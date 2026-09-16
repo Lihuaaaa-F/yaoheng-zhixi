@@ -31,3 +31,8 @@ desktop.ini
 
 # ==== ZCode 本地状态 ====
 .zcode/
+.pharma
+
+# ==== 大体积交付ZIP（本地/网盘交付，不入库；清单与回执入库）====
+药衡智析_增量源码交接/public_source_candidate/07_交付/可运行源码交接包/*.zip
+*.tsbuildinfo

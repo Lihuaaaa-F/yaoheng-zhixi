@@ -1,0 +1,38 @@
+{
+  "task_id": "v3-s3-pages",
+  "purpose": "V3终检：GLM实调报告（narrative PASS/llm，身份VERIFIED）+全部视觉修复；替代v1/v2任务",
+  "scenario": "S3",
+  "input_description": {
+    "factory": "中药一厂",
+    "product": "六味地黄胶囊",
+    "month": "2026-03",
+    "analysis_type": "monthly",
+    "basis": "unit"
+  },
+  "artifact": {
+    "source": "06_评测/run_20260917_glm_live (scenario_reports_v3)",
+    "docx_sha256": "c3a5bb0387f0533ba2b6627198b945d6f60d524fbaf4aeb27218e076a627ffa8",
+    "pdf_sha256": "12ffae55b822c83dbd81de0d0d2543262495bf0cd53b0a96f19eef7e00f19a3a",
+    "pages": 7,
+    "build_label": "GLM实调v11提示词"
+  },
+  "expected_business_facts": {
+    "narrative": "PASS",
+    "model_participation": "PASS",
+    "model_identity": "VERIFIED(glm-5.3-flash)",
+    "acceptance_overall": "PENDING",
+    "human_review": "PENDING"
+  },
+  "recheck_context": "v2修复项（断行/标签/目录/数值统一）随新分页全页重查；新增模型解释正文的阅读负担与层次",
+  "viewport": "A4 PDF页渲染，PyMuPDF 120dpi；Windows LibreOffice导出+系统字体回退",
+  "check_scope": [
+    "全页缺字/裁切/连排/图例（分页相对v2有变化）",
+    "模型解释段落可读性与层次",
+    "v2所列修复是否保持"
+  ],
+  "output": {
+    "result_json": "D:\\重庆市AI大赛\\药衡智析_增量源码交接\\public_source_candidate\\06_评测\\dual_model\\20260917\\visual\\v3-s3-pages\\result.json",
+    "review_md": "D:\\重庆市AI大赛\\药衡智析_增量源码交接\\public_source_candidate\\06_评测\\dual_model\\20260917\\visual\\v3-s3-pages\\review.md",
+    "format": "issue_id+定位+观察+影响+severity+建议；总体PASS_VISUAL/NEEDS_FIX/BLOCKED"
+  }
+}

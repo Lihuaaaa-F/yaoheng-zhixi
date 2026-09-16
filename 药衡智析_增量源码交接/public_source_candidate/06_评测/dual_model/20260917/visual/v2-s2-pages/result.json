@@ -1,0 +1,52 @@
+{
+  "task_id": "v2-s2-pages",
+  "reviewer": "GLM-5.3-Flash 视觉审阅（独立会话）",
+  "date": "2026-09-17",
+  "coverage": "6/6 页逐页查看",
+  "recheck": [
+    {
+      "v0_issue": "V0-009 目录竖排",
+      "status": "RECHECK_FIXED",
+      "evidence": "page-01 目录已竖排（一行一项），密排连排消失；条目右侧无页码（本任务未声明页码回填，见 v2s2-003）"
+    },
+    {
+      "v0_issue": "V0-012 趋势表数值统一",
+      "status": "RECHECK_FIXED",
+      "evidence": "page-04 趋势表单位成本列统一两位小数（7.12/7.25/6.96/7.24/7.47），图标签与表逐值一致"
+    }
+  ],
+  "new_issues": [
+    {
+      "issue_id": "v2s2-001",
+      "severity": "medium",
+      "page": "page-01 核心发现段",
+      "observation": "\"每盒变动 0.18\"行尾接\"元。\"行首——数值 0.18 本体未拆但与单位\"元\"跨行分离，属 V0-001/002 声称已修复的同一类断行（NBSP 未覆盖此句）",
+      "reader_impact": "数值可读但阅读停顿；首页头条句版式瑕疵",
+      "minimal_suggestion": "并入 v2-s1 的 NBSP 修复范围（同模板），覆盖核心发现句的\"数值+单位\"",
+      "recheck": "重渲 S2 p1，确认\"0.18 元\"同行"
+    },
+    {
+      "issue_id": "v2s2-002",
+      "severity": "low",
+      "page": "page-04 4.2 段",
+      "observation": "\"其中产量影响 84000.00\"行尾接\"元，\"行首——数值与单位跨行分离，同类断行",
+      "reader_impact": "轻微阅读停顿",
+      "minimal_suggestion": "同上，纳入 NBSP 修复范围",
+      "recheck": "重渲 S2 p4 核对"
+    },
+    {
+      "issue_id": "v2s2-003",
+      "severity": "low",
+      "page": "page-01 目录",
+      "observation": "目录条目无页码。S1 任务声明了\"页码回填\"且同样缺失（见 v2s1-001）；S2 未声明但跨报告目录形态应一致",
+      "reader_impact": "目录定位价值有限；跨报告不一致",
+      "minimal_suggestion": "随 v2s1-001 一并处理",
+      "recheck": "重渲后核对目录页码"
+    }
+  ],
+  "deferred_still_present": "2.1 表首列\"单 位 成 本(元/盒)\"分散断行（V0-010 类）；6.4 表\"合格产/量\"孤字（V0-008 类）；瀑布图微小柱（+0.02/+0.03）靠标签传达（V0-006 类）——维持缓办口径",
+  "no_problem_spots": "page-02/03 数值表达式（2.90 → 3.05 元/盒 等）均未断行；page-05 差额标签（0.20/0.13/0.17）抬高清晰、表列对齐；page-06 表格整齐；页脚逐页正确；全 6 页无缺字/tofu/溢出/图例遮挡",
+  "overall": "NEEDS_FIX",
+  "overall_note": "本任务两项 recheck（V0-009/012）均确认修复；但核心发现句\"0.18 元\"断行与 S1 同类（NBSP 修复未覆盖核心发现句），随模板一并修复后需复渲。平台口径：Windows LibreOffice 26.8 导出+系统字体回退，最终版式以目标环境为准。仅视觉结论",
+  "out_of_scope": "数值正确性、业务口径、归因对错未评审"
+}

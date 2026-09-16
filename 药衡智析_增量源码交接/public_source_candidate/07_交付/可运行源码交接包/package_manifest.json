@@ -1,0 +1,23 @@
+{
+  "status": "PACKAGED_NOT_ACCEPTED",
+  "files": 614,
+  "archives": {
+    "药衡智析_可运行源码交接包.zip": {
+      "bytes": 69525605,
+      "sha256": "bb33c0e150730f5223bebfb48fd7d99b5724ef44807f090125122215152baddf"
+    },
+    "药衡智析_公开源码候选包.zip": {
+      "bytes": 13155974,
+      "sha256": "acec70eaf5223638ac30f46c42b3b2f0c082c091b952d45ec69d38ffe2e45e99"
+    }
+  },
+  "excluded": [
+    "credentials",
+    "personal_configuration",
+    "venv",
+    "node_modules",
+    "runtime_cache",
+    "obsolete_outputs"
+  ],
+  "runtime_acceptance": "see unpack_acceptance.json"
+}

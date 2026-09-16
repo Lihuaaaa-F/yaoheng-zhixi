@@ -1,0 +1,44 @@
+{
+  "task_id": "v2-browser-fixes",
+  "reviewer": "GLM-5.3-Flash 视觉审阅（独立会话）",
+  "date": "2026-09-17",
+  "input_hash_note": "4/4 张图已逐张查看（benchmark 整页长图按关键区放大裁剪复核：顶部指标总览表、原料明细表右缘、相关文档证据列表）",
+  "recheck": [
+    {
+      "v0_issue": "V0-011 季度比较期双\"至\"连排",
+      "status": "RECHECK_FIXED",
+      "evidence": "1366_quarter.png：环比\"比较期 2026-01–2026-03（3 个月）\"、同比\"比较期 2025-04–2025-06（3 个月）\"、预算偏差\"比较期 2026-04–2026-06（3 个月）\"，均为单区间写法，双\"至\"连排消失"
+    },
+    {
+      "v0_issue": "V0-013 复选框与标签同行",
+      "status": "UNVERIFIABLE_MISSING_INPUT",
+      "evidence": "本任务输入仅 benchmark/cost/evidence/quarter 四张，无\"报告与任务\"页（1366_acceptance）截图，无法复核。请补截后单独复核该项"
+    },
+    {
+      "v0_issue": "V0-014 benchmark证据重复条目",
+      "status": "RECHECK_FIXED",
+      "evidence": "1366_benchmark.png 相关文档证据列表 5 条互不重复：产品配方文档·第1页、生产工艺文档·第1页、生产工艺文档·第2页、GMP·第55页、GMP·第16页；原重复的\"GMP法规核心摘要_2010修订版.pdf·第4页\"条目已不存在（证据集本身已更换，属数据侧变化）"
+    },
+    {
+      "v0_issue": "V0-004 表格右缘（程序量化为可滚动）",
+      "status": "STILL_BROKEN",
+      "severity": "low",
+      "evidence": "1366_benchmark.png 原料明细表：最后一列表头显示\"产\"后被卡右缘裁切，数值\"58…\"同样被切，截图内无滚动条——静态截图视觉状态与 V0 相同。与 request note 的程序取证（scrollWidth>clientWidth、overflow-x:auto 可滚动）不矛盾：静态图无法证实或证伪滚动能力，仅按\"静态截图可读\"口径问题仍在",
+      "minimal_suggestion": "给可滚动表加可视提示（如右缘渐隐、露出下一列局部、\"→ 可横向滚动\"角标）后再截，让静态图读者也知道右侧有更多列"
+    }
+  ],
+  "new_issues": [
+    {
+      "issue_id": "v2bf-001",
+      "severity": "low（偏好）",
+      "page": "1366_quarter.png KPI 卡片 vs 同页页脚/趋势图标题",
+      "observation": "区间写法并存：KPI 卡用 en-dash\"2026-01–2026-03\"，页脚与趋势图标题用\"至\"（\"2026-06 至 2026-06\"\"2026-01 至 2026-05·可用 6 个月\"）",
+      "reader_impact": "无误读风险，仅风格不统一；是否统一归 5.3",
+      "minimal_suggestion": "统一两种区间写法之一",
+      "recheck": "重截同页核对"
+    }
+  ],
+  "overall": "PASS_VISUAL",
+  "overall_note": "限定视觉口径：V0-011/V0-014 确认修复；V0-004 静态截图口径保留 low 观察（与程序取证不矛盾）；V0-013 缺输入图未复核。本结论不代表功能、数字或业务合格，不构成真人验收。渲染平台：本批截图据 STATUS 为本机 Edge headless；与目标环境差异由 5.3 把握。",
+  "out_of_scope": "数值正确性、业务口径、证据集更换的合理性均未评审"
+}

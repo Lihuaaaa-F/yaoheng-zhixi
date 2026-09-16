@@ -1,0 +1,65 @@
+{
+  "status": "PASS",
+  "scope": "新临时目录解压后的真实bootstrap/API/worker/混合检索/报告生成/三附件下载；复用同机兼容解释器和经SHA核验的外置embedding，不宣称净系统安装",
+  "archive_sha256": "e46b17522ca4a4474e6a4e85989eb2c5411d0ff1e60a1fa3eac230fc52994b02",
+  "archive": "D:\\重庆市AI大赛\\药衡智析_增量源码交接\\public_source_candidate\\07_交付\\可运行源码交接包\\药衡智析_可运行源码交接包.zip",
+  "work_directory": "C:\\Users\\ShiyuFang\\AppData\\Local\\Temp\\pharma-unpacked-iqm4r4_z",
+  "checks": [
+    {
+      "name": "every_archived_file_hash",
+      "status": "PASS"
+    },
+    {
+      "name": "actual_relocated_bootstrap_start",
+      "status": "PASS"
+    },
+    {
+      "name": "http_ui",
+      "status": "PASS"
+    },
+    {
+      "name": "worker_alive",
+      "status": "PASS"
+    },
+    {
+      "name": "core_unit_cost",
+      "status": "PASS"
+    },
+    {
+      "name": "comparison_is_bound",
+      "status": "PASS"
+    },
+    {
+      "name": "actual_hybrid_retrieval",
+      "status": "PASS"
+    },
+    {
+      "name": "report_export_terminal",
+      "status": "PASS"
+    },
+    {
+      "name": "missing_model_never_accepted",
+      "status": "PASS"
+    },
+    {
+      "name": "download_docx",
+      "status": "PASS"
+    },
+    {
+      "name": "download_pdf",
+      "status": "PASS"
+    },
+    {
+      "name": "download_audit",
+      "status": "PASS"
+    },
+    {
+      "name": "updated_toc",
+      "status": "PASS"
+    }
+  ],
+  "reused_python": "D:\\重庆市AI大赛\\药衡智析_增量源码交接\\public_source_candidate\\05_原型\\.venv\\Scripts\\python.exe",
+  "model_runtime": "BLOCKED_NO_KEY",
+  "human_review": "PENDING",
+  "job_id": "8fbf4b34f5334efba77d08233b17ff40"
+}

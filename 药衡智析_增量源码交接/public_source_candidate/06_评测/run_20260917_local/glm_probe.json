@@ -1,0 +1,37 @@
+{
+  "model": "glm-5.3-flash",
+  "endpoint": "https://open.bigmodel.cn/api/paas/v4",
+  "protocol": "openai",
+  "credential_present": false,
+  "cost": "UNKNOWN",
+  "checked_at": "2026-09-17T02:06:45+0800",
+  "official_docs": "https://docs.z.ai/api-reference/llm/chat-completion",
+  "probes": {
+    "text": {
+      "status": "NOT_RUN",
+      "reason": "应用凭据缺失"
+    },
+    "structured_response": {
+      "status": "NOT_RUN",
+      "reason": "应用凭据缺失"
+    },
+    "tools": {
+      "status": "NOT_RUN",
+      "reason": "应用凭据缺失"
+    },
+    "stream": {
+      "status": "NOT_RUN",
+      "reason": "应用凭据缺失"
+    },
+    "rate_limit": {
+      "status": "NOT_RUN",
+      "reason": "应用凭据缺失"
+    },
+    "timeout": {
+      "status": "NOT_RUN",
+      "reason": "应用凭据缺失"
+    }
+  },
+  "status": "BLOCKED",
+  "reason": "MODEL_KEY_NOT_SET; application account/endpoint and billing must be checked on teammate machine"
+}

@@ -1,0 +1,59 @@
+{
+  "at": "2026-09-17T01:54:53+0800",
+  "status": {
+    "PROJECT_ROOT": "D:\\重庆市AI大赛\\药衡智析_增量源码交接\\public_source_candidate",
+    "python": "D:\\重庆市AI大赛\\药衡智析_增量源码交接\\public_source_candidate\\05_原型\\.venv\\Scripts\\python.exe",
+    "ENV_REUSE": "PASS",
+    "CORE_CALC": "PASS",
+    "DATA_INTEGRITY": "PASS",
+    "BASELINE_CONTRACT": "PASS",
+    "TEMPLATE_BINDINGS": "NOT_RUN",
+    "RAG_HYBRID_REAL": "NOT_RUN",
+    "LLM_LIVE": "NOT_RUN",
+    "DOCX_EXPORT": "NOT_RUN",
+    "PDF_EXPORT": "NOT_RUN",
+    "RPA_PROVIDED_MOCK": "NOT_RUN",
+    "RECOVERY": "PASS",
+    "E2E": "NOT_RUN",
+    "DOCKER_RUNTIME": "NOT_IN_SCOPE",
+    "HUMAN_SCORE": "PENDING",
+    "COMPETITION_READY": "PARTIAL",
+    "protected_file_count": 45,
+    "protected_changed": [],
+    "baseline_missing_paths": [],
+    "FINAL_STATUS": "PARTIAL",
+    "PHARMA_PYTHON_NOTE": "所有入口统一经 scripts/pharma_python.sh 或当前解释器解析"
+  },
+  "tests_exit_code": 0,
+  "reports": [
+    {
+      "scenario": "S1",
+      "job_id": "a8ff927e67aa4c5a97e36ba11d8d1cc4",
+      "status": "NOT_IN_THIS_RUNTIME",
+      "note": "历史job不在当前runtime数据库；重跑generate_scenarios.py生成新证据"
+    },
+    {
+      "scenario": "S2",
+      "job_id": "a3711ec8e2494a50a0ff326a378a4991",
+      "status": "NOT_IN_THIS_RUNTIME",
+      "note": "历史job不在当前runtime数据库；重跑generate_scenarios.py生成新证据"
+    },
+    {
+      "scenario": "S3",
+      "job_id": "3e260a251a8f47fab8e8adb82bead179",
+      "status": "NOT_IN_THIS_RUNTIME",
+      "note": "历史job不在当前runtime数据库；重跑generate_scenarios.py生成新证据"
+    },
+    {
+      "scenario": "Q2",
+      "job_id": "1537edd673c143aa88f915562d9a3495",
+      "status": "NOT_IN_THIS_RUNTIME",
+      "note": "历史job不在当前runtime数据库；重跑generate_scenarios.py生成新证据"
+    }
+  ],
+  "limits": [
+    "LLM_LIVE需真实凭据+响应身份核验+必要解释覆盖",
+    "HUMAN_SCORE只能由真人审核录入",
+    "历史job不在当前runtime时按NOT_IN_THIS_RUNTIME记录，不冒充新证据"
+  ]
+}

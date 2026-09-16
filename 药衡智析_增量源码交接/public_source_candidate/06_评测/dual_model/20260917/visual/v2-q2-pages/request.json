@@ -1,0 +1,41 @@
+{
+  "task_id": "v2-q2-pages",
+  "purpose": "V2复查：V0问题修复后的新构建；目录竖排导致分页变化（全页重查）",
+  "scenario": "Q2",
+  "input_description": {
+    "factory": "中药一厂",
+    "product": "银黄口服液",
+    "month": "2026-06",
+    "analysis_type": "quarterly",
+    "basis": "unit"
+  },
+  "artifact": {
+    "source": "06_评测/run_20260917_local (scenario_reports_v2)",
+    "docx_sha256": "bb4307fce9bea29224724210cd406a0157302be73ca36c886d723139ee02cce7",
+    "pdf_sha256": "a621896f5f7d9f12233fc71b6ebcd7894d726d80404f119e9a99360cae3dc84a",
+    "pages": 7,
+    "build_label": "v2视觉修复版"
+  },
+  "recheck_of_v0_issues": [
+    "V0-003差额标签抬高+白底",
+    "V0-002/005排版",
+    "V0-009目录竖排",
+    "V0-012数值统一"
+  ],
+  "expected_business_facts": {
+    "status": "DEGRADED",
+    "model_live": false,
+    "acceptance_overall": "FAIL"
+  },
+  "viewport": "A4 PDF页渲染，PyMuPDF 120dpi；Windows LibreOffice导出+系统字体回退",
+  "check_scope": [
+    "复核recheck_of_v0_issues所列修复是否生效且无新问题",
+    "全部页面的缺字/裁切/连排/图例（分页全局变化需全查）"
+  ],
+  "output": {
+    "result_json": "D:\\重庆市AI大赛\\药衡智析_增量源码交接\\public_source_candidate\\06_评测\\dual_model\\20260917\\visual\\v2-q2-pages\\result.json",
+    "review_md": "D:\\重庆市AI大赛\\药衡智析_增量源码交接\\public_source_candidate\\06_评测\\dual_model\\20260917\\visual\\v2-q2-pages\\review.md",
+    "format": "按V0 issue_id逐项给RECHECK_FIXED/STILL_BROKEN/NEW；新问题用v2-新ID；总体PASS_VISUAL/NEEDS_FIX/BLOCKED"
+  },
+  "note": "本构建模型未参与（无应用密钥）。V0-004经程序量化为可滚动容器（scrollWidth>clientWidth, overflow-x:auto），属截图无滚动条假象；如有异议请看新整页截图标注。"
+}
