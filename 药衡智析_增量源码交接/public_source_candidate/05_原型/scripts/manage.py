@@ -18,7 +18,22 @@ def token(pid):
         return fields[21] if fields[2]!='Z' else None
     except (OSError,IndexError):return None
 
-def alive(info):return token(info['pid'])==info['token']
+def alive(info):
+    # POSIX: /proc start-time token. Windows: /proc absent; verify the pid
+    # still names a live process (Start Time via WMI-free ctypes check).
+    if Path('/proc').is_dir():
+        return token(info['pid'])==info['token']
+    import ctypes
+    PROCESS_QUERY_LIMITED_INFORMATION=0x1000; STILL_ACTIVE=259
+    kernel32=ctypes.windll.kernel32
+    handle=kernel32.OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION,False,int(info['pid']))
+    if not handle:return False
+    try:
+        code=ctypes.c_ulong()
+        if not kernel32.GetExitCodeProcess(handle,ctypes.byref(code)):return False
+        return code.value==STILL_ACTIVE
+    finally:
+        kernel32.CloseHandle(handle)
 def ready(port):
     try:
         with urllib.request.urlopen(f'http://127.0.0.1:{port}/health',timeout=1) as r:return r.status==200
@@ -48,7 +63,14 @@ def main():
         if name in state and alive(state[name]):continue
         if port and occupied(port):raise SystemExit(f'端口{port}被非本项目受管进程占用；未终止其他服务')
         with (RUN/(name+'.log')).open('ab') as log:
-            p=subprocess.Popen(cmd,cwd=APP,env=env,stdout=log,stderr=log,start_new_session=True)
+            # start_new_session is POSIX-only; on Windows the children must
+            # detach from the caller's console/job or they die with the shell.
+            flags=0
+            if os.name=='nt':
+                flags=subprocess.CREATE_NEW_PROCESS_GROUP|subprocess.DETACHED_PROCESS
+                try:flags|=subprocess.CREATE_BREAKAWAY_FROM_JOB
+                except AttributeError:pass
+            p=subprocess.Popen(cmd,cwd=APP,env=env,stdout=log,stderr=log,start_new_session=(os.name!='nt'),creationflags=flags)
         state[name]={'pid':p.pid,'token':token(p.pid),'command':cmd};STATE.write_text(json.dumps(state,ensure_ascii=False,indent=2))
         if port:
             for _ in range(60):

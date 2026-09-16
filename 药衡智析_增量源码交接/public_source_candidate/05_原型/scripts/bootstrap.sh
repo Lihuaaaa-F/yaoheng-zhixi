@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
-app_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+# Resolve absolute paths BEFORE any cd: callers may invoke this script by a
+# relative path from the project root.
+here="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+app_dir="$(cd -- "$here/.." && pwd)"
 cd "$app_dir"
-here="$(dirname -- "${BASH_SOURCE[0]}")"
 
 # 1) Interpreter: one resolution order shared by every entry point.
 pharma_python="$(bash "$here/pharma_python.sh")"
