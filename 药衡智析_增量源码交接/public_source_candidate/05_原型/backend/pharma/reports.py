@@ -2,7 +2,7 @@
 from pathlib import Path
 from zipfile import ZipFile, ZIP_DEFLATED
 from xml.etree import ElementTree as ET
-import hashlib, json, re, subprocess, tempfile
+import hashlib, json, re, shutil, subprocess, tempfile
 from datetime import datetime
 from decimal import Decimal
 from .config import ROOT, PACKAGE, ARTIFACTS
@@ -161,14 +161,14 @@ def build_bindings(snapshot,narrative,benchmark=None):
     def prose(section):
         return '\n'.join(f.get('rendered_text',f.get('text','')) for f in findings if f.get('section')==section and f.get('claim_type')=='hypothesis')
     material=els['materials']
-    material_text='直接材料每盒 '+number(material['unit'])+' 元，比上期变动 '+number(material.get('unit_delta'))+' 元，占单位成本变动的 '+number(material.get('unit_contribution'))+'%。'
+    material_text='直接材料每盒 '+number(material['unit'])+' 元，比上期变动 '+number(material.get('unit_delta'))+' 元，占单位成本变动的 '+number(material.get('unit_contribution'))+'%。'
     rows=snapshot.get('materials_summary',[])
     if rows:
-        material_text+='\n'+'；'.join(r.get('name','')+'：'+number(r.get('previous'))+' → '+number(r.get('current'))+' 元/盒，变动 '+number(r.get('delta'))+' 元/盒，占材料增量 '+number(r.get('contribution'))+'%' for r in rows[:4])+'。'
+        material_text+='\n'+'；'.join(r.get('name','')+'：'+number(r.get('previous'))+' → '+number(r.get('current'))+' 元/盒，变动 '+number(r.get('delta'))+' 元/盒，占材料增量 '+number(r.get('contribution'))+'%' for r in rows[:4])+'。'
     material_text+=' 单位消耗成本同时受价格和实耗影响；需采购入库单、批次领退料及合格产出记录，才能分别核验价格与耗量。'
     values['材料成本归因分析文本']=material_text+'\n'+prose('materials')
     changes=snapshot.get('period_changes',{})
-    overview='本期产量 '+number(m['quantity'],0)+' 盒，总成本 '+number(m['total_cost'])+' 元。'
+    overview='本期产量 '+number(m['quantity'],0)+' 盒，总成本 '+number(m['total_cost'])+' 元。'
     alerts=snapshot.get('alerts',[])
     alert_text='\n'.join(a['element']+'的'+('单位成本' if a['basis']=='unit' else '总额')+'环比变动 '+number(a['rate'])+'%；'+a['note']+'。' for a in alerts) or '本期三要素没有超过既定阈值的告警；仍应核对主要变动项。'
     bridges=snapshot.get('budget_bridge') or {}
@@ -245,7 +245,7 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
         if not items:return []
         return [[str(k),str(v)] for item in items for k,v in item.items() if not k.startswith('_') and k not in ('source_hash','row_key')]
     table('原材料成本明细表格',['月份','原料','单位消耗成本（元/盒）','总成本（元）'],[[r['月份'],r['原材料名称'],r['单位消耗成本(元/盒)'],r['原材料总成本(元)']] for r in details.get('materials',[])])
-    table('近6个月成本趋势表格',['月份','单位成本（元/盒）','产量（盒）','总成本（元）'],[[r['month'],r['unit_cost'],r['quantity'],r['total_cost']] for r in snapshot['trend']])
+    table('近6个月成本趋势表格',['月份','单位成本（元/盒）','产量（盒）','总成本（元）'],[[r['month'],number(r['unit_cost']),number(r['quantity'],0),number(r['total_cost'])] for r in snapshot['trend']])
     table('原材料价格跟踪表格',['药材','参考月份','市场价格','单位（非采购价）'],[[r['药材名称'],snapshot['month'],r.get(str(int(snapshot['month'][5:]))+'月价格',NA),r['单位']] for r in details.get('market',[])])
     table('对标差异表格',['要素','二厂（元/盒）','一厂（元/盒）','差异（元/盒）','差异率（%）'],[[r.get('name','单位成本'),number(r.get('left')),number(r.get('right')),number(r.get('delta')),number(r.get('rate'))] for r in (benchmark or {}).get('summary',[])[:1]+(benchmark or {}).get('elements',[])])
     actionable=[f for f in narrative.get('findings',[]) if f.get('suggestion','').strip()]
@@ -256,7 +256,7 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
     for prefix,key,text in [('3.3','labor','平均小时工资是题包折算口径。每盒人工费用受工时、人员组成及加班影响；需核对工时台账、工资组成与返工记录，不能认定基础薪率上涨。'),('四、','overhead','按费用台账和分配基数检查变化。维修事件只有在产品、期间及入账范围一致时才用于本期解释；不得将维修金额重复计入总成本。')]:
         anchor=next((p for p in doc.paragraphs if p.text.startswith(prefix)),None)
         if anchor is not None:
-            e=els[key];anchor.insert_paragraph_before(e['name']+'每盒 '+number(e['unit'])+' 元，比上期变动 '+number(e.get('unit_delta'))+' 元，占单位成本环比变动 '+number(e.get('unit_contribution'))+'%。'+text)
+            e=els[key];anchor.insert_paragraph_before(e['name']+'每盒 '+number(e['unit'])+' 元，比上期变动 '+number(e.get('unit_delta'))+' 元，占单位成本环比变动 '+number(e.get('unit_contribution'))+'%。'+text)
     add_reader_charts(doc,snapshot,benchmark,dynamic_anchors,output)
     add_reader_summary(doc,snapshot,narrative,output)
     doc.add_paragraph('来源与审核说明')
@@ -313,6 +313,12 @@ def convert_pdf(docx_path,timeout=90,converter='libreoffice',_toc_pass=0):
     import os
     path=Path(docx_path)
     try:
+        exe = shutil.which(converter)
+        if exe is None and converter == 'libreoffice' and os.name == 'nt':
+            for candidate in ('soffice', r'C:\Program Files\LibreOffice\program\soffice.exe', r'C:\Program Files (x86)\LibreOffice\program\soffice.exe'):
+                found = shutil.which(candidate) if not candidate.startswith('C:') else (candidate if Path(candidate).exists() else None)
+                if found: exe = found; break
+        if exe is None: return {'status': 'FAILED', 'reason': 'CONVERTER_NOT_FOUND: ' + converter}
         temp_root = '/tmp' if os.name != 'nt' else tempfile.gettempdir()
         with tempfile.TemporaryDirectory(prefix='pharma-lo-',dir=temp_root) as work:
             folder=Path(work);profile=folder/'profile';target=folder/path.with_suffix('.pdf').name
@@ -320,7 +326,7 @@ def convert_pdf(docx_path,timeout=90,converter='libreoffice',_toc_pass=0):
             font_config=folder/'fonts.conf'
             font_config.write_text('<?xml version="1.0"?><!DOCTYPE fontconfig SYSTEM "fonts.dtd"><fontconfig><include ignore_missing="yes">/etc/fonts/fonts.conf</include><dir>'+escape(str(ROOT/'05_原型/assets/fonts'))+'</dir><cachedir>'+escape(str(folder/'font-cache'))+'</cachedir></fontconfig>')
             env={**os.environ,'TMPDIR':'/tmp','XDG_RUNTIME_DIR':work,'FONTCONFIG_FILE':str(font_config)}
-            result=subprocess.run([converter,f'-env:UserInstallation={profile.as_uri()}','--headless','--convert-to','pdf','--outdir',work,str(path)],capture_output=True,text=True,timeout=timeout,env=env)
+            result=subprocess.run([exe,f'-env:UserInstallation={profile.as_uri()}','--headless','--convert-to','pdf','--outdir',work,str(path)],capture_output=True,text=True,timeout=timeout,env=env)
             if result.returncode or not target.exists():return {'status':'FAILED','reason':'CONVERSION_FAILED','log':result.stderr[-1000:]}
             import fitz
             with fitz.open(target) as doc:
@@ -355,9 +361,19 @@ def convert_pdf(docx_path,timeout=90,converter='libreoffice',_toc_pass=0):
                     start=candidate;previous=previous.getprevious()
                 if not start.paragraph_format.page_break_before:
                     start.paragraph_format.page_break_before=True;layout_changed=True
-        toc_text='目录  '+ '；'.join(h+' '+str(page_map[h]) for h in headings if h in page_map)+'。'
-        if _toc_pass<5 and (layout_changed or (toc is not None and toc.text!=toc_text)):
-            if toc is not None:_text(toc,toc.text,toc_text)
+        # 竖排目录逐行回填实际页码；目录标题行(带YH_TOC书签)保持不变
+        toc_lines={'一、基本信息':'一、封面与基本信息','二、总成本概览':'二、总成本概览','三、要素明细':'三、成本要素明细分析','四、专项分析':'四、重点产品专项分析','五、对标分析':'五、对标分析','六、总结与建议':'六、总结与建议'}
+        toc_updated=False
+        for paragraph in d.paragraphs:
+            text=paragraph.text.strip()
+            # 目录行以全角空格开头；真实章节标题不以全角空格开头，避免污染正文
+            if not text.startswith(chr(0x3000)):continue
+            key=next((k for k in toc_lines if text.lstrip(chr(0x3000)).split('　')[0].startswith(k)),None)
+            if key is None or paragraph is toc:continue
+            page=page_map.get(toc_lines[key])
+            fresh=chr(0x3000)+key+('　·　第'+str(page)+'页' if page else '')
+            if paragraph.text!=fresh:_text(paragraph,paragraph.text,fresh);toc_updated=True
+        if _toc_pass<5 and (layout_changed or toc_updated):
             d.save(path)
             return convert_pdf(path,timeout,converter,_toc_pass+1)
         return {'status':'PASS','scope':'file_conversion','toc_updated':len(page_map)==6,'orphan_headings':orphan_headings,'toc_pages':page_map,'path':str(pdf),'pages':pages,'sha256':hashlib.sha256(pdf.read_bytes()).hexdigest()}
@@ -462,6 +478,7 @@ def style_reader(doc):
 def add_reader_summary(doc,snapshot,narrative,output):
     from docx.oxml import OxmlElement
     from docx.oxml.ns import qn
+    from docx.shared import Pt
     first=doc.paragraphs[0]
     title=first.insert_paragraph_before(snapshot['product']+'成本分析报告')
     title.paragraph_format.keep_with_next=True
@@ -472,8 +489,12 @@ def add_reader_summary(doc,snapshot,narrative,output):
     first.insert_paragraph_before(mode)
     ranked=sorted(snapshot['elements'],key=lambda e:abs(Decimal(e.get('unit_delta') or '0')),reverse=True)
     lead=ranked[0]
-    first.insert_paragraph_before('核心发现：单位成本 '+number(m['unit_cost'])+' 元/盒，总成本 '+number(m['total_cost'])+' 元；较上期变动最大的要素为'+lead['name']+'，每盒变动 '+number(lead.get('unit_delta'))+' 元。建议先核对该要素原始明细，再安排责任部门复核。')
-    toc=first.insert_paragraph_before('目录：一、基本信息；二、总成本概览；三、要素明细；四、专项分析；五、对标分析；六、总结与建议。')
+    first.insert_paragraph_before('核心发现：单位成本 '+number(m['unit_cost'])+' 元/盒，总成本 '+number(m['total_cost'])+' 元；较上期变动最大的要素为'+lead['name']+'，每盒变动 '+number(lead.get('unit_delta'))+' 元。建议先核对该要素原始明细，再安排责任部门复核。')
+    toc_items=['一、基本信息','二、总成本概览','三、要素明细','四、专项分析','五、对标分析','六、总结与建议']
+    toc=first.insert_paragraph_before('目录')
+    for item in toc_items:
+        line=first.insert_paragraph_before('　'+item)
+        line.paragraph_format.space_after=Pt(0);line.paragraph_format.keep_with_next=True
     mark=OxmlElement('w:bookmarkStart');mark.set(qn('w:id'),'30000');mark.set(qn('w:name'),'YH_TOC');toc._p.insert(0,mark)
 
 
@@ -517,7 +538,7 @@ def add_reader_charts(doc,snapshot,benchmark,anchors,output):
     if be:
         fig,ax=plt.subplots(figsize=(8,2.4));pos=list(range(len(be)))
         ax.bar([x-.18 for x in pos],[float(r['right']) for r in be],width=.35,label='一厂',color='#176C8C');ax.bar([x+.18 for x in pos],[float(r['left']) for r in be],width=.35,label='二厂',color='#82939F')
-        for i,r in enumerate(be):ax.text(i,max(float(r['right']),float(r['left']))+.06,'差额 '+number(r['delta']),ha='center')
+        for i,r in enumerate(be):peak=max(float(r['right']),float(r['left']));ax.text(i,peak+peak*.05,'差额 '+number(r['delta']),ha='center',bbox={'facecolor':'white','alpha':.8,'edgecolor':'none','pad':1.2})
         ax.set_xticks(pos,[r['name'] for r in be]);ax.set_ylabel('元/盒（零基线）');ax.set_ylim(0,max(float(r[k]) for r in be for k in ('left','right'))*1.3);ax.legend(ncol=2)
         insert(fig,'benchmark',anchors['对标差异表格']._p,snapshot['product']+' · '+period_label+'｜跨厂三要素（差额＝二厂−一厂）')
 
@@ -562,9 +583,9 @@ def assess_report(result,review=None):
       'visual_quality':human('visual_quality','逐页渲染检查与真人版式审核待完成'),
       'task_actionability':verdict(bool(actions) and all(f.get('verification_target') and f.get('expected_evidence') and f.get('responsible_role') and f.get('deadline_basis') for f in actions),'建议必须包含对象、预期证据、责任角色和期限依据'),
       'model_participation':verdict(n.get('model_live') is True and n.get('status')=='PASS','模型实际参与、身份核验一致且解释覆盖校验通过；基础分析不视为模型通过')}
+    r['overall']='PASS' if all(v['status']=='PASS' for v in r.values()) else 'FAIL' if any(v['status']=='FAIL' for v in r.values()) else 'PENDING'
     if review:
         r['human_attribution_score']=review.get('attribution_score')
         r['human_review_comment']=review.get('comment','')
-    r['overall']='PASS' if all(v['status']=='PASS' for v in r.values()) else 'FAIL' if any(v['status']=='FAIL' for v in r.values()) else 'PENDING'
     r['policy']='强制环节逐项通过后才能认定报告合格；人工评审缺失保持待评，产物变化使既有审核失效'
     return r

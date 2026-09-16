@@ -60,7 +60,15 @@ def get_benchmark(product:str,month:str,left:str='中药二厂',right:str='中�
     from .knowledge import Knowledge
     from .narrative import generate
     snapshot,result=benchmark_analysis(product,month,left,right)
-    result['evidence']=Knowledge().search(product+' 工艺 收率 设备 差异',product=product,limit=5)
+    retrieved=Knowledge().search(product+' 工艺 收率 设备 差异',product=product,limit=5)
+    # 同一文档同一位置的重复分片只保留首个，避免界面出现重复证据条目
+    seen=set();unique=[]
+    for e in retrieved.get('evidence',[]):
+        key=(e.get('source'),e.get('location') or e.get('page'))
+        if key in seen:continue
+        seen.add(key);unique.append(e)
+    retrieved['evidence']=unique
+    result['evidence']=retrieved
     result['narrative']=generate(snapshot,result['evidence'])
     result['hypotheses']=[{**f,'hypothesis':f['rendered_text']} for f in result['narrative']['findings']]
     return result
