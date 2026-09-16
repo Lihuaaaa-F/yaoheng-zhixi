@@ -211,12 +211,16 @@ class Knowledge:
             return {'status':'FAILED','failures':failures,'knowledge_version':version}
         dbtmp = target / 'fts.sqlite.tmp'
         if dbtmp.exists(): dbtmp.unlink()
-        with sqlite3.connect(dbtmp) as db:
-            db.execute('CREATE TABLE chunks(id TEXT PRIMARY KEY, body TEXT NOT NULL)')
-            db.execute('CREATE VIRTUAL TABLE search USING fts5(id UNINDEXED,tokens)')
-            for c in chunks:
-                db.execute('INSERT INTO chunks VALUES (?,?)',(c['evidence_id'],json.dumps(c,ensure_ascii=False)))
-                db.execute('INSERT INTO search VALUES (?,?)',(c['evidence_id'],' '.join(tokenize(c['text']))))
+        db = sqlite3.connect(dbtmp)
+        try:
+            with db:
+                db.execute('CREATE TABLE chunks(id TEXT PRIMARY KEY, body TEXT NOT NULL)')
+                db.execute('CREATE VIRTUAL TABLE search USING fts5(id UNINDEXED,tokens)')
+                for c in chunks:
+                    db.execute('INSERT INTO chunks VALUES (?,?)',(c['evidence_id'],json.dumps(c,ensure_ascii=False)))
+                    db.execute('INSERT INTO search VALUES (?,?)',(c['evidence_id'],' '.join(tokenize(c['text']))))
+        finally:
+            db.close()  # Windows cannot replace a file with an open handle
         os.replace(dbtmp,target/'fts.sqlite')
         vector_error = None
         if self.vector_enabled:
@@ -270,13 +274,16 @@ class Knowledge:
             return {'status':'FAILED','mode':mode,'evidence':[],'reason':'No valid knowledge snapshot'}
         version = (self.path/'CURRENT').read_text().strip()
         target = self.path/version
-        with sqlite3.connect(target/'fts.sqlite') as db:
+        db = sqlite3.connect(target/'fts.sqlite')
+        try:
             chunks = {row[0]:json.loads(row[1]) for row in db.execute('SELECT id,body FROM chunks')}
             applicability = {k:self.evidence_applicability(v,product,factory,period,specification,document_version) for k,v in chunks.items()}
             eligible = {k for k,v in applicability.items() if v['applicable']}
             tokens = list(dict.fromkeys(tokenize(query)))[:60]
             match = ' OR '.join('"'+x.replace('"','""')+'"' for x in tokens)
             bm25 = [r[0] for r in db.execute('SELECT id FROM search WHERE search MATCH ? ORDER BY bm25(search) ASC LIMIT 100',(match,)) if r[0] in eligible] if match else []
+        finally:
+            db.close()  # leaked handles block index replacement on Windows
         vec, error = [], None
         if mode != 'bm25' and self.vector_enabled:
             try:
