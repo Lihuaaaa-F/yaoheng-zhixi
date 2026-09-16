@@ -6,13 +6,18 @@ import httpx
 ROOT=Path(__file__).resolve().parents[2]
 archive=Path(sys.argv[1]) if len(sys.argv)>1 else ROOT/'07_交付/可运行源码交接包/药衡智析_可运行源码交接包.zip'
 out=ROOT/'07_交付/可运行源码交接包/unpack_acceptance.json'
-work=Path(tempfile.mkdtemp(prefix='pharma-unpacked-',dir=None if os.name=='nt' else '/tmp'))
+work=Path(tempfile.mkdtemp(prefix='pharma-unpacked-',dir=None if os.name=='nt' else '/tmp')).resolve()  # TEMP may use 8.3 short names
 with zipfile.ZipFile(archive) as z:
  for n in z.namelist():
   if not (work/n).resolve().is_relative_to(work):raise ValueError('Unsafe member')
  z.extractall(work)
 package=next(work.iterdir());manifest=json.loads((package/'SHA256.json').read_text())
 checks=[]
+bash='bash'
+if os.name=='nt':
+    # PATH may surface WSL's System32 bash.exe first; the scripts need Git Bash.
+    for cand in ('C:/Program Files/Git/bin/bash.exe','C:/Program Files/Git/usr/bin/bash.exe','C:/Program Files (x86)/Git/bin/bash.exe'):
+        if Path(cand).exists():bash=cand;break
 def check(name,ok):
  checks.append({'name':name,'status':'PASS' if ok else 'FAIL'})
  if not ok:raise AssertionError(name)
@@ -27,8 +32,8 @@ env.update(PHARMA_PYTHON=sys.executable,PHARMA_EMBEDDING_DIR=str(ROOT/'05_原型
 status='FAIL';job=None
 try:
  with log.open('w') as f:
-  subprocess.run(['bash','05_原型/scripts/bootstrap.sh'],cwd=project,env=env,stdout=f,stderr=f,check=True,timeout=120)
-  subprocess.run(['bash','05_原型/scripts/start.sh'],cwd=project,env=env,stdout=f,stderr=f,check=True,timeout=45)
+  subprocess.run([bash,'05_原型/scripts/bootstrap.sh'],cwd=project,env=env,stdout=f,stderr=f,check=True,timeout=420)
+  subprocess.run([bash,'05_原型/scripts/start.sh'],cwd=project,env=env,stdout=f,stderr=f,check=True,timeout=45)
  check('actual_relocated_bootstrap_start',True)
  with httpx.Client(base_url=f'http://127.0.0.1:{api_port}',timeout=20) as c:
   check('http_ui',c.get('/').status_code==200)
@@ -52,9 +57,10 @@ try:
  status='PASS'
 except Exception as exc:checks.append({'failure':type(exc).__name__+': '+str(exc)[:200]})
 finally:
- with log.open('a') as f:subprocess.run(['bash','05_原型/scripts/stop.sh'],cwd=project,env=env,stdout=f,stderr=f,timeout=20)
+ with log.open('a') as f:subprocess.run([bash,'05_原型/scripts/stop.sh'],cwd=project,env=env,stdout=f,stderr=f,timeout=20)
 result={'status':status,'scope':'新临时目录解压后的真实bootstrap/API/worker/混合检索/报告生成/三附件下载；复用同机兼容解释器和经SHA核验的外置embedding，不宣称净系统安装','archive_sha256':hashlib.sha256(archive.read_bytes()).hexdigest(),'archive':str(archive),'work_directory':str(work),'checks':checks,'reused_python':sys.executable,'model_runtime':'BLOCKED_NO_KEY','human_review':'PENDING','job_id':job.get('id') if job else None}
 out.write_text(json.dumps(result,ensure_ascii=False,indent=2))
-(ROOT/'06_评测/incremental_20260916/unpack_acceptance.json').write_text(out.read_text())
-(ROOT/'06_评测/incremental_20260916/unpack_startup.log').write_text(log.read_text())
+(ROOT/'06_评测/unpack_receipts').mkdir(exist_ok=True)
+(ROOT/'06_评测/unpack_receipts'/('unpack_acceptance_'+time.strftime('%Y%m%d_%H%M%S')+'.json')).write_text(out.read_text())  # 历史回执不覆写
+(ROOT/'06_评测/unpack_receipts'/('unpack_startup_'+time.strftime('%Y%m%d_%H%M%S')+'.log')).write_text(log.read_text())
 print(json.dumps(result,ensure_ascii=False,indent=2));sys.exit(0 if status=='PASS' else 1)

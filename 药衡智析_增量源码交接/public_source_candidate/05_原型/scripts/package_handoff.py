@@ -8,7 +8,7 @@ release=json.loads((ROOT/'06_评测/incremental_20260916/scenario_reports_delive
 valid_page_images={str((ROOT/x['image']).resolve()) for x in json.loads((ROOT/'06_评测/incremental_20260916/pages_delivery/manifest.json').read_text())}
 exclude={'.runtime','.venv','node_modules','__pycache__','.pytest_cache','.agents','.codex','.git','99_隔离区'}
 public_dirs=['05_原型/assets','05_原型/backend','05_原型/frontend','05_原型/scripts','docs']
-internal_dirs=['00_赛题原始资料','01_数据','02_知识库','03_研究','04_方案与文档','06_评测/incremental_20260916','06_评测/dual_model','05_原型/tests','90_工具']
+internal_dirs=['00_赛题原始资料','01_数据','02_知识库','03_研究','04_方案与文档','06_评测/incremental_20260916','06_评测/dual_model','06_评测/run_20260917_local','06_评测/run_20260917_glm_live','06_评测/verify_20260917_defect_fixes','06_评测/unpack_receipts','05_原型/tests','90_工具']
 
 def copytree(source,dest):
  for p in source.rglob('*'):
@@ -33,6 +33,9 @@ with tempfile.TemporaryDirectory(prefix='pharma-package-',dir=None if __import__
   if p.name not in ('embedding_manifest.json',):p.unlink()
  for rel in internal_dirs:copytree(ROOT/rel,internal/rel)
  for rel in ('07_交付/artifact.json','07_交付/药析证链_制药成本智能分析一等奖方案.html'):copyfile(rel,internal)
+ copyfile('06_评测/golden.json',internal)  # tests/test_metrics.py 的独立golden，随包携带
+ local_run=json.loads((ROOT/'06_评测/run_20260917_local/scenario_reports.json').read_text())
+ for item in local_run:copytree(ROOT/('07_交付/业务报告/'+item['job_id']),internal/('07_交付/业务报告/'+item['job_id']))
  for item in release:
   rel='07_交付/业务报告/'+item['job_id'];copytree(ROOT/rel,internal/rel)
  # Baseline evidence remains evidence; never represent it as executable source.
@@ -40,7 +43,9 @@ with tempfile.TemporaryDirectory(prefix='pharma-package-',dir=None if __import__
  for name in ('scenario_reports.json','verification.json','retrieval_results.json'):
   p=ROOT/'06_评测'/name
   if p.exists():shutil.copy2(p,baseline/name)
- original=json.loads((ROOT/'06_评测/scenario_reports.json').read_text())
+ # The original machine's first-run scenario_reports.json was never packaged;
+ # the delivered manifest carries the same S2 job whose artifacts exist here.
+ original=json.loads((ROOT/'06_评测/incremental_20260916/scenario_reports_delivery.json').read_text())
  s2=next((x for x in original if x.get('scenario')=='S2'),None)
  if s2:
   for name in ('record.json','report.docx','report.pdf'):
