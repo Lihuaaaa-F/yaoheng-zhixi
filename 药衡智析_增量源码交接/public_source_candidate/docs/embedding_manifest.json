@@ -1,0 +1,18 @@
+{
+  "repo": "Xenova/bge-small-zh-v1.5",
+  "revision": "75c43b069aac4d136ba6bc1122f995fedcfd2781",
+  "base_model": "BAAI/bge-small-zh-v1.5",
+  "base_model_license": "MIT",
+  "license_source": "https://huggingface.co/BAAI/bge-small-zh-v1.5/blob/main/README.md",
+  "onnx_card": "https://huggingface.co/Xenova/bge-small-zh-v1.5/blob/75c43b069aac4d136ba6bc1122f995fedcfd2781/README.md",
+  "files": {
+    "model_quantized.onnx": {
+      "sha256": "15b717c382bcb518ba457b93ea6850ede7f4f1cd8937454aa06972366cd19bcc",
+      "bytes": 24010842
+    },
+    "tokenizer.json": {
+      "sha256": "48cea5d44424912a6fd1ea647bf4fe50b55ab8b1e5879c3275f80e339e8fae26",
+      "bytes": 439125
+    }
+  }
+}

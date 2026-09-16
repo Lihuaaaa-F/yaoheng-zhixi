@@ -1,0 +1,50 @@
+{
+  "tests": [
+    {
+      "name": "test_free_numbers_and_unproven_causality_are_rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "test_no_evidence_and_injection_rule_fallback_are_explicit",
+      "status": "PASS"
+    },
+    {
+      "name": "test_event_lost_output_cannot_become_monthly_net_decline",
+      "status": "PASS"
+    },
+    {
+      "name": "test_other_product_device_event_cannot_explain_selected_product",
+      "status": "PASS"
+    },
+    {
+      "name": "test_shared_device_table_quote_requires_correct_equipment_subject",
+      "status": "PASS"
+    },
+    {
+      "name": "test_unknown_scope_is_not_general",
+      "status": "PASS"
+    },
+    {
+      "name": "test_wrong_period_factory_spec_and_version_are_rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "test_real_maintenance_events_are_individual_rows_and_period_filtered",
+      "status": "PASS"
+    },
+    {
+      "name": "test_no_evidence_and_conflicting_process_parameters_do_not_become_hypotheses",
+      "status": "PASS"
+    },
+    {
+      "name": "test_runtime_coding_endpoint_is_rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "test_conflicting_document_versions_are_excluded_before_model",
+      "status": "PASS"
+    }
+  ],
+  "scope": "真实校验边界、产品串扰、时期事件、工厂规格版本、无证据、证据冲突、提示注入；模型传输用夹具，非GLM实调",
+  "original_N01_N02_note": "源数据缺失不得从检索找到的背景知识补成采购价或二厂原料事实；生成边界无证据回退测试覆盖禁止无证据假设。历史原负例查询未被当作answerable Recall样本。"
+}

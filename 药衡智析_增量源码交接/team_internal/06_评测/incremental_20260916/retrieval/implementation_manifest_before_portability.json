@@ -1,0 +1,14 @@
+{
+  "files": {
+    "05_原型/backend/pharma/knowledge.py": "ab7c92eeeff436b236bfae1763e957d4169d7ba25cb6e1b056faa954b9b7d19a",
+    "05_原型/backend/pharma/narrative.py": "5edd7da880bd0f2a262feab13a846413b5928f9f9728233c0c1a99d5cbdfa3b4",
+    "05_原型/tests/test_retrieval_incremental.py": "2f19445b9d22f6d0bbd563256ddd46611fdab05d3b59670f8b01ae0cd323d922",
+    "06_评测/run_retrieval.py": "ae5891e2dcf364e58d427fe75b5970c07d659349620ce00022913d05d212ea5b"
+  },
+  "test_command": "PYTHONPATH=05_原型/backend 05_原型/.venv/bin/pytest -s -q --basetemp=/tmp/pharma_retrieval_tests_final_20260916 05_原型/tests/test_knowledge.py 05_原型/tests/test_narrative.py 05_原型/tests/test_retrieval_incremental.py",
+  "test_result": "27 passed",
+  "retrieval_knowledge_version": "df20c64039f3460fae85",
+  "retrieval_chunks": 160,
+  "live_model_status": "BLOCKED_NO_APPLICATION_CREDENTIALS",
+  "independent_generalization": "NOT_ESTABLISHED"
+}

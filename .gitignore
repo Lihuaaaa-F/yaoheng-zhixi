@@ -1,0 +1,28 @@
+# ==== Python（venv 可由 bootstrap/scripts 重建，不入库）====
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# ==== Node ====
+node_modules/
+
+# ==== 敏感信息（密钥只放受控文件，.env 只存路径；.env.example 保留）====
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# ==== 临时 / 日志 / 系统文件 ====
+*.log
+tmp/
+.tmp/
+Thumbs.db
+.DS_Store
+desktop.ini
+~$*
+
+# ==== ZCode 本地状态 ====
+.zcode/

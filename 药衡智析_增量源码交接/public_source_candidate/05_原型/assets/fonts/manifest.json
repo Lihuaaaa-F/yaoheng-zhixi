@@ -1,0 +1,10 @@
+{
+  "source": "https://github.com/notofonts/noto-cjk/tree/main/Sans/Variable/TTF/Subset",
+  "download_sha256": "d68bafcb48a2707749396aa12bbbd833cb70401f3a9a689fd2902c7e0d295964",
+  "license": "SIL OFL 1.1",
+  "adaptation": "Fixed wght400/700 instances using fontTools; original copyright/name records retained; no system installation",
+  "files": {
+    "NotoSansSC-Regular.ttf": "a65cec69005de5be50d37dec94c16e698e88666b5fd195dc8e12eb030caaedfc",
+    "NotoSansSC-Bold.ttf": "b18fde7357824cd519a3e23867b8589570b8c5e7e390fb69054d593378bd88c1"
+  }
+}

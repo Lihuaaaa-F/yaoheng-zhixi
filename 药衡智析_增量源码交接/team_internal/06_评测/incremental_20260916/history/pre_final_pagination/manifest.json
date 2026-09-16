@@ -1,0 +1,242 @@
+[
+  {
+    "scenario": "S1",
+    "page": 1,
+    "image": "06_评测/incremental_20260916/pages_delivery/S1/page-01.png",
+    "image_sha256": "cb5daf241519d7a2959961fc0eeaa7a9fe5accf7af8f7370af9a616b41b96332",
+    "pdf_sha256": "d222bc6e7f3cc84a72bd45fb17597234b4cac7c998a2e31cda42747e5461ba02",
+    "text_length": 799,
+    "visual_agent_review": "PENDING",
+    "human_review": "PENDING"
+  },
+  {
+    "scenario": "S1",
+    "page": 2,
+    "image": "06_评测/incremental_20260916/pages_delivery/S1/page-02.png",
+    "image_sha256": "9fe2d0c4a20ca0faae0c9b434320ff1b7ae22fb9e9f8d47915911f42268937c2",
+    "pdf_sha256": "d222bc6e7f3cc84a72bd45fb17597234b4cac7c998a2e31cda42747e5461ba02",
+    "text_length": 593,
+    "visual_agent_review": "PENDING",
+    "human_review": "PENDING"
+  },
+  {
+    "scenario": "S1",
+    "page": 3,
+    "image": "06_评测/incremental_20260916/pages_delivery/S1/page-03.png",
+    "image_sha256": "8701552b70efec4a51fee2f80579acc08f602e767d139184f6db8a08fac8c8e2",
+    "pdf_sha256": "d222bc6e7f3cc84a72bd45fb17597234b4cac7c998a2e31cda42747e5461ba02",
+    "text_length": 883,
+    "visual_agent_review": "PENDING",
+    "human_review": "PENDING"
+  },
+  {
+    "scenario": "S1",
+    "page": 4,
+    "image": "06_评测/incremental_20260916/pages_delivery/S1/page-04.png",
+    "image_sha256": "bed11c50ec8bcd8ea388259c25d39ccb54e82c8d7499dd515b0f4ce8288721fb",
+    "pdf_sha256": "d222bc6e7f3cc84a72bd45fb17597234b4cac7c998a2e31cda42747e5461ba02",
+    "text_length": 544,
+    "visual_agent_review": "PENDING",
+    "human_review": "PENDING"
+  },
+  {
+    "scenario": "S1",
+    "page": 5,
+    "image": "06_评测/incremental_20260916/pages_delivery/S1/page-05.png",
+    "image_sha256": "650d58fb3d6ff0ec7c14129b54609e1d37c7e9f997fd3ff82c378b5fec3b1665",
+    "pdf_sha256": "d222bc6e7f3cc84a72bd45fb17597234b4cac7c998a2e31cda42747e5461ba02",
+    "text_length": 586,
+    "visual_agent_review": "PENDING",
+    "human_review": "PENDING"
+  },
+  {
+    "scenario": "S1",
+    "page": 6,
+    "image": "06_评测/incremental_20260916/pages_delivery/S1/page-06.png",
+    "image_sha256": "86822e15438bcba4b23fe0e81d949f0b0e32b1fbe416f8cd5ee33f7dc9ef56d5",
+    "pdf_sha256": "d222bc6e7f3cc84a72bd45fb17597234b4cac7c998a2e31cda42747e5461ba02",
+    "text_length": 1056,
+    "visual_agent_review": "PENDING",
+    "human_review": "PENDING"
+  },
+  {
+    "scenario": "S2",
+    "page": 1,
+    "image": "06_评测/incremental_20260916/pages_delivery/S2/page-01.png",
+    "image_sha256": "74db145b13d9b9a775ee5a9b97bc9f9570923378c8ef68e9954c4ba70aec9d2f",
+    "pdf_sha256": "6303343df0d6f05ec418fd029d1c573e21041a952ef2e1611d6548a5f212b352",
+    "text_length": 792,
+    "visual_agent_review": "PENDING",
+    "human_review": "PENDING"
+  },
+  {
+    "scenario": "S2",
+    "page": 2,
+    "image": "06_评测/incremental_20260916/pages_delivery/S2/page-02.png",
+    "image_sha256": "fa1e6b0ef8b41cf3d48487a564d3afa513e5f93c399c98af2a87a4c1cd318df0",
+    "pdf_sha256": "6303343df0d6f05ec418fd029d1c573e21041a952ef2e1611d6548a5f212b352",
+    "text_length": 676,
+    "visual_agent_review": "PENDING",
+    "human_review": "PENDING"
+  },
+  {
+    "scenario": "S2",
+    "page": 3,
+    "image": "06_评测/incremental_20260916/pages_delivery/S2/page-03.png",
+    "image_sha256": "49046cb2f5a7639c5346693cae32807786d310b94e5dc8eb44c895b94e55486c",
+    "pdf_sha256": "6303343df0d6f05ec418fd029d1c573e21041a952ef2e1611d6548a5f212b352",
+    "text_length": 747,
+    "visual_agent_review": "PENDING",
+    "human_review": "PENDING"
+  },
+  {
+    "scenario": "S2",
+    "page": 4,
+    "image": "06_评测/incremental_20260916/pages_delivery/S2/page-04.png",
+    "image_sha256": "f871b8d5d74b3ae3d31a244df64548c906d968e9388d68007b6cbe250b2504cd",
+    "pdf_sha256": "6303343df0d6f05ec418fd029d1c573e21041a952ef2e1611d6548a5f212b352",
+    "text_length": 516,
+    "visual_agent_review": "PENDING",
+    "human_review": "PENDING"
+  },
+  {
+    "scenario": "S2",
+    "page": 5,
+    "image": "06_评测/incremental_20260916/pages_delivery/S2/page-05.png",
+    "image_sha256": "d966c243e621e114609ac796557cef4a96132470f9e2f36bf28f12f479832f9c",
+    "pdf_sha256": "6303343df0d6f05ec418fd029d1c573e21041a952ef2e1611d6548a5f212b352",
+    "text_length": 582,
+    "visual_agent_review": "PENDING",
+    "human_review": "PENDING"
+  },
+  {
+    "scenario": "S2",
+    "page": 6,
+    "image": "06_评测/incremental_20260916/pages_delivery/S2/page-06.png",
+    "image_sha256": "fb4675f966547f5d737fe2edeac75ccba767aaaad13456bd1ab3c54eba30adea",
+    "pdf_sha256": "6303343df0d6f05ec418fd029d1c573e21041a952ef2e1611d6548a5f212b352",
+    "text_length": 1057,
+    "visual_agent_review": "PENDING",
+    "human_review": "PENDING"
+  },
+  {
+    "scenario": "S3",
+    "page": 1,
+    "image": "06_评测/incremental_20260916/pages_delivery/S3/page-01.png",
+    "image_sha256": "98db7c037b4e8ff4c328b4aa073de81a496a30816c4bd43352d24baad7fe0d6a",
+    "pdf_sha256": "f250ad262fe2288b36ddfac24f7bff096254f88c0e7070bf2f623505b8913be9",
+    "text_length": 813,
+    "visual_agent_review": "PENDING",
+    "human_review": "PENDING"
+  },
+  {
+    "scenario": "S3",
+    "page": 2,
+    "image": "06_评测/incremental_20260916/pages_delivery/S3/page-02.png",
+    "image_sha256": "c7d9f02fd595ab6e70886c5b32203690948250e50f0a33d9d0fe9de6877ebd6f",
+    "pdf_sha256": "f250ad262fe2288b36ddfac24f7bff096254f88c0e7070bf2f623505b8913be9",
+    "text_length": 508,
+    "visual_agent_review": "PENDING",
+    "human_review": "PENDING"
+  },
+  {
+    "scenario": "S3",
+    "page": 3,
+    "image": "06_评测/incremental_20260916/pages_delivery/S3/page-03.png",
+    "image_sha256": "bf69e7e2b637a6cc1407f28364f0ed6317a9323690fd7bf9cbc452f5d75d5847",
+    "pdf_sha256": "f250ad262fe2288b36ddfac24f7bff096254f88c0e7070bf2f623505b8913be9",
+    "text_length": 972,
+    "visual_agent_review": "PENDING",
+    "human_review": "PENDING"
+  },
+  {
+    "scenario": "S3",
+    "page": 4,
+    "image": "06_评测/incremental_20260916/pages_delivery/S3/page-04.png",
+    "image_sha256": "b322d98f3521c90eb5f453aaec11418ce3ec22b9262622d1e34801c56626e33e",
+    "pdf_sha256": "f250ad262fe2288b36ddfac24f7bff096254f88c0e7070bf2f623505b8913be9",
+    "text_length": 721,
+    "visual_agent_review": "PENDING",
+    "human_review": "PENDING"
+  },
+  {
+    "scenario": "S3",
+    "page": 5,
+    "image": "06_评测/incremental_20260916/pages_delivery/S3/page-05.png",
+    "image_sha256": "ad96a238749c624abb504741f499c23e7dbe4e5644bdf327f6c56ada9960444e",
+    "pdf_sha256": "f250ad262fe2288b36ddfac24f7bff096254f88c0e7070bf2f623505b8913be9",
+    "text_length": 587,
+    "visual_agent_review": "PENDING",
+    "human_review": "PENDING"
+  },
+  {
+    "scenario": "S3",
+    "page": 6,
+    "image": "06_评测/incremental_20260916/pages_delivery/S3/page-06.png",
+    "image_sha256": "51fa4af8f12063cc1d73b4f6cad424f8e5b3ab6451cf03392c64d7258088a656",
+    "pdf_sha256": "f250ad262fe2288b36ddfac24f7bff096254f88c0e7070bf2f623505b8913be9",
+    "text_length": 1060,
+    "visual_agent_review": "PENDING",
+    "human_review": "PENDING"
+  },
+  {
+    "scenario": "Q2",
+    "page": 1,
+    "image": "06_评测/incremental_20260916/pages_delivery/Q2/page-01.png",
+    "image_sha256": "550841ca569a5ba1a366e67dd2051b9d1ca116a012be831143147cb74a25e9e7",
+    "pdf_sha256": "dc04bfc058211c6d5e04bbac4b1a715719670d5f7b49ff5ba2564c70ac9846ea",
+    "text_length": 833,
+    "visual_agent_review": "PENDING",
+    "human_review": "PENDING"
+  },
+  {
+    "scenario": "Q2",
+    "page": 2,
+    "image": "06_评测/incremental_20260916/pages_delivery/Q2/page-02.png",
+    "image_sha256": "df89372145e8faaef0629be165b8268a6cde2c91ab263024d44b4aeeb4b29552",
+    "pdf_sha256": "dc04bfc058211c6d5e04bbac4b1a715719670d5f7b49ff5ba2564c70ac9846ea",
+    "text_length": 560,
+    "visual_agent_review": "PENDING",
+    "human_review": "PENDING"
+  },
+  {
+    "scenario": "Q2",
+    "page": 3,
+    "image": "06_评测/incremental_20260916/pages_delivery/Q2/page-03.png",
+    "image_sha256": "cf0cd7d6178b2f693a58681560b79af914b387cbcfc1030f233cef0ddf88f6ba",
+    "pdf_sha256": "dc04bfc058211c6d5e04bbac4b1a715719670d5f7b49ff5ba2564c70ac9846ea",
+    "text_length": 1182,
+    "visual_agent_review": "PENDING",
+    "human_review": "PENDING"
+  },
+  {
+    "scenario": "Q2",
+    "page": 4,
+    "image": "06_评测/incremental_20260916/pages_delivery/Q2/page-04.png",
+    "image_sha256": "dd14015121792ebc1c9ad2fc0e7502d3ac14edda98b6ebd81ac862db01450d8e",
+    "pdf_sha256": "dc04bfc058211c6d5e04bbac4b1a715719670d5f7b49ff5ba2564c70ac9846ea",
+    "text_length": 747,
+    "visual_agent_review": "PENDING",
+    "human_review": "PENDING"
+  },
+  {
+    "scenario": "Q2",
+    "page": 5,
+    "image": "06_评测/incremental_20260916/pages_delivery/Q2/page-05.png",
+    "image_sha256": "867b1036cb369ee452aeac445f2d4b957f5f7d04592c422dfdbca1127f1e5cb7",
+    "pdf_sha256": "dc04bfc058211c6d5e04bbac4b1a715719670d5f7b49ff5ba2564c70ac9846ea",
+    "text_length": 588,
+    "visual_agent_review": "PENDING",
+    "human_review": "PENDING"
+  },
+  {
+    "scenario": "Q2",
+    "page": 6,
+    "image": "06_评测/incremental_20260916/pages_delivery/Q2/page-06.png",
+    "image_sha256": "15a9ce4b9f7537b5eedba79365b3ee3ee1810829296919ebe00bc068b7df7287",
+    "pdf_sha256": "dc04bfc058211c6d5e04bbac4b1a715719670d5f7b49ff5ba2564c70ac9846ea",
+    "text_length": 1056,
+    "visual_agent_review": "PENDING",
+    "human_review": "PENDING"
+  }
+]

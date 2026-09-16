@@ -1,0 +1,25 @@
+{
+  "original_path": "05_原型/.runtime/model-response-30.json",
+  "sha256": "a85808bddab6d80cd5245360e4e95cbb1dd35b8a6537286854e460005631b5b6",
+  "historical_model": "deepseek-flash",
+  "original_preserved": true,
+  "rejected_claim_excerpt": "本期单位成本上升可能与提取收率下降有关，收率每降1个百分点，材料成本上升，待核查。缺少本期实际提取收率与批次记录。",
+  "cited_quotes": {
+    "7d05783223600030c8d8373d": "提取收率≥85%",
+    "c3d69fdcbc95069dedbb03e9": "提取收率直接影响板蓝根单耗"
+  },
+  "root_causes": [
+    "未绑定业务/工艺数字“1个百分点”触发旧全份拒绝",
+    "引用工艺PDF第2页85%属于银黄口服液，板蓝根正确参数在第3页82%",
+    "原始输出同时存在有效numeric_fact，旧实现也随整份回退丢失"
+  ],
+  "fix_scope": [
+    "坐标阅读顺序修复并按产品章跨页继承",
+    "维修事件按真实行与期间过滤",
+    "日期、规格、文档参数与业务计算分别绑定",
+    "单条和章节校验；有限修复保留已通过章节"
+  ],
+  "live_glm": "BLOCKED_NO_APPLICATION_CREDENTIALS; ZCode is on teammate computer; no GLM or DeepSeek live request made by this task",
+  "human_attribution_score": "PENDING",
+  "human_readability_review": "PENDING"
+}

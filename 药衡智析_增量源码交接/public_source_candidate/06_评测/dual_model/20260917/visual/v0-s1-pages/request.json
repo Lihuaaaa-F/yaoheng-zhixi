@@ -1,0 +1,39 @@
+{
+  "task_id": "v0-s1-pages",
+  "purpose": "V0基线观察（历史产物，非新构建终检）",
+  "scenario": "S1",
+  "input_description": {
+    "factory": "中药一厂",
+    "product": "银黄口服液",
+    "month": "2026-05",
+    "analysis_type": "monthly",
+    "basis": "unit"
+  },
+  "artifact": {
+    "source": "06_评测/incremental_20260916/pages_delivery (历史冻结)",
+    "docx_sha256": "6f9b6f97594f65d6a3609f67a545342940a79d71b6c5ab7f8a718e6a30496e45",
+    "pdf_sha256": "6c8ba055ea3a1d6abe4c8b539342441b58a63837dc3e6527ea0a43673a3554ab",
+    "pages": 6,
+    "build_label": "incremental_20260916历史交付"
+  },
+  "expected_business_facts": {
+    "status": "DEGRADED",
+    "model_live": false,
+    "acceptance_overall": "FAIL",
+    "human_review": "PENDING（Flash观察不代表真人审核）"
+  },
+  "viewport": "A4 PDF页面渲染，Poppler 120dpi",
+  "check_scope": [
+    "图题与单位是否与图表内容一致、是否被裁切",
+    "中文字体是否缺字、乱码或明显缩放漏绘",
+    "标题/图表连排与分页：孤行标题、表格断页、目录页码对位",
+    "图表可读性：坐标轴、图例、数值标注是否可辨认且不重叠",
+    "正文层次与阅读负担：是否存在机器式编号/重复期间等明显问题"
+  ],
+  "output": {
+    "result_json": "06_评测\\dual_model\\20260917\\visual\\v0-s1-pages\\result.json",
+    "review_md": "06_评测\\dual_model\\20260917\\visual\\v0-s1-pages\\review.md",
+    "format": "每个问题含issue_id、page、位置描述、观察、读者影响、severity、最小建议、复查方式；总体给PASS_VISUAL/NEEDS_FIX/BLOCKED"
+  },
+  "note": "本任务是V0基线观察；源码缺陷修复后的新构建将另行发起新task_id并使本结果标记为历史基线。"
+}

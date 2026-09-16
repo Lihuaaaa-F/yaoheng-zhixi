@@ -1,0 +1,1 @@
+未隔离pytest插件时，宿主ROS的launch_testing被自动加载并因缺lark失败；这是其他项目插件污染，使用PYTEST_DISABLE_PLUGIN_AUTOLOAD=1和本项目PYTHONPATH后70测试通过，未全局补装lark。首次解压验收被沙箱本地socket权限阻止，在获准仅本机启动后重试通过。历史业务降级保留原record。

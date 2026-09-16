@@ -1,0 +1,652 @@
+{
+  "scope": "独立重新打开原PDF页、报告DOCX/PDF正文核对真实引用及任务字段；不替代人工归因或视觉评分",
+  "index": "06_评测/incremental_20260916/scenario_reports_delivery.json",
+  "reports": [
+    {
+      "scenario": "S1",
+      "job_id": "a2dfef9c2bfa4c6babdb7789ca6c87bd",
+      "record_sha256": "3af9647a8551e611f99ccb17a60e600e6920e0f8eec19be67fdf090dc684a023",
+      "docx_sha256": "34b96b335729cc65bd035f372dc7dc2f2bd2c8d26c2e5f531a7e04b43165c2b0",
+      "pdf_sha256": "aad2ce30ffa00cfbbab8dde63f4fb7b62009f413d15043daf299c3c9522c3dec",
+      "model": "glm-5.3-flash",
+      "model_live": false,
+      "generation_mode": "rules",
+      "used_citations": [
+        {
+          "evidence_id": "de32ecb260b8d7e54d410bcc",
+          "citation": "生产工艺文档_中药一厂.pdf · 二、银黄口服液 生产工艺路线 · 第2页",
+          "quote": "水提 加水量10倍、提取2次、各 提取收率≥85% 收率每降1个百分点，材料成本",
+          "source_sha256": "aa7d48f697f2caa2bedf5b16e84a4d4765d3c92a52a619a7a93360764d7d8e00",
+          "document_version": "V3.0",
+          "effective_date": "2025-06-01",
+          "scope_limits": [
+            "该引用切片未单独声明包装规格，作为该产品工艺背景；未以其参数替代当期成本计算"
+          ],
+          "checks": {
+            "quote_found_on_original_page": true,
+            "product_matches_declared_section": true,
+            "factory_no_conflict": true,
+            "event_within_period": true,
+            "document_version_found_in_original": true,
+            "document_effective_before_report_period": true,
+            "short_quote": true,
+            "citation_present_in_docx": true,
+            "citation_present_in_pdf": true,
+            "hypothesis_marked_uncertain": true,
+            "no_measured_yield_decline_assertion": true
+          },
+          "status": "PASS_WITH_LIMITS"
+        }
+      ],
+      "retrieved_context": [
+        {
+          "source": "生产工艺文档_中药一厂.pdf",
+          "page": 2,
+          "products": [
+            "银黄口服液"
+          ],
+          "event_period": null
+        },
+        {
+          "source": "生产工艺文档_中药一厂.pdf",
+          "page": 1,
+          "products": [
+            "银黄口服液"
+          ],
+          "event_period": null
+        },
+        {
+          "source": "产品配方文档_银黄口服液.pdf",
+          "page": 1,
+          "products": [
+            "银黄口服液"
+          ],
+          "event_period": null
+        },
+        {
+          "source": "GMP法规核心摘要_2010修订版.pdf",
+          "page": 4,
+          "products": [],
+          "event_period": null
+        },
+        {
+          "source": "GMP法规核心摘要_2010修订版.pdf",
+          "page": 6,
+          "products": [],
+          "event_period": null
+        }
+      ],
+      "specification_crosscheck": {
+        "snapshot": "10ml×10支/盒",
+        "independent_product_document": "产品配方文档_银黄口服液.pdf · 第1页",
+        "components_match": true,
+        "note": "核对产品配方规格；工艺切片缺包装规格的引用仍标背景限制"
+      },
+      "actions": [
+        {
+          "section": "materials",
+          "action": "按同批次核对采购价、投料与合格产出，分别检查采购变化和生产损耗；工艺调整须经质量部门批准。",
+          "required_fields": {
+            "verification_target": true,
+            "expected_evidence": true,
+            "responsible_role": true,
+            "department": true,
+            "deadline_basis": true
+          },
+          "priority_valid": true,
+          "unknown_assignee_not_fabricated": true,
+          "action_in_docx": true,
+          "action_in_pdf": true,
+          "target_in_docx": true,
+          "target_in_pdf": true,
+          "status": "PASS"
+        },
+        {
+          "section": "labor",
+          "action": "核对人员结构、加班及返工工时，区分每盒工时变化与人工费用结构变化。",
+          "required_fields": {
+            "verification_target": true,
+            "expected_evidence": true,
+            "responsible_role": true,
+            "department": true,
+            "deadline_basis": true
+          },
+          "priority_valid": true,
+          "unknown_assignee_not_fabricated": true,
+          "action_in_docx": true,
+          "action_in_pdf": true,
+          "target_in_docx": true,
+          "target_in_pdf": true,
+          "status": "PASS"
+        },
+        {
+          "section": "overhead",
+          "action": "逐项核对费用总额、分配基数和产量影响，仅将本期适用工单用于原因核查，避免重复计入维修费。",
+          "required_fields": {
+            "verification_target": true,
+            "expected_evidence": true,
+            "responsible_role": true,
+            "department": true,
+            "deadline_basis": true
+          },
+          "priority_valid": true,
+          "unknown_assignee_not_fabricated": true,
+          "action_in_docx": true,
+          "action_in_pdf": true,
+          "target_in_docx": true,
+          "target_in_pdf": true,
+          "status": "PASS"
+        },
+        {
+          "section": "benchmark",
+          "action": "先核对两厂成本归集口径，再按材料、人工和制造费用差额检查主要项目；缺少二厂原料明细时保留缺项。",
+          "required_fields": {
+            "verification_target": true,
+            "expected_evidence": true,
+            "responsible_role": true,
+            "department": true,
+            "deadline_basis": true
+          },
+          "priority_valid": true,
+          "unknown_assignee_not_fabricated": true,
+          "action_in_docx": true,
+          "action_in_pdf": true,
+          "target_in_docx": true,
+          "target_in_pdf": true,
+          "status": "PASS"
+        }
+      ],
+      "human_attribution_score": "PENDING",
+      "human_readability": "PENDING",
+      "rendered_visual_quality": "NOT_ASSESSED_BY_THIS_TEXT_AND_CITATION_AUDIT",
+      "status": "PASS_WITH_LIMITS"
+    },
+    {
+      "scenario": "S2",
+      "job_id": "1c09c6559d164661b8fdd7694d2a49e5",
+      "record_sha256": "579f4139d50e2c587007a474e2295d287c50be023143c89296180192f5d7e02d",
+      "docx_sha256": "2a23ec8127ae8d09d6e2c658b9493658b44fce6d616ef7d345474559bd3d28fd",
+      "pdf_sha256": "ae59a63d0fc3589c07b2d4e3183f598c7db1943e294d78f08097a11f1b9ce839",
+      "model": "glm-5.3-flash",
+      "model_live": false,
+      "generation_mode": "rules",
+      "used_citations": [
+        {
+          "evidence_id": "9ba04f5a0917668aa6e8a9c6",
+          "citation": "产品配方文档_板蓝根颗粒.pdf · 四、关键工艺参数对成本的影响 · 第2页",
+          "quote": "水提取 加水量10倍、提取2次 提取收率直接影响板蓝根单耗",
+          "source_sha256": "5f1dd55e4a388b190fc74c601f0589574bccbfa716a2025ea3e79857dd2eec47",
+          "document_version": "V1.5",
+          "effective_date": "2025-03-01",
+          "scope_limits": [
+            "该引用切片未单独声明包装规格，作为该产品工艺背景；未以其参数替代当期成本计算",
+            "配方文档未单独声明工厂，作为该产品配方背景；未据此证明本厂实际工艺偏差"
+          ],
+          "checks": {
+            "quote_found_on_original_page": true,
+            "product_matches_declared_section": true,
+            "factory_no_conflict": true,
+            "event_within_period": true,
+            "document_version_found_in_original": true,
+            "document_effective_before_report_period": true,
+            "short_quote": true,
+            "citation_present_in_docx": true,
+            "citation_present_in_pdf": true,
+            "hypothesis_marked_uncertain": true,
+            "no_measured_yield_decline_assertion": true
+          },
+          "status": "PASS_WITH_LIMITS"
+        }
+      ],
+      "retrieved_context": [
+        {
+          "source": "产品配方文档_板蓝根颗粒.pdf",
+          "page": 2,
+          "products": [
+            "板蓝根颗粒"
+          ],
+          "event_period": null
+        },
+        {
+          "source": "生产工艺文档_中药一厂.pdf",
+          "page": 3,
+          "products": [
+            "板蓝根颗粒"
+          ],
+          "event_period": null
+        },
+        {
+          "source": "产品配方文档_板蓝根颗粒.pdf",
+          "page": 1,
+          "products": [
+            "板蓝根颗粒"
+          ],
+          "event_period": null
+        },
+        {
+          "source": "GMP法规核心摘要_2010修订版.pdf",
+          "page": 4,
+          "products": [],
+          "event_period": null
+        },
+        {
+          "source": "GMP法规核心摘要_2010修订版.pdf",
+          "page": 4,
+          "products": [],
+          "event_period": null
+        }
+      ],
+      "specification_crosscheck": {
+        "snapshot": "10g×20袋/盒",
+        "independent_product_document": "产品配方文档_板蓝根颗粒.pdf · 第1页",
+        "components_match": true,
+        "note": "核对产品配方规格；工艺切片缺包装规格的引用仍标背景限制"
+      },
+      "actions": [
+        {
+          "section": "materials",
+          "action": "按同批次核对采购价、投料与合格产出，分别检查采购变化和生产损耗；工艺调整须经质量部门批准。",
+          "required_fields": {
+            "verification_target": true,
+            "expected_evidence": true,
+            "responsible_role": true,
+            "department": true,
+            "deadline_basis": true
+          },
+          "priority_valid": true,
+          "unknown_assignee_not_fabricated": true,
+          "action_in_docx": true,
+          "action_in_pdf": true,
+          "target_in_docx": true,
+          "target_in_pdf": true,
+          "status": "PASS"
+        },
+        {
+          "section": "labor",
+          "action": "核对人员结构、加班及返工工时，区分每盒工时变化与人工费用结构变化。",
+          "required_fields": {
+            "verification_target": true,
+            "expected_evidence": true,
+            "responsible_role": true,
+            "department": true,
+            "deadline_basis": true
+          },
+          "priority_valid": true,
+          "unknown_assignee_not_fabricated": true,
+          "action_in_docx": true,
+          "action_in_pdf": true,
+          "target_in_docx": true,
+          "target_in_pdf": true,
+          "status": "PASS"
+        },
+        {
+          "section": "overhead",
+          "action": "逐项核对费用总额、分配基数和产量影响，仅将本期适用工单用于原因核查，避免重复计入维修费。",
+          "required_fields": {
+            "verification_target": true,
+            "expected_evidence": true,
+            "responsible_role": true,
+            "department": true,
+            "deadline_basis": true
+          },
+          "priority_valid": true,
+          "unknown_assignee_not_fabricated": true,
+          "action_in_docx": true,
+          "action_in_pdf": true,
+          "target_in_docx": true,
+          "target_in_pdf": true,
+          "status": "PASS"
+        },
+        {
+          "section": "benchmark",
+          "action": "先核对两厂成本归集口径，再按材料、人工和制造费用差额检查主要项目；缺少二厂原料明细时保留缺项。",
+          "required_fields": {
+            "verification_target": true,
+            "expected_evidence": true,
+            "responsible_role": true,
+            "department": true,
+            "deadline_basis": true
+          },
+          "priority_valid": true,
+          "unknown_assignee_not_fabricated": true,
+          "action_in_docx": true,
+          "action_in_pdf": true,
+          "target_in_docx": true,
+          "target_in_pdf": true,
+          "status": "PASS"
+        }
+      ],
+      "human_attribution_score": "PENDING",
+      "human_readability": "PENDING",
+      "rendered_visual_quality": "NOT_ASSESSED_BY_THIS_TEXT_AND_CITATION_AUDIT",
+      "specific_regression": {
+        "correct_process_page3_available": true,
+        "silver_process_page2_excluded": true,
+        "actual_mechanism_citation": "本次采用同产品配方第2页收率与单耗段落；并未冒称引用工艺第3页"
+      },
+      "status": "PASS_WITH_LIMITS"
+    },
+    {
+      "scenario": "S3",
+      "job_id": "e7ff529220394ef4a8affc049014c366",
+      "record_sha256": "a4eafc5529b6c383f9451e507a9ce671e970c7cf9d9f9f28b2463db88ba9b189",
+      "docx_sha256": "e8b4dffa164229e260300f5b5109d9443fdd348400e176edb04088e039ee3001",
+      "pdf_sha256": "9863a3452951629714f63febe8670270aef9a292810dc404e05691cefc8a5fa6",
+      "model": "glm-5.3-flash",
+      "model_live": false,
+      "generation_mode": "rules",
+      "used_citations": [
+        {
+          "evidence_id": "51e1fba50e98c0465bf72deb",
+          "citation": "车间设备清单_中药一厂.pdf · 六、设备维修历史（高价值事件记录） · 第4页",
+          "quote": "2026- 胶囊填充机NJP- 计量盘磨损导致装量 8,500 24 胶囊产量减少\n 03 3200 偏差超标 12000粒",
+          "source_sha256": "1e3808fc86fece94d3736690f087c218b8e082e6defe869e68bbdfdcdce7e503",
+          "document_version": "V2.1",
+          "effective_date": null,
+          "scope_limits": [
+            "该引用切片未单独声明包装规格，作为该产品工艺背景；未以其参数替代当期成本计算"
+          ],
+          "checks": {
+            "quote_found_on_original_page": true,
+            "product_matches_declared_section": true,
+            "factory_no_conflict": true,
+            "event_within_period": true,
+            "document_version_found_in_original": true,
+            "document_effective_before_report_period": true,
+            "short_quote": true,
+            "citation_present_in_docx": true,
+            "citation_present_in_pdf": true,
+            "hypothesis_marked_uncertain": true,
+            "no_measured_yield_decline_assertion": true
+          },
+          "status": "PASS_WITH_LIMITS"
+        }
+      ],
+      "retrieved_context": [
+        {
+          "source": "车间设备清单_中药一厂.pdf",
+          "page": 4,
+          "products": [
+            "六味地黄胶囊"
+          ],
+          "event_period": "2026-03"
+        },
+        {
+          "source": "药品生产质量管理规范GMP.pdf",
+          "page": 23,
+          "products": [],
+          "event_period": null
+        },
+        {
+          "source": "药品生产质量管理规范GMP.pdf",
+          "page": 15,
+          "products": [],
+          "event_period": null
+        },
+        {
+          "source": "药品生产质量管理规范GMP.pdf",
+          "page": 4,
+          "products": [],
+          "event_period": null
+        },
+        {
+          "source": "药品生产质量管理规范GMP.pdf",
+          "page": 24,
+          "products": [],
+          "event_period": null
+        }
+      ],
+      "specification_crosscheck": {
+        "snapshot": "0.3g×60粒/盒",
+        "independent_product_document": "产品配方文档_六味地黄胶囊.pdf · 第1页",
+        "components_match": true,
+        "note": "核对产品配方规格；工艺切片缺包装规格的引用仍标背景限制"
+      },
+      "actions": [
+        {
+          "section": "materials",
+          "action": "按同批次核对采购价、投料与合格产出，分别检查采购变化和生产损耗；工艺调整须经质量部门批准。",
+          "required_fields": {
+            "verification_target": true,
+            "expected_evidence": true,
+            "responsible_role": true,
+            "department": true,
+            "deadline_basis": true
+          },
+          "priority_valid": true,
+          "unknown_assignee_not_fabricated": true,
+          "action_in_docx": true,
+          "action_in_pdf": true,
+          "target_in_docx": true,
+          "target_in_pdf": true,
+          "status": "PASS"
+        },
+        {
+          "section": "labor",
+          "action": "核对人员结构、加班及返工工时，区分每盒工时变化与人工费用结构变化。",
+          "required_fields": {
+            "verification_target": true,
+            "expected_evidence": true,
+            "responsible_role": true,
+            "department": true,
+            "deadline_basis": true
+          },
+          "priority_valid": true,
+          "unknown_assignee_not_fabricated": true,
+          "action_in_docx": true,
+          "action_in_pdf": true,
+          "target_in_docx": true,
+          "target_in_pdf": true,
+          "status": "PASS"
+        },
+        {
+          "section": "overhead",
+          "action": "逐项核对费用总额、分配基数和产量影响，仅将本期适用工单用于原因核查，避免重复计入维修费。",
+          "required_fields": {
+            "verification_target": true,
+            "expected_evidence": true,
+            "responsible_role": true,
+            "department": true,
+            "deadline_basis": true
+          },
+          "priority_valid": true,
+          "unknown_assignee_not_fabricated": true,
+          "action_in_docx": true,
+          "action_in_pdf": true,
+          "target_in_docx": true,
+          "target_in_pdf": true,
+          "status": "PASS"
+        },
+        {
+          "section": "benchmark",
+          "action": "先核对两厂成本归集口径，再按材料、人工和制造费用差额检查主要项目；缺少二厂原料明细时保留缺项。",
+          "required_fields": {
+            "verification_target": true,
+            "expected_evidence": true,
+            "responsible_role": true,
+            "department": true,
+            "deadline_basis": true
+          },
+          "priority_valid": true,
+          "unknown_assignee_not_fabricated": true,
+          "action_in_docx": true,
+          "action_in_pdf": true,
+          "target_in_docx": true,
+          "target_in_pdf": true,
+          "status": "PASS"
+        }
+      ],
+      "human_attribution_score": "PENDING",
+      "human_readability": "PENDING",
+      "rendered_visual_quality": "NOT_ASSESSED_BY_THIS_TEXT_AND_CITATION_AUDIT",
+      "specific_regression": {
+        "current_event_available": true,
+        "current_event_hypothesis_present": true,
+        "net_decline_not_inferred": true,
+        "raw_event_numbers_not_in_body": true
+      },
+      "coverage_limit": "已形成当期维修事件支持的可能机制，仍缺批次装量、损耗、停工和入账凭证，不能视为已证实因果。",
+      "status": "PASS_WITH_LIMITS"
+    },
+    {
+      "scenario": "Q2",
+      "job_id": "72af94271f7b43ea982cba06ea8839b3",
+      "record_sha256": "c008d467eab14b8e3359de46144ecffba789f64a048f54ac41c7b25762fcd24b",
+      "docx_sha256": "3bbb6b8491e871ada4a0aecd4055a98b26999d1ef7bbcca36d53bc19f59ecd29",
+      "pdf_sha256": "98adfe5c85c3f624b2d5949609f545eb9b0e2a8bc369f7dfb37a571a8f47a8c2",
+      "model": "glm-5.3-flash",
+      "model_live": false,
+      "generation_mode": "rules",
+      "used_citations": [
+        {
+          "evidence_id": "de32ecb260b8d7e54d410bcc",
+          "citation": "生产工艺文档_中药一厂.pdf · 二、银黄口服液 生产工艺路线 · 第2页",
+          "quote": "水提 加水量10倍、提取2次、各 提取收率≥85% 收率每降1个百分点，材料成本",
+          "source_sha256": "aa7d48f697f2caa2bedf5b16e84a4d4765d3c92a52a619a7a93360764d7d8e00",
+          "document_version": "V3.0",
+          "effective_date": "2025-06-01",
+          "scope_limits": [
+            "该引用切片未单独声明包装规格，作为该产品工艺背景；未以其参数替代当期成本计算"
+          ],
+          "checks": {
+            "quote_found_on_original_page": true,
+            "product_matches_declared_section": true,
+            "factory_no_conflict": true,
+            "event_within_period": true,
+            "document_version_found_in_original": true,
+            "document_effective_before_report_period": true,
+            "short_quote": true,
+            "citation_present_in_docx": true,
+            "citation_present_in_pdf": true,
+            "hypothesis_marked_uncertain": true,
+            "no_measured_yield_decline_assertion": true
+          },
+          "status": "PASS_WITH_LIMITS"
+        }
+      ],
+      "retrieved_context": [
+        {
+          "source": "生产工艺文档_中药一厂.pdf",
+          "page": 2,
+          "products": [
+            "银黄口服液"
+          ],
+          "event_period": null
+        },
+        {
+          "source": "生产工艺文档_中药一厂.pdf",
+          "page": 1,
+          "products": [
+            "银黄口服液"
+          ],
+          "event_period": null
+        },
+        {
+          "source": "产品配方文档_银黄口服液.pdf",
+          "page": 1,
+          "products": [
+            "银黄口服液"
+          ],
+          "event_period": null
+        },
+        {
+          "source": "GMP法规核心摘要_2010修订版.pdf",
+          "page": 4,
+          "products": [],
+          "event_period": null
+        },
+        {
+          "source": "GMP法规核心摘要_2010修订版.pdf",
+          "page": 6,
+          "products": [],
+          "event_period": null
+        }
+      ],
+      "specification_crosscheck": {
+        "snapshot": "10ml×10支/盒",
+        "independent_product_document": "产品配方文档_银黄口服液.pdf · 第1页",
+        "components_match": true,
+        "note": "核对产品配方规格；工艺切片缺包装规格的引用仍标背景限制"
+      },
+      "actions": [
+        {
+          "section": "materials",
+          "action": "按同批次核对采购价、投料与合格产出，分别检查采购变化和生产损耗；工艺调整须经质量部门批准。",
+          "required_fields": {
+            "verification_target": true,
+            "expected_evidence": true,
+            "responsible_role": true,
+            "department": true,
+            "deadline_basis": true
+          },
+          "priority_valid": true,
+          "unknown_assignee_not_fabricated": true,
+          "action_in_docx": true,
+          "action_in_pdf": true,
+          "target_in_docx": true,
+          "target_in_pdf": true,
+          "status": "PASS"
+        },
+        {
+          "section": "labor",
+          "action": "核对人员结构、加班及返工工时，区分每盒工时变化与人工费用结构变化。",
+          "required_fields": {
+            "verification_target": true,
+            "expected_evidence": true,
+            "responsible_role": true,
+            "department": true,
+            "deadline_basis": true
+          },
+          "priority_valid": true,
+          "unknown_assignee_not_fabricated": true,
+          "action_in_docx": true,
+          "action_in_pdf": true,
+          "target_in_docx": true,
+          "target_in_pdf": true,
+          "status": "PASS"
+        },
+        {
+          "section": "overhead",
+          "action": "逐项核对费用总额、分配基数和产量影响，仅将本期适用工单用于原因核查，避免重复计入维修费。",
+          "required_fields": {
+            "verification_target": true,
+            "expected_evidence": true,
+            "responsible_role": true,
+            "department": true,
+            "deadline_basis": true
+          },
+          "priority_valid": true,
+          "unknown_assignee_not_fabricated": true,
+          "action_in_docx": true,
+          "action_in_pdf": true,
+          "target_in_docx": true,
+          "target_in_pdf": true,
+          "status": "PASS"
+        },
+        {
+          "section": "benchmark",
+          "action": "先核对两厂成本归集口径，再按材料、人工和制造费用差额检查主要项目；缺少二厂原料明细时保留缺项。",
+          "required_fields": {
+            "verification_target": true,
+            "expected_evidence": true,
+            "responsible_role": true,
+            "department": true,
+            "deadline_basis": true
+          },
+          "priority_valid": true,
+          "unknown_assignee_not_fabricated": true,
+          "action_in_docx": true,
+          "action_in_pdf": true,
+          "target_in_docx": true,
+          "target_in_pdf": true,
+          "status": "PASS"
+        }
+      ],
+      "human_attribution_score": "PENDING",
+      "human_readability": "PENDING",
+      "rendered_visual_quality": "NOT_ASSESSED_BY_THIS_TEXT_AND_CITATION_AUDIT",
+      "status": "PASS_WITH_LIMITS"
+    }
+  ],
+  "overall": "PASS_WITH_LIMITS"
+}

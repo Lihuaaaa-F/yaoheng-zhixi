@@ -1,0 +1,26 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+_ test_banlangen_material_driver_budget_bridge_and_available_yoy_are_registered _
+
+    def test_banlangen_material_driver_budget_bridge_and_available_yoy_are_registered():
+        result = analyze('中药一厂','板蓝根颗粒','2026-05')
+        assert [D(e['yoy_unit']) for e in result['elements']] == [D('4.42'),D('1.04'),D('1.64')]
+        assert [D(e['yoy_rate']).quantize(D('0.01')) for e in result['elements']] == [D('7.47'),D('1.92'),D('1.22')]
+>       driver = result['materials_summary'][0]
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'materials_summary'
+
+05_原型/tests/test_metrics.py:89: KeyError
+_____ test_missing_material_details_and_incomplete_quarter_remain_explicit _____
+
+    def test_missing_material_details_and_incomplete_quarter_remain_explicit():
+        second = analyze('中药二厂','板蓝根颗粒','2026-05')
+>       assert second['materials_summary'] == []
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'materials_summary'
+
+05_原型/tests/test_metrics.py:107: KeyError
+=========================== short test summary info ============================
+FAILED 05_原型/tests/test_metrics.py::test_banlangen_material_driver_budget_bridge_and_available_yoy_are_registered
+FAILED 05_原型/tests/test_metrics.py::test_missing_material_details_and_incomplete_quarter_remain_explicit
+2 failed, 12 deselected in 0.16s

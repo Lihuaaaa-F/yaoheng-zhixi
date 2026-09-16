@@ -1,0 +1,28 @@
+Building prefix dict from the default dictionary ...
+Loading model from cache /mnt/d/AI_Temp/tmp/jieba.cache
+Loading model cost 2.564 seconds.
+Prefix dict has been built successfully.
+F
+=================================== FAILURES ===================================
+_ test_current_capsule_maintenance_supports_bounded_hypothesis_but_not_other_periods _
+
+    def test_current_capsule_maintenance_supports_bounded_hypothesis_but_not_other_periods():
+        from pharma.metrics import analyze
+        from pharma.narrative import rule_findings
+        k=Knowledge()
+        result=k.search('胶囊填充机 维修 停机',product='六味地黄胶囊',factory='中药一厂',period={'start':'2026-03','end':'2026-03'})
+        out=rule_findings(analyze('中药一厂','六味地黄胶囊','2026-03'),result['evidence'])
+        hypotheses=[f for f in out if f['claim_type']=='hypothesis' and f.get('section')=='overhead']
+>       assert len(hypotheses)==1
+E       assert 0 == 1
+E        +  where 0 = len([])
+
+05_原型/tests/test_retrieval_incremental.py:168: AssertionError
+------------------------------ Captured log call -------------------------------
+DEBUG    jieba:__init__.py:113 Building prefix dict from the default dictionary ...
+DEBUG    jieba:__init__.py:132 Loading model from cache /mnt/d/AI_Temp/tmp/jieba.cache
+DEBUG    jieba:__init__.py:164 Loading model cost 2.564 seconds.
+DEBUG    jieba:__init__.py:166 Prefix dict has been built successfully.
+=========================== short test summary info ============================
+FAILED 05_原型/tests/test_retrieval_incremental.py::test_current_capsule_maintenance_supports_bounded_hypothesis_but_not_other_periods
+1 failed, 16 deselected in 4.07s

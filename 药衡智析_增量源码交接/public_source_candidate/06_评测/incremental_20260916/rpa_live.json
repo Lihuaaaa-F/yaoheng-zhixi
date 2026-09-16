@@ -1,0 +1,42 @@
+{
+  "status": "PASS",
+  "scope": "原题包本地mock；合成身份；超时由client transport模拟响应丢失，接收及查询为真实HTTP；重启为真实子进程重启",
+  "checks": [
+    {
+      "name": "confirmation_required",
+      "status": "PASS"
+    },
+    {
+      "name": "duplicate_confirm_single_outbox",
+      "status": "PASS"
+    },
+    {
+      "name": "original_mock_ack_verified",
+      "status": "PASS"
+    },
+    {
+      "name": "duplicate_delivery_no_second_notification",
+      "status": "PASS"
+    },
+    {
+      "name": "timeout_queries_real_original_mock",
+      "status": "PASS"
+    },
+    {
+      "name": "timeout_no_duplicate_post",
+      "status": "PASS"
+    },
+    {
+      "name": "remote_payload_conflict",
+      "status": "PASS"
+    },
+    {
+      "name": "remote_restart_state_unknown",
+      "status": "PASS"
+    },
+    {
+      "name": "restart_never_resends",
+      "status": "PASS"
+    }
+  ]
+}

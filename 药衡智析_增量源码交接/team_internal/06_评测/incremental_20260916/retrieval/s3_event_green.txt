@@ -1,0 +1,6 @@
+..............Building prefix dict from the default dictionary ...
+Loading model from cache /mnt/d/AI_Temp/tmp/jieba.cache
+Loading model cost 2.583 seconds.
+Prefix dict has been built successfully.
+................
+30 passed in 4.35s

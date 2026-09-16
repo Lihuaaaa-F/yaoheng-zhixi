@@ -1,0 +1,1438 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "药析证链：赛题合规审计与详细技术方案",
+    "description": "药衡智析本地初版实施审计：确定性计算、真实混合检索、模板报告与模拟RPA；实测、降级和待人工明确区分。",
+    "generatedAt": "2026-09-15T19:28:24.107Z",
+    "sources": [
+      {
+        "id": "implementation-evidence",
+        "label": "本轮实施状态与真实运行证据",
+        "path": "docs/implementation_status.md"
+      },
+      {
+        "id": "quality-checks",
+        "label": "本轮独立CSV/Fraction复算",
+        "path": "06_评测/incremental_20260916/data/report_independent_audit.json"
+      },
+      {
+        "id": "scenario-data",
+        "label": "独立golden与四场景指标快照",
+        "path": "06_评测/golden.json"
+      },
+      {
+        "id": "retrieval",
+        "label": "真实BM25/向量/混合28题实测",
+        "path": "06_评测/incremental_20260916/retrieval/v4_final/retrieval_results.json"
+      },
+      {
+        "id": "reports",
+        "label": "四场景DOCX/PDF分别验证",
+        "path": "06_评测/incremental_20260916/scenario_reports_delivery.json"
+      },
+      {
+        "id": "verification",
+        "label": "最终统一验证（生成中则以分项记录为准）",
+        "path": "06_评测/incremental_20260916/verification.json"
+      }
+    ],
+    "blocks": [
+      {
+        "id": "title",
+        "type": "markdown",
+        "body": "# 药析证链：赛题合规审计与详细技术方案\n\n药衡智析——基于RAG与大模型的制药企业产品成本智能分析报告系统。",
+        "sourceId": "implementation-evidence"
+      },
+      {
+        "id": "technical-summary",
+        "type": "markdown",
+        "sourceId": "implementation-evidence",
+        "body": "## 实施摘要\n\n本地初版已经具备确定性计算、混合检索、模板报告与模拟RPA闭环源码及运行证据。S1：DEGRADED，DOCX PASS / PDF PASS；S2：DEGRADED，DOCX PASS / PDF PASS；S3：DEGRADED，DOCX PASS / PDF PASS；Q2：DEGRADED，DOCX PASS / PDF PASS。\n\n本轮独立CSV/Fraction复算5574项观测无差异。混合检索28题Recall@5实测0.9286，不是目标值抄录。\n\n统一初版FINAL_STATUS=PARTIAL；COMPETITION_READY=PENDING_HUMAN_AND_GLM。人工评分、最终视频/PPT与正式发布待完成；Docker运行NOT_IN_SCOPE，不是本轮原生初版必须项。"
+      },
+      {
+        "id": "scope",
+        "type": "markdown",
+        "sourceId": "implementation-evidence",
+        "body": "## 状态口径\n\n已验证表示对应分项已有运行记录；已实现表示代码已落地，整体验收仍读verification.json；部分满足表示真实缺口或降级；待人工与待后续交付均不能算比赛完成。保留原49行追踪结构，不把自设性能、多供应商或Docker运行当成赛题强制条件。业务数据截至2026-06，实施审计日期2026-09-16。"
+      },
+      {
+        "id": "compliance-chart-block",
+        "type": "chart",
+        "chartId": "compliance-status-chart"
+      },
+      {
+        "id": "verdict",
+        "type": "markdown",
+        "sourceId": "implementation-evidence",
+        "body": "## 当前证据与剩余条件\n\n四份真实DOCX/PDF已生成，当前任务状态详见下文与scenario_reports.json。四份报告按文件、计算、章节、证据、可读性、视觉、任务及模型八维验收；历史失败/规则降级记录保留，不能以单次模型成功替代报告验收。人工归因评分、最终视频/PPT、公开发布未完成。统一初版FINAL_STATUS=PARTIAL；COMPETITION_READY=PENDING_HUMAN_AND_GLM。人工评分、最终视频/PPT与正式发布待完成；Docker运行NOT_IN_SCOPE，不是本轮原生初版必须项。"
+      },
+      {
+        "id": "compliance-table-block",
+        "type": "table",
+        "tableId": "compliance-matrix-table"
+      },
+      {
+        "id": "architecture-overview",
+        "type": "markdown",
+        "sourceId": "implementation-evidence",
+        "body": "## 实际架构\n\nReact/ECharts → FastAPI → 固定指标快照；DuckDB只读Parquet、SQLite持久任务与审计。单worker依次检索、受约束生成、原Word模板填充、LibreOffice转换、验证归档；原mock默认8090。LlamaIndex适配的Chroma向量与中文FTS5 BM25各自排序后RRF融合。没有开放Agent或GPU生成模型。"
+      },
+      {
+        "id": "stack-table-block",
+        "type": "table",
+        "tableId": "stack-table"
+      },
+      {
+        "id": "component-contracts",
+        "type": "markdown",
+        "sourceId": "implementation-evidence",
+        "body": "## 公开数据契约\n\n指标含metric_id、原值/展示值、单位、公式、分子分母、比较期、源行和哈希。Finding区分数字事实、文档事实、原因假设、证据不足和建议。报告/看板共享快照；任务保存已确认payload哈希。API以实际OpenAPI为准，详细字段在docs/data_contract.md。"
+      },
+      {
+        "id": "data-path",
+        "type": "markdown",
+        "sourceId": "implementation-evidence",
+        "body": "## 数据保护与导入\n\n原始CSV/ZIP/PDF/模板只读。ZIP安全检查保留原名→修复名映射，CSV继续UTF-8 BOM读取。字段白名单、主键、数值、关联、勾稽失败留下拒绝记录，不发布新快照。成功先写临时Parquet再原子切换清单，旧快照保留。"
+      },
+      {
+        "id": "metric-method",
+        "type": "markdown",
+        "sourceId": "implementation-evidence",
+        "body": "## 成本公式与边界\n\n单位成本=材料+人工+制造费用，总成本=产量×单位成本；月份显式连接，缺月或零分母N/A。贡献=要素变动额/同口径总变动额，负值和大于100%不裁剪。严格±10%边界不触发；实际45个要素环比单位0条/总额31条触发。季度Σ总成本/Σ产量，必须完整对应季度。跨厂二厂−一厂，以一厂为分母；交换工厂分母随之改变。"
+      },
+      {
+        "id": "scenario-chart-block",
+        "type": "chart",
+        "chartId": "scenario-comparison-chart"
+      },
+      {
+        "id": "scenario-table-block",
+        "type": "table",
+        "tableId": "scenario-table"
+      },
+      {
+        "id": "scenario-contribution-table-block",
+        "type": "table",
+        "tableId": "scenario-contribution-table"
+      },
+      {
+        "id": "scenario-meaning",
+        "type": "markdown",
+        "sourceId": "implementation-evidence",
+        "body": "## 三场景与季度\n\nS1银黄2026-05单位11.21元/盒，材料/人工/制造费用单位变动0.22/0.03/0.06元。S2板蓝根二厂7.97、一厂7.47，正向+6.6934404%、反向−6.2735257%。S3六味地黄2026-03单位17.60→17.02、总额492800→595700；设备页4维修记录只能支持待核查假设。\n\n银黄2026Q2总额1796180元、产量163000盒，加权单位11.01950920245398773006134969元/盒；独立Fraction golden与生产接口逐项核验。"
+      },
+      {
+        "id": "rag-pipeline",
+        "type": "markdown",
+        "sourceId": "implementation-evidence",
+        "body": "## 产品与期间适用的混合检索\n\nPDF按位置读取、产品标题跨页继承，维修表按事件期间独立切片。空产品标签不代表通用。引用按产品、工厂、规格、期间与版本核验；多版本冲突不静默合并。\n\n本轮历史已见集混合Recall@5为0.9286，BM25为1.0000。保留语义+BM25能力，原开发/保留集均已查看，只作为历史回归；不能声称独立泛化提高或混合全面更优。产品串扰、跨期、冲突和无证据回归见本轮检索目录。"
+      },
+      {
+        "id": "corpus-chart-block",
+        "type": "chart",
+        "chartId": "corpus-pages-chart"
+      },
+      {
+        "id": "rag-quality",
+        "type": "markdown",
+        "sourceId": "implementation-evidence",
+        "body": "## 产品与期间适用的混合检索\n\nPDF按位置读取、产品标题跨页继承，维修表按事件期间独立切片。空产品标签不代表通用。引用按产品、工厂、规格、期间与版本核验；多版本冲突不静默合并。\n\n本轮历史已见集混合Recall@5为0.9286，BM25为1.0000。保留语义+BM25能力，原开发/保留集均已查看，只作为历史回归；不能声称独立泛化提高或混合全面更优。产品串扰、跨期、冲突和无证据回归见本轮检索目录。"
+      },
+      {
+        "id": "report-compiler",
+        "type": "markdown",
+        "sourceId": "implementation-evidence",
+        "body": "## 业务报告与验收\n\n六个固定章节及原模板对应关系保留；重复封面、空文控表与IT阅读指南已整理。首页展示产品、工厂、期间、发现及建议；导出前按实际分页更新目录。成本结构、变动瀑布、趋势、跨厂结构直接读取指标快照。正文及图表使用项目内Noto Sans SC TrueType与SIL OFL许可证，修复原Type1子集缩放漏绘；Linux以临时Fontconfig加载，Windows按同字体复核。\n\nS1：DEGRADED，DOCX PASS / PDF PASS；S2：DEGRADED，DOCX PASS / PDF PASS；S3：DEGRADED，DOCX PASS / PDF PASS；Q2：DEGRADED，DOCX PASS / PDF PASS。文件可打开、计算一致、章节实质完整、证据适用、内容可读、视觉合格、任务可执行、模型实际参与分开记录。强制环节未全通过，报告不合格。机器审计附件保存JSON、哈希与原证据，业务正文仅保留短来源与限制。真人评分仍待评。"
+      },
+      {
+        "id": "model-gateway",
+        "type": "markdown",
+        "sourceId": "implementation-evidence",
+        "body": "## GLM-5.3-Flash应用网关\n\n实际默认ID为glm-5.3-flash，中国站通用端点https://open.bigmodel.cn/api/paas/v4；国际账号使用官方对应通用端点。禁止Coding专用端点进入业务运行时。模型思考不传旧disabled，依官方支持配置。\n\n本机凭据缺失，探测状态BLOCKED；文本、结构化、工具、流式、真实限流与超时均未实测。ZCode CLI在队员电脑，接续项见docs/ZCODE_HANDOFF.md。基础分析明确降级，不切回DeepSeek；历史DeepSeek记录保留原模型值。"
+      },
+      {
+        "id": "benchmark-engine",
+        "type": "markdown",
+        "sourceId": "implementation-evidence",
+        "body": "## 跨厂三步法\n\n差异总览→三要素及可用明细→检索来源、待核查原因和建议。默认二厂−一厂；一厂有原料/费用/工时，二厂缺明细明确显示。行业每盒成本按10支/20袋/60粒换算后比较静态题包分位数；市场价格不是企业采购价，缺收入不计算毛利率。"
+      },
+      {
+        "id": "rpa-engine",
+        "type": "markdown",
+        "sourceId": "implementation-evidence",
+        "body": "## 原mock模拟闭环\n\n建议先由用户编辑确认，SQLite事务写任务/outbox。按原POST /api/rpa/tasks发送一次模拟微信；HTTP接收与带发送时间的模拟通知证明分别校验，received不等于已发。超时或重复ID先GET对账；不一致冲突，无法确认DELIVERY_UNKNOWN，不换ID盲发。远端重启丢失记录只记状态未知，sent不等于整改完成。"
+      },
+      {
+        "id": "frontend",
+        "type": "markdown",
+        "sourceId": "implementation-evidence",
+        "body": "## 已实现的四入口\n\n成本分析、跨厂对标、报告与任务、数据与证据。React+TypeScript+Vite+ECharts本地打包，浅色中文界面；筛选请求有竞态防护，实例销毁与事件清理。趋势不含未来月份，精确表、N/A和降级标识与图联动。1366×768和Chrome/Edge按实际浏览器结果记录，不以编译替代验收。"
+      },
+      {
+        "id": "api-contract",
+        "type": "markdown",
+        "sourceId": "implementation-evidence",
+        "body": "## 实际API\n\n/api/catalog、/api/analyses、/api/benchmarks、/api/reports、/api/jobs、/api/imports、/api/kb、/api/actions；异步任务返回job_id，artifact下载使用受控ID。OpenAPI由FastAPI维护。主应用默认127.0.0.1:8765，原mock默认8090；最终启动端口以README为准。"
+      },
+      {
+        "id": "reliability",
+        "type": "markdown",
+        "sourceId": "implementation-evidence",
+        "body": "## 可靠性与恢复\n\n单worker持久阶段：VALIDATING→COMPUTING→RETRIEVING→GENERATING→RENDERING_DOCX→CONVERTING_PDF→VERIFYING→终态。核对固定输入版本再恢复，异常按任务隔离。并发同键草稿/报告提交已真实复现并修复，16线程回归；失败缓存允许重新执行且保留历史。"
+      },
+      {
+        "id": "testing",
+        "type": "markdown",
+        "sourceId": "implementation-evidence",
+        "body": "## 本轮验证范围\n\n计算由独立CSV/Fraction复算；检索包含负例与适用性合同；模型格式与降级用HTTP夹具，GLM应用实调受凭据阻塞。最终四场景23页全部逐页渲染查看；70项Python回归、应用浏览器48项、方案浏览器18项和隔离原mock9项通过。浏览器在1366×768和1920×1080核验筛选、证据、生成、下载、任务及失败状态。机器视觉检查不替代真人0—5归因评分及可读性评审。"
+      },
+      {
+        "id": "security",
+        "type": "markdown",
+        "sourceId": "implementation-evidence",
+        "body": "## 本地安全边界\n\nSQL参数化，artifact ID受控路径/哈希；文档和模型内容不可信，不执行其中Shell/SQL/任意URL。CSV字符串导出防公式注入而负数保留数值类型。密钥、比赛原文、切片、索引、实际报告不进公开源码包。本轮无真实ERP/微信、无真实人员通知、无自动购买或公开发布。"
+      },
+      {
+        "id": "compatibility",
+        "type": "markdown",
+        "sourceId": "implementation-evidence",
+        "body": "## 环境与开源复用\n\nWSL Ubuntu24.04、Python3.12项目隔离环境和现有Node复用；Linux运行不使用Windows venv/node_modules。CPU embedding不安装CUDA/驱动/大生成模型。React/浏览器/Data技能复用，共享Matt六技能按已审SHA安装并保留原文；LlamaIndex和Chroma实际运行，Docling及评测平台仅备选未引入。"
+      },
+      {
+        "id": "economics",
+        "type": "markdown",
+        "sourceId": "implementation-evidence",
+        "body": "## 调用与资源边界\n\n沿用用户既有模型账号和预算，不自动充值或购买云资源。生成限定并发、超时、最多两次修复和调用次数；相同版本缓存注明来源时间。没有依据时不填写旧方案500元等假预算，也不把未知费用写成0。"
+      },
+      {
+        "id": "innovation",
+        "type": "markdown",
+        "sourceId": "implementation-evidence",
+        "body": "## 初版的可验证价值\n\n确定性计算与可追溯解释共用快照；材料/工艺原因保留证据和缺证项；原模板报告可对账；模拟RPA确认、幂等与未知送达状态可检查。范围不包含预测、完整知识图谱、开放Agent、多模型互审、真实ERP或硬件。"
+      },
+      {
+        "id": "roadmap",
+        "type": "markdown",
+        "sourceId": "implementation-evidence",
+        "body": "## 当前与下一步\n\n本轮已完成实际开发、数据与检索运行、业务报告导出和浏览器链路验证。先汇总真实verification，再由真人评归因合理性；最终视频/PPT、源码交接打包与解压启动验收在本轮完成；视频/PPT与公开发布待后续实施。3—4人可按数据/指标、检索/报告、前端/E2E及可选质量负责人维护现有单体。"
+      },
+      {
+        "id": "deliverables",
+        "type": "markdown",
+        "sourceId": "implementation-evidence",
+        "body": "## 可运行源码交接\n\n现有05_原型源码、锁文件、工作模板、依赖检测/启动脚本、脱敏配置、真实验证与样例保留。公开源码候选与仅供队内的题包、知识和原始数据分离；不含密钥、个人配置、虚拟环境、node_modules、缓存及作废产物。解压启动验收范围与限制见交接记录。"
+      },
+      {
+        "id": "questions",
+        "type": "markdown",
+        "sourceId": "implementation-evidence",
+        "body": "## 剩余条件\n\n统一初版FINAL_STATUS=PARTIAL；COMPETITION_READY=PENDING_HUMAN_AND_GLM。人工评分、最终视频/PPT与正式发布待完成；Docker运行NOT_IN_SCOPE，不是本轮原生初版必须项。\n\n历史模型请求与报告降级保留；本轮分项修复证据不能代表报告总体验收通过；中文浏览器/PDF视觉验证按记录逐项判断。采购价格/实耗、二厂明细、收入和完整因果链缺失时保持证据不足。GLM应用真实参与和真人评审仍待完成。"
+      },
+      {
+        "id": "data-notes",
+        "type": "markdown",
+        "sourceId": "implementation-evidence",
+        "body": "## 数据与状态\n\n本轮增量修复记录位于06_评测/incremental_20260916/。历史记录保持独立，不用当前GLM配置改写历史DeepSeek模型值。截至5月的报告只使用1—5月趋势；季度回归独立使用完整季度。真人审核缺失保持待评。"
+      }
+    ],
+    "charts": [
+      {
+        "id": "compliance-status-chart",
+        "title": "当前49项要求的证据状态",
+        "description": "49条沿用原追踪矩阵；状态来自本次分项证据，非全比赛完成率。",
+        "type": "bar",
+        "dataset": "compliance_summary",
+        "encodings": {
+          "x": {
+            "field": "当前状态",
+            "type": "nominal",
+            "title": "状态"
+          },
+          "y": {
+            "field": "要求数",
+            "type": "quantitative",
+            "title": "要求数"
+          },
+          "tooltip": [
+            {
+              "field": "占比",
+              "type": "quantitative",
+              "title": "占比（%）"
+            },
+            {
+              "field": "总要求",
+              "type": "quantitative",
+              "title": "总要求"
+            }
+          ]
+        },
+        "options": {
+          "orientation": "vertical",
+          "sort": "none",
+          "showValues": true
+        },
+        "source": {
+          "label": "本次本地受控证据快照",
+          "path": "07_交付/artifact.json",
+          "metricDefinitions": "数据源为当前审计、独立golden和实际运行记录；非实时ERP。"
+        }
+      },
+      {
+        "id": "scenario-comparison-chart",
+        "title": "三个场景的单位成本比较",
+        "description": "单位为百分比，分别为环比、同比和预算偏差；跨厂采用独立明细表的二厂−一厂口径。",
+        "type": "bar",
+        "dataset": "scenario_comparison",
+        "encodings": {
+          "x": {
+            "field": "产品",
+            "type": "nominal",
+            "title": "产品"
+          },
+          "y": {
+            "field": "差异率",
+            "type": "quantitative",
+            "title": "差异率（%）",
+            "unit": "%"
+          },
+          "color": {
+            "field": "比较基准",
+            "type": "nominal",
+            "title": "比较基准"
+          },
+          "tooltip": [
+            {
+              "field": "场景月份",
+              "type": "text",
+              "title": "场景月份"
+            },
+            {
+              "field": "单位成本",
+              "type": "quantitative",
+              "title": "单位成本（元/盒）"
+            },
+            {
+              "field": "主要贡献",
+              "type": "text",
+              "title": "主要贡献"
+            },
+            {
+              "field": "主要贡献率",
+              "type": "quantitative",
+              "title": "主要贡献率（%）"
+            }
+          ]
+        },
+        "options": {
+          "orientation": "vertical",
+          "sort": "none",
+          "showValues": true
+        },
+        "source": {
+          "label": "本次本地受控证据快照",
+          "path": "07_交付/artifact.json",
+          "metricDefinitions": "数据源为当前审计、独立golden和实际运行记录；非实时ERP。"
+        }
+      },
+      {
+        "id": "corpus-pages-chart",
+        "title": "知识库文档页数分布",
+        "description": "原7PDF共116页；当前实际索引以本轮检索记录为准。旧逐页切片/清洗计数已清空，防混作本轮实测。",
+        "type": "bar",
+        "dataset": "corpus_documents",
+        "encodings": {
+          "x": {
+            "field": "文档",
+            "type": "nominal",
+            "title": "文档"
+          },
+          "y": {
+            "field": "页数",
+            "type": "quantitative",
+            "title": "页数"
+          },
+          "tooltip": [
+            {
+              "field": "类型",
+              "type": "text",
+              "title": "类型"
+            },
+            {
+              "field": "清洗字符",
+              "type": "quantitative",
+              "title": "清洗字符"
+            },
+            {
+              "field": "删除重复行",
+              "type": "quantitative",
+              "title": "删除重复行"
+            },
+            {
+              "field": "切片数",
+              "type": "quantitative",
+              "title": "切片数"
+            }
+          ]
+        },
+        "options": {
+          "orientation": "horizontal",
+          "sort": "-x",
+          "showValues": true
+        },
+        "source": {
+          "label": "本次本地受控证据快照",
+          "path": "07_交付/artifact.json",
+          "metricDefinitions": "数据源为当前审计、独立golden和实际运行记录；非实时ERP。"
+        }
+      }
+    ],
+    "tables": [
+      {
+        "id": "compliance-matrix-table",
+        "title": "赛题逐条合规追踪矩阵",
+        "description": "保留原行ID和字段结构；功能实现、分项通过、降级、人工及后续交付分别记录。",
+        "dataset": "requirements",
+        "density": "dense",
+        "layout": "full",
+        "defaultSort": {
+          "field": "ID",
+          "direction": "asc"
+        },
+        "source": {
+          "label": "本次本地受控证据快照",
+          "path": "07_交付/artifact.json",
+          "metricDefinitions": "数据源为当前审计、独立golden和实际运行记录；非实时ERP。"
+        },
+        "columns": [
+          {
+            "field": "ID",
+            "label": "ID",
+            "type": "text"
+          },
+          {
+            "field": "领域",
+            "label": "领域",
+            "type": "text"
+          },
+          {
+            "field": "赛题要求",
+            "label": "赛题要求",
+            "type": "text"
+          },
+          {
+            "field": "当前状态",
+            "label": "当前状态",
+            "type": "text"
+          },
+          {
+            "field": "当前证据与缺口",
+            "label": "当前证据与缺口",
+            "type": "text"
+          },
+          {
+            "field": "修订后技术路径",
+            "label": "修订后技术路径",
+            "type": "text"
+          },
+          {
+            "field": "验收证据",
+            "label": "验收证据",
+            "type": "text"
+          },
+          {
+            "field": "强制项",
+            "label": "强制项",
+            "type": "text"
+          }
+        ]
+      },
+      {
+        "id": "scenario-table",
+        "title": "三个黄金场景的确定性结论与证据边界",
+        "dataset": "scenario_detail",
+        "density": "dense",
+        "layout": "full",
+        "defaultSort": {
+          "field": "场景",
+          "direction": "asc"
+        },
+        "source": {
+          "label": "本次本地受控证据快照",
+          "path": "07_交付/artifact.json",
+          "metricDefinitions": "数据源为当前审计、独立golden和实际运行记录；非实时ERP。"
+        },
+        "columns": [
+          {
+            "field": "场景",
+            "label": "场景",
+            "type": "text"
+          },
+          {
+            "field": "单位成本元每盒",
+            "label": "单位成本（元/盒）",
+            "format": "number"
+          },
+          {
+            "field": "环比百分比",
+            "label": "环比（%）",
+            "format": "number",
+            "movement": true
+          },
+          {
+            "field": "同比百分比",
+            "label": "同比（%）",
+            "format": "number",
+            "movement": true
+          },
+          {
+            "field": "预算差异百分比",
+            "label": "预算差异（%）",
+            "format": "number",
+            "movement": true
+          },
+          {
+            "field": "跨厂差异百分比",
+            "label": "跨厂差异（%）",
+            "format": "number",
+            "movement": true
+          },
+          {
+            "field": "确定性结论",
+            "label": "已验证计算",
+            "type": "text"
+          },
+          {
+            "field": "证据边界",
+            "label": "证据边界",
+            "type": "text"
+          }
+        ],
+        "description": "跨厂差异仅S2展示：二厂−一厂，以一厂为分母；其他行空值不是0。"
+      },
+      {
+        "id": "stack-table",
+        "title": "最终技术基线与降级边界",
+        "dataset": "stack_decisions",
+        "density": "dense",
+        "layout": "full",
+        "defaultSort": {
+          "field": "层级",
+          "direction": "asc"
+        },
+        "source": {
+          "label": "本次本地受控证据快照",
+          "path": "07_交付/artifact.json",
+          "metricDefinitions": "数据源为当前审计、独立golden和实际运行记录；非实时ERP。"
+        },
+        "columns": [
+          {
+            "field": "层级",
+            "label": "层级",
+            "type": "text"
+          },
+          {
+            "field": "选择",
+            "label": "技术选择",
+            "type": "text"
+          },
+          {
+            "field": "责任",
+            "label": "唯一责任",
+            "type": "text"
+          },
+          {
+            "field": "兼容与降级",
+            "label": "兼容与降级",
+            "type": "text"
+          }
+        ]
+      },
+      {
+        "id": "scenario-contribution-table",
+        "title": "三场景材料贡献与比较口径",
+        "dataset": "scenario_comparison",
+        "description": "贡献分子为材料单位成本差额，分母为同一比较对象的总单位成本差额；单位元/盒，贡献率为百分比。",
+        "columns": [
+          {
+            "field": "产品",
+            "label": "产品",
+            "type": "text"
+          },
+          {
+            "field": "比较基准",
+            "label": "比较基准",
+            "type": "text"
+          },
+          {
+            "field": "基期",
+            "label": "基期",
+            "type": "text"
+          },
+          {
+            "field": "分子元每盒",
+            "label": "分子元每盒",
+            "type": "text"
+          },
+          {
+            "field": "分母元每盒",
+            "label": "分母元每盒",
+            "type": "text"
+          },
+          {
+            "field": "主要贡献率",
+            "label": "主要贡献率",
+            "type": "number",
+            "format": {
+              "maximumFractionDigits": 2
+            }
+          }
+        ],
+        "source": {
+          "label": "本次本地受控证据快照",
+          "path": "07_交付/artifact.json",
+          "metricDefinitions": "数据源为当前审计、独立golden和实际运行记录；非实时ERP。"
+        }
+      }
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "status": "ready",
+    "generatedAt": "2026-09-15T19:28:24.107Z",
+    "datasets": {
+      "compliance_summary": [
+        {
+          "当前状态": "已验证",
+          "要求数": 26,
+          "占比": 53.1,
+          "总要求": 49
+        },
+        {
+          "当前状态": "已实现",
+          "要求数": 3,
+          "占比": 6.1,
+          "总要求": 49
+        },
+        {
+          "当前状态": "部分满足",
+          "要求数": 10,
+          "占比": 20.4,
+          "总要求": 49
+        },
+        {
+          "当前状态": "待人工",
+          "要求数": 2,
+          "占比": 4.1,
+          "总要求": 49
+        },
+        {
+          "当前状态": "待后续交付",
+          "要求数": 3,
+          "占比": 6.1,
+          "总要求": 49
+        },
+        {
+          "当前状态": "不纳入初版",
+          "要求数": 5,
+          "占比": 10.2,
+          "总要求": 49
+        }
+      ],
+      "requirements": [
+        {
+          "ID": "R01",
+          "领域": "报告模板",
+          "赛题要求": "解析Word模板并识别固定标题和动态占位符",
+          "当前状态": "已验证",
+          "当前证据与缺口": "原Word工作模板完成位置绑定与跨run填充；四场景导出有实际文件",
+          "修订后技术路径": "python-docx XML位置映射；101唯一/108次原占位符，原模板只读",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R02",
+          "领域": "报告模板",
+          "赛题要求": "模板至少含5章",
+          "当前状态": "已验证",
+          "当前证据与缺口": "原Word工作模板完成位置绑定与跨run填充；四场景导出有实际文件",
+          "修订后技术路径": "python-docx XML位置映射；101唯一/108次原占位符，原模板只读",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R03",
+          "领域": "知识库",
+          "赛题要求": "产品配方与生产工艺知识",
+          "当前状态": "已验证",
+          "当前证据与缺口": "7PDF/116页，真实CPU向量及中文FTS5检索；支持PDF/DOCX/TXT位置证据",
+          "修订后技术路径": "PyMuPDF/python-docx；LlamaIndex Core节点与检索适配；Chroma+中文BM25+RRF",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R04",
+          "领域": "知识库",
+          "赛题要求": "药材行情、GMP、行业成本基准",
+          "当前状态": "已验证",
+          "当前证据与缺口": "7PDF/116页，真实CPU向量及中文FTS5检索；支持PDF/DOCX/TXT位置证据",
+          "修订后技术路径": "PyMuPDF/python-docx；LlamaIndex Core节点与检索适配；Chroma+中文BM25+RRF",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R05",
+          "领域": "知识库",
+          "赛题要求": "设备、异常处理记录、跨厂基线",
+          "当前状态": "已验证",
+          "当前证据与缺口": "7PDF/116页，真实CPU向量及中文FTS5检索；支持PDF/DOCX/TXT位置证据",
+          "修订后技术路径": "PyMuPDF/python-docx；LlamaIndex Core节点与检索适配；Chroma+中文BM25+RRF",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R06",
+          "领域": "知识库",
+          "赛题要求": "支持PDF、Word、TXT",
+          "当前状态": "已验证",
+          "当前证据与缺口": "7PDF/116页，真实CPU向量及中文FTS5检索；支持PDF/DOCX/TXT位置证据",
+          "修订后技术路径": "PyMuPDF/python-docx；LlamaIndex Core节点与检索适配；Chroma+中文BM25+RRF",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R07",
+          "领域": "知识库",
+          "赛题要求": "语义检索+BM25混合",
+          "当前状态": "已验证",
+          "当前证据与缺口": "7PDF/116页，真实CPU向量及中文FTS5检索；支持PDF/DOCX/TXT位置证据",
+          "修订后技术路径": "PyMuPDF/python-docx；LlamaIndex Core节点与检索适配；Chroma+中文BM25+RRF",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R08",
+          "领域": "知识库",
+          "赛题要求": "检索结果标注来源文档",
+          "当前状态": "已验证",
+          "当前证据与缺口": "7PDF/116页，真实CPU向量及中文FTS5检索；支持PDF/DOCX/TXT位置证据",
+          "修订后技术路径": "PyMuPDF/python-docx；LlamaIndex Core节点与检索适配；Chroma+中文BM25+RRF",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R09",
+          "领域": "报告生成",
+          "赛题要求": "支持月度/季度/专题分析",
+          "当前状态": "部分满足",
+          "当前证据与缺口": "四场景基础分析文件实际导出；GLM应用凭据缺失，真实模型未通过；人工归因、可读性与版式待评。",
+          "修订后技术路径": "持久worker、固定指标快照、原Word工作模板、LibreOffice逐任务转换",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R10",
+          "领域": "报告生成",
+          "赛题要求": "融合模板、数据、RAG和大模型文本",
+          "当前状态": "部分满足",
+          "当前证据与缺口": "四场景基础分析文件实际导出；GLM应用凭据缺失，真实模型未通过；人工归因、可读性与版式待评。",
+          "修订后技术路径": "持久worker、固定指标快照、原Word工作模板、LibreOffice逐任务转换",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R11",
+          "领域": "报告生成",
+          "赛题要求": "专业Word/PDF双导出",
+          "当前状态": "部分满足",
+          "当前证据与缺口": "四场景基础分析文件实际导出；GLM应用凭据缺失，真实模型未通过；人工归因、可读性与版式待评。",
+          "修订后技术路径": "持久worker、固定指标快照、原Word工作模板、LibreOffice逐任务转换",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R12",
+          "领域": "报告评测",
+          "赛题要求": "给定3场景检查结构完整度",
+          "当前状态": "部分满足",
+          "当前证据与缺口": "四场景基础分析文件实际导出；GLM应用凭据缺失，真实模型未通过；人工归因、可读性与版式待评。",
+          "修订后技术路径": "持久worker、固定指标快照、原Word工作模板、LibreOffice逐任务转换",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R13",
+          "领域": "报告评测",
+          "赛题要求": "归因合理性人工0-5分",
+          "当前状态": "待人工",
+          "当前证据与缺口": "归因合理性量表与待评分记录已保留；无人类已评分结果",
+          "修订后技术路径": "事实、文档事实、待核查假设、建议分开；真人按0—5分量表评分",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R14",
+          "领域": "看板数据",
+          "赛题要求": "提取成本要素时间序列",
+          "当前状态": "已验证",
+          "当前证据与缺口": "本轮独立CSV/Fraction复算96快照、18组跨厂、5574观测零差异；环比同比预算贡献分别绑定。",
+          "修订后技术路径": "Decimal；显式比较月份；季度加权；二厂−一厂以一厂为分母；严格±10%",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R15",
+          "领域": "看板计算",
+          "赛题要求": "环比/同比/预算偏差",
+          "当前状态": "已验证",
+          "当前证据与缺口": "本轮独立CSV/Fraction复算96快照、18组跨厂、5574观测零差异；环比同比预算贡献分别绑定。",
+          "修订后技术路径": "Decimal；显式比较月份；季度加权；二厂−一厂以一厂为分母；严格±10%",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R16",
+          "领域": "看板计算",
+          "赛题要求": "成本要素贡献度公式",
+          "当前状态": "已验证",
+          "当前证据与缺口": "本轮独立CSV/Fraction复算96快照、18组跨厂、5574观测零差异；环比同比预算贡献分别绑定。",
+          "修订后技术路径": "Decimal；显式比较月份；季度加权；二厂−一厂以一厂为分母；严格±10%",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R17",
+          "领域": "看板可视化",
+          "赛题要求": "近6个月单位成本折线图",
+          "当前状态": "已验证",
+          "当前证据与缺口": "三要素结构、变动瀑布、趋势及三步对标有实现；筛选、图表交互、终态下载以本轮浏览器记录为准。",
+          "修订后技术路径": "React+TypeScript+Vite+ECharts；截至筛选月；请求竞态防护；图表销毁",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R18",
+          "领域": "看板可视化",
+          "赛题要求": "成本变动瀑布图",
+          "当前状态": "已验证",
+          "当前证据与缺口": "三要素结构、变动瀑布、趋势及三步对标有实现；筛选、图表交互、终态下载以本轮浏览器记录为准。",
+          "修订后技术路径": "React+TypeScript+Vite+ECharts；截至筛选月；请求竞态防护；图表销毁",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R19",
+          "领域": "看板可视化",
+          "赛题要求": "本月成本结构饼/环图",
+          "当前状态": "已验证",
+          "当前证据与缺口": "三要素结构、变动瀑布、趋势及三步对标有实现；筛选、图表交互、终态下载以本轮浏览器记录为准。",
+          "修订后技术路径": "React+TypeScript+Vite+ECharts；截至筛选月；请求竞态防护；图表销毁",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R20",
+          "领域": "看板加分",
+          "赛题要求": "产品×月份×要素热力图",
+          "当前状态": "不纳入初版",
+          "当前证据与缺口": "加分项不进入本轮冻结范围，未实现也不伪装完成",
+          "修订后技术路径": "不做热力扩展、完整知识图谱、多模型互审、开放Agent、预测",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "否"
+        },
+        {
+          "ID": "R21",
+          "领域": "归因生成",
+          "赛题要求": "大模型接收JSON生成归因",
+          "当前状态": "部分满足",
+          "当前证据与缺口": "四场景基础分析文件实际导出；GLM应用凭据缺失，真实模型未通过；人工归因、可读性与版式待评。",
+          "修订后技术路径": "OpenAI/Anthropic格式适配；默认glm-5.3-flash，业务数字由程序插槽注入；有限重试和预算",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R22",
+          "领域": "归因生成",
+          "赛题要求": "文本达到正式报告质量",
+          "当前状态": "待人工",
+          "当前证据与缺口": "归因合理性量表与待评分记录已保留；无人类已评分结果",
+          "修订后技术路径": "事实、文档事实、待核查假设、建议分开；真人按0—5分量表评分",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R23",
+          "领域": "归因生成",
+          "赛题要求": "要素环比超过±10%自动重点分析",
+          "当前状态": "已验证",
+          "当前证据与缺口": "本轮独立CSV/Fraction复算96快照、18组跨厂、5574观测零差异；环比同比预算贡献分别绑定。",
+          "修订后技术路径": "Decimal；显式比较月份；季度加权；二厂−一厂以一厂为分母；严格±10%",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R24",
+          "领域": "对标三步法",
+          "赛题要求": "第一步找差异",
+          "当前状态": "已验证",
+          "当前证据与缺口": "本轮独立CSV/Fraction复算96快照、18组跨厂、5574观测零差异；环比同比预算贡献分别绑定。",
+          "修订后技术路径": "Decimal；显式比较月份；季度加权；二厂−一厂以一厂为分母；严格±10%",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R25",
+          "领域": "对标三步法",
+          "赛题要求": "第二步拆结构并下钻原料",
+          "当前状态": "已验证",
+          "当前证据与缺口": "三要素结构、变动瀑布、趋势及三步对标有实现；筛选、图表交互、终态下载以本轮浏览器记录为准。",
+          "修订后技术路径": "React+TypeScript+Vite+ECharts；截至筛选月；请求竞态防护；图表销毁",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R26",
+          "领域": "对标三步法",
+          "赛题要求": "第三步结合RAG拆原因",
+          "当前状态": "部分满足",
+          "当前证据与缺口": "已修复章节内容、跨厂结构和可执行建议；功能存在不等于单份报告验收通过。默认业务输出与机器审计分离，视觉与真人评分见本轮记录。",
+          "修订后技术路径": "React+TypeScript+Vite+ECharts；截至筛选月；请求竞态防护；图表销毁",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R27",
+          "领域": "对标输出",
+          "赛题要求": "差异表+归因文本+改进建议",
+          "当前状态": "部分满足",
+          "当前证据与缺口": "已修复章节内容、跨厂结构和可执行建议；功能存在不等于单份报告验收通过。默认业务输出与机器审计分离，视觉与真人评分见本轮记录。",
+          "修订后技术路径": "React+TypeScript+Vite+ECharts；截至筛选月；请求竞态防护；图表销毁",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R28",
+          "领域": "对标评测",
+          "赛题要求": "三步法格式正确率",
+          "当前状态": "部分满足",
+          "当前证据与缺口": "已修复章节内容、跨厂结构和可执行建议；功能存在不等于单份报告验收通过。默认业务输出与机器审计分离，视觉与真人评分见本轮记录。",
+          "修订后技术路径": "React+TypeScript+Vite+ECharts；截至筛选月；请求竞态防护；图表销毁",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R29",
+          "领域": "对标评测",
+          "赛题要求": "差异计算误差≤1%",
+          "当前状态": "已验证",
+          "当前证据与缺口": "本轮独立CSV/Fraction复算96快照、18组跨厂、5574观测零差异；环比同比预算贡献分别绑定。",
+          "修订后技术路径": "Decimal；显式比较月份；季度加权；二厂−一厂以一厂为分母；严格±10%",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R30",
+          "领域": "整改任务",
+          "赛题要求": "生成规定字段的任务JSON",
+          "当前状态": "已验证",
+          "当前证据与缺口": "嵌套任务JSON、编辑确认、事务outbox、原mock模拟发送及状态查询",
+          "修订后技术路径": "POST成功同时核HTTP/body/task_id/sent；超时GET同ID对账，未知不盲发",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R31",
+          "领域": "RPA联动",
+          "赛题要求": "HTTP发送并识别200成功",
+          "当前状态": "已验证",
+          "当前证据与缺口": "嵌套任务JSON、编辑确认、事务outbox、原mock模拟发送及状态查询",
+          "修订后技术路径": "POST成功同时核HTTP/body/task_id/sent；超时GET同ID对账，未知不盲发",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R32",
+          "领域": "消息闭环",
+          "赛题要求": "模拟微信并展示已发送责任人",
+          "当前状态": "已验证",
+          "当前证据与缺口": "嵌套任务JSON、编辑确认、事务outbox、原mock模拟发送及状态查询",
+          "修订后技术路径": "POST成功同时核HTTP/body/task_id/sent；超时GET同ID对账，未知不盲发",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R33",
+          "领域": "任务加分",
+          "赛题要求": "任务状态看板",
+          "当前状态": "已验证",
+          "当前证据与缺口": "嵌套任务JSON、编辑确认、事务outbox、原mock模拟发送及状态查询",
+          "修订后技术路径": "POST成功同时核HTTP/body/task_id/sent；超时GET同ID对账，未知不盲发",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "否"
+        },
+        {
+          "ID": "R34",
+          "领域": "模型栈",
+          "赛题要求": "OpenAI兼容的大模型接口",
+          "当前状态": "部分满足",
+          "当前证据与缺口": "四场景基础分析文件实际导出；GLM应用凭据缺失，真实模型未通过；人工归因、可读性与版式待评。",
+          "修订后技术路径": "OpenAI/Anthropic格式适配；默认glm-5.3-flash，业务数字由程序插槽注入；有限重试和预算",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R35",
+          "领域": "RAG栈",
+          "赛题要求": "支持主流RAG框架/向量存储",
+          "当前状态": "已验证",
+          "当前证据与缺口": "7PDF/116页，真实CPU向量及中文FTS5检索；支持PDF/DOCX/TXT位置证据",
+          "修订后技术路径": "PyMuPDF/python-docx；LlamaIndex Core节点与检索适配；Chroma+中文BM25+RRF",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R36",
+          "领域": "前端栈",
+          "赛题要求": "Web界面并使用ECharts",
+          "当前状态": "已验证",
+          "当前证据与缺口": "三要素结构、变动瀑布、趋势及三步对标有实现；筛选、图表交互、终态下载以本轮浏览器记录为准。",
+          "修订后技术路径": "React+TypeScript+Vite+ECharts；截至筛选月；请求竞态防护；图表销毁",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R37",
+          "领域": "后端栈",
+          "赛题要求": "Python FastAPI、Flask或Django",
+          "当前状态": "已验证",
+          "当前证据与缺口": "WSL Python3.12项目venv、FastAPI单体与持久worker，一键本地脚本已启动",
+          "修订后技术路径": "requirements及精确锁；127.0.0.1原生服务；Docker运行未测不阻塞",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R38",
+          "领域": "部署",
+          "赛题要求": "Dockerfile或requirements一键启动",
+          "当前状态": "已验证",
+          "当前证据与缺口": "WSL Python3.12项目venv、FastAPI单体与持久worker，一键本地脚本已启动",
+          "修订后技术路径": "requirements及精确锁；127.0.0.1原生服务；Docker运行未测不阻塞",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R39",
+          "领域": "加分技术",
+          "赛题要求": "知识图谱增强RAG",
+          "当前状态": "不纳入初版",
+          "当前证据与缺口": "加分项不进入本轮冻结范围，未实现也不伪装完成",
+          "修订后技术路径": "不做热力扩展、完整知识图谱、多模型互审、开放Agent、预测",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "否"
+        },
+        {
+          "ID": "R40",
+          "领域": "加分技术",
+          "赛题要求": "多模型协作",
+          "当前状态": "不纳入初版",
+          "当前证据与缺口": "加分项不进入本轮冻结范围，未实现也不伪装完成",
+          "修订后技术路径": "不做热力扩展、完整知识图谱、多模型互审、开放Agent、预测",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "否"
+        },
+        {
+          "ID": "R41",
+          "领域": "加分技术",
+          "赛题要求": "Agent自主决策",
+          "当前状态": "不纳入初版",
+          "当前证据与缺口": "加分项不进入本轮冻结范围，未实现也不伪装完成",
+          "修订后技术路径": "不做热力扩展、完整知识图谱、多模型互审、开放Agent、预测",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "否"
+        },
+        {
+          "ID": "R42",
+          "领域": "加分技术",
+          "赛题要求": "成本预测",
+          "当前状态": "不纳入初版",
+          "当前证据与缺口": "加分项不进入本轮冻结范围，未实现也不伪装完成",
+          "修订后技术路径": "不做热力扩展、完整知识图谱、多模型互审、开放Agent、预测",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "否"
+        },
+        {
+          "ID": "R43",
+          "领域": "开发约束",
+          "赛题要求": "比赛资料保密与已授权模型必要上下文处理",
+          "当前状态": "已实现",
+          "当前证据与缺口": "用户明确授权项目必要上下文交商业模型；密钥仅本地安全读取，不打印/打包",
+          "修订后技术路径": "最小必要指标/证据发送；原数据不公开；拒执行文档/模型中的命令",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R44",
+          "领域": "开发约束",
+          "赛题要求": "开源来源与许可证标注",
+          "当前状态": "已实现",
+          "当前证据与缺口": "开源组件/技能来源和实际锁已记录，文档随实现原位更新",
+          "修订后技术路径": "共享Matt六技能；复用React/浏览器/Data技能；无整套编排框架",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R45",
+          "领域": "交付",
+          "赛题要求": "公开GitHub/Gitee完整代码",
+          "当前状态": "待后续交付",
+          "当前证据与缺口": "未公开仓库、未push、未制作最终视频/PPT或提交比赛",
+          "修订后技术路径": "公开源码包与完整参赛包分离；后续经用户明确发布指令处理",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R46",
+          "领域": "交付",
+          "赛题要求": "架构/RAG/Prompt/模板/API技术文档",
+          "当前状态": "已实现",
+          "当前证据与缺口": "开源组件/技能来源和实际锁已记录，文档随实现原位更新",
+          "修订后技术路径": "共享Matt六技能；复用React/浏览器/Data技能；无整套编排框架",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R47",
+          "领域": "交付",
+          "赛题要求": "3场景系统评测报告",
+          "当前状态": "部分满足",
+          "当前证据与缺口": "四场景基础分析文件实际导出；GLM应用凭据缺失，真实模型未通过；人工归因、可读性与版式待评。",
+          "修订后技术路径": "实测与目标、规则版与真实模型、运行通过与人工待评分别记录",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R48",
+          "领域": "交付",
+          "赛题要求": "5分钟内端到端演示视频",
+          "当前状态": "待后续交付",
+          "当前证据与缺口": "未公开仓库、未push、未制作最终视频/PPT或提交比赛",
+          "修订后技术路径": "公开源码包与完整参赛包分离；后续经用户明确发布指令处理",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        },
+        {
+          "ID": "R49",
+          "领域": "交付",
+          "赛题要求": "决赛PPT",
+          "当前状态": "待后续交付",
+          "当前证据与缺口": "未公开仓库、未push、未制作最终视频/PPT或提交比赛",
+          "修订后技术路径": "公开源码包与完整参赛包分离；后续经用户明确发布指令处理",
+          "验收证据": "06_评测/incremental_20260916/verification.json；本轮各分项原始日志",
+          "强制项": "是"
+        }
+      ],
+      "scenario_comparison": [
+        {
+          "产品": "银黄口服液",
+          "比较基准": "环比",
+          "差异率": 2.8440366972477062,
+          "场景月份": "2026-05",
+          "单位成本": 11.21,
+          "主要贡献": "直接材料",
+          "主要贡献率": 70.96774193548387,
+          "基期": [
+            "2026-04"
+          ],
+          "分子元每盒": "0.22",
+          "分母元每盒": "0.31"
+        },
+        {
+          "产品": "银黄口服液",
+          "比较基准": "同比",
+          "差异率": 4.6685340802987865,
+          "场景月份": "2026-05",
+          "单位成本": 11.21,
+          "主要贡献": "直接材料",
+          "主要贡献率": 92,
+          "基期": [
+            "2025-05"
+          ],
+          "分子元每盒": "0.46",
+          "分母元每盒": "0.50"
+        },
+        {
+          "产品": "银黄口服液",
+          "比较基准": "预算差异",
+          "差异率": 5.754716981132075,
+          "场景月份": "2026-05",
+          "单位成本": 11.21,
+          "主要贡献": "直接材料",
+          "主要贡献率": 81.9672131147541,
+          "基期": [
+            "2026-05"
+          ],
+          "分子元每盒": "0.5",
+          "分母元每盒": "0.61"
+        },
+        {
+          "产品": "板蓝根颗粒",
+          "比较基准": "环比",
+          "差异率": 3.1767955801104972,
+          "场景月份": "2026-05",
+          "单位成本": 7.47,
+          "主要贡献": "直接材料",
+          "主要贡献率": 78.26086956521739,
+          "基期": [
+            "2026-04"
+          ],
+          "分子元每盒": "0.18",
+          "分母元每盒": "0.23"
+        },
+        {
+          "产品": "板蓝根颗粒",
+          "比较基准": "同比",
+          "差异率": 5.211267605633803,
+          "场景月份": "2026-05",
+          "单位成本": 7.47,
+          "主要贡献": "直接材料",
+          "主要贡献率": 89.1891891891892,
+          "基期": [
+            "2025-05"
+          ],
+          "分子元每盒": "0.33",
+          "分母元每盒": "0.37"
+        },
+        {
+          "产品": "板蓝根颗粒",
+          "比较基准": "预算差异",
+          "差异率": 6.714285714285714,
+          "场景月份": "2026-05",
+          "单位成本": 7.47,
+          "主要贡献": "直接材料",
+          "主要贡献率": 78.72340425531915,
+          "基期": [
+            "2026-05"
+          ],
+          "分子元每盒": "0.37",
+          "分母元每盒": "0.47"
+        },
+        {
+          "产品": "六味地黄胶囊",
+          "比较基准": "环比",
+          "差异率": -3.2954545454545454,
+          "场景月份": "2026-03",
+          "单位成本": 17.02,
+          "主要贡献": "直接材料",
+          "主要贡献率": 62.06896551724138,
+          "基期": [
+            "2026-02"
+          ],
+          "分子元每盒": "-0.36",
+          "分母元每盒": "-0.58"
+        },
+        {
+          "产品": "六味地黄胶囊",
+          "比较基准": "同比",
+          "差异率": 0.5910165484633569,
+          "场景月份": "2026-03",
+          "单位成本": 17.02,
+          "主要贡献": "直接材料",
+          "主要贡献率": 60,
+          "基期": [
+            "2025-03"
+          ],
+          "分子元每盒": "0.06",
+          "分母元每盒": "0.10"
+        },
+        {
+          "产品": "六味地黄胶囊",
+          "比较基准": "预算差异",
+          "差异率": -0.4678362573099415,
+          "场景月份": "2026-03",
+          "单位成本": 17.02,
+          "主要贡献": "直接材料",
+          "主要贡献率": 137.5,
+          "基期": [
+            "2026-03"
+          ],
+          "分子元每盒": "-0.11",
+          "分母元每盒": "-0.08"
+        }
+      ],
+      "scenario_detail": [
+        {
+          "场景": "银黄口服液·2026-05",
+          "单位成本元每盒": 11.21,
+          "环比百分比": 2.8440366972477062,
+          "同比百分比": 4.6685340802987865,
+          "预算差异百分比": 5.754716981132075,
+          "跨厂差异百分比": null,
+          "确定性结论": "单位成本变动0.31元/盒；材料贡献70.96774193548387096774193548%",
+          "证据边界": "原料单位消耗成本不是采购价/耗量；行情与设备只支持待核查假设"
+        },
+        {
+          "场景": "板蓝根颗粒·2026-05",
+          "单位成本元每盒": 7.47,
+          "环比百分比": 3.1767955801104972,
+          "同比百分比": 5.211267605633803,
+          "预算差异百分比": 6.714285714285714,
+          "跨厂差异百分比": 6.693440428380187,
+          "确定性结论": "单位成本变动0.23元/盒；材料贡献78.26086956521739130434782609%",
+          "证据边界": "跨厂方向二厂−一厂，分母一厂；二厂缺原料明细"
+        },
+        {
+          "场景": "六味地黄胶囊·2026-03",
+          "单位成本元每盒": 17.02,
+          "环比百分比": -3.2954545454545454,
+          "同比百分比": 0.5910165484633569,
+          "预算差异百分比": -0.4678362573099415,
+          "跨厂差异百分比": null,
+          "确定性结论": "单位成本下降；总成本492800→595700元，不能把设备事件当作已证实净因果",
+          "证据边界": "原料单位消耗成本不是采购价/耗量；行情与设备只支持待核查假设"
+        }
+      ],
+      "corpus_documents": [
+        {
+          "文档": "药品生产质量管理规范GMP",
+          "类型": "法规制度",
+          "页数": 93,
+          "清洗字符": null,
+          "删除重复行": null,
+          "切片数": null
+        },
+        {
+          "文档": "GMP法规核心摘要",
+          "类型": "法规制度",
+          "页数": 7,
+          "清洗字符": null,
+          "删除重复行": null,
+          "切片数": null
+        },
+        {
+          "文档": "生产工艺·中药一厂",
+          "类型": "生产工艺",
+          "页数": 5,
+          "清洗字符": null,
+          "删除重复行": null,
+          "切片数": null
+        },
+        {
+          "文档": "车间设备清单·中药一厂",
+          "类型": "设备台账",
+          "页数": 4,
+          "清洗字符": null,
+          "删除重复行": null,
+          "切片数": null
+        },
+        {
+          "文档": "产品配方·六味地黄胶囊",
+          "类型": "产品配方",
+          "页数": 3,
+          "清洗字符": null,
+          "删除重复行": null,
+          "切片数": null
+        },
+        {
+          "文档": "产品配方·板蓝根颗粒",
+          "类型": "产品配方",
+          "页数": 2,
+          "清洗字符": null,
+          "删除重复行": null,
+          "切片数": null
+        },
+        {
+          "文档": "产品配方·银黄口服液",
+          "类型": "产品配方",
+          "页数": 2,
+          "清洗字符": null,
+          "删除重复行": null,
+          "切片数": null
+        }
+      ],
+      "stack_decisions": [
+        {
+          "层级": "前端",
+          "选择": "React + TypeScript + Vite + ECharts",
+          "责任": "四入口与精确表/证据抽屉",
+          "兼容与降级": "Chrome/Edge各按实际运行证据标记"
+        },
+        {
+          "层级": "API",
+          "选择": "Python 3.12 + FastAPI + Pydantic",
+          "责任": "公开接口与输入验证",
+          "兼容与降级": "单体；127.0.0.1"
+        },
+        {
+          "层级": "分析",
+          "选择": "Decimal + DuckDB + Parquet",
+          "责任": "确定性指标/数据版本",
+          "兼容与降级": "校验后原子发布，失败保留旧快照"
+        },
+        {
+          "层级": "状态",
+          "选择": "SQLite WAL + 单持久worker",
+          "责任": "任务、审计、事务outbox",
+          "兼容与降级": "并发幂等；恢复检查点"
+        },
+        {
+          "层级": "RAG",
+          "选择": "LlamaIndex Core + Chroma + FTS5 BM25 + RRF",
+          "责任": "中文切片与双路检索",
+          "兼容与降级": "CPU ONNX小embedding；向量故障明确降级"
+        },
+        {
+          "层级": "模型",
+          "选择": "GLM-5.3-Flash + 可替换协议网关",
+          "责任": "证据和指标插槽解释",
+          "兼容与降级": "有限超时/修复；规则版清晰标记；未知费用UNKNOWN"
+        },
+        {
+          "层级": "报告",
+          "选择": "python-docx + matplotlib + LibreOffice",
+          "责任": "原模板DOCX与PDF",
+          "兼容与降级": "格式分别记状态；正式输出验证后归档"
+        },
+        {
+          "层级": "部署",
+          "选择": "WSL本地脚本 + requirements精确锁",
+          "责任": "启动API/worker/原mock",
+          "兼容与降级": "复用Linux环境；Docker runtime未运行不伪称通过"
+        }
+      ]
+    }
+  },
+  "sources": [
+    {
+      "id": "implementation-evidence",
+      "label": "本轮实施状态与真实运行证据",
+      "path": "docs/implementation_status.md"
+    },
+    {
+      "id": "quality-checks",
+      "label": "本轮独立CSV/Fraction复算",
+      "path": "06_评测/incremental_20260916/data/report_independent_audit.json"
+    },
+    {
+      "id": "scenario-data",
+      "label": "独立golden与四场景指标快照",
+      "path": "06_评测/golden.json"
+    },
+    {
+      "id": "retrieval",
+      "label": "真实BM25/向量/混合28题实测",
+      "path": "06_评测/incremental_20260916/retrieval/v4_final/retrieval_results.json"
+    },
+    {
+      "id": "reports",
+      "label": "四场景DOCX/PDF分别验证",
+      "path": "06_评测/incremental_20260916/scenario_reports_delivery.json"
+    },
+    {
+      "id": "verification",
+      "label": "最终统一验证（生成中则以分项记录为准）",
+      "path": "06_评测/incremental_20260916/verification.json"
+    }
+  ],
+  "generatedAt": "2026-09-15T19:28:24.107Z"
+}

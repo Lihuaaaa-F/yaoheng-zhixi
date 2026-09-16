@@ -1,0 +1,22 @@
+{
+  "task_id": "v0-browser-final",
+  "purpose": "V0基线观察（应用界面最终截图，历史冻结）",
+  "scenario": "browser-ui",
+  "viewport": "1366px桌面视口",
+  "artifact": {
+    "source": "06_评测/incremental_20260916/browser",
+    "build_label": "incremental_20260916历史交付"
+  },
+  "check_scope": [
+    "页面信息层级与可读性：字号、行宽、留白、对齐",
+    "图表（ECharts）标注与图例可读性、坐标单位",
+    "中文缺字/乱码、控件遮挡、明显布局破损",
+    "开发者折叠区是否在业务视图中隐藏"
+  ],
+  "output": {
+    "result_json": "06_评测\\dual_model\\20260917\\visual\\v0-browser-final\\result.json",
+    "review_md": "06_评测\\dual_model\\20260917\\visual\\v0-browser-final\\review.md",
+    "format": "同v0-*-pages：issue_id+定位+影响+severity+建议"
+  },
+  "note": "V0基线；新构建后需重新截图并新task_id复查。"
+}

@@ -1,0 +1,101 @@
+FF
+=================================== FAILURES ===================================
+___ test_knowledge_default_respects_external_package_runtime_and_embeddings ____
+
+tmp_path = PosixPath('/tmp/pharma_portability_red_20260916/test_knowledge_default_respect0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f3f57ddba70>
+
+    def test_knowledge_default_respects_external_package_runtime_and_embeddings(tmp_path,monkeypatch):
+        import pharma.knowledge as module
+        data=tmp_path/'external-data';runtime=tmp_path/'external-runtime';models=tmp_path/'licensed-model'
+        monkeypatch.setattr(module,'PACKAGE',data)
+        monkeypatch.setattr(module,'RUNTIME',runtime)
+        monkeypatch.setenv('PHARMA_EMBEDDING_DIR',str(models))
+>       k=Knowledge()
+          ^^^^^^^^^^^
+
+05_原型/tests/test_retrieval_incremental.py:130: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+05_原型/backend/pharma/knowledge.py:134: in __init__
+    self.source_dir = Path(source_dir) if source_dir else self.root / PACKAGE.relative_to(ROOT) / '03_制药知识文档'
+                                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/pharma_portability_red_20260916/test_knowledge_default_respect0/external-data')
+other = PosixPath('/home/hujunjie/企业赛道_创灵境_基于RAG与大模型的制药企业产品成本智能分析报告系统')
+walk_up = False, _deprecated = ()
+
+    def relative_to(self, other, /, *_deprecated, walk_up=False):
+        """Return the relative path to another path identified by the passed
+        arguments.  If the operation is not possible (because this is not
+        related to the other path), raise ValueError.
+    
+        The *walk_up* parameter controls whether `..` may be used to resolve
+        the path.
+        """
+        if _deprecated:
+            msg = ("support for supplying more than one positional argument "
+                   "to pathlib.PurePath.relative_to() is deprecated and "
+                   "scheduled for removal in Python {remove}")
+            warnings._deprecated("pathlib.PurePath.relative_to(*args)", msg,
+                                 remove=(3, 14))
+        other = self.with_segments(other, *_deprecated)
+        for step, path in enumerate([other] + list(other.parents)):
+            if self.is_relative_to(path):
+                break
+            elif not walk_up:
+>               raise ValueError(f"{str(self)!r} is not in the subpath of {str(other)!r}")
+E               ValueError: '/tmp/pharma_portability_red_20260916/test_knowledge_default_respect0/external-data' is not in the subpath of '/home/hujunjie/企业赛道_创灵境_基于RAG与大模型的制药企业产品成本智能分析报告系统'
+
+/usr/lib/python3.12/pathlib.py:682: ValueError
+____ test_explicit_test_root_keeps_isolated_defaults_with_external_package _____
+
+tmp_path = PosixPath('/tmp/pharma_portability_red_20260916/test_explicit_test_root_keeps_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f3f57ddacf0>
+
+    def test_explicit_test_root_keeps_isolated_defaults_with_external_package(tmp_path,monkeypatch):
+        import pharma.knowledge as module
+        monkeypatch.setattr(module,'PACKAGE',tmp_path/'unrelated-external-data')
+        monkeypatch.setattr(module,'RUNTIME',tmp_path/'unrelated-runtime')
+        monkeypatch.delenv('PHARMA_EMBEDDING_DIR',raising=False)
+>       k=Knowledge(root=tmp_path/'isolated-project')
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+05_原型/tests/test_retrieval_incremental.py:141: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+05_原型/backend/pharma/knowledge.py:134: in __init__
+    self.source_dir = Path(source_dir) if source_dir else self.root / PACKAGE.relative_to(ROOT) / '03_制药知识文档'
+                                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/pharma_portability_red_20260916/test_explicit_test_root_keeps_0/unrelated-external-data')
+other = PosixPath('/home/hujunjie/企业赛道_创灵境_基于RAG与大模型的制药企业产品成本智能分析报告系统')
+walk_up = False, _deprecated = ()
+
+    def relative_to(self, other, /, *_deprecated, walk_up=False):
+        """Return the relative path to another path identified by the passed
+        arguments.  If the operation is not possible (because this is not
+        related to the other path), raise ValueError.
+    
+        The *walk_up* parameter controls whether `..` may be used to resolve
+        the path.
+        """
+        if _deprecated:
+            msg = ("support for supplying more than one positional argument "
+                   "to pathlib.PurePath.relative_to() is deprecated and "
+                   "scheduled for removal in Python {remove}")
+            warnings._deprecated("pathlib.PurePath.relative_to(*args)", msg,
+                                 remove=(3, 14))
+        other = self.with_segments(other, *_deprecated)
+        for step, path in enumerate([other] + list(other.parents)):
+            if self.is_relative_to(path):
+                break
+            elif not walk_up:
+>               raise ValueError(f"{str(self)!r} is not in the subpath of {str(other)!r}")
+E               ValueError: '/tmp/pharma_portability_red_20260916/test_explicit_test_root_keeps_0/unrelated-external-data' is not in the subpath of '/home/hujunjie/企业赛道_创灵境_基于RAG与大模型的制药企业产品成本智能分析报告系统'
+
+/usr/lib/python3.12/pathlib.py:682: ValueError
+=========================== short test summary info ============================
+FAILED 05_原型/tests/test_retrieval_incremental.py::test_knowledge_default_respects_external_package_runtime_and_embeddings
+FAILED 05_原型/tests/test_retrieval_incremental.py::test_explicit_test_root_keeps_isolated_defaults_with_external_package
+2 failed, 12 deselected in 0.17s

@@ -1,0 +1,64 @@
+{
+  "task_id": "V0-baseline-visual-20260917",
+  "mode": "dual_session_fallback_no_request_json",
+  "reviewer": "GLM-5.3-Flash 视觉审阅（独立会话）",
+  "date": "2026-09-17",
+  "status": "NEEDS_FIX",
+  "status_scope": "仅限本文件所列冻结图片的视觉观察；不代表数字正确、功能正常、专业结论成立或真人验收",
+  "task_source": "未发现 request.json；按 docs/ZCODE_HANDOFF.md 预案执行 V0 基线观察",
+  "inputs": {
+    "pages_delivery": {
+      "path": "06_评测/incremental_20260916/pages_delivery/",
+      "scenarios": { "S1": 6, "S2": 5, "S3": 6, "Q2": 6 },
+      "total_pages": 23,
+      "image_size_px": "993x1404",
+      "renderer_per_manifest": "Poppler pdftoppm",
+      "sha256_check": "23/23 与 manifest.json 一致"
+    },
+    "browser_final_batch": {
+      "path": "06_评测/incremental_20260916/browser/",
+      "batch_prefix": "2026-09-15T18-48-47-842Z_",
+      "count": 10,
+      "viewports": ["1366x768 x7（含整页长图 1366x4678、1366x1476）", "1920x1080 x1", "390x844 x1"]
+    }
+  },
+  "coverage": {
+    "checked": "23/23 报告页全量逐页 + 10/10 浏览器最终批截图；重点区域放大复核 6 处",
+    "not_checked": [
+      "DOCX/PDF 在 Windows 本地 Word/PDF 查看器的渲染",
+      "plan_browser/ 旧方案截图与历史批次截图",
+      "浏览器交互状态仅限截图所固化的状态"
+    ]
+  },
+  "issues": [
+    { "issue_id": "V0-001", "severity": "中", "page": "S3 page-01", "summary": "核心发现段负号与数值断行分离（'每盒变动 -' 行尾，'0.36 元' 次行行首）" },
+    { "issue_id": "V0-002", "severity": "低", "page": "Q2 page-03；S3 page-03", "summary": "数值表达式断行拆散箭头或单位（'0.45 →/0.47'；'-0.04 元//盒'）" },
+    { "issue_id": "V0-003", "severity": "中", "page": "Q2 page-05", "summary": "5.1 柱图'差额 -0.01'标签与一厂柱顶重叠，落于色块上对比度下降" },
+    { "issue_id": "V0-004", "severity": "页面级高", "page": "browser 跨厂对标 1366 整页截图", "summary": "中药一厂原料明细表右缘截断：'产量'列只显半字/数值切断，截图内未见横向滚动条" },
+    { "issue_id": "V0-005", "severity": "低", "page": "Q2 page-01/02", "summary": "同列小数位不一：11.0195(4位) 与 2 位并列；瀑布图标签 +0.34 与 -0.0024/-0.0019 精度不一（口径归 5.3）" },
+    { "issue_id": "V0-006", "severity": "低-偏好", "page": "四报告 page-02", "summary": "瀑布图小变动柱体近乎不可见，仅文字标签传达" },
+    { "issue_id": "V0-007", "severity": "低-偏好", "page": "S1 p6 / S2 p5 / S3 p6 / Q2 p6", "summary": "6.3 表无表尾收束线，末行直接接下节标题；续页表头重复正确" },
+    { "issue_id": "V0-008", "severity": "低", "page": "同 V0-007 四页", "summary": "右列换行单字孤行（'合格产/量'）" },
+    { "issue_id": "V0-009", "severity": "低-偏好", "page": "四报告 page-01", "summary": "目录为分号连排密排段，扫读性差，建议竖排列表" },
+    { "issue_id": "V0-010", "severity": "低-偏好", "page": "四报告 page-01", "summary": "2.1 表首列词中断行（'直接材/料(元/盒)'）" },
+    { "issue_id": "V0-011", "severity": "中低", "page": "browser 1366_quarter.png", "summary": "比较期渲染为'2026-01 至 2026-02 至 2026-03'双'至'连排，易误读（措辞归 5.3）" },
+    { "issue_id": "V0-012", "severity": "信息", "page": "S1 page-04；Q2 page-04", "summary": "趋势表小数位混排（10.7/10.9 与 10.87 同列）" },
+    { "issue_id": "V0-013", "severity": "低", "page": "browser 1366_acceptance.png", "summary": "'查看历史报告及失败记录'复选框与标签错位分行" },
+    { "issue_id": "V0-014", "severity": "信息-疑似交5.3", "page": "browser benchmark 相关文档证据", "summary": "两条相同'GMP法规核心摘要_2010修订版.pdf · · 第 4 页'条目，疑似重复，需 5.3 核验数据" },
+    { "issue_id": "V0-015", "severity": "信息-偏好", "page": "browser 390_cost.png", "summary": "KPI 副文案孤字换行；390 宽侧栏仍展开占宽；无横向溢出" }
+  ],
+  "clean_findings": [
+    "23 页与全部截图无缺字/漏绘/tofu，中文字形正常",
+    "跨页表续页重复表头；图题与图同页；无内容裁切；页脚页码与实际一致",
+    "图表标签/图例无遮挡（除 V0-003 一处）；tooltip、空态、失败态清晰",
+    "八维验收'待评/未通过'诚实状态在界面可见；1366/1920/390 无整页横向溢出"
+  ],
+  "uncertainties": [
+    "V0-004 是否存在可用横向滚动需活页确认",
+    "浏览器渲染来自 WSL/Playwright/Chrome，不代表 Windows 本机查看器",
+    "长图分 4 段审阅，极小灰色说明字以可辨为准",
+    "未核验任何业务数值；V0-014 仅作疑似转交"
+  ],
+  "handoff": "视觉结果交回 5.3：由其判断业务影响、修改代码、重渲产物后按 issue_id 复查；字体/分页类全局改动需重查受影响全部页面。",
+  "non_fields": { "note": "机器/通道版本信息不写入业务报告，仅留此审阅记录" }
+}

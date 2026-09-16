@@ -1,0 +1,7 @@
+.Building prefix dict from the default dictionary ...
+Loading model from cache /mnt/d/AI_Temp/tmp/jieba.cache
+Loading model cost 2.581 seconds.
+Prefix dict has been built successfully.
+...............warning: The `fitz` API is deprecated and will be removed in future. Use `import pymupdf` instead.
+...............
+31 passed in 8.06s

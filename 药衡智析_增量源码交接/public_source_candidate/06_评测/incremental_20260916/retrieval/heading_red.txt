@@ -1,0 +1,15 @@
+F
+=================================== FAILURES ===================================
+________ test_real_index_excludes_product_heading_without_section_body _________
+
+    def test_real_index_excludes_product_heading_without_section_body():
+        k=Knowledge();k.build()
+        chunks=json.loads((k.path/k.version/'chunks.json').read_text())
+>       assert not any(e['source']=='生产工艺文档_中药一厂.pdf' and e['page']==2 and e.get('products')==['板蓝根颗粒'] for e in chunks)
+E       assert not True
+E        +  where True = any(<generator object test_real_index_excludes_product_heading_without_section_body.<locals>.<genexpr> at 0x7c8e7aa01970>)
+
+05_原型/tests/test_retrieval_incremental.py:158: AssertionError
+=========================== short test summary info ============================
+FAILED 05_原型/tests/test_retrieval_incremental.py::test_real_index_excludes_product_heading_without_section_body
+1 failed, 15 deselected in 0.14s

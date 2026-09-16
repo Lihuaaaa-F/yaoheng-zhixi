@@ -1,0 +1,7121 @@
+{
+  "created_at": "2026-09-15T19:23:34.977078+00:00",
+  "index": "06_评测/incremental_20260916/scenario_reports_delivery.json",
+  "index_sha256": "92f7f57710ebed5769050ffd2ffa42baf9574833fd8d114c8d9815a6ddff34e4",
+  "method": "Read-only original CSV Fraction arithmetic; DOCX table cells checked against source arithmetic at displayed precision; whitespace-only PDF table reading-order matching; narrative matching additionally removes explicit page-number lines; independent SHA-256 against artifact index and record. No production calculation functions used.",
+  "scope": "Four final report files, period comparisons, material/labor detail, cross-factory direction and contribution, budget bridge, trend, and quarter weighting. Human attribution, readability and visual grading excluded.",
+  "sources": [
+    {
+      "path": "01_数据/00_原始/01_成本明细数据/中药一厂_人工工时明细_2026年1-6月.csv",
+      "sha256": "cb4d519b474fe144dcbba64988039e60d5207c3bc44c5927e903bdf5ba4bf323"
+    },
+    {
+      "path": "01_数据/00_原始/01_成本明细数据/中药一厂_制造费用明细_2026年1-6月.csv",
+      "sha256": "9fe8245f517e8cd787d58e9113f93d08521043975a4997dead3329e12caee90f"
+    },
+    {
+      "path": "01_数据/00_原始/01_成本明细数据/中药一厂_原材料消耗明细_2026年1-6月.csv",
+      "sha256": "911cb2ac45043f027848df6ad7daea55c0f3d6b4d2a2397a783abfb1b71be8d5"
+    },
+    {
+      "path": "01_数据/00_原始/01_成本明细数据/中药一厂_成本汇总_2025年1-6月.csv",
+      "sha256": "a0d573417032d3fa865af82567fc81e1cad151678fe4f4fd77464f259fc3d96b"
+    },
+    {
+      "path": "01_数据/00_原始/01_成本明细数据/中药一厂_成本汇总_2026年1-6月.csv",
+      "sha256": "08b6be09c9297d8df82b346cfa83507f34a278d7a000187960768d9bb4931c26"
+    },
+    {
+      "path": "01_数据/00_原始/01_成本明细数据/中药一厂_预算数据_2026年.csv",
+      "sha256": "987526c99f4a98a2775830c110506460a6027eafcf9d6cf7a07a01eb74cef9aa"
+    },
+    {
+      "path": "01_数据/00_原始/01_成本明细数据/中药二厂_成本汇总_2025年1-6月.csv",
+      "sha256": "37dfacdddb93cda4d1d0df4f42043b48bc27429121d58384dfec51d7bb42eb09"
+    },
+    {
+      "path": "01_数据/00_原始/01_成本明细数据/中药二厂_成本汇总_2026年1-6月.csv",
+      "sha256": "8cb6f41faaa944f98060b0ae2e3fc989420cad0d0b03227dd160127567f3b240"
+    },
+    {
+      "path": "01_数据/00_原始/02_行业参考数据/药材市场价格行情_2026年上半年.csv",
+      "sha256": "44210be6e6fdb89e0212e544f63cd5f8cfe72389716019c1ddffcc5032cdf94c"
+    },
+    {
+      "path": "01_数据/00_原始/02_行业参考数据/行业成本基准数据_2026.csv",
+      "sha256": "31fa1383e2cf2c9d38da3eee3d5398b207c1806a6b67bb18e222f6eddf4154ed"
+    }
+  ],
+  "reports": [
+    {
+      "scenario": "S1",
+      "job_id": "a2dfef9c2bfa4c6babdb7789ca6c87bd",
+      "product": "银黄口服液",
+      "period": [
+        "2026-05"
+      ],
+      "pdf_pages": 6,
+      "model_live": false,
+      "report_acceptance": "FAIL"
+    },
+    {
+      "scenario": "S2",
+      "job_id": "1c09c6559d164661b8fdd7694d2a49e5",
+      "product": "板蓝根颗粒",
+      "period": [
+        "2026-05"
+      ],
+      "pdf_pages": 5,
+      "model_live": false,
+      "report_acceptance": "FAIL"
+    },
+    {
+      "scenario": "S3",
+      "job_id": "e7ff529220394ef4a8affc049014c366",
+      "product": "六味地黄胶囊",
+      "period": [
+        "2026-03"
+      ],
+      "pdf_pages": 6,
+      "model_live": false,
+      "report_acceptance": "FAIL"
+    },
+    {
+      "scenario": "Q2",
+      "job_id": "72af94271f7b43ea982cba06ea8839b3",
+      "product": "银黄口服液",
+      "period": [
+        "2026-04",
+        "2026-05",
+        "2026-06"
+      ],
+      "pdf_pages": 6,
+      "model_live": false,
+      "report_acceptance": "FAIL"
+    }
+  ],
+  "checks": [
+    {
+      "scenario": "S1",
+      "field": "docx.index_hash",
+      "status": "PASS",
+      "actual": "34b96b335729cc65bd035f372dc7dc2f2bd2c8d26c2e5f531a7e04b43165c2b0",
+      "expected": "34b96b335729cc65bd035f372dc7dc2f2bd2c8d26c2e5f531a7e04b43165c2b0"
+    },
+    {
+      "scenario": "S1",
+      "field": "docx.record_hash",
+      "status": "PASS",
+      "actual": "34b96b335729cc65bd035f372dc7dc2f2bd2c8d26c2e5f531a7e04b43165c2b0",
+      "expected": "34b96b335729cc65bd035f372dc7dc2f2bd2c8d26c2e5f531a7e04b43165c2b0"
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.index_hash",
+      "status": "PASS",
+      "actual": "aad2ce30ffa00cfbbab8dde63f4fb7b62009f413d15043daf299c3c9522c3dec",
+      "expected": "aad2ce30ffa00cfbbab8dde63f4fb7b62009f413d15043daf299c3c9522c3dec"
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.record_hash",
+      "status": "PASS",
+      "actual": "aad2ce30ffa00cfbbab8dde63f4fb7b62009f413d15043daf299c3c9522c3dec",
+      "expected": "aad2ce30ffa00cfbbab8dde63f4fb7b62009f413d15043daf299c3c9522c3dec"
+    },
+    {
+      "scenario": "S1",
+      "field": "audit.index_hash",
+      "status": "PASS",
+      "actual": "d632324b5a7bfe09a39599fcdfb1bee714bf0f4daffaa6d23e6903a9a6ec84c7",
+      "expected": "d632324b5a7bfe09a39599fcdfb1bee714bf0f4daffaa6d23e6903a9a6ec84c7"
+    },
+    {
+      "scenario": "S1",
+      "field": "audit.record_hash",
+      "status": "PASS",
+      "actual": "d632324b5a7bfe09a39599fcdfb1bee714bf0f4daffaa6d23e6903a9a6ec84c7",
+      "expected": "d632324b5a7bfe09a39599fcdfb1bee714bf0f4daffaa6d23e6903a9a6ec84c7"
+    },
+    {
+      "scenario": "S1",
+      "field": "snapshot.record_audit_identity",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "bindings.index_record_audit_identity",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "snapshot.quantity",
+      "status": "PASS",
+      "actual": "58000",
+      "expected": "58000"
+    },
+    {
+      "scenario": "S1",
+      "field": "snapshot.unit_cost",
+      "status": "PASS",
+      "actual": "11.21",
+      "expected": "1121/100"
+    },
+    {
+      "scenario": "S1",
+      "field": "snapshot.total_cost",
+      "status": "PASS",
+      "actual": "650180.0",
+      "expected": "650180"
+    },
+    {
+      "scenario": "S1",
+      "field": "snapshot.materials",
+      "status": "PASS",
+      "actual": "7.3",
+      "expected": "73/10"
+    },
+    {
+      "scenario": "S1",
+      "field": "snapshot.labor",
+      "status": "PASS",
+      "actual": "1.53",
+      "expected": "153/100"
+    },
+    {
+      "scenario": "S1",
+      "field": "snapshot.overhead",
+      "status": "PASS",
+      "actual": "2.38",
+      "expected": "119/50"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.quantity.column1",
+      "status": "PASS",
+      "actual": "58000",
+      "expected": "58000"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.quantity.column2",
+      "status": "PASS",
+      "actual": "55000",
+      "expected": "55000"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.quantity.column3",
+      "status": "PASS",
+      "actual": "5.45%",
+      "expected": "60/11"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.quantity.column4",
+      "status": "PASS",
+      "actual": "55100",
+      "expected": "55100"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.quantity.column5",
+      "status": "PASS",
+      "actual": "5.26%",
+      "expected": "100/19"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.quantity.column6",
+      "status": "PASS",
+      "actual": "50000",
+      "expected": "50000"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.quantity.column7",
+      "status": "PASS",
+      "actual": "16.00%",
+      "expected": "16"
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.overview.quantity.same_row",
+      "status": "PASS",
+      "actual": "产量(盒)58000550005.45%551005.26%5000016.00%",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.unit_cost.column1",
+      "status": "PASS",
+      "actual": "11.21",
+      "expected": "1121/100"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.unit_cost.column2",
+      "status": "PASS",
+      "actual": "10.90",
+      "expected": "109/10"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.unit_cost.column3",
+      "status": "PASS",
+      "actual": "2.84%",
+      "expected": "310/109"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.unit_cost.column4",
+      "status": "PASS",
+      "actual": "10.71",
+      "expected": "1071/100"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.unit_cost.column5",
+      "status": "PASS",
+      "actual": "4.67%",
+      "expected": "5000/1071"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.unit_cost.column6",
+      "status": "PASS",
+      "actual": "10.60",
+      "expected": "53/5"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.unit_cost.column7",
+      "status": "PASS",
+      "actual": "5.75%",
+      "expected": "305/53"
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.overview.unit_cost.same_row",
+      "status": "PASS",
+      "actual": "单位成本(元/盒)11.2110.902.84%10.714.67%10.605.75%",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.total_cost.column1",
+      "status": "PASS",
+      "actual": "650180.00",
+      "expected": "650180"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.total_cost.column2",
+      "status": "PASS",
+      "actual": "599500.00",
+      "expected": "599500"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.total_cost.column3",
+      "status": "PASS",
+      "actual": "8.45%",
+      "expected": "10136/1199"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.total_cost.column4",
+      "status": "PASS",
+      "actual": "590121.00",
+      "expected": "590121"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.total_cost.column5",
+      "status": "PASS",
+      "actual": "10.18%",
+      "expected": "10900/1071"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.total_cost.column6",
+      "status": "PASS",
+      "actual": "530000.00",
+      "expected": "530000"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.total_cost.column7",
+      "status": "PASS",
+      "actual": "22.68%",
+      "expected": "6009/265"
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.overview.total_cost.same_row",
+      "status": "PASS",
+      "actual": "总成本(元)650180.00599500.008.45%590121.0010.18%530000.0022.68%",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.materials.column1",
+      "status": "PASS",
+      "actual": "7.30",
+      "expected": "73/10"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.materials.column2",
+      "status": "PASS",
+      "actual": "7.08",
+      "expected": "177/25"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.materials.column3",
+      "status": "PASS",
+      "actual": "3.11%",
+      "expected": "550/177"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.materials.column4",
+      "status": "PASS",
+      "actual": "6.84",
+      "expected": "171/25"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.materials.column5",
+      "status": "PASS",
+      "actual": "6.73%",
+      "expected": "1150/171"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.materials.column6",
+      "status": "PASS",
+      "actual": "6.80",
+      "expected": "34/5"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.materials.column7",
+      "status": "PASS",
+      "actual": "7.35%",
+      "expected": "125/17"
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.overview.materials.same_row",
+      "status": "PASS",
+      "actual": "其中：直接材料(元/盒)7.307.083.11%6.846.73%6.807.35%",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.labor.column1",
+      "status": "PASS",
+      "actual": "1.53",
+      "expected": "153/100"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.labor.column2",
+      "status": "PASS",
+      "actual": "1.50",
+      "expected": "3/2"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.labor.column3",
+      "status": "PASS",
+      "actual": "2.00%",
+      "expected": "2"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.labor.column4",
+      "status": "PASS",
+      "actual": "1.51",
+      "expected": "151/100"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.labor.column5",
+      "status": "PASS",
+      "actual": "1.32%",
+      "expected": "200/151"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.labor.column6",
+      "status": "PASS",
+      "actual": "1.50",
+      "expected": "3/2"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.labor.column7",
+      "status": "PASS",
+      "actual": "2.00%",
+      "expected": "2"
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.overview.labor.same_row",
+      "status": "PASS",
+      "actual": "其中：直接人工(元/盒)1.531.502.00%1.511.32%1.502.00%",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.overhead.column1",
+      "status": "PASS",
+      "actual": "2.38",
+      "expected": "119/50"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.overhead.column2",
+      "status": "PASS",
+      "actual": "2.32",
+      "expected": "58/25"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.overhead.column3",
+      "status": "PASS",
+      "actual": "2.59%",
+      "expected": "75/29"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.overhead.column4",
+      "status": "PASS",
+      "actual": "2.36",
+      "expected": "59/25"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.overhead.column5",
+      "status": "PASS",
+      "actual": "0.85%",
+      "expected": "50/59"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.overhead.column6",
+      "status": "PASS",
+      "actual": "2.30",
+      "expected": "23/10"
+    },
+    {
+      "scenario": "S1",
+      "field": "overview.overhead.column7",
+      "status": "PASS",
+      "actual": "3.48%",
+      "expected": "80/23"
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.overview.overhead.same_row",
+      "status": "PASS",
+      "actual": "其中：制造费用(元/盒)2.382.322.59%2.360.85%2.303.48%",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "structure.materials.column1",
+      "status": "PASS",
+      "actual": "7.30",
+      "expected": "73/10"
+    },
+    {
+      "scenario": "S1",
+      "field": "structure.materials.column2",
+      "status": "PASS",
+      "actual": "65.12%",
+      "expected": "73000/1121"
+    },
+    {
+      "scenario": "S1",
+      "field": "structure.materials.column3",
+      "status": "PASS",
+      "actual": "0.22",
+      "expected": "11/50"
+    },
+    {
+      "scenario": "S1",
+      "field": "structure.materials.column4",
+      "status": "PASS",
+      "actual": "70.97%",
+      "expected": "2200/31"
+    },
+    {
+      "scenario": "S1",
+      "field": "bound.materials.mom.numerator",
+      "status": "PASS",
+      "actual": "0.22",
+      "expected": "11/50"
+    },
+    {
+      "scenario": "S1",
+      "field": "bound.materials.mom.denominator",
+      "status": "PASS",
+      "actual": "0.31",
+      "expected": "31/100"
+    },
+    {
+      "scenario": "S1",
+      "field": "bound.materials.mom.contribution",
+      "status": "PASS",
+      "actual": "70.96774193548387096774193548",
+      "expected": "2200/31"
+    },
+    {
+      "scenario": "S1",
+      "field": "bound.materials.yoy.numerator",
+      "status": "PASS",
+      "actual": "0.46",
+      "expected": "23/50"
+    },
+    {
+      "scenario": "S1",
+      "field": "bound.materials.yoy.denominator",
+      "status": "PASS",
+      "actual": "0.50",
+      "expected": "1/2"
+    },
+    {
+      "scenario": "S1",
+      "field": "bound.materials.yoy.contribution",
+      "status": "PASS",
+      "actual": "92.00",
+      "expected": "92"
+    },
+    {
+      "scenario": "S1",
+      "field": "bound.materials.budget.numerator",
+      "status": "PASS",
+      "actual": "0.5",
+      "expected": "1/2"
+    },
+    {
+      "scenario": "S1",
+      "field": "bound.materials.budget.denominator",
+      "status": "PASS",
+      "actual": "0.61",
+      "expected": "61/100"
+    },
+    {
+      "scenario": "S1",
+      "field": "bound.materials.budget.contribution",
+      "status": "PASS",
+      "actual": "81.96721311475409836065573770",
+      "expected": "5000/61"
+    },
+    {
+      "scenario": "S1",
+      "field": "structure.labor.column1",
+      "status": "PASS",
+      "actual": "1.53",
+      "expected": "153/100"
+    },
+    {
+      "scenario": "S1",
+      "field": "structure.labor.column2",
+      "status": "PASS",
+      "actual": "13.65%",
+      "expected": "15300/1121"
+    },
+    {
+      "scenario": "S1",
+      "field": "structure.labor.column3",
+      "status": "PASS",
+      "actual": "0.03",
+      "expected": "3/100"
+    },
+    {
+      "scenario": "S1",
+      "field": "structure.labor.column4",
+      "status": "PASS",
+      "actual": "9.68%",
+      "expected": "300/31"
+    },
+    {
+      "scenario": "S1",
+      "field": "bound.labor.mom.numerator",
+      "status": "PASS",
+      "actual": "0.03",
+      "expected": "3/100"
+    },
+    {
+      "scenario": "S1",
+      "field": "bound.labor.mom.denominator",
+      "status": "PASS",
+      "actual": "0.31",
+      "expected": "31/100"
+    },
+    {
+      "scenario": "S1",
+      "field": "bound.labor.mom.contribution",
+      "status": "PASS",
+      "actual": "9.677419354838709677419354839",
+      "expected": "300/31"
+    },
+    {
+      "scenario": "S1",
+      "field": "bound.labor.yoy.numerator",
+      "status": "PASS",
+      "actual": "0.02",
+      "expected": "1/50"
+    },
+    {
+      "scenario": "S1",
+      "field": "bound.labor.yoy.denominator",
+      "status": "PASS",
+      "actual": "0.50",
+      "expected": "1/2"
+    },
+    {
+      "scenario": "S1",
+      "field": "bound.labor.yoy.contribution",
+      "status": "PASS",
+      "actual": "4.00",
+      "expected": "4"
+    },
+    {
+      "scenario": "S1",
+      "field": "bound.labor.budget.numerator",
+      "status": "PASS",
+      "actual": "0.03",
+      "expected": "3/100"
+    },
+    {
+      "scenario": "S1",
+      "field": "bound.labor.budget.denominator",
+      "status": "PASS",
+      "actual": "0.61",
+      "expected": "61/100"
+    },
+    {
+      "scenario": "S1",
+      "field": "bound.labor.budget.contribution",
+      "status": "PASS",
+      "actual": "4.918032786885245901639344262",
+      "expected": "300/61"
+    },
+    {
+      "scenario": "S1",
+      "field": "structure.overhead.column1",
+      "status": "PASS",
+      "actual": "2.38",
+      "expected": "119/50"
+    },
+    {
+      "scenario": "S1",
+      "field": "structure.overhead.column2",
+      "status": "PASS",
+      "actual": "21.23%",
+      "expected": "23800/1121"
+    },
+    {
+      "scenario": "S1",
+      "field": "structure.overhead.column3",
+      "status": "PASS",
+      "actual": "0.06",
+      "expected": "3/50"
+    },
+    {
+      "scenario": "S1",
+      "field": "structure.overhead.column4",
+      "status": "PASS",
+      "actual": "19.35%",
+      "expected": "600/31"
+    },
+    {
+      "scenario": "S1",
+      "field": "bound.overhead.mom.numerator",
+      "status": "PASS",
+      "actual": "0.06",
+      "expected": "3/50"
+    },
+    {
+      "scenario": "S1",
+      "field": "bound.overhead.mom.denominator",
+      "status": "PASS",
+      "actual": "0.31",
+      "expected": "31/100"
+    },
+    {
+      "scenario": "S1",
+      "field": "bound.overhead.mom.contribution",
+      "status": "PASS",
+      "actual": "19.35483870967741935483870968",
+      "expected": "600/31"
+    },
+    {
+      "scenario": "S1",
+      "field": "bound.overhead.yoy.numerator",
+      "status": "PASS",
+      "actual": "0.02",
+      "expected": "1/50"
+    },
+    {
+      "scenario": "S1",
+      "field": "bound.overhead.yoy.denominator",
+      "status": "PASS",
+      "actual": "0.50",
+      "expected": "1/2"
+    },
+    {
+      "scenario": "S1",
+      "field": "bound.overhead.yoy.contribution",
+      "status": "PASS",
+      "actual": "4.00",
+      "expected": "4"
+    },
+    {
+      "scenario": "S1",
+      "field": "bound.overhead.budget.numerator",
+      "status": "PASS",
+      "actual": "0.08",
+      "expected": "2/25"
+    },
+    {
+      "scenario": "S1",
+      "field": "bound.overhead.budget.denominator",
+      "status": "PASS",
+      "actual": "0.61",
+      "expected": "61/100"
+    },
+    {
+      "scenario": "S1",
+      "field": "bound.overhead.budget.contribution",
+      "status": "PASS",
+      "actual": "13.11475409836065573770491803",
+      "expected": "800/61"
+    },
+    {
+      "scenario": "S1",
+      "field": "material_detail.row_count",
+      "status": "PASS",
+      "actual": 6,
+      "expected": "6"
+    },
+    {
+      "scenario": "S1",
+      "field": "material_detail.2026-05.金银花.unit",
+      "status": "PASS",
+      "actual": "3.5",
+      "expected": "7/2"
+    },
+    {
+      "scenario": "S1",
+      "field": "material_detail.2026-05.金银花.total",
+      "status": "PASS",
+      "actual": "203000.0",
+      "expected": "203000"
+    },
+    {
+      "scenario": "S1",
+      "field": "material_detail.2026-05.黄芩提取物.unit",
+      "status": "PASS",
+      "actual": "2.2",
+      "expected": "11/5"
+    },
+    {
+      "scenario": "S1",
+      "field": "material_detail.2026-05.黄芩提取物.total",
+      "status": "PASS",
+      "actual": "127600.0",
+      "expected": "127600"
+    },
+    {
+      "scenario": "S1",
+      "field": "material_detail.2026-05.蔗糖.unit",
+      "status": "PASS",
+      "actual": "0.48",
+      "expected": "12/25"
+    },
+    {
+      "scenario": "S1",
+      "field": "material_detail.2026-05.蔗糖.total",
+      "status": "PASS",
+      "actual": "27840.0",
+      "expected": "27840"
+    },
+    {
+      "scenario": "S1",
+      "field": "material_detail.2026-05.苯甲酸钠.unit",
+      "status": "PASS",
+      "actual": "0.16",
+      "expected": "4/25"
+    },
+    {
+      "scenario": "S1",
+      "field": "material_detail.2026-05.苯甲酸钠.total",
+      "status": "PASS",
+      "actual": "9280.0",
+      "expected": "9280"
+    },
+    {
+      "scenario": "S1",
+      "field": "material_detail.2026-05.纯化水.unit",
+      "status": "PASS",
+      "actual": "0.08",
+      "expected": "2/25"
+    },
+    {
+      "scenario": "S1",
+      "field": "material_detail.2026-05.纯化水.total",
+      "status": "PASS",
+      "actual": "4640.0",
+      "expected": "4640"
+    },
+    {
+      "scenario": "S1",
+      "field": "material_detail.2026-05.包装材料(盒+说明书).unit",
+      "status": "PASS",
+      "actual": "0.88",
+      "expected": "22/25"
+    },
+    {
+      "scenario": "S1",
+      "field": "material_detail.2026-05.包装材料(盒+说明书).total",
+      "status": "PASS",
+      "actual": "51040.0",
+      "expected": "51040"
+    },
+    {
+      "scenario": "S1",
+      "field": "material_driver.金银花.current",
+      "status": "PASS",
+      "actual": "3.5",
+      "expected": "7/2"
+    },
+    {
+      "scenario": "S1",
+      "field": "material_driver.金银花.previous",
+      "status": "PASS",
+      "actual": "3.35",
+      "expected": "67/20"
+    },
+    {
+      "scenario": "S1",
+      "field": "material_driver.金银花.delta",
+      "status": "PASS",
+      "actual": "0.15",
+      "expected": "3/20"
+    },
+    {
+      "scenario": "S1",
+      "field": "material_driver.金银花.contribution",
+      "status": "PASS",
+      "actual": "68.18181818181818181818181818",
+      "expected": "750/11"
+    },
+    {
+      "scenario": "S1",
+      "field": "docx.material_driver.金银花.contribution",
+      "status": "PASS",
+      "actual": "占材料增量68.18%",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.material_driver.金银花.contribution",
+      "status": "PASS",
+      "actual": "占材料增量68.18%",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "material_driver.黄芩提取物.current",
+      "status": "PASS",
+      "actual": "2.2",
+      "expected": "11/5"
+    },
+    {
+      "scenario": "S1",
+      "field": "material_driver.黄芩提取物.previous",
+      "status": "PASS",
+      "actual": "2.15",
+      "expected": "43/20"
+    },
+    {
+      "scenario": "S1",
+      "field": "material_driver.黄芩提取物.delta",
+      "status": "PASS",
+      "actual": "0.05",
+      "expected": "1/20"
+    },
+    {
+      "scenario": "S1",
+      "field": "material_driver.黄芩提取物.contribution",
+      "status": "PASS",
+      "actual": "22.72727272727272727272727273",
+      "expected": "250/11"
+    },
+    {
+      "scenario": "S1",
+      "field": "docx.material_driver.黄芩提取物.contribution",
+      "status": "PASS",
+      "actual": "占材料增量22.73%",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.material_driver.黄芩提取物.contribution",
+      "status": "PASS",
+      "actual": "占材料增量22.73%",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "material_driver.包装材料(盒+说明书).current",
+      "status": "PASS",
+      "actual": "0.88",
+      "expected": "22/25"
+    },
+    {
+      "scenario": "S1",
+      "field": "material_driver.包装材料(盒+说明书).previous",
+      "status": "PASS",
+      "actual": "0.87",
+      "expected": "87/100"
+    },
+    {
+      "scenario": "S1",
+      "field": "material_driver.包装材料(盒+说明书).delta",
+      "status": "PASS",
+      "actual": "0.01",
+      "expected": "1/100"
+    },
+    {
+      "scenario": "S1",
+      "field": "material_driver.包装材料(盒+说明书).contribution",
+      "status": "PASS",
+      "actual": "4.545454545454545454545454545",
+      "expected": "50/11"
+    },
+    {
+      "scenario": "S1",
+      "field": "docx.material_driver.包装材料(盒+说明书).contribution",
+      "status": "PASS",
+      "actual": "占材料增量4.55%",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.material_driver.包装材料(盒+说明书).contribution",
+      "status": "PASS",
+      "actual": "占材料增量4.55%",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "material_driver.蔗糖.current",
+      "status": "PASS",
+      "actual": "0.48",
+      "expected": "12/25"
+    },
+    {
+      "scenario": "S1",
+      "field": "material_driver.蔗糖.previous",
+      "status": "PASS",
+      "actual": "0.47",
+      "expected": "47/100"
+    },
+    {
+      "scenario": "S1",
+      "field": "material_driver.蔗糖.delta",
+      "status": "PASS",
+      "actual": "0.01",
+      "expected": "1/100"
+    },
+    {
+      "scenario": "S1",
+      "field": "material_driver.蔗糖.contribution",
+      "status": "PASS",
+      "actual": "4.545454545454545454545454545",
+      "expected": "50/11"
+    },
+    {
+      "scenario": "S1",
+      "field": "docx.material_driver.蔗糖.contribution",
+      "status": "PASS",
+      "actual": "占材料增量4.55%",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.material_driver.蔗糖.contribution",
+      "status": "PASS",
+      "actual": "占材料增量4.55%",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "material_driver.纯化水.current",
+      "status": "PASS",
+      "actual": "0.08",
+      "expected": "2/25"
+    },
+    {
+      "scenario": "S1",
+      "field": "material_driver.纯化水.previous",
+      "status": "PASS",
+      "actual": "0.08",
+      "expected": "2/25"
+    },
+    {
+      "scenario": "S1",
+      "field": "material_driver.纯化水.delta",
+      "status": "PASS",
+      "actual": "0.00",
+      "expected": "0"
+    },
+    {
+      "scenario": "S1",
+      "field": "material_driver.纯化水.contribution",
+      "status": "PASS",
+      "actual": "0",
+      "expected": "0"
+    },
+    {
+      "scenario": "S1",
+      "field": "material_driver.苯甲酸钠.current",
+      "status": "PASS",
+      "actual": "0.16",
+      "expected": "4/25"
+    },
+    {
+      "scenario": "S1",
+      "field": "material_driver.苯甲酸钠.previous",
+      "status": "PASS",
+      "actual": "0.16",
+      "expected": "4/25"
+    },
+    {
+      "scenario": "S1",
+      "field": "material_driver.苯甲酸钠.delta",
+      "status": "PASS",
+      "actual": "0.00",
+      "expected": "0"
+    },
+    {
+      "scenario": "S1",
+      "field": "material_driver.苯甲酸钠.contribution",
+      "status": "PASS",
+      "actual": "0",
+      "expected": "0"
+    },
+    {
+      "scenario": "S1",
+      "field": "labor.row1.column1",
+      "status": "PASS",
+      "actual": "1.53",
+      "expected": "153/100"
+    },
+    {
+      "scenario": "S1",
+      "field": "labor.row1.column2",
+      "status": "PASS",
+      "actual": "1.50",
+      "expected": "3/2"
+    },
+    {
+      "scenario": "S1",
+      "field": "labor.row1.column3",
+      "status": "PASS",
+      "actual": "2.00%",
+      "expected": "2"
+    },
+    {
+      "scenario": "S1",
+      "field": "labor.row2.column1",
+      "status": "PASS",
+      "actual": "231.72",
+      "expected": "6720/29"
+    },
+    {
+      "scenario": "S1",
+      "field": "labor.row2.column2",
+      "status": "PASS",
+      "actual": "256.00",
+      "expected": "256"
+    },
+    {
+      "scenario": "S1",
+      "field": "labor.row2.column3",
+      "status": "PASS",
+      "actual": "-9.48%",
+      "expected": "-275/29"
+    },
+    {
+      "scenario": "S1",
+      "field": "labor.row3.column1",
+      "status": "PASS",
+      "actual": "66.03",
+      "expected": "7395/112"
+    },
+    {
+      "scenario": "S1",
+      "field": "labor.row3.column2",
+      "status": "PASS",
+      "actual": "58.59",
+      "expected": "1875/32"
+    },
+    {
+      "scenario": "S1",
+      "field": "labor.row3.column3",
+      "status": "PASS",
+      "actual": "12.69%",
+      "expected": "444/35"
+    },
+    {
+      "scenario": "S1",
+      "field": "labor.row4.column1",
+      "status": "PASS",
+      "actual": "345.24",
+      "expected": "7250/21"
+    },
+    {
+      "scenario": "S1",
+      "field": "labor.row4.column2",
+      "status": "PASS",
+      "actual": "312.50",
+      "expected": "625/2"
+    },
+    {
+      "scenario": "S1",
+      "field": "labor.row4.column3",
+      "status": "PASS",
+      "actual": "10.48%",
+      "expected": "220/21"
+    },
+    {
+      "scenario": "S1",
+      "field": "benchmark.unit_cost.column1",
+      "status": "PASS",
+      "actual": "11.60",
+      "expected": "58/5"
+    },
+    {
+      "scenario": "S1",
+      "field": "benchmark.unit_cost.column2",
+      "status": "PASS",
+      "actual": "11.21",
+      "expected": "1121/100"
+    },
+    {
+      "scenario": "S1",
+      "field": "benchmark.unit_cost.column3",
+      "status": "PASS",
+      "actual": "0.39",
+      "expected": "39/100"
+    },
+    {
+      "scenario": "S1",
+      "field": "benchmark.unit_cost.column4",
+      "status": "PASS",
+      "actual": "3.48",
+      "expected": "3900/1121"
+    },
+    {
+      "scenario": "S1",
+      "field": "benchmark.materials.column1",
+      "status": "PASS",
+      "actual": "7.29",
+      "expected": "729/100"
+    },
+    {
+      "scenario": "S1",
+      "field": "benchmark.materials.column2",
+      "status": "PASS",
+      "actual": "7.30",
+      "expected": "73/10"
+    },
+    {
+      "scenario": "S1",
+      "field": "benchmark.materials.column3",
+      "status": "PASS",
+      "actual": "-0.01",
+      "expected": "-1/100"
+    },
+    {
+      "scenario": "S1",
+      "field": "benchmark.materials.column4",
+      "status": "PASS",
+      "actual": "-0.14",
+      "expected": "-10/73"
+    },
+    {
+      "scenario": "S1",
+      "field": "benchmark.materials.contribution_docx",
+      "status": "PASS",
+      "actual": "-2.56%",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "benchmark.materials.contribution_pdf",
+      "status": "PASS",
+      "actual": "-2.56%",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "benchmark.labor.column1",
+      "status": "PASS",
+      "actual": "1.73",
+      "expected": "173/100"
+    },
+    {
+      "scenario": "S1",
+      "field": "benchmark.labor.column2",
+      "status": "PASS",
+      "actual": "1.53",
+      "expected": "153/100"
+    },
+    {
+      "scenario": "S1",
+      "field": "benchmark.labor.column3",
+      "status": "PASS",
+      "actual": "0.20",
+      "expected": "1/5"
+    },
+    {
+      "scenario": "S1",
+      "field": "benchmark.labor.column4",
+      "status": "PASS",
+      "actual": "13.07",
+      "expected": "2000/153"
+    },
+    {
+      "scenario": "S1",
+      "field": "benchmark.labor.contribution_docx",
+      "status": "PASS",
+      "actual": "51.28%",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "benchmark.labor.contribution_pdf",
+      "status": "PASS",
+      "actual": "51.28%",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "benchmark.overhead.column1",
+      "status": "PASS",
+      "actual": "2.58",
+      "expected": "129/50"
+    },
+    {
+      "scenario": "S1",
+      "field": "benchmark.overhead.column2",
+      "status": "PASS",
+      "actual": "2.38",
+      "expected": "119/50"
+    },
+    {
+      "scenario": "S1",
+      "field": "benchmark.overhead.column3",
+      "status": "PASS",
+      "actual": "0.20",
+      "expected": "1/5"
+    },
+    {
+      "scenario": "S1",
+      "field": "benchmark.overhead.column4",
+      "status": "PASS",
+      "actual": "8.40",
+      "expected": "1000/119"
+    },
+    {
+      "scenario": "S1",
+      "field": "benchmark.overhead.contribution_docx",
+      "status": "PASS",
+      "actual": "51.28%",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "benchmark.overhead.contribution_pdf",
+      "status": "PASS",
+      "actual": "51.28%",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "budget_bridge.quantity_effect",
+      "status": "PASS",
+      "actual": "84800.0",
+      "expected": "84800"
+    },
+    {
+      "scenario": "S1",
+      "field": "docx.budget_bridge.quantity_effect",
+      "status": "PASS",
+      "actual": "84800.00",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.budget_bridge.quantity_effect",
+      "status": "PASS",
+      "actual": "84800.00",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "budget_bridge.unit_cost_effect",
+      "status": "PASS",
+      "actual": "35380.00",
+      "expected": "35380"
+    },
+    {
+      "scenario": "S1",
+      "field": "docx.budget_bridge.unit_cost_effect",
+      "status": "PASS",
+      "actual": "35380.00",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.budget_bridge.unit_cost_effect",
+      "status": "PASS",
+      "actual": "35380.00",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "budget_bridge.total_delta",
+      "status": "PASS",
+      "actual": "120180.0",
+      "expected": "120180"
+    },
+    {
+      "scenario": "S1",
+      "field": "docx.budget_bridge.total_delta",
+      "status": "PASS",
+      "actual": "120180.00",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.budget_bridge.total_delta",
+      "status": "PASS",
+      "actual": "120180.00",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "trend.no_future.2026-01",
+      "status": "PASS",
+      "actual": "2026-01",
+      "expected": "2026-05"
+    },
+    {
+      "scenario": "S1",
+      "field": "trend.2026-01.unit_cost",
+      "status": "PASS",
+      "actual": "10.7",
+      "expected": "107/10"
+    },
+    {
+      "scenario": "S1",
+      "field": "trend.2026-01.quantity",
+      "status": "PASS",
+      "actual": "45000",
+      "expected": "45000"
+    },
+    {
+      "scenario": "S1",
+      "field": "trend.2026-01.total_cost",
+      "status": "PASS",
+      "actual": "481500.0",
+      "expected": "481500"
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.trend.2026-01",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "trend.no_future.2026-02",
+      "status": "PASS",
+      "actual": "2026-02",
+      "expected": "2026-05"
+    },
+    {
+      "scenario": "S1",
+      "field": "trend.2026-02.unit_cost",
+      "status": "PASS",
+      "actual": "10.87",
+      "expected": "1087/100"
+    },
+    {
+      "scenario": "S1",
+      "field": "trend.2026-02.quantity",
+      "status": "PASS",
+      "actual": "38000",
+      "expected": "38000"
+    },
+    {
+      "scenario": "S1",
+      "field": "trend.2026-02.total_cost",
+      "status": "PASS",
+      "actual": "413060.0",
+      "expected": "413060"
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.trend.2026-02",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "trend.no_future.2026-03",
+      "status": "PASS",
+      "actual": "2026-03",
+      "expected": "2026-05"
+    },
+    {
+      "scenario": "S1",
+      "field": "trend.2026-03.unit_cost",
+      "status": "PASS",
+      "actual": "10.53",
+      "expected": "1053/100"
+    },
+    {
+      "scenario": "S1",
+      "field": "trend.2026-03.quantity",
+      "status": "PASS",
+      "actual": "52000",
+      "expected": "52000"
+    },
+    {
+      "scenario": "S1",
+      "field": "trend.2026-03.total_cost",
+      "status": "PASS",
+      "actual": "547560.0",
+      "expected": "547560"
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.trend.2026-03",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "trend.no_future.2026-04",
+      "status": "PASS",
+      "actual": "2026-04",
+      "expected": "2026-05"
+    },
+    {
+      "scenario": "S1",
+      "field": "trend.2026-04.unit_cost",
+      "status": "PASS",
+      "actual": "10.9",
+      "expected": "109/10"
+    },
+    {
+      "scenario": "S1",
+      "field": "trend.2026-04.quantity",
+      "status": "PASS",
+      "actual": "55000",
+      "expected": "55000"
+    },
+    {
+      "scenario": "S1",
+      "field": "trend.2026-04.total_cost",
+      "status": "PASS",
+      "actual": "599500.0",
+      "expected": "599500"
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.trend.2026-04",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "trend.no_future.2026-05",
+      "status": "PASS",
+      "actual": "2026-05",
+      "expected": "2026-05"
+    },
+    {
+      "scenario": "S1",
+      "field": "trend.2026-05.unit_cost",
+      "status": "PASS",
+      "actual": "11.21",
+      "expected": "1121/100"
+    },
+    {
+      "scenario": "S1",
+      "field": "trend.2026-05.quantity",
+      "status": "PASS",
+      "actual": "58000",
+      "expected": "58000"
+    },
+    {
+      "scenario": "S1",
+      "field": "trend.2026-05.total_cost",
+      "status": "PASS",
+      "actual": "650180.0",
+      "expected": "650180"
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.trend.2026-05",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "trend.available_months",
+      "status": "PASS",
+      "actual": [
+        "2026-01",
+        "2026-02",
+        "2026-03",
+        "2026-04",
+        "2026-05"
+      ],
+      "expected": "['2026-01', '2026-02', '2026-03', '2026-04', '2026-05']"
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.table2.row1.same_as_docx",
+      "status": "PASS",
+      "actual": "直接材料7.3065.12%0.2270.97%",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.table2.row2.same_as_docx",
+      "status": "PASS",
+      "actual": "直接人工1.5313.65%0.039.68%",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.table2.row3.same_as_docx",
+      "status": "PASS",
+      "actual": "制造费用2.3821.23%0.0619.35%",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.table2.row4.same_as_docx",
+      "status": "PASS",
+      "actual": "合计11.21100%0.31100.00%",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.table3.row1.same_as_docx",
+      "status": "PASS",
+      "actual": "2026-05金银花3.5203000.0",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.table3.row2.same_as_docx",
+      "status": "PASS",
+      "actual": "2026-05黄芩提取物2.2127600.0",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.table3.row3.same_as_docx",
+      "status": "PASS",
+      "actual": "2026-05蔗糖0.4827840.0",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.table3.row4.same_as_docx",
+      "status": "PASS",
+      "actual": "2026-05苯甲酸钠0.169280.0",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.table3.row5.same_as_docx",
+      "status": "PASS",
+      "actual": "2026-05纯化水0.084640.0",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.table3.row6.same_as_docx",
+      "status": "PASS",
+      "actual": "2026-05包装材料(盒+说明书)0.8851040.0",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.table4.row1.same_as_docx",
+      "status": "PASS",
+      "actual": "单位人工成本(元/盒)1.531.502.00%—",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.table4.row2.same_as_docx",
+      "status": "PASS",
+      "actual": "人工工时(h/万盒)231.72256.00-9.48%—",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.table4.row3.same_as_docx",
+      "status": "PASS",
+      "actual": "平均小时工资(元/h)66.0358.5912.69%—",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.table4.row4.same_as_docx",
+      "status": "PASS",
+      "actual": "人工效率(盒/人·日)345.24312.5010.48%—",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.table5.row1.same_as_docx",
+      "status": "PASS",
+      "actual": "折旧费0.830.812.47%折旧费变动需核对费用台账及分摊依据",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.table5.row2.same_as_docx",
+      "status": "PASS",
+      "actual": "动力费(水电气)0.560.543.70%动力费(水电气)变动需核对费用台账及分摊依据",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.table5.row3.same_as_docx",
+      "status": "PASS",
+      "actual": "间接人工0.480.472.13%人工(间接)变动需核对费用台账及分摊依据",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.table5.row4.same_as_docx",
+      "status": "PASS",
+      "actual": "检验费0.260.254.00%检验费变动需核对费用台账及分摊依据",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.table5.row5.same_as_docx",
+      "status": "PASS",
+      "actual": "其他制造费用0.250.250.00%其他制造费用变动需核对费用台账及分摊依据",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.table5.row6.same_as_docx",
+      "status": "PASS",
+      "actual": "合计2.382.322.59%—",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.table8.row1.same_as_docx",
+      "status": "PASS",
+      "actual": "单位成本11.6011.210.393.48",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.table8.row2.same_as_docx",
+      "status": "PASS",
+      "actual": "直接材料7.297.30-0.01-0.14",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.table8.row3.same_as_docx",
+      "status": "PASS",
+      "actual": "直接人工1.731.530.2013.07",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "pdf.table8.row4.same_as_docx",
+      "status": "PASS",
+      "actual": "制造费用2.582.380.208.40",
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "degradation_disclosed_docx",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "degradation_disclosed_pdf",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "S1",
+      "field": "no_report_approval_claim",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "docx.index_hash",
+      "status": "PASS",
+      "actual": "2a23ec8127ae8d09d6e2c658b9493658b44fce6d616ef7d345474559bd3d28fd",
+      "expected": "2a23ec8127ae8d09d6e2c658b9493658b44fce6d616ef7d345474559bd3d28fd"
+    },
+    {
+      "scenario": "S2",
+      "field": "docx.record_hash",
+      "status": "PASS",
+      "actual": "2a23ec8127ae8d09d6e2c658b9493658b44fce6d616ef7d345474559bd3d28fd",
+      "expected": "2a23ec8127ae8d09d6e2c658b9493658b44fce6d616ef7d345474559bd3d28fd"
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.index_hash",
+      "status": "PASS",
+      "actual": "ae59a63d0fc3589c07b2d4e3183f598c7db1943e294d78f08097a11f1b9ce839",
+      "expected": "ae59a63d0fc3589c07b2d4e3183f598c7db1943e294d78f08097a11f1b9ce839"
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.record_hash",
+      "status": "PASS",
+      "actual": "ae59a63d0fc3589c07b2d4e3183f598c7db1943e294d78f08097a11f1b9ce839",
+      "expected": "ae59a63d0fc3589c07b2d4e3183f598c7db1943e294d78f08097a11f1b9ce839"
+    },
+    {
+      "scenario": "S2",
+      "field": "audit.index_hash",
+      "status": "PASS",
+      "actual": "8bb053120b2a546ee9490790afdcb5a2ad101f408900bce01eff6c56caca1b82",
+      "expected": "8bb053120b2a546ee9490790afdcb5a2ad101f408900bce01eff6c56caca1b82"
+    },
+    {
+      "scenario": "S2",
+      "field": "audit.record_hash",
+      "status": "PASS",
+      "actual": "8bb053120b2a546ee9490790afdcb5a2ad101f408900bce01eff6c56caca1b82",
+      "expected": "8bb053120b2a546ee9490790afdcb5a2ad101f408900bce01eff6c56caca1b82"
+    },
+    {
+      "scenario": "S2",
+      "field": "snapshot.record_audit_identity",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "bindings.index_record_audit_identity",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "snapshot.quantity",
+      "status": "PASS",
+      "actual": "102000",
+      "expected": "102000"
+    },
+    {
+      "scenario": "S2",
+      "field": "snapshot.unit_cost",
+      "status": "PASS",
+      "actual": "7.47",
+      "expected": "747/100"
+    },
+    {
+      "scenario": "S2",
+      "field": "snapshot.total_cost",
+      "status": "PASS",
+      "actual": "761940.0",
+      "expected": "761940"
+    },
+    {
+      "scenario": "S2",
+      "field": "snapshot.materials",
+      "status": "PASS",
+      "actual": "4.75",
+      "expected": "19/4"
+    },
+    {
+      "scenario": "S2",
+      "field": "snapshot.labor",
+      "status": "PASS",
+      "actual": "1.06",
+      "expected": "53/50"
+    },
+    {
+      "scenario": "S2",
+      "field": "snapshot.overhead",
+      "status": "PASS",
+      "actual": "1.66",
+      "expected": "83/50"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.quantity.column1",
+      "status": "PASS",
+      "actual": "102000",
+      "expected": "102000"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.quantity.column2",
+      "status": "PASS",
+      "actual": "98000",
+      "expected": "98000"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.quantity.column3",
+      "status": "PASS",
+      "actual": "4.08%",
+      "expected": "200/49"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.quantity.column4",
+      "status": "PASS",
+      "actual": "96900",
+      "expected": "96900"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.quantity.column5",
+      "status": "PASS",
+      "actual": "5.26%",
+      "expected": "100/19"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.quantity.column6",
+      "status": "PASS",
+      "actual": "90000",
+      "expected": "90000"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.quantity.column7",
+      "status": "PASS",
+      "actual": "13.33%",
+      "expected": "40/3"
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.overview.quantity.same_row",
+      "status": "PASS",
+      "actual": "产量(盒)102000980004.08%969005.26%9000013.33%",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.unit_cost.column1",
+      "status": "PASS",
+      "actual": "7.47",
+      "expected": "747/100"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.unit_cost.column2",
+      "status": "PASS",
+      "actual": "7.24",
+      "expected": "181/25"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.unit_cost.column3",
+      "status": "PASS",
+      "actual": "3.18%",
+      "expected": "575/181"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.unit_cost.column4",
+      "status": "PASS",
+      "actual": "7.10",
+      "expected": "71/10"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.unit_cost.column5",
+      "status": "PASS",
+      "actual": "5.21%",
+      "expected": "370/71"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.unit_cost.column6",
+      "status": "PASS",
+      "actual": "7.00",
+      "expected": "7"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.unit_cost.column7",
+      "status": "PASS",
+      "actual": "6.71%",
+      "expected": "47/7"
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.overview.unit_cost.same_row",
+      "status": "PASS",
+      "actual": "单位成本(元/盒)7.477.243.18%7.105.21%7.006.71%",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.total_cost.column1",
+      "status": "PASS",
+      "actual": "761940.00",
+      "expected": "761940"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.total_cost.column2",
+      "status": "PASS",
+      "actual": "709520.00",
+      "expected": "709520"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.total_cost.column3",
+      "status": "PASS",
+      "actual": "7.39%",
+      "expected": "65525/8869"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.total_cost.column4",
+      "status": "PASS",
+      "actual": "687990.00",
+      "expected": "687990"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.total_cost.column5",
+      "status": "PASS",
+      "actual": "10.75%",
+      "expected": "14500/1349"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.total_cost.column6",
+      "status": "PASS",
+      "actual": "630000.00",
+      "expected": "630000"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.total_cost.column7",
+      "status": "PASS",
+      "actual": "20.94%",
+      "expected": "733/35"
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.overview.total_cost.same_row",
+      "status": "PASS",
+      "actual": "总成本(元)761940.00709520.007.39%687990.0010.75%630000.0020.94%",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.materials.column1",
+      "status": "PASS",
+      "actual": "4.75",
+      "expected": "19/4"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.materials.column2",
+      "status": "PASS",
+      "actual": "4.57",
+      "expected": "457/100"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.materials.column3",
+      "status": "PASS",
+      "actual": "3.94%",
+      "expected": "1800/457"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.materials.column4",
+      "status": "PASS",
+      "actual": "4.42",
+      "expected": "221/50"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.materials.column5",
+      "status": "PASS",
+      "actual": "7.47%",
+      "expected": "1650/221"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.materials.column6",
+      "status": "PASS",
+      "actual": "4.38",
+      "expected": "219/50"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.materials.column7",
+      "status": "PASS",
+      "actual": "8.45%",
+      "expected": "1850/219"
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.overview.materials.same_row",
+      "status": "PASS",
+      "actual": "其中：直接材料(元/盒)4.754.573.94%4.427.47%4.388.45%",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.labor.column1",
+      "status": "PASS",
+      "actual": "1.06",
+      "expected": "53/50"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.labor.column2",
+      "status": "PASS",
+      "actual": "1.04",
+      "expected": "26/25"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.labor.column3",
+      "status": "PASS",
+      "actual": "1.92%",
+      "expected": "25/13"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.labor.column4",
+      "status": "PASS",
+      "actual": "1.04",
+      "expected": "26/25"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.labor.column5",
+      "status": "PASS",
+      "actual": "1.92%",
+      "expected": "25/13"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.labor.column6",
+      "status": "PASS",
+      "actual": "1.02",
+      "expected": "51/50"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.labor.column7",
+      "status": "PASS",
+      "actual": "3.92%",
+      "expected": "200/51"
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.overview.labor.same_row",
+      "status": "PASS",
+      "actual": "其中：直接人工(元/盒)1.061.041.92%1.041.92%1.023.92%",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.overhead.column1",
+      "status": "PASS",
+      "actual": "1.66",
+      "expected": "83/50"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.overhead.column2",
+      "status": "PASS",
+      "actual": "1.63",
+      "expected": "163/100"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.overhead.column3",
+      "status": "PASS",
+      "actual": "1.84%",
+      "expected": "300/163"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.overhead.column4",
+      "status": "PASS",
+      "actual": "1.64",
+      "expected": "41/25"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.overhead.column5",
+      "status": "PASS",
+      "actual": "1.22%",
+      "expected": "50/41"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.overhead.column6",
+      "status": "PASS",
+      "actual": "1.60",
+      "expected": "8/5"
+    },
+    {
+      "scenario": "S2",
+      "field": "overview.overhead.column7",
+      "status": "PASS",
+      "actual": "3.75%",
+      "expected": "15/4"
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.overview.overhead.same_row",
+      "status": "PASS",
+      "actual": "其中：制造费用(元/盒)1.661.631.84%1.641.22%1.603.75%",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "structure.materials.column1",
+      "status": "PASS",
+      "actual": "4.75",
+      "expected": "19/4"
+    },
+    {
+      "scenario": "S2",
+      "field": "structure.materials.column2",
+      "status": "PASS",
+      "actual": "63.59%",
+      "expected": "47500/747"
+    },
+    {
+      "scenario": "S2",
+      "field": "structure.materials.column3",
+      "status": "PASS",
+      "actual": "0.18",
+      "expected": "9/50"
+    },
+    {
+      "scenario": "S2",
+      "field": "structure.materials.column4",
+      "status": "PASS",
+      "actual": "78.26%",
+      "expected": "1800/23"
+    },
+    {
+      "scenario": "S2",
+      "field": "bound.materials.mom.numerator",
+      "status": "PASS",
+      "actual": "0.18",
+      "expected": "9/50"
+    },
+    {
+      "scenario": "S2",
+      "field": "bound.materials.mom.denominator",
+      "status": "PASS",
+      "actual": "0.23",
+      "expected": "23/100"
+    },
+    {
+      "scenario": "S2",
+      "field": "bound.materials.mom.contribution",
+      "status": "PASS",
+      "actual": "78.26086956521739130434782609",
+      "expected": "1800/23"
+    },
+    {
+      "scenario": "S2",
+      "field": "bound.materials.yoy.numerator",
+      "status": "PASS",
+      "actual": "0.33",
+      "expected": "33/100"
+    },
+    {
+      "scenario": "S2",
+      "field": "bound.materials.yoy.denominator",
+      "status": "PASS",
+      "actual": "0.37",
+      "expected": "37/100"
+    },
+    {
+      "scenario": "S2",
+      "field": "bound.materials.yoy.contribution",
+      "status": "PASS",
+      "actual": "89.18918918918918918918918919",
+      "expected": "3300/37"
+    },
+    {
+      "scenario": "S2",
+      "field": "bound.materials.budget.numerator",
+      "status": "PASS",
+      "actual": "0.37",
+      "expected": "37/100"
+    },
+    {
+      "scenario": "S2",
+      "field": "bound.materials.budget.denominator",
+      "status": "PASS",
+      "actual": "0.47",
+      "expected": "47/100"
+    },
+    {
+      "scenario": "S2",
+      "field": "bound.materials.budget.contribution",
+      "status": "PASS",
+      "actual": "78.72340425531914893617021277",
+      "expected": "3700/47"
+    },
+    {
+      "scenario": "S2",
+      "field": "structure.labor.column1",
+      "status": "PASS",
+      "actual": "1.06",
+      "expected": "53/50"
+    },
+    {
+      "scenario": "S2",
+      "field": "structure.labor.column2",
+      "status": "PASS",
+      "actual": "14.19%",
+      "expected": "10600/747"
+    },
+    {
+      "scenario": "S2",
+      "field": "structure.labor.column3",
+      "status": "PASS",
+      "actual": "0.02",
+      "expected": "1/50"
+    },
+    {
+      "scenario": "S2",
+      "field": "structure.labor.column4",
+      "status": "PASS",
+      "actual": "8.70%",
+      "expected": "200/23"
+    },
+    {
+      "scenario": "S2",
+      "field": "bound.labor.mom.numerator",
+      "status": "PASS",
+      "actual": "0.02",
+      "expected": "1/50"
+    },
+    {
+      "scenario": "S2",
+      "field": "bound.labor.mom.denominator",
+      "status": "PASS",
+      "actual": "0.23",
+      "expected": "23/100"
+    },
+    {
+      "scenario": "S2",
+      "field": "bound.labor.mom.contribution",
+      "status": "PASS",
+      "actual": "8.695652173913043478260869565",
+      "expected": "200/23"
+    },
+    {
+      "scenario": "S2",
+      "field": "bound.labor.yoy.numerator",
+      "status": "PASS",
+      "actual": "0.02",
+      "expected": "1/50"
+    },
+    {
+      "scenario": "S2",
+      "field": "bound.labor.yoy.denominator",
+      "status": "PASS",
+      "actual": "0.37",
+      "expected": "37/100"
+    },
+    {
+      "scenario": "S2",
+      "field": "bound.labor.yoy.contribution",
+      "status": "PASS",
+      "actual": "5.405405405405405405405405405",
+      "expected": "200/37"
+    },
+    {
+      "scenario": "S2",
+      "field": "bound.labor.budget.numerator",
+      "status": "PASS",
+      "actual": "0.04",
+      "expected": "1/25"
+    },
+    {
+      "scenario": "S2",
+      "field": "bound.labor.budget.denominator",
+      "status": "PASS",
+      "actual": "0.47",
+      "expected": "47/100"
+    },
+    {
+      "scenario": "S2",
+      "field": "bound.labor.budget.contribution",
+      "status": "PASS",
+      "actual": "8.510638297872340425531914894",
+      "expected": "400/47"
+    },
+    {
+      "scenario": "S2",
+      "field": "structure.overhead.column1",
+      "status": "PASS",
+      "actual": "1.66",
+      "expected": "83/50"
+    },
+    {
+      "scenario": "S2",
+      "field": "structure.overhead.column2",
+      "status": "PASS",
+      "actual": "22.22%",
+      "expected": "200/9"
+    },
+    {
+      "scenario": "S2",
+      "field": "structure.overhead.column3",
+      "status": "PASS",
+      "actual": "0.03",
+      "expected": "3/100"
+    },
+    {
+      "scenario": "S2",
+      "field": "structure.overhead.column4",
+      "status": "PASS",
+      "actual": "13.04%",
+      "expected": "300/23"
+    },
+    {
+      "scenario": "S2",
+      "field": "bound.overhead.mom.numerator",
+      "status": "PASS",
+      "actual": "0.03",
+      "expected": "3/100"
+    },
+    {
+      "scenario": "S2",
+      "field": "bound.overhead.mom.denominator",
+      "status": "PASS",
+      "actual": "0.23",
+      "expected": "23/100"
+    },
+    {
+      "scenario": "S2",
+      "field": "bound.overhead.mom.contribution",
+      "status": "PASS",
+      "actual": "13.04347826086956521739130435",
+      "expected": "300/23"
+    },
+    {
+      "scenario": "S2",
+      "field": "bound.overhead.yoy.numerator",
+      "status": "PASS",
+      "actual": "0.02",
+      "expected": "1/50"
+    },
+    {
+      "scenario": "S2",
+      "field": "bound.overhead.yoy.denominator",
+      "status": "PASS",
+      "actual": "0.37",
+      "expected": "37/100"
+    },
+    {
+      "scenario": "S2",
+      "field": "bound.overhead.yoy.contribution",
+      "status": "PASS",
+      "actual": "5.405405405405405405405405405",
+      "expected": "200/37"
+    },
+    {
+      "scenario": "S2",
+      "field": "bound.overhead.budget.numerator",
+      "status": "PASS",
+      "actual": "0.06",
+      "expected": "3/50"
+    },
+    {
+      "scenario": "S2",
+      "field": "bound.overhead.budget.denominator",
+      "status": "PASS",
+      "actual": "0.47",
+      "expected": "47/100"
+    },
+    {
+      "scenario": "S2",
+      "field": "bound.overhead.budget.contribution",
+      "status": "PASS",
+      "actual": "12.76595744680851063829787234",
+      "expected": "600/47"
+    },
+    {
+      "scenario": "S2",
+      "field": "material_detail.row_count",
+      "status": "PASS",
+      "actual": 4,
+      "expected": "4"
+    },
+    {
+      "scenario": "S2",
+      "field": "material_detail.2026-05.板蓝根.unit",
+      "status": "PASS",
+      "actual": "3.05",
+      "expected": "61/20"
+    },
+    {
+      "scenario": "S2",
+      "field": "material_detail.2026-05.板蓝根.total",
+      "status": "PASS",
+      "actual": "311100.0",
+      "expected": "311100"
+    },
+    {
+      "scenario": "S2",
+      "field": "material_detail.2026-05.蔗糖.unit",
+      "status": "PASS",
+      "actual": "0.58",
+      "expected": "29/50"
+    },
+    {
+      "scenario": "S2",
+      "field": "material_detail.2026-05.蔗糖.total",
+      "status": "PASS",
+      "actual": "59160.0",
+      "expected": "59160"
+    },
+    {
+      "scenario": "S2",
+      "field": "material_detail.2026-05.糊精.unit",
+      "status": "PASS",
+      "actual": "0.37",
+      "expected": "37/100"
+    },
+    {
+      "scenario": "S2",
+      "field": "material_detail.2026-05.糊精.total",
+      "status": "PASS",
+      "actual": "37740.0",
+      "expected": "37740"
+    },
+    {
+      "scenario": "S2",
+      "field": "material_detail.2026-05.包装材料(复合膜袋+纸盒).unit",
+      "status": "PASS",
+      "actual": "0.75",
+      "expected": "3/4"
+    },
+    {
+      "scenario": "S2",
+      "field": "material_detail.2026-05.包装材料(复合膜袋+纸盒).total",
+      "status": "PASS",
+      "actual": "76500.0",
+      "expected": "76500"
+    },
+    {
+      "scenario": "S2",
+      "field": "material_driver.板蓝根.current",
+      "status": "PASS",
+      "actual": "3.05",
+      "expected": "61/20"
+    },
+    {
+      "scenario": "S2",
+      "field": "material_driver.板蓝根.previous",
+      "status": "PASS",
+      "actual": "2.9",
+      "expected": "29/10"
+    },
+    {
+      "scenario": "S2",
+      "field": "material_driver.板蓝根.delta",
+      "status": "PASS",
+      "actual": "0.15",
+      "expected": "3/20"
+    },
+    {
+      "scenario": "S2",
+      "field": "material_driver.板蓝根.contribution",
+      "status": "PASS",
+      "actual": "83.33333333333333333333333333",
+      "expected": "250/3"
+    },
+    {
+      "scenario": "S2",
+      "field": "docx.material_driver.板蓝根.contribution",
+      "status": "PASS",
+      "actual": "占材料增量83.33%",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.material_driver.板蓝根.contribution",
+      "status": "PASS",
+      "actual": "占材料增量83.33%",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "material_driver.包装材料(复合膜袋+纸盒).current",
+      "status": "PASS",
+      "actual": "0.75",
+      "expected": "3/4"
+    },
+    {
+      "scenario": "S2",
+      "field": "material_driver.包装材料(复合膜袋+纸盒).previous",
+      "status": "PASS",
+      "actual": "0.74",
+      "expected": "37/50"
+    },
+    {
+      "scenario": "S2",
+      "field": "material_driver.包装材料(复合膜袋+纸盒).delta",
+      "status": "PASS",
+      "actual": "0.01",
+      "expected": "1/100"
+    },
+    {
+      "scenario": "S2",
+      "field": "material_driver.包装材料(复合膜袋+纸盒).contribution",
+      "status": "PASS",
+      "actual": "5.555555555555555555555555556",
+      "expected": "50/9"
+    },
+    {
+      "scenario": "S2",
+      "field": "docx.material_driver.包装材料(复合膜袋+纸盒).contribution",
+      "status": "PASS",
+      "actual": "占材料增量5.56%",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.material_driver.包装材料(复合膜袋+纸盒).contribution",
+      "status": "PASS",
+      "actual": "占材料增量5.56%",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "material_driver.糊精.current",
+      "status": "PASS",
+      "actual": "0.37",
+      "expected": "37/100"
+    },
+    {
+      "scenario": "S2",
+      "field": "material_driver.糊精.previous",
+      "status": "PASS",
+      "actual": "0.36",
+      "expected": "9/25"
+    },
+    {
+      "scenario": "S2",
+      "field": "material_driver.糊精.delta",
+      "status": "PASS",
+      "actual": "0.01",
+      "expected": "1/100"
+    },
+    {
+      "scenario": "S2",
+      "field": "material_driver.糊精.contribution",
+      "status": "PASS",
+      "actual": "5.555555555555555555555555556",
+      "expected": "50/9"
+    },
+    {
+      "scenario": "S2",
+      "field": "docx.material_driver.糊精.contribution",
+      "status": "PASS",
+      "actual": "占材料增量5.56%",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.material_driver.糊精.contribution",
+      "status": "PASS",
+      "actual": "占材料增量5.56%",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "material_driver.蔗糖.current",
+      "status": "PASS",
+      "actual": "0.58",
+      "expected": "29/50"
+    },
+    {
+      "scenario": "S2",
+      "field": "material_driver.蔗糖.previous",
+      "status": "PASS",
+      "actual": "0.57",
+      "expected": "57/100"
+    },
+    {
+      "scenario": "S2",
+      "field": "material_driver.蔗糖.delta",
+      "status": "PASS",
+      "actual": "0.01",
+      "expected": "1/100"
+    },
+    {
+      "scenario": "S2",
+      "field": "material_driver.蔗糖.contribution",
+      "status": "PASS",
+      "actual": "5.555555555555555555555555556",
+      "expected": "50/9"
+    },
+    {
+      "scenario": "S2",
+      "field": "docx.material_driver.蔗糖.contribution",
+      "status": "PASS",
+      "actual": "占材料增量5.56%",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.material_driver.蔗糖.contribution",
+      "status": "PASS",
+      "actual": "占材料增量5.56%",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "labor.row1.column1",
+      "status": "PASS",
+      "actual": "1.06",
+      "expected": "53/50"
+    },
+    {
+      "scenario": "S2",
+      "field": "labor.row1.column2",
+      "status": "PASS",
+      "actual": "1.04",
+      "expected": "26/25"
+    },
+    {
+      "scenario": "S2",
+      "field": "labor.row1.column3",
+      "status": "PASS",
+      "actual": "1.92%",
+      "expected": "25/13"
+    },
+    {
+      "scenario": "S2",
+      "field": "labor.row2.column1",
+      "status": "PASS",
+      "actual": "164.71",
+      "expected": "2800/17"
+    },
+    {
+      "scenario": "S2",
+      "field": "labor.row2.column2",
+      "status": "PASS",
+      "actual": "179.59",
+      "expected": "8800/49"
+    },
+    {
+      "scenario": "S2",
+      "field": "labor.row2.column3",
+      "status": "PASS",
+      "actual": "-8.29%",
+      "expected": "-1550/187"
+    },
+    {
+      "scenario": "S2",
+      "field": "labor.row3.column1",
+      "status": "PASS",
+      "actual": "64.36",
+      "expected": "901/14"
+    },
+    {
+      "scenario": "S2",
+      "field": "labor.row3.column2",
+      "status": "PASS",
+      "actual": "57.91",
+      "expected": "637/11"
+    },
+    {
+      "scenario": "S2",
+      "field": "labor.row3.column3",
+      "status": "PASS",
+      "actual": "11.13%",
+      "expected": "49650/4459"
+    },
+    {
+      "scenario": "S2",
+      "field": "labor.row4.column1",
+      "status": "PASS",
+      "actual": "485.71",
+      "expected": "3400/7"
+    },
+    {
+      "scenario": "S2",
+      "field": "labor.row4.column2",
+      "status": "PASS",
+      "actual": "445.45",
+      "expected": "4900/11"
+    },
+    {
+      "scenario": "S2",
+      "field": "labor.row4.column3",
+      "status": "PASS",
+      "actual": "9.04%",
+      "expected": "3100/343"
+    },
+    {
+      "scenario": "S2",
+      "field": "benchmark.unit_cost.column1",
+      "status": "PASS",
+      "actual": "7.97",
+      "expected": "797/100"
+    },
+    {
+      "scenario": "S2",
+      "field": "benchmark.unit_cost.column2",
+      "status": "PASS",
+      "actual": "7.47",
+      "expected": "747/100"
+    },
+    {
+      "scenario": "S2",
+      "field": "benchmark.unit_cost.column3",
+      "status": "PASS",
+      "actual": "0.50",
+      "expected": "1/2"
+    },
+    {
+      "scenario": "S2",
+      "field": "benchmark.unit_cost.column4",
+      "status": "PASS",
+      "actual": "6.69",
+      "expected": "5000/747"
+    },
+    {
+      "scenario": "S2",
+      "field": "benchmark.materials.column1",
+      "status": "PASS",
+      "actual": "4.95",
+      "expected": "99/20"
+    },
+    {
+      "scenario": "S2",
+      "field": "benchmark.materials.column2",
+      "status": "PASS",
+      "actual": "4.75",
+      "expected": "19/4"
+    },
+    {
+      "scenario": "S2",
+      "field": "benchmark.materials.column3",
+      "status": "PASS",
+      "actual": "0.20",
+      "expected": "1/5"
+    },
+    {
+      "scenario": "S2",
+      "field": "benchmark.materials.column4",
+      "status": "PASS",
+      "actual": "4.21",
+      "expected": "80/19"
+    },
+    {
+      "scenario": "S2",
+      "field": "benchmark.materials.contribution_docx",
+      "status": "PASS",
+      "actual": "40.00%",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "benchmark.materials.contribution_pdf",
+      "status": "PASS",
+      "actual": "40.00%",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "benchmark.labor.column1",
+      "status": "PASS",
+      "actual": "1.19",
+      "expected": "119/100"
+    },
+    {
+      "scenario": "S2",
+      "field": "benchmark.labor.column2",
+      "status": "PASS",
+      "actual": "1.06",
+      "expected": "53/50"
+    },
+    {
+      "scenario": "S2",
+      "field": "benchmark.labor.column3",
+      "status": "PASS",
+      "actual": "0.13",
+      "expected": "13/100"
+    },
+    {
+      "scenario": "S2",
+      "field": "benchmark.labor.column4",
+      "status": "PASS",
+      "actual": "12.26",
+      "expected": "650/53"
+    },
+    {
+      "scenario": "S2",
+      "field": "benchmark.labor.contribution_docx",
+      "status": "PASS",
+      "actual": "26.00%",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "benchmark.labor.contribution_pdf",
+      "status": "PASS",
+      "actual": "26.00%",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "benchmark.overhead.column1",
+      "status": "PASS",
+      "actual": "1.83",
+      "expected": "183/100"
+    },
+    {
+      "scenario": "S2",
+      "field": "benchmark.overhead.column2",
+      "status": "PASS",
+      "actual": "1.66",
+      "expected": "83/50"
+    },
+    {
+      "scenario": "S2",
+      "field": "benchmark.overhead.column3",
+      "status": "PASS",
+      "actual": "0.17",
+      "expected": "17/100"
+    },
+    {
+      "scenario": "S2",
+      "field": "benchmark.overhead.column4",
+      "status": "PASS",
+      "actual": "10.24",
+      "expected": "850/83"
+    },
+    {
+      "scenario": "S2",
+      "field": "benchmark.overhead.contribution_docx",
+      "status": "PASS",
+      "actual": "34.00%",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "benchmark.overhead.contribution_pdf",
+      "status": "PASS",
+      "actual": "34.00%",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "budget_bridge.quantity_effect",
+      "status": "PASS",
+      "actual": "84000.0",
+      "expected": "84000"
+    },
+    {
+      "scenario": "S2",
+      "field": "docx.budget_bridge.quantity_effect",
+      "status": "PASS",
+      "actual": "84000.00",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.budget_bridge.quantity_effect",
+      "status": "PASS",
+      "actual": "84000.00",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "budget_bridge.unit_cost_effect",
+      "status": "PASS",
+      "actual": "47940.00",
+      "expected": "47940"
+    },
+    {
+      "scenario": "S2",
+      "field": "docx.budget_bridge.unit_cost_effect",
+      "status": "PASS",
+      "actual": "47940.00",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.budget_bridge.unit_cost_effect",
+      "status": "PASS",
+      "actual": "47940.00",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "budget_bridge.total_delta",
+      "status": "PASS",
+      "actual": "131940.0",
+      "expected": "131940"
+    },
+    {
+      "scenario": "S2",
+      "field": "docx.budget_bridge.total_delta",
+      "status": "PASS",
+      "actual": "131940.00",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.budget_bridge.total_delta",
+      "status": "PASS",
+      "actual": "131940.00",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "trend.no_future.2026-01",
+      "status": "PASS",
+      "actual": "2026-01",
+      "expected": "2026-05"
+    },
+    {
+      "scenario": "S2",
+      "field": "trend.2026-01.unit_cost",
+      "status": "PASS",
+      "actual": "7.12",
+      "expected": "178/25"
+    },
+    {
+      "scenario": "S2",
+      "field": "trend.2026-01.quantity",
+      "status": "PASS",
+      "actual": "85000",
+      "expected": "85000"
+    },
+    {
+      "scenario": "S2",
+      "field": "trend.2026-01.total_cost",
+      "status": "PASS",
+      "actual": "605200.0",
+      "expected": "605200"
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.trend.2026-01",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "trend.no_future.2026-02",
+      "status": "PASS",
+      "actual": "2026-02",
+      "expected": "2026-05"
+    },
+    {
+      "scenario": "S2",
+      "field": "trend.2026-02.unit_cost",
+      "status": "PASS",
+      "actual": "7.25",
+      "expected": "29/4"
+    },
+    {
+      "scenario": "S2",
+      "field": "trend.2026-02.quantity",
+      "status": "PASS",
+      "actual": "72000",
+      "expected": "72000"
+    },
+    {
+      "scenario": "S2",
+      "field": "trend.2026-02.total_cost",
+      "status": "PASS",
+      "actual": "522000.0",
+      "expected": "522000"
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.trend.2026-02",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "trend.no_future.2026-03",
+      "status": "PASS",
+      "actual": "2026-03",
+      "expected": "2026-05"
+    },
+    {
+      "scenario": "S2",
+      "field": "trend.2026-03.unit_cost",
+      "status": "PASS",
+      "actual": "6.96",
+      "expected": "174/25"
+    },
+    {
+      "scenario": "S2",
+      "field": "trend.2026-03.quantity",
+      "status": "PASS",
+      "actual": "95000",
+      "expected": "95000"
+    },
+    {
+      "scenario": "S2",
+      "field": "trend.2026-03.total_cost",
+      "status": "PASS",
+      "actual": "661200.0",
+      "expected": "661200"
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.trend.2026-03",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "trend.no_future.2026-04",
+      "status": "PASS",
+      "actual": "2026-04",
+      "expected": "2026-05"
+    },
+    {
+      "scenario": "S2",
+      "field": "trend.2026-04.unit_cost",
+      "status": "PASS",
+      "actual": "7.24",
+      "expected": "181/25"
+    },
+    {
+      "scenario": "S2",
+      "field": "trend.2026-04.quantity",
+      "status": "PASS",
+      "actual": "98000",
+      "expected": "98000"
+    },
+    {
+      "scenario": "S2",
+      "field": "trend.2026-04.total_cost",
+      "status": "PASS",
+      "actual": "709520.0",
+      "expected": "709520"
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.trend.2026-04",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "trend.no_future.2026-05",
+      "status": "PASS",
+      "actual": "2026-05",
+      "expected": "2026-05"
+    },
+    {
+      "scenario": "S2",
+      "field": "trend.2026-05.unit_cost",
+      "status": "PASS",
+      "actual": "7.47",
+      "expected": "747/100"
+    },
+    {
+      "scenario": "S2",
+      "field": "trend.2026-05.quantity",
+      "status": "PASS",
+      "actual": "102000",
+      "expected": "102000"
+    },
+    {
+      "scenario": "S2",
+      "field": "trend.2026-05.total_cost",
+      "status": "PASS",
+      "actual": "761940.0",
+      "expected": "761940"
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.trend.2026-05",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "trend.available_months",
+      "status": "PASS",
+      "actual": [
+        "2026-01",
+        "2026-02",
+        "2026-03",
+        "2026-04",
+        "2026-05"
+      ],
+      "expected": "['2026-01', '2026-02', '2026-03', '2026-04', '2026-05']"
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.table2.row1.same_as_docx",
+      "status": "PASS",
+      "actual": "直接材料4.7563.59%0.1878.26%",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.table2.row2.same_as_docx",
+      "status": "PASS",
+      "actual": "直接人工1.0614.19%0.028.70%",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.table2.row3.same_as_docx",
+      "status": "PASS",
+      "actual": "制造费用1.6622.22%0.0313.04%",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.table2.row4.same_as_docx",
+      "status": "PASS",
+      "actual": "合计7.47100%0.23100.00%",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.table3.row1.same_as_docx",
+      "status": "PASS",
+      "actual": "2026-05板蓝根3.05311100.0",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.table3.row2.same_as_docx",
+      "status": "PASS",
+      "actual": "2026-05蔗糖0.5859160.0",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.table3.row3.same_as_docx",
+      "status": "PASS",
+      "actual": "2026-05糊精0.3737740.0",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.table3.row4.same_as_docx",
+      "status": "PASS",
+      "actual": "2026-05包装材料(复合膜袋+纸盒)0.7576500.0",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.table4.row1.same_as_docx",
+      "status": "PASS",
+      "actual": "单位人工成本(元/盒)1.061.041.92%—",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.table4.row2.same_as_docx",
+      "status": "PASS",
+      "actual": "人工工时(h/万盒)164.71179.59-8.29%—",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.table4.row3.same_as_docx",
+      "status": "PASS",
+      "actual": "平均小时工资(元/h)64.3657.9111.13%—",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.table4.row4.same_as_docx",
+      "status": "PASS",
+      "actual": "人工效率(盒/人·日)485.71445.459.04%—",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.table5.row1.same_as_docx",
+      "status": "PASS",
+      "actual": "折旧费0.550.541.85%折旧费变动需核对费用台账及分摊依据",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.table5.row2.same_as_docx",
+      "status": "PASS",
+      "actual": "动力费(水电气)0.420.412.44%动力费(水电气)变动需核对费用台账及分摊依据",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.table5.row3.same_as_docx",
+      "status": "PASS",
+      "actual": "间接人工0.340.333.03%人工(间接)变动需核对费用台账及分摊依据",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.table5.row4.same_as_docx",
+      "status": "PASS",
+      "actual": "检验费0.180.180.00%检验费变动需核对费用台账及分摊依据",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.table5.row5.same_as_docx",
+      "status": "PASS",
+      "actual": "其他制造费用0.170.170.00%其他制造费用变动需核对费用台账及分摊依据",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.table5.row6.same_as_docx",
+      "status": "PASS",
+      "actual": "合计1.661.631.84%—",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.table8.row1.same_as_docx",
+      "status": "PASS",
+      "actual": "单位成本7.977.470.506.69",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.table8.row2.same_as_docx",
+      "status": "PASS",
+      "actual": "直接材料4.954.750.204.21",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.table8.row3.same_as_docx",
+      "status": "PASS",
+      "actual": "直接人工1.191.060.1312.26",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "pdf.table8.row4.same_as_docx",
+      "status": "PASS",
+      "actual": "制造费用1.831.660.1710.24",
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "degradation_disclosed_docx",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "degradation_disclosed_pdf",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "S2",
+      "field": "no_report_approval_claim",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "docx.index_hash",
+      "status": "PASS",
+      "actual": "e8b4dffa164229e260300f5b5109d9443fdd348400e176edb04088e039ee3001",
+      "expected": "e8b4dffa164229e260300f5b5109d9443fdd348400e176edb04088e039ee3001"
+    },
+    {
+      "scenario": "S3",
+      "field": "docx.record_hash",
+      "status": "PASS",
+      "actual": "e8b4dffa164229e260300f5b5109d9443fdd348400e176edb04088e039ee3001",
+      "expected": "e8b4dffa164229e260300f5b5109d9443fdd348400e176edb04088e039ee3001"
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.index_hash",
+      "status": "PASS",
+      "actual": "9863a3452951629714f63febe8670270aef9a292810dc404e05691cefc8a5fa6",
+      "expected": "9863a3452951629714f63febe8670270aef9a292810dc404e05691cefc8a5fa6"
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.record_hash",
+      "status": "PASS",
+      "actual": "9863a3452951629714f63febe8670270aef9a292810dc404e05691cefc8a5fa6",
+      "expected": "9863a3452951629714f63febe8670270aef9a292810dc404e05691cefc8a5fa6"
+    },
+    {
+      "scenario": "S3",
+      "field": "audit.index_hash",
+      "status": "PASS",
+      "actual": "9a0b90f3108f7261e55419bf4f96fe552db18c8ee249fd37179d2f0cce42c2ea",
+      "expected": "9a0b90f3108f7261e55419bf4f96fe552db18c8ee249fd37179d2f0cce42c2ea"
+    },
+    {
+      "scenario": "S3",
+      "field": "audit.record_hash",
+      "status": "PASS",
+      "actual": "9a0b90f3108f7261e55419bf4f96fe552db18c8ee249fd37179d2f0cce42c2ea",
+      "expected": "9a0b90f3108f7261e55419bf4f96fe552db18c8ee249fd37179d2f0cce42c2ea"
+    },
+    {
+      "scenario": "S3",
+      "field": "snapshot.record_audit_identity",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "bindings.index_record_audit_identity",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "snapshot.quantity",
+      "status": "PASS",
+      "actual": "35000",
+      "expected": "35000"
+    },
+    {
+      "scenario": "S3",
+      "field": "snapshot.unit_cost",
+      "status": "PASS",
+      "actual": "17.02",
+      "expected": "851/50"
+    },
+    {
+      "scenario": "S3",
+      "field": "snapshot.total_cost",
+      "status": "PASS",
+      "actual": "595700.0",
+      "expected": "595700"
+    },
+    {
+      "scenario": "S3",
+      "field": "snapshot.materials",
+      "status": "PASS",
+      "actual": "11.99",
+      "expected": "1199/100"
+    },
+    {
+      "scenario": "S3",
+      "field": "snapshot.labor",
+      "status": "PASS",
+      "actual": "2.05",
+      "expected": "41/20"
+    },
+    {
+      "scenario": "S3",
+      "field": "snapshot.overhead",
+      "status": "PASS",
+      "actual": "2.98",
+      "expected": "149/50"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.quantity.column1",
+      "status": "PASS",
+      "actual": "35000",
+      "expected": "35000"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.quantity.column2",
+      "status": "PASS",
+      "actual": "28000",
+      "expected": "28000"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.quantity.column3",
+      "status": "PASS",
+      "actual": "25.00%",
+      "expected": "25"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.quantity.column4",
+      "status": "PASS",
+      "actual": "33300",
+      "expected": "33300"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.quantity.column5",
+      "status": "PASS",
+      "actual": "5.11%",
+      "expected": "1700/333"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.quantity.column6",
+      "status": "PASS",
+      "actual": "35000",
+      "expected": "35000"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.quantity.column7",
+      "status": "PASS",
+      "actual": "0.00%",
+      "expected": "0"
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.overview.quantity.same_row",
+      "status": "PASS",
+      "actual": "产量(盒)350002800025.00%333005.11%350000.00%",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.unit_cost.column1",
+      "status": "PASS",
+      "actual": "17.02",
+      "expected": "851/50"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.unit_cost.column2",
+      "status": "PASS",
+      "actual": "17.60",
+      "expected": "88/5"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.unit_cost.column3",
+      "status": "PASS",
+      "actual": "-3.30%",
+      "expected": "-145/44"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.unit_cost.column4",
+      "status": "PASS",
+      "actual": "16.92",
+      "expected": "423/25"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.unit_cost.column5",
+      "status": "PASS",
+      "actual": "0.59%",
+      "expected": "250/423"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.unit_cost.column6",
+      "status": "PASS",
+      "actual": "17.10",
+      "expected": "171/10"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.unit_cost.column7",
+      "status": "PASS",
+      "actual": "-0.47%",
+      "expected": "-80/171"
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.overview.unit_cost.same_row",
+      "status": "PASS",
+      "actual": "单位成本(元/盒)17.0217.60-3.30%16.920.59%17.10-0.47%",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.total_cost.column1",
+      "status": "PASS",
+      "actual": "595700.00",
+      "expected": "595700"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.total_cost.column2",
+      "status": "PASS",
+      "actual": "492800.00",
+      "expected": "492800"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.total_cost.column3",
+      "status": "PASS",
+      "actual": "20.88%",
+      "expected": "3675/176"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.total_cost.column4",
+      "status": "PASS",
+      "actual": "563436.00",
+      "expected": "563436"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.total_cost.column5",
+      "status": "PASS",
+      "actual": "5.73%",
+      "expected": "21800/3807"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.total_cost.column6",
+      "status": "PASS",
+      "actual": "598500.00",
+      "expected": "598500"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.total_cost.column7",
+      "status": "PASS",
+      "actual": "-0.47%",
+      "expected": "-80/171"
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.overview.total_cost.same_row",
+      "status": "PASS",
+      "actual": "总成本(元)595700.00492800.0020.88%563436.005.73%598500.00-0.47%",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.materials.column1",
+      "status": "PASS",
+      "actual": "11.99",
+      "expected": "1199/100"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.materials.column2",
+      "status": "PASS",
+      "actual": "12.35",
+      "expected": "247/20"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.materials.column3",
+      "status": "PASS",
+      "actual": "-2.91%",
+      "expected": "-720/247"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.materials.column4",
+      "status": "PASS",
+      "actual": "11.93",
+      "expected": "1193/100"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.materials.column5",
+      "status": "PASS",
+      "actual": "0.50%",
+      "expected": "600/1193"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.materials.column6",
+      "status": "PASS",
+      "actual": "12.10",
+      "expected": "121/10"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.materials.column7",
+      "status": "PASS",
+      "actual": "-0.91%",
+      "expected": "-10/11"
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.overview.materials.same_row",
+      "status": "PASS",
+      "actual": "其中：直接材料(元/盒)11.9912.35-2.91%11.930.50%12.10-0.91%",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.labor.column1",
+      "status": "PASS",
+      "actual": "2.05",
+      "expected": "41/20"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.labor.column2",
+      "status": "PASS",
+      "actual": "2.15",
+      "expected": "43/20"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.labor.column3",
+      "status": "PASS",
+      "actual": "-4.65%",
+      "expected": "-200/43"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.labor.column4",
+      "status": "PASS",
+      "actual": "2.03",
+      "expected": "203/100"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.labor.column5",
+      "status": "PASS",
+      "actual": "0.99%",
+      "expected": "200/203"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.labor.column6",
+      "status": "PASS",
+      "actual": "2.06",
+      "expected": "103/50"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.labor.column7",
+      "status": "PASS",
+      "actual": "-0.49%",
+      "expected": "-50/103"
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.overview.labor.same_row",
+      "status": "PASS",
+      "actual": "其中：直接人工(元/盒)2.052.15-4.65%2.030.99%2.06-0.49%",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.overhead.column1",
+      "status": "PASS",
+      "actual": "2.98",
+      "expected": "149/50"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.overhead.column2",
+      "status": "PASS",
+      "actual": "3.10",
+      "expected": "31/10"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.overhead.column3",
+      "status": "PASS",
+      "actual": "-3.87%",
+      "expected": "-120/31"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.overhead.column4",
+      "status": "PASS",
+      "actual": "2.96",
+      "expected": "74/25"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.overhead.column5",
+      "status": "PASS",
+      "actual": "0.68%",
+      "expected": "25/37"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.overhead.column6",
+      "status": "PASS",
+      "actual": "2.94",
+      "expected": "147/50"
+    },
+    {
+      "scenario": "S3",
+      "field": "overview.overhead.column7",
+      "status": "PASS",
+      "actual": "1.36%",
+      "expected": "200/147"
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.overview.overhead.same_row",
+      "status": "PASS",
+      "actual": "其中：制造费用(元/盒)2.983.10-3.87%2.960.68%2.941.36%",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "structure.materials.column1",
+      "status": "PASS",
+      "actual": "11.99",
+      "expected": "1199/100"
+    },
+    {
+      "scenario": "S3",
+      "field": "structure.materials.column2",
+      "status": "PASS",
+      "actual": "70.45%",
+      "expected": "59950/851"
+    },
+    {
+      "scenario": "S3",
+      "field": "structure.materials.column3",
+      "status": "PASS",
+      "actual": "-0.36",
+      "expected": "-9/25"
+    },
+    {
+      "scenario": "S3",
+      "field": "structure.materials.column4",
+      "status": "PASS",
+      "actual": "62.07%",
+      "expected": "1800/29"
+    },
+    {
+      "scenario": "S3",
+      "field": "bound.materials.mom.numerator",
+      "status": "PASS",
+      "actual": "-0.36",
+      "expected": "-9/25"
+    },
+    {
+      "scenario": "S3",
+      "field": "bound.materials.mom.denominator",
+      "status": "PASS",
+      "actual": "-0.58",
+      "expected": "-29/50"
+    },
+    {
+      "scenario": "S3",
+      "field": "bound.materials.mom.contribution",
+      "status": "PASS",
+      "actual": "62.06896551724137931034482759",
+      "expected": "1800/29"
+    },
+    {
+      "scenario": "S3",
+      "field": "bound.materials.yoy.numerator",
+      "status": "PASS",
+      "actual": "0.06",
+      "expected": "3/50"
+    },
+    {
+      "scenario": "S3",
+      "field": "bound.materials.yoy.denominator",
+      "status": "PASS",
+      "actual": "0.10",
+      "expected": "1/10"
+    },
+    {
+      "scenario": "S3",
+      "field": "bound.materials.yoy.contribution",
+      "status": "PASS",
+      "actual": "60.0",
+      "expected": "60"
+    },
+    {
+      "scenario": "S3",
+      "field": "bound.materials.budget.numerator",
+      "status": "PASS",
+      "actual": "-0.11",
+      "expected": "-11/100"
+    },
+    {
+      "scenario": "S3",
+      "field": "bound.materials.budget.denominator",
+      "status": "PASS",
+      "actual": "-0.08",
+      "expected": "-2/25"
+    },
+    {
+      "scenario": "S3",
+      "field": "bound.materials.budget.contribution",
+      "status": "PASS",
+      "actual": "137.500",
+      "expected": "275/2"
+    },
+    {
+      "scenario": "S3",
+      "field": "structure.labor.column1",
+      "status": "PASS",
+      "actual": "2.05",
+      "expected": "41/20"
+    },
+    {
+      "scenario": "S3",
+      "field": "structure.labor.column2",
+      "status": "PASS",
+      "actual": "12.04%",
+      "expected": "10250/851"
+    },
+    {
+      "scenario": "S3",
+      "field": "structure.labor.column3",
+      "status": "PASS",
+      "actual": "-0.10",
+      "expected": "-1/10"
+    },
+    {
+      "scenario": "S3",
+      "field": "structure.labor.column4",
+      "status": "PASS",
+      "actual": "17.24%",
+      "expected": "500/29"
+    },
+    {
+      "scenario": "S3",
+      "field": "bound.labor.mom.numerator",
+      "status": "PASS",
+      "actual": "-0.10",
+      "expected": "-1/10"
+    },
+    {
+      "scenario": "S3",
+      "field": "bound.labor.mom.denominator",
+      "status": "PASS",
+      "actual": "-0.58",
+      "expected": "-29/50"
+    },
+    {
+      "scenario": "S3",
+      "field": "bound.labor.mom.contribution",
+      "status": "PASS",
+      "actual": "17.24137931034482758620689655",
+      "expected": "500/29"
+    },
+    {
+      "scenario": "S3",
+      "field": "bound.labor.yoy.numerator",
+      "status": "PASS",
+      "actual": "0.02",
+      "expected": "1/50"
+    },
+    {
+      "scenario": "S3",
+      "field": "bound.labor.yoy.denominator",
+      "status": "PASS",
+      "actual": "0.10",
+      "expected": "1/10"
+    },
+    {
+      "scenario": "S3",
+      "field": "bound.labor.yoy.contribution",
+      "status": "PASS",
+      "actual": "20.0",
+      "expected": "20"
+    },
+    {
+      "scenario": "S3",
+      "field": "bound.labor.budget.numerator",
+      "status": "PASS",
+      "actual": "-0.01",
+      "expected": "-1/100"
+    },
+    {
+      "scenario": "S3",
+      "field": "bound.labor.budget.denominator",
+      "status": "PASS",
+      "actual": "-0.08",
+      "expected": "-2/25"
+    },
+    {
+      "scenario": "S3",
+      "field": "bound.labor.budget.contribution",
+      "status": "PASS",
+      "actual": "12.500",
+      "expected": "25/2"
+    },
+    {
+      "scenario": "S3",
+      "field": "structure.overhead.column1",
+      "status": "PASS",
+      "actual": "2.98",
+      "expected": "149/50"
+    },
+    {
+      "scenario": "S3",
+      "field": "structure.overhead.column2",
+      "status": "PASS",
+      "actual": "17.51%",
+      "expected": "14900/851"
+    },
+    {
+      "scenario": "S3",
+      "field": "structure.overhead.column3",
+      "status": "PASS",
+      "actual": "-0.12",
+      "expected": "-3/25"
+    },
+    {
+      "scenario": "S3",
+      "field": "structure.overhead.column4",
+      "status": "PASS",
+      "actual": "20.69%",
+      "expected": "600/29"
+    },
+    {
+      "scenario": "S3",
+      "field": "bound.overhead.mom.numerator",
+      "status": "PASS",
+      "actual": "-0.12",
+      "expected": "-3/25"
+    },
+    {
+      "scenario": "S3",
+      "field": "bound.overhead.mom.denominator",
+      "status": "PASS",
+      "actual": "-0.58",
+      "expected": "-29/50"
+    },
+    {
+      "scenario": "S3",
+      "field": "bound.overhead.mom.contribution",
+      "status": "PASS",
+      "actual": "20.68965517241379310344827586",
+      "expected": "600/29"
+    },
+    {
+      "scenario": "S3",
+      "field": "bound.overhead.yoy.numerator",
+      "status": "PASS",
+      "actual": "0.02",
+      "expected": "1/50"
+    },
+    {
+      "scenario": "S3",
+      "field": "bound.overhead.yoy.denominator",
+      "status": "PASS",
+      "actual": "0.10",
+      "expected": "1/10"
+    },
+    {
+      "scenario": "S3",
+      "field": "bound.overhead.yoy.contribution",
+      "status": "PASS",
+      "actual": "20.0",
+      "expected": "20"
+    },
+    {
+      "scenario": "S3",
+      "field": "bound.overhead.budget.numerator",
+      "status": "PASS",
+      "actual": "0.04",
+      "expected": "1/25"
+    },
+    {
+      "scenario": "S3",
+      "field": "bound.overhead.budget.denominator",
+      "status": "PASS",
+      "actual": "-0.08",
+      "expected": "-2/25"
+    },
+    {
+      "scenario": "S3",
+      "field": "bound.overhead.budget.contribution",
+      "status": "PASS",
+      "actual": "-50.0",
+      "expected": "-50"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_detail.row_count",
+      "status": "PASS",
+      "actual": 8,
+      "expected": "8"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_detail.2026-03.熟地黄.unit",
+      "status": "PASS",
+      "actual": "3.45",
+      "expected": "69/20"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_detail.2026-03.熟地黄.total",
+      "status": "PASS",
+      "actual": "120750.0",
+      "expected": "120750"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_detail.2026-03.山茱萸.unit",
+      "status": "PASS",
+      "actual": "2.75",
+      "expected": "11/4"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_detail.2026-03.山茱萸.total",
+      "status": "PASS",
+      "actual": "96250.0",
+      "expected": "96250"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_detail.2026-03.山药.unit",
+      "status": "PASS",
+      "actual": "1.48",
+      "expected": "37/25"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_detail.2026-03.山药.total",
+      "status": "PASS",
+      "actual": "51800.0",
+      "expected": "51800"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_detail.2026-03.泽泻.unit",
+      "status": "PASS",
+      "actual": "0.84",
+      "expected": "21/25"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_detail.2026-03.泽泻.total",
+      "status": "PASS",
+      "actual": "29400.0",
+      "expected": "29400"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_detail.2026-03.茯苓.unit",
+      "status": "PASS",
+      "actual": "1.18",
+      "expected": "59/50"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_detail.2026-03.茯苓.total",
+      "status": "PASS",
+      "actual": "41300.0",
+      "expected": "41300"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_detail.2026-03.牡丹皮.unit",
+      "status": "PASS",
+      "actual": "1.03",
+      "expected": "103/100"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_detail.2026-03.牡丹皮.total",
+      "status": "PASS",
+      "actual": "36050.0",
+      "expected": "36050"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_detail.2026-03.空心胶囊.unit",
+      "status": "PASS",
+      "actual": "0.37",
+      "expected": "37/100"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_detail.2026-03.空心胶囊.total",
+      "status": "PASS",
+      "actual": "12950.0",
+      "expected": "12950"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_detail.2026-03.包装材料(PVC+铝箔+纸盒).unit",
+      "status": "PASS",
+      "actual": "0.89",
+      "expected": "89/100"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_detail.2026-03.包装材料(PVC+铝箔+纸盒).total",
+      "status": "PASS",
+      "actual": "31150.0",
+      "expected": "31150"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_driver.山茱萸.current",
+      "status": "PASS",
+      "actual": "2.75",
+      "expected": "11/4"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_driver.山茱萸.previous",
+      "status": "PASS",
+      "actual": "2.85",
+      "expected": "57/20"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_driver.山茱萸.delta",
+      "status": "PASS",
+      "actual": "-0.10",
+      "expected": "-1/10"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_driver.山茱萸.contribution",
+      "status": "PASS",
+      "actual": "27.77777777777777777777777778",
+      "expected": "250/9"
+    },
+    {
+      "scenario": "S3",
+      "field": "docx.material_driver.山茱萸.contribution",
+      "status": "PASS",
+      "actual": "占材料增量27.78%",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.material_driver.山茱萸.contribution",
+      "status": "PASS",
+      "actual": "占材料增量27.78%",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "material_driver.熟地黄.current",
+      "status": "PASS",
+      "actual": "3.45",
+      "expected": "69/20"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_driver.熟地黄.previous",
+      "status": "PASS",
+      "actual": "3.55",
+      "expected": "71/20"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_driver.熟地黄.delta",
+      "status": "PASS",
+      "actual": "-0.10",
+      "expected": "-1/10"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_driver.熟地黄.contribution",
+      "status": "PASS",
+      "actual": "27.77777777777777777777777778",
+      "expected": "250/9"
+    },
+    {
+      "scenario": "S3",
+      "field": "docx.material_driver.熟地黄.contribution",
+      "status": "PASS",
+      "actual": "占材料增量27.78%",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.material_driver.熟地黄.contribution",
+      "status": "PASS",
+      "actual": "占材料增量27.78%",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "material_driver.山药.current",
+      "status": "PASS",
+      "actual": "1.48",
+      "expected": "37/25"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_driver.山药.previous",
+      "status": "PASS",
+      "actual": "1.52",
+      "expected": "38/25"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_driver.山药.delta",
+      "status": "PASS",
+      "actual": "-0.04",
+      "expected": "-1/25"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_driver.山药.contribution",
+      "status": "PASS",
+      "actual": "11.11111111111111111111111111",
+      "expected": "100/9"
+    },
+    {
+      "scenario": "S3",
+      "field": "docx.material_driver.山药.contribution",
+      "status": "PASS",
+      "actual": "占材料增量11.11%",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.material_driver.山药.contribution",
+      "status": "PASS",
+      "actual": "占材料增量11.11%",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "material_driver.茯苓.current",
+      "status": "PASS",
+      "actual": "1.18",
+      "expected": "59/50"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_driver.茯苓.previous",
+      "status": "PASS",
+      "actual": "1.22",
+      "expected": "61/50"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_driver.茯苓.delta",
+      "status": "PASS",
+      "actual": "-0.04",
+      "expected": "-1/25"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_driver.茯苓.contribution",
+      "status": "PASS",
+      "actual": "11.11111111111111111111111111",
+      "expected": "100/9"
+    },
+    {
+      "scenario": "S3",
+      "field": "docx.material_driver.茯苓.contribution",
+      "status": "PASS",
+      "actual": "占材料增量11.11%",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.material_driver.茯苓.contribution",
+      "status": "PASS",
+      "actual": "占材料增量11.11%",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "material_driver.牡丹皮.current",
+      "status": "PASS",
+      "actual": "1.03",
+      "expected": "103/100"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_driver.牡丹皮.previous",
+      "status": "PASS",
+      "actual": "1.06",
+      "expected": "53/50"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_driver.牡丹皮.delta",
+      "status": "PASS",
+      "actual": "-0.03",
+      "expected": "-3/100"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_driver.牡丹皮.contribution",
+      "status": "PASS",
+      "actual": "8.333333333333333333333333333",
+      "expected": "25/3"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_driver.包装材料(PVC+铝箔+纸盒).current",
+      "status": "PASS",
+      "actual": "0.89",
+      "expected": "89/100"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_driver.包装材料(PVC+铝箔+纸盒).previous",
+      "status": "PASS",
+      "actual": "0.91",
+      "expected": "91/100"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_driver.包装材料(PVC+铝箔+纸盒).delta",
+      "status": "PASS",
+      "actual": "-0.02",
+      "expected": "-1/50"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_driver.包装材料(PVC+铝箔+纸盒).contribution",
+      "status": "PASS",
+      "actual": "5.555555555555555555555555556",
+      "expected": "50/9"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_driver.泽泻.current",
+      "status": "PASS",
+      "actual": "0.84",
+      "expected": "21/25"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_driver.泽泻.previous",
+      "status": "PASS",
+      "actual": "0.86",
+      "expected": "43/50"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_driver.泽泻.delta",
+      "status": "PASS",
+      "actual": "-0.02",
+      "expected": "-1/50"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_driver.泽泻.contribution",
+      "status": "PASS",
+      "actual": "5.555555555555555555555555556",
+      "expected": "50/9"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_driver.空心胶囊.current",
+      "status": "PASS",
+      "actual": "0.37",
+      "expected": "37/100"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_driver.空心胶囊.previous",
+      "status": "PASS",
+      "actual": "0.38",
+      "expected": "19/50"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_driver.空心胶囊.delta",
+      "status": "PASS",
+      "actual": "-0.01",
+      "expected": "-1/100"
+    },
+    {
+      "scenario": "S3",
+      "field": "material_driver.空心胶囊.contribution",
+      "status": "PASS",
+      "actual": "2.777777777777777777777777778",
+      "expected": "25/9"
+    },
+    {
+      "scenario": "S3",
+      "field": "labor.row1.column1",
+      "status": "PASS",
+      "actual": "2.05",
+      "expected": "41/20"
+    },
+    {
+      "scenario": "S3",
+      "field": "labor.row1.column2",
+      "status": "PASS",
+      "actual": "2.15",
+      "expected": "43/20"
+    },
+    {
+      "scenario": "S3",
+      "field": "labor.row1.column3",
+      "status": "PASS",
+      "actual": "-4.65%",
+      "expected": "-200/43"
+    },
+    {
+      "scenario": "S3",
+      "field": "labor.row2.column1",
+      "status": "PASS",
+      "actual": "603.43",
+      "expected": "4224/7"
+    },
+    {
+      "scenario": "S3",
+      "field": "labor.row2.column2",
+      "status": "PASS",
+      "actual": "548.57",
+      "expected": "3840/7"
+    },
+    {
+      "scenario": "S3",
+      "field": "labor.row2.column3",
+      "status": "PASS",
+      "actual": "10.00%",
+      "expected": "10"
+    },
+    {
+      "scenario": "S3",
+      "field": "labor.row3.column1",
+      "status": "PASS",
+      "actual": "33.97",
+      "expected": "35875/1056"
+    },
+    {
+      "scenario": "S3",
+      "field": "labor.row3.column2",
+      "status": "PASS",
+      "actual": "39.19",
+      "expected": "7525/192"
+    },
+    {
+      "scenario": "S3",
+      "field": "labor.row3.column3",
+      "status": "PASS",
+      "actual": "-13.32%",
+      "expected": "-6300/473"
+    },
+    {
+      "scenario": "S3",
+      "field": "labor.row4.column1",
+      "status": "PASS",
+      "actual": "132.58",
+      "expected": "4375/33"
+    },
+    {
+      "scenario": "S3",
+      "field": "labor.row4.column2",
+      "status": "PASS",
+      "actual": "145.83",
+      "expected": "875/6"
+    },
+    {
+      "scenario": "S3",
+      "field": "labor.row4.column3",
+      "status": "PASS",
+      "actual": "-9.09%",
+      "expected": "-100/11"
+    },
+    {
+      "scenario": "S3",
+      "field": "benchmark.unit_cost.column1",
+      "status": "PASS",
+      "actual": "18.18",
+      "expected": "909/50"
+    },
+    {
+      "scenario": "S3",
+      "field": "benchmark.unit_cost.column2",
+      "status": "PASS",
+      "actual": "17.02",
+      "expected": "851/50"
+    },
+    {
+      "scenario": "S3",
+      "field": "benchmark.unit_cost.column3",
+      "status": "PASS",
+      "actual": "1.16",
+      "expected": "29/25"
+    },
+    {
+      "scenario": "S3",
+      "field": "benchmark.unit_cost.column4",
+      "status": "PASS",
+      "actual": "6.82",
+      "expected": "5800/851"
+    },
+    {
+      "scenario": "S3",
+      "field": "benchmark.materials.column1",
+      "status": "PASS",
+      "actual": "12.62",
+      "expected": "631/50"
+    },
+    {
+      "scenario": "S3",
+      "field": "benchmark.materials.column2",
+      "status": "PASS",
+      "actual": "11.99",
+      "expected": "1199/100"
+    },
+    {
+      "scenario": "S3",
+      "field": "benchmark.materials.column3",
+      "status": "PASS",
+      "actual": "0.63",
+      "expected": "63/100"
+    },
+    {
+      "scenario": "S3",
+      "field": "benchmark.materials.column4",
+      "status": "PASS",
+      "actual": "5.25",
+      "expected": "6300/1199"
+    },
+    {
+      "scenario": "S3",
+      "field": "benchmark.materials.contribution_docx",
+      "status": "PASS",
+      "actual": "54.31%",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "benchmark.materials.contribution_pdf",
+      "status": "PASS",
+      "actual": "54.31%",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "benchmark.labor.column1",
+      "status": "PASS",
+      "actual": "2.28",
+      "expected": "57/25"
+    },
+    {
+      "scenario": "S3",
+      "field": "benchmark.labor.column2",
+      "status": "PASS",
+      "actual": "2.05",
+      "expected": "41/20"
+    },
+    {
+      "scenario": "S3",
+      "field": "benchmark.labor.column3",
+      "status": "PASS",
+      "actual": "0.23",
+      "expected": "23/100"
+    },
+    {
+      "scenario": "S3",
+      "field": "benchmark.labor.column4",
+      "status": "PASS",
+      "actual": "11.22",
+      "expected": "460/41"
+    },
+    {
+      "scenario": "S3",
+      "field": "benchmark.labor.contribution_docx",
+      "status": "PASS",
+      "actual": "19.83%",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "benchmark.labor.contribution_pdf",
+      "status": "PASS",
+      "actual": "19.83%",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "benchmark.overhead.column1",
+      "status": "PASS",
+      "actual": "3.28",
+      "expected": "82/25"
+    },
+    {
+      "scenario": "S3",
+      "field": "benchmark.overhead.column2",
+      "status": "PASS",
+      "actual": "2.98",
+      "expected": "149/50"
+    },
+    {
+      "scenario": "S3",
+      "field": "benchmark.overhead.column3",
+      "status": "PASS",
+      "actual": "0.30",
+      "expected": "3/10"
+    },
+    {
+      "scenario": "S3",
+      "field": "benchmark.overhead.column4",
+      "status": "PASS",
+      "actual": "10.07",
+      "expected": "1500/149"
+    },
+    {
+      "scenario": "S3",
+      "field": "benchmark.overhead.contribution_docx",
+      "status": "PASS",
+      "actual": "25.86%",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "benchmark.overhead.contribution_pdf",
+      "status": "PASS",
+      "actual": "25.86%",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "budget_bridge.quantity_effect",
+      "status": "PASS",
+      "actual": "0.0",
+      "expected": "0"
+    },
+    {
+      "scenario": "S3",
+      "field": "docx.budget_bridge.quantity_effect",
+      "status": "PASS",
+      "actual": "0.00",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.budget_bridge.quantity_effect",
+      "status": "PASS",
+      "actual": "0.00",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "budget_bridge.unit_cost_effect",
+      "status": "PASS",
+      "actual": "-2800.00",
+      "expected": "-2800"
+    },
+    {
+      "scenario": "S3",
+      "field": "docx.budget_bridge.unit_cost_effect",
+      "status": "PASS",
+      "actual": "-2800.00",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.budget_bridge.unit_cost_effect",
+      "status": "PASS",
+      "actual": "-2800.00",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "budget_bridge.total_delta",
+      "status": "PASS",
+      "actual": "-2800.0",
+      "expected": "-2800"
+    },
+    {
+      "scenario": "S3",
+      "field": "docx.budget_bridge.total_delta",
+      "status": "PASS",
+      "actual": "-2800.00",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.budget_bridge.total_delta",
+      "status": "PASS",
+      "actual": "-2800.00",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "trend.no_future.2026-01",
+      "status": "PASS",
+      "actual": "2026-01",
+      "expected": "2026-03"
+    },
+    {
+      "scenario": "S3",
+      "field": "trend.2026-01.unit_cost",
+      "status": "PASS",
+      "actual": "17.33",
+      "expected": "1733/100"
+    },
+    {
+      "scenario": "S3",
+      "field": "trend.2026-01.quantity",
+      "status": "PASS",
+      "actual": "32000",
+      "expected": "32000"
+    },
+    {
+      "scenario": "S3",
+      "field": "trend.2026-01.total_cost",
+      "status": "PASS",
+      "actual": "554560.0",
+      "expected": "554560"
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.trend.2026-01",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "trend.no_future.2026-02",
+      "status": "PASS",
+      "actual": "2026-02",
+      "expected": "2026-03"
+    },
+    {
+      "scenario": "S3",
+      "field": "trend.2026-02.unit_cost",
+      "status": "PASS",
+      "actual": "17.6",
+      "expected": "88/5"
+    },
+    {
+      "scenario": "S3",
+      "field": "trend.2026-02.quantity",
+      "status": "PASS",
+      "actual": "28000",
+      "expected": "28000"
+    },
+    {
+      "scenario": "S3",
+      "field": "trend.2026-02.total_cost",
+      "status": "PASS",
+      "actual": "492800.0",
+      "expected": "492800"
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.trend.2026-02",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "trend.no_future.2026-03",
+      "status": "PASS",
+      "actual": "2026-03",
+      "expected": "2026-03"
+    },
+    {
+      "scenario": "S3",
+      "field": "trend.2026-03.unit_cost",
+      "status": "PASS",
+      "actual": "17.02",
+      "expected": "851/50"
+    },
+    {
+      "scenario": "S3",
+      "field": "trend.2026-03.quantity",
+      "status": "PASS",
+      "actual": "35000",
+      "expected": "35000"
+    },
+    {
+      "scenario": "S3",
+      "field": "trend.2026-03.total_cost",
+      "status": "PASS",
+      "actual": "595700.0",
+      "expected": "595700"
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.trend.2026-03",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "trend.available_months",
+      "status": "PASS",
+      "actual": [
+        "2026-01",
+        "2026-02",
+        "2026-03"
+      ],
+      "expected": "['2026-01', '2026-02', '2026-03']"
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.table2.row1.same_as_docx",
+      "status": "PASS",
+      "actual": "直接材料11.9970.45%-0.3662.07%",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.table2.row2.same_as_docx",
+      "status": "PASS",
+      "actual": "直接人工2.0512.04%-0.1017.24%",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.table2.row3.same_as_docx",
+      "status": "PASS",
+      "actual": "制造费用2.9817.51%-0.1220.69%",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.table2.row4.same_as_docx",
+      "status": "PASS",
+      "actual": "合计17.02100%-0.58100.00%",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.table3.row1.same_as_docx",
+      "status": "PASS",
+      "actual": "2026-03熟地黄3.45120750.0",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.table3.row2.same_as_docx",
+      "status": "PASS",
+      "actual": "2026-03山茱萸2.7596250.0",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.table3.row3.same_as_docx",
+      "status": "PASS",
+      "actual": "2026-03山药1.4851800.0",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.table3.row4.same_as_docx",
+      "status": "PASS",
+      "actual": "2026-03泽泻0.8429400.0",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.table3.row5.same_as_docx",
+      "status": "PASS",
+      "actual": "2026-03茯苓1.1841300.0",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.table3.row6.same_as_docx",
+      "status": "PASS",
+      "actual": "2026-03牡丹皮1.0336050.0",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.table3.row7.same_as_docx",
+      "status": "PASS",
+      "actual": "2026-03空心胶囊0.3712950.0",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.table3.row8.same_as_docx",
+      "status": "PASS",
+      "actual": "2026-03包装材料(PVC+铝箔+纸盒)0.8931150.0",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.table4.row1.same_as_docx",
+      "status": "PASS",
+      "actual": "单位人工成本(元/盒)2.052.15-4.65%—",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.table4.row2.same_as_docx",
+      "status": "PASS",
+      "actual": "人工工时(h/万盒)603.43548.5710.00%—",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.table4.row3.same_as_docx",
+      "status": "PASS",
+      "actual": "平均小时工资(元/h)33.9739.19-13.32%—",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.table4.row4.same_as_docx",
+      "status": "PASS",
+      "actual": "人工效率(盒/人·日)132.58145.83-9.09%—",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.table5.row1.same_as_docx",
+      "status": "PASS",
+      "actual": "折旧费1.021.07-4.67%折旧费变动需核对费用台账及分摊依据",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.table5.row2.same_as_docx",
+      "status": "PASS",
+      "actual": "动力费(水电气)0.700.74-5.41%动力费(水电气)变动需核对费用台账及分摊依据",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.table5.row3.same_as_docx",
+      "status": "PASS",
+      "actual": "间接人工0.570.59-3.39%人工(间接)变动需核对费用台账及分摊依据",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.table5.row4.same_as_docx",
+      "status": "PASS",
+      "actual": "检验费0.340.35-2.86%检验费变动需核对费用台账及分摊依据",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.table5.row5.same_as_docx",
+      "status": "PASS",
+      "actual": "其他制造费用0.350.350.00%其他制造费用变动需核对费用台账及分摊依据",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.table5.row6.same_as_docx",
+      "status": "PASS",
+      "actual": "合计2.983.10-3.87%—",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.table8.row1.same_as_docx",
+      "status": "PASS",
+      "actual": "单位成本18.1817.021.166.82",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.table8.row2.same_as_docx",
+      "status": "PASS",
+      "actual": "直接材料12.6211.990.635.25",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.table8.row3.same_as_docx",
+      "status": "PASS",
+      "actual": "直接人工2.282.050.2311.22",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "pdf.table8.row4.same_as_docx",
+      "status": "PASS",
+      "actual": "制造费用3.282.980.3010.07",
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "degradation_disclosed_docx",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "degradation_disclosed_pdf",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "S3",
+      "field": "no_report_approval_claim",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "docx.index_hash",
+      "status": "PASS",
+      "actual": "3bbb6b8491e871ada4a0aecd4055a98b26999d1ef7bbcca36d53bc19f59ecd29",
+      "expected": "3bbb6b8491e871ada4a0aecd4055a98b26999d1ef7bbcca36d53bc19f59ecd29"
+    },
+    {
+      "scenario": "Q2",
+      "field": "docx.record_hash",
+      "status": "PASS",
+      "actual": "3bbb6b8491e871ada4a0aecd4055a98b26999d1ef7bbcca36d53bc19f59ecd29",
+      "expected": "3bbb6b8491e871ada4a0aecd4055a98b26999d1ef7bbcca36d53bc19f59ecd29"
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.index_hash",
+      "status": "PASS",
+      "actual": "98adfe5c85c3f624b2d5949609f545eb9b0e2a8bc369f7dfb37a571a8f47a8c2",
+      "expected": "98adfe5c85c3f624b2d5949609f545eb9b0e2a8bc369f7dfb37a571a8f47a8c2"
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.record_hash",
+      "status": "PASS",
+      "actual": "98adfe5c85c3f624b2d5949609f545eb9b0e2a8bc369f7dfb37a571a8f47a8c2",
+      "expected": "98adfe5c85c3f624b2d5949609f545eb9b0e2a8bc369f7dfb37a571a8f47a8c2"
+    },
+    {
+      "scenario": "Q2",
+      "field": "audit.index_hash",
+      "status": "PASS",
+      "actual": "2a33fa5c2a5f830abb38e5f46c230c60e240405877e353a6fd7cbd663861475d",
+      "expected": "2a33fa5c2a5f830abb38e5f46c230c60e240405877e353a6fd7cbd663861475d"
+    },
+    {
+      "scenario": "Q2",
+      "field": "audit.record_hash",
+      "status": "PASS",
+      "actual": "2a33fa5c2a5f830abb38e5f46c230c60e240405877e353a6fd7cbd663861475d",
+      "expected": "2a33fa5c2a5f830abb38e5f46c230c60e240405877e353a6fd7cbd663861475d"
+    },
+    {
+      "scenario": "Q2",
+      "field": "snapshot.record_audit_identity",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "bindings.index_record_audit_identity",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "snapshot.quantity",
+      "status": "PASS",
+      "actual": "163000",
+      "expected": "163000"
+    },
+    {
+      "scenario": "Q2",
+      "field": "snapshot.unit_cost",
+      "status": "PASS",
+      "actual": "11.01950920245398773006134969",
+      "expected": "89809/8150"
+    },
+    {
+      "scenario": "Q2",
+      "field": "snapshot.total_cost",
+      "status": "PASS",
+      "actual": "1796180.0",
+      "expected": "1796180"
+    },
+    {
+      "scenario": "Q2",
+      "field": "snapshot.materials",
+      "status": "PASS",
+      "actual": "7.173619631901840490797546012",
+      "expected": "11693/1630"
+    },
+    {
+      "scenario": "Q2",
+      "field": "snapshot.labor",
+      "status": "PASS",
+      "actual": "1.510674846625766871165644172",
+      "expected": "6156/4075"
+    },
+    {
+      "scenario": "Q2",
+      "field": "snapshot.overhead",
+      "status": "PASS",
+      "actual": "2.335214723926380368098159509",
+      "expected": "9516/4075"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.quantity.column1",
+      "status": "PASS",
+      "actual": "163000",
+      "expected": "163000"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.quantity.column2",
+      "status": "PASS",
+      "actual": "135000",
+      "expected": "135000"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.quantity.column3",
+      "status": "PASS",
+      "actual": "20.74%",
+      "expected": "560/27"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.quantity.column4",
+      "status": "PASS",
+      "actual": "154900",
+      "expected": "154900"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.quantity.column5",
+      "status": "PASS",
+      "actual": "5.23%",
+      "expected": "8100/1549"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.quantity.column6",
+      "status": "PASS",
+      "actual": "150000",
+      "expected": "150000"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.quantity.column7",
+      "status": "PASS",
+      "actual": "8.67%",
+      "expected": "26/3"
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.overview.quantity.same_row",
+      "status": "PASS",
+      "actual": "产量(盒)16300013500020.74%1549005.23%1500008.67%",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.unit_cost.column1",
+      "status": "PASS",
+      "actual": "11.0195",
+      "expected": "89809/8150"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.unit_cost.column2",
+      "status": "PASS",
+      "actual": "10.68",
+      "expected": "36053/3375"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.unit_cost.column3",
+      "status": "PASS",
+      "actual": "3.16%",
+      "expected": "18546850/5876639"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.unit_cost.column4",
+      "status": "PASS",
+      "actual": "10.62",
+      "expected": "82229/7745"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.unit_cost.column5",
+      "status": "PASS",
+      "actual": "3.79%",
+      "expected": "50808710/13403327"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.unit_cost.column6",
+      "status": "PASS",
+      "actual": "10.60",
+      "expected": "53/5"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.unit_cost.column7",
+      "status": "PASS",
+      "actual": "3.96%",
+      "expected": "34190/8639"
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.overview.unit_cost.same_row",
+      "status": "PASS",
+      "actual": "单位成本(元/盒)11.019510.683.16%10.623.79%10.603.96%",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.total_cost.column1",
+      "status": "PASS",
+      "actual": "1796180.00",
+      "expected": "1796180"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.total_cost.column2",
+      "status": "PASS",
+      "actual": "1442120.00",
+      "expected": "1442120"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.total_cost.column3",
+      "status": "PASS",
+      "actual": "24.55%",
+      "expected": "885150/36053"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.total_cost.column4",
+      "status": "PASS",
+      "actual": "1644580.00",
+      "expected": "1644580"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.total_cost.column5",
+      "status": "PASS",
+      "actual": "9.22%",
+      "expected": "758000/82229"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.total_cost.column6",
+      "status": "PASS",
+      "actual": "1590000.00",
+      "expected": "1590000"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.total_cost.column7",
+      "status": "PASS",
+      "actual": "12.97%",
+      "expected": "10309/795"
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.overview.total_cost.same_row",
+      "status": "PASS",
+      "actual": "总成本(元)1796180.001442120.0024.55%1644580.009.22%1590000.0012.97%",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.materials.column1",
+      "status": "PASS",
+      "actual": "7.17",
+      "expected": "11693/1630"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.materials.column2",
+      "status": "PASS",
+      "actual": "6.83",
+      "expected": "6149/900"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.materials.column3",
+      "status": "PASS",
+      "actual": "5.00%",
+      "expected": "455300/91117"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.materials.column4",
+      "status": "PASS",
+      "actual": "6.81",
+      "expected": "1055049/154900"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.materials.column5",
+      "status": "PASS",
+      "actual": "5.32%",
+      "expected": "915158300/171972987"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.materials.column6",
+      "status": "PASS",
+      "actual": "6.80",
+      "expected": "34/5"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.materials.column7",
+      "status": "PASS",
+      "actual": "5.49%",
+      "expected": "15225/2771"
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.overview.materials.same_row",
+      "status": "PASS",
+      "actual": "其中：直接材料(元/盒)7.176.835.00%6.815.32%6.805.49%",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.labor.column1",
+      "status": "PASS",
+      "actual": "1.51",
+      "expected": "6156/4075"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.labor.column2",
+      "status": "PASS",
+      "actual": "1.51",
+      "expected": "10213/6750"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.labor.column3",
+      "status": "PASS",
+      "actual": "-0.16%",
+      "expected": "-259900/1664719"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.labor.column4",
+      "status": "PASS",
+      "actual": "1.49",
+      "expected": "46181/30980"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.labor.column5",
+      "status": "PASS",
+      "actual": "1.34%",
+      "expected": "10101220/7527503"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.labor.column6",
+      "status": "PASS",
+      "actual": "1.50",
+      "expected": "3/2"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.labor.column7",
+      "status": "PASS",
+      "actual": "0.71%",
+      "expected": "116/163"
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.overview.labor.same_row",
+      "status": "PASS",
+      "actual": "其中：直接人工(元/盒)1.511.51-0.16%1.491.34%1.500.71%",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.overhead.column1",
+      "status": "PASS",
+      "actual": "2.34",
+      "expected": "9516/4075"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.overhead.column2",
+      "status": "PASS",
+      "actual": "2.34",
+      "expected": "10517/4500"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.overhead.column3",
+      "status": "PASS",
+      "actual": "-0.08%",
+      "expected": "-10700/131867"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.overhead.column4",
+      "status": "PASS",
+      "actual": "2.32",
+      "expected": "179313/77450"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.overhead.column5",
+      "status": "PASS",
+      "actual": "0.86%",
+      "expected": "8418300/9742673"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.overhead.column6",
+      "status": "PASS",
+      "actual": "2.30",
+      "expected": "23/10"
+    },
+    {
+      "scenario": "Q2",
+      "field": "overview.overhead.column7",
+      "status": "PASS",
+      "actual": "1.53%",
+      "expected": "5740/3749"
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.overview.overhead.same_row",
+      "status": "PASS",
+      "actual": "其中：制造费用(元/盒)2.342.34-0.08%2.320.86%2.301.53%",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "structure.materials.column1",
+      "status": "PASS",
+      "actual": "7.17",
+      "expected": "11693/1630"
+    },
+    {
+      "scenario": "Q2",
+      "field": "structure.materials.column2",
+      "status": "PASS",
+      "actual": "65.10%",
+      "expected": "5846500/89809"
+    },
+    {
+      "scenario": "Q2",
+      "field": "structure.materials.column3",
+      "status": "PASS",
+      "actual": "0.34",
+      "expected": "50083/146700"
+    },
+    {
+      "scenario": "Q2",
+      "field": "structure.materials.column4",
+      "status": "PASS",
+      "actual": "101.26%",
+      "expected": "37562250/370937"
+    },
+    {
+      "scenario": "Q2",
+      "field": "bound.materials.mom.numerator",
+      "status": "PASS",
+      "actual": "0.341397409679618268575323790",
+      "expected": "50083/146700"
+    },
+    {
+      "scenario": "Q2",
+      "field": "bound.materials.mom.denominator",
+      "status": "PASS",
+      "actual": "0.33713883208361735969097932",
+      "expected": "370937/1100250"
+    },
+    {
+      "scenario": "Q2",
+      "field": "bound.materials.mom.contribution",
+      "status": "PASS",
+      "actual": "101.2631525029856822047948852",
+      "expected": "37562250/370937"
+    },
+    {
+      "scenario": "Q2",
+      "field": "bound.materials.yoy.numerator",
+      "status": "PASS",
+      "actual": "0.362457591876017379112587975",
+      "expected": "9151583/25248700"
+    },
+    {
+      "scenario": "Q2",
+      "field": "bound.materials.yoy.denominator",
+      "status": "PASS",
+      "actual": "0.40246594874191542534863181",
+      "expected": "5080871/12624350"
+    },
+    {
+      "scenario": "Q2",
+      "field": "bound.materials.yoy.contribution",
+      "status": "PASS",
+      "actual": "90.05919457510336318320225038",
+      "expected": "457579150/5080871"
+    },
+    {
+      "scenario": "Q2",
+      "field": "bound.materials.budget.numerator",
+      "status": "PASS",
+      "actual": "0.373619631901840490797546012",
+      "expected": "609/1630"
+    },
+    {
+      "scenario": "Q2",
+      "field": "bound.materials.budget.denominator",
+      "status": "PASS",
+      "actual": "0.41950920245398773006134969",
+      "expected": "3419/8150"
+    },
+    {
+      "scenario": "Q2",
+      "field": "bound.materials.budget.contribution",
+      "status": "PASS",
+      "actual": "89.06112898508335770693185204",
+      "expected": "304500/3419"
+    },
+    {
+      "scenario": "Q2",
+      "field": "structure.labor.column1",
+      "status": "PASS",
+      "actual": "1.51",
+      "expected": "6156/4075"
+    },
+    {
+      "scenario": "Q2",
+      "field": "structure.labor.column2",
+      "status": "PASS",
+      "actual": "13.71%",
+      "expected": "1231200/89809"
+    },
+    {
+      "scenario": "Q2",
+      "field": "structure.labor.column3",
+      "status": "PASS",
+      "actual": "-0.0024",
+      "expected": "-2599/1100250"
+    },
+    {
+      "scenario": "Q2",
+      "field": "structure.labor.column4",
+      "status": "PASS",
+      "actual": "-0.70%",
+      "expected": "-259900/370937"
+    },
+    {
+      "scenario": "Q2",
+      "field": "bound.labor.mom.numerator",
+      "status": "PASS",
+      "actual": "-0.002362190411270165871392865",
+      "expected": "-2599/1100250"
+    },
+    {
+      "scenario": "Q2",
+      "field": "bound.labor.mom.denominator",
+      "status": "PASS",
+      "actual": "0.33713883208361735969097932",
+      "expected": "370937/1100250"
+    },
+    {
+      "scenario": "Q2",
+      "field": "bound.labor.mom.contribution",
+      "status": "PASS",
+      "actual": "-0.7006580632290658521527913739",
+      "expected": "-259900/370937"
+    },
+    {
+      "scenario": "Q2",
+      "field": "bound.labor.yoy.numerator",
+      "status": "PASS",
+      "actual": "0.020003445721957962192112861",
+      "expected": "505061/25248700"
+    },
+    {
+      "scenario": "Q2",
+      "field": "bound.labor.yoy.denominator",
+      "status": "PASS",
+      "actual": "0.40246594874191542534863181",
+      "expected": "5080871/12624350"
+    },
+    {
+      "scenario": "Q2",
+      "field": "bound.labor.yoy.contribution",
+      "status": "PASS",
+      "actual": "4.970220657048761915033859298",
+      "expected": "25253050/5080871"
+    },
+    {
+      "scenario": "Q2",
+      "field": "bound.labor.budget.numerator",
+      "status": "PASS",
+      "actual": "0.010674846625766871165644172",
+      "expected": "87/8150"
+    },
+    {
+      "scenario": "Q2",
+      "field": "bound.labor.budget.denominator",
+      "status": "PASS",
+      "actual": "0.41950920245398773006134969",
+      "expected": "3419/8150"
+    },
+    {
+      "scenario": "Q2",
+      "field": "bound.labor.budget.contribution",
+      "status": "PASS",
+      "actual": "2.544603685288095934483767256",
+      "expected": "8700/3419"
+    },
+    {
+      "scenario": "Q2",
+      "field": "structure.overhead.column1",
+      "status": "PASS",
+      "actual": "2.34",
+      "expected": "9516/4075"
+    },
+    {
+      "scenario": "Q2",
+      "field": "structure.overhead.column2",
+      "status": "PASS",
+      "actual": "21.19%",
+      "expected": "1903200/89809"
+    },
+    {
+      "scenario": "Q2",
+      "field": "structure.overhead.column3",
+      "status": "PASS",
+      "actual": "-0.0019",
+      "expected": "-1391/733500"
+    },
+    {
+      "scenario": "Q2",
+      "field": "structure.overhead.column4",
+      "status": "PASS",
+      "actual": "-0.56%",
+      "expected": "-208650/370937"
+    },
+    {
+      "scenario": "Q2",
+      "field": "bound.overhead.mom.numerator",
+      "status": "PASS",
+      "actual": "-0.001896387184730743012951602",
+      "expected": "-1391/733500"
+    },
+    {
+      "scenario": "Q2",
+      "field": "bound.overhead.mom.denominator",
+      "status": "PASS",
+      "actual": "0.33713883208361735969097932",
+      "expected": "370937/1100250"
+    },
+    {
+      "scenario": "Q2",
+      "field": "bound.overhead.mom.contribution",
+      "status": "PASS",
+      "actual": "-0.5624944397566163526420928940",
+      "expected": "-208650/370937"
+    },
+    {
+      "scenario": "Q2",
+      "field": "bound.overhead.yoy.numerator",
+      "status": "PASS",
+      "actual": "0.020004911143940084043930974",
+      "expected": "252549/12624350"
+    },
+    {
+      "scenario": "Q2",
+      "field": "bound.overhead.yoy.denominator",
+      "status": "PASS",
+      "actual": "0.40246594874191542534863181",
+      "expected": "5080871/12624350"
+    },
+    {
+      "scenario": "Q2",
+      "field": "bound.overhead.yoy.contribution",
+      "status": "PASS",
+      "actual": "4.970584767847874901763890327",
+      "expected": "25254900/5080871"
+    },
+    {
+      "scenario": "Q2",
+      "field": "bound.overhead.budget.numerator",
+      "status": "PASS",
+      "actual": "0.035214723926380368098159509",
+      "expected": "287/8150"
+    },
+    {
+      "scenario": "Q2",
+      "field": "bound.overhead.budget.denominator",
+      "status": "PASS",
+      "actual": "0.41950920245398773006134969",
+      "expected": "3419/8150"
+    },
+    {
+      "scenario": "Q2",
+      "field": "bound.overhead.budget.contribution",
+      "status": "PASS",
+      "actual": "8.394267329628546358584381415",
+      "expected": "28700/3419"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.row_count",
+      "status": "PASS",
+      "actual": 18,
+      "expected": "18"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.2026-04.金银花.unit",
+      "status": "PASS",
+      "actual": "3.35",
+      "expected": "67/20"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.2026-04.金银花.total",
+      "status": "PASS",
+      "actual": "184250.0",
+      "expected": "184250"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.2026-04.黄芩提取物.unit",
+      "status": "PASS",
+      "actual": "2.15",
+      "expected": "43/20"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.2026-04.黄芩提取物.total",
+      "status": "PASS",
+      "actual": "118250.0",
+      "expected": "118250"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.2026-04.蔗糖.unit",
+      "status": "PASS",
+      "actual": "0.47",
+      "expected": "47/100"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.2026-04.蔗糖.total",
+      "status": "PASS",
+      "actual": "25850.0",
+      "expected": "25850"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.2026-04.苯甲酸钠.unit",
+      "status": "PASS",
+      "actual": "0.16",
+      "expected": "4/25"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.2026-04.苯甲酸钠.total",
+      "status": "PASS",
+      "actual": "8800.0",
+      "expected": "8800"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.2026-04.纯化水.unit",
+      "status": "PASS",
+      "actual": "0.08",
+      "expected": "2/25"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.2026-04.纯化水.total",
+      "status": "PASS",
+      "actual": "4400.0",
+      "expected": "4400"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.2026-04.包装材料(盒+说明书).unit",
+      "status": "PASS",
+      "actual": "0.87",
+      "expected": "87/100"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.2026-04.包装材料(盒+说明书).total",
+      "status": "PASS",
+      "actual": "47850.0",
+      "expected": "47850"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.2026-05.金银花.unit",
+      "status": "PASS",
+      "actual": "3.5",
+      "expected": "7/2"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.2026-05.金银花.total",
+      "status": "PASS",
+      "actual": "203000.0",
+      "expected": "203000"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.2026-05.黄芩提取物.unit",
+      "status": "PASS",
+      "actual": "2.2",
+      "expected": "11/5"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.2026-05.黄芩提取物.total",
+      "status": "PASS",
+      "actual": "127600.0",
+      "expected": "127600"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.2026-05.蔗糖.unit",
+      "status": "PASS",
+      "actual": "0.48",
+      "expected": "12/25"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.2026-05.蔗糖.total",
+      "status": "PASS",
+      "actual": "27840.0",
+      "expected": "27840"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.2026-05.苯甲酸钠.unit",
+      "status": "PASS",
+      "actual": "0.16",
+      "expected": "4/25"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.2026-05.苯甲酸钠.total",
+      "status": "PASS",
+      "actual": "9280.0",
+      "expected": "9280"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.2026-05.纯化水.unit",
+      "status": "PASS",
+      "actual": "0.08",
+      "expected": "2/25"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.2026-05.纯化水.total",
+      "status": "PASS",
+      "actual": "4640.0",
+      "expected": "4640"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.2026-05.包装材料(盒+说明书).unit",
+      "status": "PASS",
+      "actual": "0.88",
+      "expected": "22/25"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.2026-05.包装材料(盒+说明书).total",
+      "status": "PASS",
+      "actual": "51040.0",
+      "expected": "51040"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.2026-06.金银花.unit",
+      "status": "PASS",
+      "actual": "3.4",
+      "expected": "17/5"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.2026-06.金银花.total",
+      "status": "PASS",
+      "actual": "170000.0",
+      "expected": "170000"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.2026-06.黄芩提取物.unit",
+      "status": "PASS",
+      "actual": "2.18",
+      "expected": "109/50"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.2026-06.黄芩提取物.total",
+      "status": "PASS",
+      "actual": "109000.0",
+      "expected": "109000"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.2026-06.蔗糖.unit",
+      "status": "PASS",
+      "actual": "0.46",
+      "expected": "23/50"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.2026-06.蔗糖.total",
+      "status": "PASS",
+      "actual": "23000.0",
+      "expected": "23000"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.2026-06.苯甲酸钠.unit",
+      "status": "PASS",
+      "actual": "0.15",
+      "expected": "3/20"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.2026-06.苯甲酸钠.total",
+      "status": "PASS",
+      "actual": "7500.0",
+      "expected": "7500"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.2026-06.纯化水.unit",
+      "status": "PASS",
+      "actual": "0.08",
+      "expected": "2/25"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.2026-06.纯化水.total",
+      "status": "PASS",
+      "actual": "4000.0",
+      "expected": "4000"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.2026-06.包装材料(盒+说明书).unit",
+      "status": "PASS",
+      "actual": "0.86",
+      "expected": "43/50"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_detail.2026-06.包装材料(盒+说明书).total",
+      "status": "PASS",
+      "actual": "43000.0",
+      "expected": "43000"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_driver.金银花.current",
+      "status": "PASS",
+      "actual": "3.418711656441717791411042945",
+      "expected": "2229/652"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_driver.金银花.previous",
+      "status": "PASS",
+      "actual": "3.206370370370370370370370370",
+      "expected": "21643/6750"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_driver.金银花.delta",
+      "status": "PASS",
+      "actual": "0.212341286071347421040672575",
+      "expected": "467257/2200500"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_driver.金银花.contribution",
+      "status": "PASS",
+      "actual": "62.19768517594127082376588215",
+      "expected": "9345140/150249"
+    },
+    {
+      "scenario": "Q2",
+      "field": "docx.material_driver.金银花.contribution",
+      "status": "PASS",
+      "actual": "占材料增量62.20%",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.material_driver.金银花.contribution",
+      "status": "PASS",
+      "actual": "占材料增量62.20%",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_driver.黄芩提取物.current",
+      "status": "PASS",
+      "actual": "2.176993865030674846625766871",
+      "expected": "7097/3260"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_driver.黄芩提取物.previous",
+      "status": "PASS",
+      "actual": "2.097925925925925925925925926",
+      "expected": "14161/6750"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_driver.黄芩提取物.delta",
+      "status": "PASS",
+      "actual": "0.079067939104748920699840945",
+      "expected": "173989/2200500"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_driver.黄芩提取物.contribution",
+      "status": "PASS",
+      "actual": "23.16008758793735732018183143",
+      "expected": "3479780/150249"
+    },
+    {
+      "scenario": "Q2",
+      "field": "docx.material_driver.黄芩提取物.contribution",
+      "status": "PASS",
+      "actual": "占材料增量23.16%",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.material_driver.黄芩提取物.contribution",
+      "status": "PASS",
+      "actual": "占材料增量23.16%",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_driver.包装材料(盒+说明书).current",
+      "status": "PASS",
+      "actual": "0.8704907975460122699386503067",
+      "expected": "14189/16300"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_driver.包装材料(盒+说明书).previous",
+      "status": "PASS",
+      "actual": "0.8489629629629629629629629630",
+      "expected": "11461/13500"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_driver.包装材料(盒+说明书).delta",
+      "status": "PASS",
+      "actual": "0.0215278345830493069756873437",
+      "expected": "11843/550125"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_driver.包装材料(盒+说明书).contribution",
+      "status": "PASS",
+      "actual": "6.305799040259835340002262886",
+      "expected": "947440/150249"
+    },
+    {
+      "scenario": "Q2",
+      "field": "docx.material_driver.包装材料(盒+说明书).contribution",
+      "status": "PASS",
+      "actual": "占材料增量6.31%",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.material_driver.包装材料(盒+说明书).contribution",
+      "status": "PASS",
+      "actual": "占材料增量6.31%",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_driver.蔗糖.current",
+      "status": "PASS",
+      "actual": "0.4704907975460122699386503067",
+      "expected": "7669/16300"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_driver.蔗糖.previous",
+      "status": "PASS",
+      "actual": "0.4489629629629629629629629630",
+      "expected": "6061/13500"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_driver.蔗糖.delta",
+      "status": "PASS",
+      "actual": "0.0215278345830493069756873437",
+      "expected": "11843/550125"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_driver.蔗糖.contribution",
+      "status": "PASS",
+      "actual": "6.305799040259835340002262886",
+      "expected": "947440/150249"
+    },
+    {
+      "scenario": "Q2",
+      "field": "docx.material_driver.蔗糖.contribution",
+      "status": "PASS",
+      "actual": "占材料增量6.31%",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.material_driver.蔗糖.contribution",
+      "status": "PASS",
+      "actual": "占材料增量6.31%",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_driver.苯甲酸钠.current",
+      "status": "PASS",
+      "actual": "0.1569325153374233128834355828",
+      "expected": "1279/8150"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_driver.苯甲酸钠.previous",
+      "status": "PASS",
+      "actual": "0.15",
+      "expected": "3/20"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_driver.苯甲酸钠.delta",
+      "status": "PASS",
+      "actual": "0.0069325153374233128834355828",
+      "expected": "113/16300"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_driver.苯甲酸钠.contribution",
+      "status": "PASS",
+      "actual": "2.030629155601701176047760711",
+      "expected": "101700/50083"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_driver.纯化水.current",
+      "status": "PASS",
+      "actual": "0.08",
+      "expected": "2/25"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_driver.纯化水.previous",
+      "status": "PASS",
+      "actual": "0.08",
+      "expected": "2/25"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_driver.纯化水.delta",
+      "status": "PASS",
+      "actual": "0.00",
+      "expected": "0"
+    },
+    {
+      "scenario": "Q2",
+      "field": "material_driver.纯化水.contribution",
+      "status": "PASS",
+      "actual": "0",
+      "expected": "0"
+    },
+    {
+      "scenario": "Q2",
+      "field": "labor.row1.column1",
+      "status": "PASS",
+      "actual": "1.51",
+      "expected": "6156/4075"
+    },
+    {
+      "scenario": "Q2",
+      "field": "labor.row1.column2",
+      "status": "PASS",
+      "actual": "1.51",
+      "expected": "10213/6750"
+    },
+    {
+      "scenario": "Q2",
+      "field": "labor.row1.column3",
+      "status": "PASS",
+      "actual": "-0.16%",
+      "expected": "-259900/1664719"
+    },
+    {
+      "scenario": "Q2",
+      "field": "labor.row2.column1",
+      "status": "PASS",
+      "actual": "251.29",
+      "expected": "40960/163"
+    },
+    {
+      "scenario": "Q2",
+      "field": "labor.row2.column2",
+      "status": "PASS",
+      "actual": "279.70",
+      "expected": "7552/27"
+    },
+    {
+      "scenario": "Q2",
+      "field": "labor.row2.column3",
+      "status": "PASS",
+      "actual": "-10.16%",
+      "expected": "-97700/9617"
+    },
+    {
+      "scenario": "Q2",
+      "field": "labor.row3.column1",
+      "status": "PASS",
+      "actual": "60.12",
+      "expected": "7695/128"
+    },
+    {
+      "scenario": "Q2",
+      "field": "labor.row3.column2",
+      "status": "PASS",
+      "actual": "54.09",
+      "expected": "51065/944"
+    },
+    {
+      "scenario": "Q2",
+      "field": "labor.row3.column3",
+      "status": "PASS",
+      "actual": "11.13%",
+      "expected": "227425/20426"
+    },
+    {
+      "scenario": "Q2",
+      "field": "labor.row4.column1",
+      "status": "PASS",
+      "actual": "318.36",
+      "expected": "20375/64"
+    },
+    {
+      "scenario": "Q2",
+      "field": "labor.row4.column2",
+      "status": "PASS",
+      "actual": "286.02",
+      "expected": "16875/59"
+    },
+    {
+      "scenario": "Q2",
+      "field": "labor.row4.column3",
+      "status": "PASS",
+      "actual": "11.31%",
+      "expected": "4885/432"
+    },
+    {
+      "scenario": "Q2",
+      "field": "benchmark.unit_cost.column1",
+      "status": "PASS",
+      "actual": "11.41",
+      "expected": "51359/4500"
+    },
+    {
+      "scenario": "Q2",
+      "field": "benchmark.unit_cost.column2",
+      "status": "PASS",
+      "actual": "11.02",
+      "expected": "89809/8150"
+    },
+    {
+      "scenario": "Q2",
+      "field": "benchmark.unit_cost.column3",
+      "status": "PASS",
+      "actual": "0.39",
+      "expected": "288707/733500"
+    },
+    {
+      "scenario": "Q2",
+      "field": "benchmark.unit_cost.column4",
+      "status": "PASS",
+      "actual": "3.57",
+      "expected": "2887070/808281"
+    },
+    {
+      "scenario": "Q2",
+      "field": "benchmark.materials.column1",
+      "status": "PASS",
+      "actual": "7.17",
+      "expected": "10751/1500"
+    },
+    {
+      "scenario": "Q2",
+      "field": "benchmark.materials.column2",
+      "status": "PASS",
+      "actual": "7.17",
+      "expected": "11693/1630"
+    },
+    {
+      "scenario": "Q2",
+      "field": "benchmark.materials.column3",
+      "status": "PASS",
+      "actual": "-0.01",
+      "expected": "-1537/244500"
+    },
+    {
+      "scenario": "Q2",
+      "field": "benchmark.materials.column4",
+      "status": "PASS",
+      "actual": "-0.09",
+      "expected": "-3074/35079"
+    },
+    {
+      "scenario": "Q2",
+      "field": "benchmark.materials.contribution_docx",
+      "status": "PASS",
+      "actual": "-1.60%",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "benchmark.materials.contribution_pdf",
+      "status": "PASS",
+      "actual": "-1.60%",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "benchmark.labor.column1",
+      "status": "PASS",
+      "actual": "1.71",
+      "expected": "1283/750"
+    },
+    {
+      "scenario": "Q2",
+      "field": "benchmark.labor.column2",
+      "status": "PASS",
+      "actual": "1.51",
+      "expected": "6156/4075"
+    },
+    {
+      "scenario": "Q2",
+      "field": "benchmark.labor.column3",
+      "status": "PASS",
+      "actual": "0.20",
+      "expected": "24449/122250"
+    },
+    {
+      "scenario": "Q2",
+      "field": "benchmark.labor.column4",
+      "status": "PASS",
+      "actual": "13.24",
+      "expected": "122245/9234"
+    },
+    {
+      "scenario": "Q2",
+      "field": "benchmark.labor.contribution_docx",
+      "status": "PASS",
+      "actual": "50.81%",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "benchmark.labor.contribution_pdf",
+      "status": "PASS",
+      "actual": "50.81%",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "benchmark.overhead.column1",
+      "status": "PASS",
+      "actual": "2.54",
+      "expected": "2852/1125"
+    },
+    {
+      "scenario": "Q2",
+      "field": "benchmark.overhead.column2",
+      "status": "PASS",
+      "actual": "2.34",
+      "expected": "9516/4075"
+    },
+    {
+      "scenario": "Q2",
+      "field": "benchmark.overhead.column3",
+      "status": "PASS",
+      "actual": "0.20",
+      "expected": "36656/183375"
+    },
+    {
+      "scenario": "Q2",
+      "field": "benchmark.overhead.column4",
+      "status": "PASS",
+      "actual": "8.56",
+      "expected": "183280/21411"
+    },
+    {
+      "scenario": "Q2",
+      "field": "benchmark.overhead.contribution_docx",
+      "status": "PASS",
+      "actual": "50.79%",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "benchmark.overhead.contribution_pdf",
+      "status": "PASS",
+      "actual": "50.79%",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "budget_bridge.quantity_effect",
+      "status": "PASS",
+      "actual": "137800.0",
+      "expected": "137800"
+    },
+    {
+      "scenario": "Q2",
+      "field": "docx.budget_bridge.quantity_effect",
+      "status": "PASS",
+      "actual": "137800.00",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.budget_bridge.quantity_effect",
+      "status": "PASS",
+      "actual": "137800.00",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "budget_bridge.unit_cost_effect",
+      "status": "PASS",
+      "actual": "68379.99999999999999999999947",
+      "expected": "68380"
+    },
+    {
+      "scenario": "Q2",
+      "field": "docx.budget_bridge.unit_cost_effect",
+      "status": "PASS",
+      "actual": "68380.00",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.budget_bridge.unit_cost_effect",
+      "status": "PASS",
+      "actual": "68380.00",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "budget_bridge.total_delta",
+      "status": "PASS",
+      "actual": "206180.0",
+      "expected": "206180"
+    },
+    {
+      "scenario": "Q2",
+      "field": "docx.budget_bridge.total_delta",
+      "status": "PASS",
+      "actual": "206180.00",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.budget_bridge.total_delta",
+      "status": "PASS",
+      "actual": "206180.00",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "trend.no_future.2026-01",
+      "status": "PASS",
+      "actual": "2026-01",
+      "expected": "2026-06"
+    },
+    {
+      "scenario": "Q2",
+      "field": "trend.2026-01.unit_cost",
+      "status": "PASS",
+      "actual": "10.7",
+      "expected": "107/10"
+    },
+    {
+      "scenario": "Q2",
+      "field": "trend.2026-01.quantity",
+      "status": "PASS",
+      "actual": "45000",
+      "expected": "45000"
+    },
+    {
+      "scenario": "Q2",
+      "field": "trend.2026-01.total_cost",
+      "status": "PASS",
+      "actual": "481500.0",
+      "expected": "481500"
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.trend.2026-01",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "trend.no_future.2026-02",
+      "status": "PASS",
+      "actual": "2026-02",
+      "expected": "2026-06"
+    },
+    {
+      "scenario": "Q2",
+      "field": "trend.2026-02.unit_cost",
+      "status": "PASS",
+      "actual": "10.87",
+      "expected": "1087/100"
+    },
+    {
+      "scenario": "Q2",
+      "field": "trend.2026-02.quantity",
+      "status": "PASS",
+      "actual": "38000",
+      "expected": "38000"
+    },
+    {
+      "scenario": "Q2",
+      "field": "trend.2026-02.total_cost",
+      "status": "PASS",
+      "actual": "413060.0",
+      "expected": "413060"
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.trend.2026-02",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "trend.no_future.2026-03",
+      "status": "PASS",
+      "actual": "2026-03",
+      "expected": "2026-06"
+    },
+    {
+      "scenario": "Q2",
+      "field": "trend.2026-03.unit_cost",
+      "status": "PASS",
+      "actual": "10.53",
+      "expected": "1053/100"
+    },
+    {
+      "scenario": "Q2",
+      "field": "trend.2026-03.quantity",
+      "status": "PASS",
+      "actual": "52000",
+      "expected": "52000"
+    },
+    {
+      "scenario": "Q2",
+      "field": "trend.2026-03.total_cost",
+      "status": "PASS",
+      "actual": "547560.0",
+      "expected": "547560"
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.trend.2026-03",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "trend.no_future.2026-04",
+      "status": "PASS",
+      "actual": "2026-04",
+      "expected": "2026-06"
+    },
+    {
+      "scenario": "Q2",
+      "field": "trend.2026-04.unit_cost",
+      "status": "PASS",
+      "actual": "10.9",
+      "expected": "109/10"
+    },
+    {
+      "scenario": "Q2",
+      "field": "trend.2026-04.quantity",
+      "status": "PASS",
+      "actual": "55000",
+      "expected": "55000"
+    },
+    {
+      "scenario": "Q2",
+      "field": "trend.2026-04.total_cost",
+      "status": "PASS",
+      "actual": "599500.0",
+      "expected": "599500"
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.trend.2026-04",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "trend.no_future.2026-05",
+      "status": "PASS",
+      "actual": "2026-05",
+      "expected": "2026-06"
+    },
+    {
+      "scenario": "Q2",
+      "field": "trend.2026-05.unit_cost",
+      "status": "PASS",
+      "actual": "11.21",
+      "expected": "1121/100"
+    },
+    {
+      "scenario": "Q2",
+      "field": "trend.2026-05.quantity",
+      "status": "PASS",
+      "actual": "58000",
+      "expected": "58000"
+    },
+    {
+      "scenario": "Q2",
+      "field": "trend.2026-05.total_cost",
+      "status": "PASS",
+      "actual": "650180.0",
+      "expected": "650180"
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.trend.2026-05",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "trend.no_future.2026-06",
+      "status": "PASS",
+      "actual": "2026-06",
+      "expected": "2026-06"
+    },
+    {
+      "scenario": "Q2",
+      "field": "trend.2026-06.unit_cost",
+      "status": "PASS",
+      "actual": "10.93",
+      "expected": "1093/100"
+    },
+    {
+      "scenario": "Q2",
+      "field": "trend.2026-06.quantity",
+      "status": "PASS",
+      "actual": "50000",
+      "expected": "50000"
+    },
+    {
+      "scenario": "Q2",
+      "field": "trend.2026-06.total_cost",
+      "status": "PASS",
+      "actual": "546500.0",
+      "expected": "546500"
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.trend.2026-06",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "trend.available_months",
+      "status": "PASS",
+      "actual": [
+        "2026-01",
+        "2026-02",
+        "2026-03",
+        "2026-04",
+        "2026-05",
+        "2026-06"
+      ],
+      "expected": "['2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06']"
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.table2.row1.same_as_docx",
+      "status": "PASS",
+      "actual": "直接材料7.1765.10%0.34101.26%",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.table2.row2.same_as_docx",
+      "status": "PASS",
+      "actual": "直接人工1.5113.71%-0.0024-0.70%",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.table2.row3.same_as_docx",
+      "status": "PASS",
+      "actual": "制造费用2.3421.19%-0.0019-0.56%",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.table2.row4.same_as_docx",
+      "status": "PASS",
+      "actual": "合计11.0195100%0.34100.00%",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.table3.row1.same_as_docx",
+      "status": "PASS",
+      "actual": "2026-04金银花3.35184250.0",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.table3.row2.same_as_docx",
+      "status": "PASS",
+      "actual": "2026-04黄芩提取物2.15118250.0",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.table3.row3.same_as_docx",
+      "status": "PASS",
+      "actual": "2026-04蔗糖0.4725850.0",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.table3.row4.same_as_docx",
+      "status": "PASS",
+      "actual": "2026-04苯甲酸钠0.168800.0",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.table3.row5.same_as_docx",
+      "status": "PASS",
+      "actual": "2026-04纯化水0.084400.0",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.table3.row6.same_as_docx",
+      "status": "PASS",
+      "actual": "2026-04包装材料(盒+说明书)0.8747850.0",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.table3.row7.same_as_docx",
+      "status": "PASS",
+      "actual": "2026-05金银花3.5203000.0",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.table3.row8.same_as_docx",
+      "status": "PASS",
+      "actual": "2026-05黄芩提取物2.2127600.0",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.table3.row9.same_as_docx",
+      "status": "PASS",
+      "actual": "2026-05蔗糖0.4827840.0",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.table3.row10.same_as_docx",
+      "status": "PASS",
+      "actual": "2026-05苯甲酸钠0.169280.0",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.table3.row11.same_as_docx",
+      "status": "PASS",
+      "actual": "2026-05纯化水0.084640.0",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.table3.row12.same_as_docx",
+      "status": "PASS",
+      "actual": "2026-05包装材料(盒+说明书)0.8851040.0",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.table3.row13.same_as_docx",
+      "status": "PASS",
+      "actual": "2026-06金银花3.4170000.0",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.table3.row14.same_as_docx",
+      "status": "PASS",
+      "actual": "2026-06黄芩提取物2.18109000.0",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.table3.row15.same_as_docx",
+      "status": "PASS",
+      "actual": "2026-06蔗糖0.4623000.0",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.table3.row16.same_as_docx",
+      "status": "PASS",
+      "actual": "2026-06苯甲酸钠0.157500.0",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.table3.row17.same_as_docx",
+      "status": "PASS",
+      "actual": "2026-06纯化水0.084000.0",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.table3.row18.same_as_docx",
+      "status": "PASS",
+      "actual": "2026-06包装材料(盒+说明书)0.8643000.0",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.table4.row1.same_as_docx",
+      "status": "PASS",
+      "actual": "单位人工成本(元/盒)1.511.51-0.16%—",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.table4.row2.same_as_docx",
+      "status": "PASS",
+      "actual": "人工工时(h/万盒)251.29279.70-10.16%—",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.table4.row3.same_as_docx",
+      "status": "PASS",
+      "actual": "平均小时工资(元/h)60.1254.0911.13%—",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.table4.row4.same_as_docx",
+      "status": "PASS",
+      "actual": "人工效率(盒/人·日)318.36286.0211.31%—",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.table5.row1.same_as_docx",
+      "status": "PASS",
+      "actual": "折旧费0.810.82-0.47%折旧费变动需核对费用台账及分摊依据",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.table5.row2.same_as_docx",
+      "status": "PASS",
+      "actual": "动力费(水电气)0.550.55-0.15%动力费(水电气)变动需核对费用台账及分摊依据",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.table5.row3.same_as_docx",
+      "status": "PASS",
+      "actual": "间接人工0.470.48-0.33%人工(间接)变动需核对费用台账及分摊依据",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.table5.row4.same_as_docx",
+      "status": "PASS",
+      "actual": "检验费0.250.253.01%检验费变动需核对费用台账及分摊依据",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.table5.row5.same_as_docx",
+      "status": "PASS",
+      "actual": "其他制造费用0.250.25-1.23%其他制造费用变动需核对费用台账及分摊依据",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.table5.row6.same_as_docx",
+      "status": "PASS",
+      "actual": "合计2.342.34-0.08%—",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.table8.row1.same_as_docx",
+      "status": "PASS",
+      "actual": "单位成本11.4111.020.393.57",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.table8.row2.same_as_docx",
+      "status": "PASS",
+      "actual": "直接材料7.177.17-0.01-0.09",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.table8.row3.same_as_docx",
+      "status": "PASS",
+      "actual": "直接人工1.711.510.2013.24",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "pdf.table8.row4.same_as_docx",
+      "status": "PASS",
+      "actual": "制造费用2.542.340.208.56",
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "degradation_disclosed_docx",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "degradation_disclosed_pdf",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "scenario": "Q2",
+      "field": "no_report_approval_claim",
+      "status": "PASS",
+      "actual": null,
+      "expected": null
+    }
+  ],
+  "check_count": 999,
+  "failure_count": 0,
+  "human_attribution_score": "PENDING",
+  "human_readability": "PENDING",
+  "visual_quality": "PENDING_PARENT_REVIEW",
+  "numeric_file_audit_status": "PASS"
+}

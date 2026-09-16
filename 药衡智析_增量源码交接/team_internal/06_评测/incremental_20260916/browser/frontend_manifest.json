@@ -1,0 +1,17 @@
+{
+  "verified_run": "2026-09-15T18:48:47.842Z",
+  "files": {
+    "05_原型/frontend/src/Analysis.tsx": "e5001dba7e79dd668ab7e07312c1adbbc0c30c2c757b8524fdd798081ea86907",
+    "05_原型/frontend/src/App.tsx": "9d3e09763c51166197864bc901cc327eb695f7616282f301e69d3ac9ab41e7e8",
+    "05_原型/frontend/src/Benchmark.tsx": "e0d1e7201a6312186ae9eeaf02a00054427a5d9afa28d2c94cbec6dde8ab4501",
+    "05_原型/frontend/src/Chart.tsx": "acd3a0bfc31c73cda97edcca9bf04cd67436b2f88f096d723e0f8c770e57231a",
+    "05_原型/frontend/src/Evidence.tsx": "2968f5611c2ae691cc1050fe5302fcfd5ee7a90e7d95b37f2512adc02d84aafa",
+    "05_原型/frontend/src/NarrativePanel.tsx": "0197367c81e403defdf3451539d6492e47d79f3f2435e210b49545f63205e678",
+    "05_原型/frontend/src/Tasks.tsx": "2bca5ad59c7a4b6d5b455ce89349eeae0755cde36828eab1d74d22874f8207d4",
+    "05_原型/frontend/src/api.ts": "240f7d265b9678806c708184aa936efc0548d3534f35e1a152f2c558332aafe9",
+    "05_原型/frontend/src/main.tsx": "7254a29d506487188f48b2a7f33912401fe8510fcdc3306f0efad67ff25df159",
+    "05_原型/frontend/src/presentation.tsx": "944074e1d15ffdf1d63de5c9567388510602fb0a3bdf249e1dae98ba74a9a1d0",
+    "05_原型/frontend/src/style.css": "e8ddf31796f7f894a9f68a60f95ff2b383c61045832c353534ae8d2adaf3d8ef",
+    "05_原型/tests/e2e_incremental_20260916.mjs": "dd846fb2300aba7817daaf38b217682e4bd970815374c0d1e7d9a5ac0cb0a1d5"
+  }
+}

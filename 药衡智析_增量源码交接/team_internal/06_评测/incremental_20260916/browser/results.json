@@ -1,0 +1,283 @@
+{
+  "started_at": "2026-09-15T18:48:47.842Z",
+  "url": "http://127.0.0.1:8765",
+  "browser_plugin": "ABSENT: Browser plugin not available; existing Playwright reused",
+  "status": "PASS",
+  "viewports": [
+    {
+      "width": 1366,
+      "height": 768
+    },
+    {
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "width": 390,
+      "height": 844
+    }
+  ],
+  "checks": [
+    {
+      "name": "page_identity",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "not_blank",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "no_framework_overlay",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "S2_unit_cost",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "review_default_no_internal_objects",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "three_cost_charts_rendered",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "no_future_trend",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "material_contribution_mom",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "material_contribution_yoy",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "material_contribution_budget",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "yoy_elements_exact",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "material_driver_83_33",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "metric_drawer_readable_sources",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "drawer_default_no_hash",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "developer_audit_retained",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "1366_no_horizontal_overflow",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "echarts_trend_tooltip_interactive",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "trend_precise_february",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "total_basis_changes_metric",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "benchmark_structure_exact",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "benchmark_chart",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "benchmark_reverse_direction",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "evidence_default_no_slice",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "evidence_no_other_product",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "banlangen_process_real_page_three",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "S1_unit_cost",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "S3_unit_cost",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "quarter_weighted_notice",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "report_not_file_pass_equals_report_pass",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "eight_acceptance_dimensions_exact",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "real_Word_download",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "real_PDF_download",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "real_machine_audit_download",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "action_has_suggestion",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "action_expected_evidence",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "action_deadline_basis",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "unknown_assignee_not_invented",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "draft_no_notification_before_confirmation",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "duplicate_draft_reuses_task",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "edit_saves_action_details",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "edit_changes_confirmation_identity",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "history_available",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "1920_no_horizontal_overflow",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "390_no_horizontal_overflow",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "controlled_accepted_is_not_notification_sent",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "console_health",
+      "status": "PASS",
+      "details": "[]"
+    },
+    {
+      "name": "controlled_network_failure_visible",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "recovery_after_network_failure",
+      "status": "PASS",
+      "details": ""
+    }
+  ],
+  "console_errors": [],
+  "artifacts": [
+    "/home/hujunjie/企业赛道_创灵境_基于RAG与大模型的制药企业产品成本智能分析报告系统/06_评测/incremental_20260916/browser/2026-09-15T18-48-47-842Z_1366_cost.png",
+    "/home/hujunjie/企业赛道_创灵境_基于RAG与大模型的制药企业产品成本智能分析报告系统/06_评测/incremental_20260916/browser/2026-09-15T18-48-47-842Z_1366_chart_tooltip.png",
+    "/home/hujunjie/企业赛道_创灵境_基于RAG与大模型的制药企业产品成本智能分析报告系统/06_评测/incremental_20260916/browser/2026-09-15T18-48-47-842Z_1366_benchmark.png",
+    "/home/hujunjie/企业赛道_创灵境_基于RAG与大模型的制药企业产品成本智能分析报告系统/06_评测/incremental_20260916/browser/2026-09-15T18-48-47-842Z_1366_evidence.png",
+    "/home/hujunjie/企业赛道_创灵境_基于RAG与大模型的制药企业产品成本智能分析报告系统/06_评测/incremental_20260916/browser/2026-09-15T18-48-47-842Z_1366_quarter.png",
+    "/home/hujunjie/企业赛道_创灵境_基于RAG与大模型的制药企业产品成本智能分析报告系统/06_评测/incremental_20260916/browser/2026-09-15T18-48-47-842Z_1366_action_draft.png",
+    "/home/hujunjie/企业赛道_创灵境_基于RAG与大模型的制药企业产品成本智能分析报告系统/06_评测/incremental_20260916/browser/2026-09-15T18-48-47-842Z_1366_acceptance.png",
+    "/home/hujunjie/企业赛道_创灵境_基于RAG与大模型的制药企业产品成本智能分析报告系统/06_评测/incremental_20260916/browser/2026-09-15T18-48-47-842Z_1920_cost.png",
+    "/home/hujunjie/企业赛道_创灵境_基于RAG与大模型的制药企业产品成本智能分析报告系统/06_评测/incremental_20260916/browser/2026-09-15T18-48-47-842Z_390_cost.png",
+    "/home/hujunjie/企业赛道_创灵境_基于RAG与大模型的制药企业产品成本智能分析报告系统/06_评测/incremental_20260916/browser/2026-09-15T18-48-47-842Z_1366_controlled_failure.png"
+  ],
+  "limitations": [
+    "真实人工归因0–5分、可读性和版式评审待评。",
+    "发送由用户确认；本浏览器流程只创建草稿，不代替用户确认。RPA发送与重启边界见后端回归。",
+    "ACCEPTED界面状态使用明确标注的只读API注入样例验证，未伪造真实通知发送。"
+  ],
+  "generated_job": "bc4ae85bd50c4d58a51ad92045957472",
+  "draft_id": "YH-6fe91f816c2f4ebd9a7580c1",
+  "finished_at": "2026-09-15T18:49:07.031Z"
+}

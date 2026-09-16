@@ -1,0 +1,16 @@
+F
+=================================== FAILURES ===================================
+_____________ test_rule_action_priorities_match_task_api_contract ______________
+
+    def test_rule_action_priorities_match_task_api_contract():
+        from pharma.metrics import analyze
+        from pharma.narrative import rule_findings
+        actions=[f for f in rule_findings(analyze('中药一厂','板蓝根颗粒','2026-05'),[]) if f['claim_type']=='recommendation']
+>       assert actions and all(f['priority'] in ('high','medium','low') for f in actions)
+E       AssertionError: assert ([{'claim_type': 'recommendation', 'text_template': '现有明细已定位主要原料驱动；价格与实物耗用的影响尚未分开。', 'metric_refs': [], 'evidence_refs'...pe': 'recommendation', 'text_template': '制造费用单位成本存在差异；事件记录不能直接作为本期新增费用。', 'metric_refs': [], 'evidence_refs': [], ...}] and False)
+E        +  where False = all(<generator object test_rule_action_priorities_match_task_api_contract.<locals>.<genexpr> at 0x79865abda4d0>)
+
+05_原型/tests/test_retrieval_incremental.py:151: AssertionError
+=========================== short test summary info ============================
+FAILED 05_原型/tests/test_retrieval_incremental.py::test_rule_action_priorities_match_task_api_contract
+1 failed, 14 deselected in 0.19s
