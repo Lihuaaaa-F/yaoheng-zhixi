@@ -36,6 +36,8 @@ with tempfile.TemporaryDirectory(prefix='pharma-package-',dir=None if __import__
  copyfile('06_评测/golden.json',internal)  # tests/test_metrics.py 的独立golden，随包携带
  local_run=json.loads((ROOT/'06_评测/run_20260917_local/scenario_reports.json').read_text())
  for item in local_run:copytree(ROOT/('07_交付/业务报告/'+item['job_id']),internal/('07_交付/业务报告/'+item['job_id']))
+ glm_live=json.loads((ROOT/'06_评测/run_20260917_glm_live/scenario_reports_v3.json').read_text())
+ for item in glm_live:copytree(ROOT/('07_交付/业务报告/'+item['job_id']),internal/('07_交付/业务报告/'+item['job_id']))
  for item in release:
   rel='07_交付/业务报告/'+item['job_id'];copytree(ROOT/rel,internal/rel)
  # Baseline evidence remains evidence; never represent it as executable source.
