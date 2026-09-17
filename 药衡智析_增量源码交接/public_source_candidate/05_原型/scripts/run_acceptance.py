@@ -2,12 +2,14 @@
 Receipts contain verdicts/identifiers, never source business data or full prose.
 """
 from pathlib import Path
-import argparse,json,os,subprocess,time,urllib.request
+import argparse,json,os,sys,time,urllib.request
 APP=Path(__file__).resolve().parents[1];ROOT=APP.parent
+sys.path.insert(0,str(APP/'backend'))
+from pharma.revision import revision_record
 
 def main():
  p=argparse.ArgumentParser();p.add_argument('--run-id',required=True);p.add_argument('--output-dir',type=Path,required=True);p.add_argument('--private-scenarios',type=Path);p.add_argument('--base-url',default='http://127.0.0.1:8765');a=p.parse_args();a.output_dir.mkdir(parents=True,exist_ok=True)
- commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()
+ revision=revision_record(ROOT)
  def call(path,data=None):
   req=urllib.request.Request(a.base_url+path,data=json.dumps(data).encode() if data is not None else None,headers={'Content-Type':'application/json'})
   with urllib.request.urlopen(req,timeout=180) as response:return json.load(response)
@@ -17,7 +19,7 @@ def main():
  for row in scenarios:
   data={k:v for k,v in row.items() if k!='id'};data['run_id']=a.run_id
   job=call('/api/reports',data);result.append({'id':row['id'],'job_id':job['job_id']});print('queued',row['id'],flush=True)
- manifest={'run_id':a.run_id,'commit':commit,'required_scenarios':[x['id'] for x in result],'scenarios':result,'receipts':{},'human_review':'PENDING','privacy':'Local only: private scenario products and prose are excluded'}
+ manifest={'run_id':a.run_id,**revision,'required_scenarios':[x['id'] for x in result],'scenarios':result,'receipts':{},'human_review':'PENDING','privacy':'Local only: private scenario products and prose are excluded'}
  path=a.output_dir/'manifest.json';path.write_text(json.dumps(manifest,ensure_ascii=False,indent=2))
  narrative=[];retrieval=[];rpa=[]
  for row in result:
@@ -45,6 +47,6 @@ def main():
   path.write_text(json.dumps(manifest,ensure_ascii=False,indent=2))
  receipts={'model_live':{'status':'PASS' if len(narrative)==len(result) and all(x['status']=='PASS' and x['model_live'] and (x.get('identity') or {}).get('status')=='VERIFIED' for x in narrative) else 'FAIL','scenarios':narrative},'retrieval':{'status':'PASS' if all(x['status']=='PASS' and x['mode']=='hybrid' for x in retrieval) else 'FAIL','scenarios':retrieval},'rpa':{'status':'PASS' if len(rpa)==len(result) and all(x['status']=='PASS' for x in rpa) else 'FAIL','scenarios':rpa}}
  for name,data in receipts.items():
-  filename=name+'.json';(a.output_dir/filename).write_text(json.dumps({'run_id':a.run_id,'commit':commit,**data},ensure_ascii=False,indent=2));manifest['receipts'][name]=filename
+  filename=name+'.json';(a.output_dir/filename).write_text(json.dumps({'run_id':a.run_id,**revision,**data},ensure_ascii=False,indent=2));manifest['receipts'][name]=filename
  path.write_text(json.dumps(manifest,ensure_ascii=False,indent=2));print('manifest',path)
 if __name__=='__main__':main()

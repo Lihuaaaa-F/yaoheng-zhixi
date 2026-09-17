@@ -63,3 +63,14 @@ def test_worker_rejects_old_unbound_version_contract(service,kind):
     job['input']['versions'].pop(kind,None)
     worker.process_job(store,job)
     assert kind.upper()+'_VERSION_CHANGED_RESUBMIT' in store.get(id)['error']
+
+
+def test_api_can_enqueue_from_archive_without_parent_git_discovery(service,tmp_path,monkeypatch):
+    client,store=service
+    archive=tmp_path/'archive';source=archive/'05_原型/backend/pharma';source.mkdir(parents=True)
+    (source/'example.py').write_text('SYNTHETIC = True\n')
+    monkeypatch.setattr(api,'ROOT',archive)
+    id=submit(client);record=store.get(id)['input']
+    assert record['commit'] is None
+    assert record['revision_kind']=='source'
+    assert record['revision'].startswith('source:')

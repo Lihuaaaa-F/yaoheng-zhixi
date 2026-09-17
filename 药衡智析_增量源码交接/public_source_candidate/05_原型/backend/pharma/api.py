@@ -1,12 +1,12 @@
 from contextlib import asynccontextmanager
 from typing import Literal
 from pathlib import Path
-import hashlib,json,time,os,subprocess
+import hashlib,json,time,os
 from fastapi import FastAPI,HTTPException,Request
 from fastapi.responses import FileResponse,JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel,Field,ConfigDict
-from .config import APP,RUNTIME
+from .config import APP,RUNTIME,ROOT
 from .jobs import JobStore
 from .actions import ActionStore
 from .metrics import analyze,benchmark,benchmark_analysis,catalog
@@ -124,8 +124,9 @@ def report(req:ReportRequest):
     gateway=ModelGateway()
     versions={'renderer':RENDERER_VERSION,'snapshot':snapshot['snapshot_id'],'knowledge':snapshot['analysis_context']['knowledge_snapshot'],'template':template_version,'prompt':PROMPT_VERSION,'validator':VALIDATOR_VERSION,'parser':__import__('pharma.knowledge',fromlist=['PARSER_VERSION']).PARSER_VERSION,'terminology':__import__('pharma.knowledge',fromlist=['terminology_hash']).terminology_hash(),'model':gateway.model,'protocol':gateway.provider,'endpoint':gateway.base_url,'context':snapshot['analysis_context'],'model_available':bool(gateway.key),'generation_parameters':{'max_tokens':os.getenv('PHARMA_MODEL_MAX_TOKENS','8192'),'reasoning_effort':os.getenv('PHARMA_MODEL_REASONING_EFFORT','low'),'max_repairs':gateway.max_repairs},'retriever':__import__('pharma.knowledge',fromlist=['RETRIEVER_VERSION']).RETRIEVER_VERSION,'embedding':__import__('pharma.knowledge',fromlist=['EMBEDDING_SHA']).EMBEDDING_SHA,'retrieval_parameters':{'mode':'hybrid','weight_policy':'lexical-anchor:0.75/0.25;otherwise:0.5/0.5','reranker':'none','limit':8},'run_id':req.run_id}
     key=hashlib.sha256(json.dumps(versions,sort_keys=True).encode()).hexdigest()
-    commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=APP,text=True).strip()
-    j=store.enqueue('report',{'snapshot_id':snapshot['snapshot_id'],'context_id':snapshot['context_id'],'versions':versions,'run_id':req.run_id,'commit':commit},key)
+    from .revision import revision_record
+    revision=revision_record(ROOT)
+    j=store.enqueue('report',{'snapshot_id':snapshot['snapshot_id'],'context_id':snapshot['context_id'],'versions':versions,'run_id':req.run_id,**revision},key)
     return {'job_id':j['id'],'status':j['status'],'cache_source_time':j['created']}
 @app.get('/api/jobs')
 def jobs(context_id:str|None=None):return [j for j in store.list() if context_id is None or j['input'].get('context_id')==context_id]

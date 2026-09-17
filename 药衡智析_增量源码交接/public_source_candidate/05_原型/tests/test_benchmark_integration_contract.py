@@ -22,7 +22,9 @@ def test_competition_benchmark_uses_bound_retrieval(tmp_path, monkeypatch):
 def test_reference_report_worker_passes_cross_metrics_to_generation(tmp_path, monkeypatch):
     from pharma import worker, industry, narrative, context_services
     snapshot=industry.analyze_reference('mechanical_demo:synthetic-mechanical',month='2026-06')
-    store=JobStore(tmp_path/'db');store.snapshot(snapshot);job=store.enqueue('report',{'snapshot_id':snapshot['snapshot_id'],'versions':{}})
+    from pharma.knowledge import PARSER_VERSION,RETRIEVER_VERSION,EMBEDDING_SHA,terminology_hash
+    versions={'validator':narrative.VALIDATOR_VERSION,'parser':PARSER_VERSION,'retriever':RETRIEVER_VERSION,'embedding':EMBEDDING_SHA,'terminology':terminology_hash()}
+    store=JobStore(tmp_path/'db');store.snapshot(snapshot);job=store.enqueue('report',{'snapshot_id':snapshot['snapshot_id'],'versions':versions})
     captured=[]
     monkeypatch.setattr(context_services,'retrieve',lambda *a,**k:{'status':'PASS','evidence':[]})
     monkeypatch.setattr(narrative,'ModelGateway',lambda:SimpleNamespace(model='synthetic',provider='openai',base_url='https://example.invalid'))
