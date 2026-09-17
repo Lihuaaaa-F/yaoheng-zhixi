@@ -1,24 +1,11 @@
-# 药衡智析项目实施规则
+# 药衡智析协作规则
 
-先读 docs/implementation_status.md、CONTEXT.md、相关 docs/adr。唯一工作目录为本 WSL 目录，D盘只读基线，禁止双向同步。无Git仓：审查以 docs/baseline.json 逐文件哈希为固定点，不强制commit或创建PR。
+Git根为本目录上两级；本目录是应用项目根，源码05_原型。所有命令显式cwd。main为协作默认分支，日常使用工作分支，不force push。用户已授权本轮修改、普通commit/push；不修改可见性或共享历史。
 
-## Agent skills
+先读README、docs/current_run.json、docs/implementation_status.md和相关ADR。唯一当前验收入口为docs/current_run.json；历史原件/报告/回执只留工程外恢复归档。原题只读，公开仓不能包含题包、私有知识、派生完整报告、旧golden或恢复备份。gitignore不代替移除tracked。
 
-共享原文位于 /home/hujunjie/.codex/skills/{setup-matt-pocock-skills,domain-modeling,codebase-design,tdd,diagnosing-bugs,code-review}/SKILL.md，锁定 SHA 3cca18b368ae95cdbdebbff572ccafa662551015。当前会话按路径读取；原生发现以新会话实际结果为准。
-- 配置已由用户确认：本地 Markdown；docs/agents/issue-tracker.md；不建外部工单、不triage、不重复访谈。
-- 领域术语沿用 CONTEXT.md；允许 API、组件等自然表达。仅在减少真实重复与隔离外部变化时设计接口，不为技能增层。
-- TDD已授权接口：指标与单位换算、模板/导出、检索/引用、RPA发送/查询、用户E2E。关键行为逐条红→绿，独立golden。不为文案样式机械加测试。
-- 调试用真实复现→观测→修复→回归；明确简单错误无需形式化多假设或千次循环。
-- code-review分规范与规格两路，包含基线以来新增及修改，不以HEAD diff替代工作区，不强制提交。
+数值用Decimal，数量独立去重；缺失不补零。证据相关不等于证实因果，任务须确认后发送；模拟送达不等于整改完成。真人0—5评分仅真人署名录入。
 
-## 代码与数据
+并行所有权：主Agent负责API/报告/任务/环境/集成；数据Agent负责ingestion/metrics/industry及行业包数据；检索Agent负责knowledge/narrative及包内归因；前端Agent负责frontend与浏览器。公共合同改动先协调。GLM-5.3负责重要非视觉工作，Flash仅按需视觉检查，均不得代填真人评分。
 
-源码唯一在05_原型，Python backend/pharma模块：ingestion、metrics、knowledge、narrative、reports、actions、api。React frontend。原材料、原模板、原mock不修改；工作模板可建一份。金额Decimal，指标快照跨看板报告复用，缺值必须含原因。sqlite持久化worker/outbox，发送需确认。密钥仅文件读取，绝不输出或打包。默认127.0.0.1，不外发、不公开。
-
-## 并行所有权
-
-主Agent：配置、环境、reports/actions/api/worker、脚本、集成与最终文档。
-数据Agent：ingestion.py、metrics.py、tests/test_metrics.py、tests/test_ingestion.py、数据契约/独立golden。
-检索Agent：knowledge.py、narrative.py、相关测试、检索评测集和结果。
-前端Agent：frontend全目录、浏览器E2E脚本及证据。
-公共合同修改先同步主Agent；不改他人所有文件。
+关键行为先真实反例再修复，独立合成golden；默认测试清除开发者应用密钥，不发真实模型请求。基础/模型实调/视觉/真人验收分开记录。密钥只从环境或受控文件加载。

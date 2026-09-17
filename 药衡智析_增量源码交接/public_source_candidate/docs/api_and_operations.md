@@ -1,91 +1,72 @@
-# API与本地运行说明
+# API与运维
 
-更新：2026-09-15。API以实际运行的 `/openapi.json`、`/docs` 为准；本文件描述当前v0.1.0接口，不含密钥。
+默认127.0.0.1:8765；本地单体演示，没有公开互联网认证服务。不要把context隔离当作跨租户鉴权。
 
-## 环境复用与启动
+| 入口 | 合同 |
+|---|---|
+| GET /api/industry/catalog | 已安装行业及企业context_id、能力与缺项 |
+| GET /api/catalog?context_id=… | 合法产品/工厂/期间/单位 |
+| POST /api/analyses | context_id、factory、product、month、analysis_type、basis，返回固定上下文快照 |
+| GET /api/benchmarks | context_id、product、month、analysis_type、basis、left、right；季度贯通 |
+| POST /api/reports | 与analysis一致；同版本完成结果复用 |
+| GET /api/jobs?context_id=… | 本上下文任务；执行状态与解释来源/真人审核分别显示 |
+| GET /api/artifacts/{id} | 终态可下载，DEGRADED允许；真实哈希漂移拒绝，preview明确草稿 |
+| POST /api/reports/{id}/reviews | 真人署名、0—5归因、章节/可读性/版式；实际产物绑定 |
+| GET /api/reports/{id}/acceptance | 重算；产物变化使旧审核STALE |
+| POST /api/kb/search | context_id、query、product、month、factory及检索模式 |
+| POST /api/actions | snapshot_id、标题/负责人/来源/优先级、建议/核查对象/证据/岗位/期限依据 |
+| PUT /api/actions/{id} | 合并后仍通过完整行动合同；未确认可编辑 |
+| POST /api/actions/{id}/confirm | 当前payload_hash确认；仅一个outbox |
+| POST /api/actions/{id}/acknowledge | 已送达任务的本人署名责任确认；不等于整改完成 |
+| POST /api/actions/{id}/refresh | 查询模拟API，严格响应合同；协议错误不抹掉已证明状态 |
 
-|项目|实际选择|证据/限制|
-|---|---|---|
-|系统|WSL2 Ubuntu24.04、x86_64，22逻辑CPU、约15GiB RAM|docs/environment_inventory.json；GPU仅检测，未安装驱动|
-|工作目录|用户授权后复制到/home/hujunjie同名目录，ext4|129文件复制哈希基线；D盘只读保留|
-|Python|复用系统3.12.3解释器创建05_原型/.venv|系统Python不升级/卸载；实际包import后锁requirements.lock|
-|Node|复用24.18.0、npm11.16.0；本项目Linux node_modules|package-lock.json，不复用Windows node_modules|
-|PDF|增量安装LibreOffice Writer24.2.7.2和Poppler，复用Noto CJK字体|小样DOCX→PDF已通过，未下载生成模型环境|
-|浏览器|复用缓存Chrome for Testing149和Windows Chrome/Edge|基础E2E/Windows只读页面实测证据分开|
-|Docker|当前CLI/daemon缺失|运行BLOCKED；不安装另一套WSL Docker Engine|
-|Embedding|单个BGE量化ONNX约22.8MB＋tokenizer|CPU，无torch/CUDA训练栈；来源SHA见第三方记录|
+发送前确认与责任人整改确认不同；GET返回sent/confirmed/completed分别保存，模拟微信不是真实集成。重启SENDING先GET核对，不盲目重发。旧runtime整体隔离，不恢复待发队列。本轮恢复仅复用兼容依赖和只读模型，私有原件路径由PHARMA_DATA_PACKAGE指定。
+
+bootstrap采用同一build_inputs.py指纹，node_modules锁指纹不一致则npm ci。缺模型允许基础降级，外置模型不改写。进程管理仅操作记录PID+启动标识。生成与分析按上下文固定，无全局行业切换。
+
+基础测试清除开发者密钥；实调单独用受控.env。verify.sh必须传当前manifest，退出0/1/2=自动通过/失败/未完成；不能用历史browser覆盖本轮，也不预置ENV PASS。
+
+报告任务同时绑定生成校验合同、解析器、术语内容、分目的检索策略、检索器与嵌入版本；任一漂移会新建任务，运行中旧绑定任务拒绝复用。Git源码记录commit；无Git公开归档记录明确的source指纹与commit=null，不查询HOME的仓库。
+
+## 前端构建与浏览器验证
+
+以下命令均从应用根 `药衡智析_增量源码交接/public_source_candidate` 执行。`bootstrap.sh` 完成依赖锁校验、前端编译并写入 `.build-inputs`；单独 `npm run build` 不写该验收指纹。源码或锁文件修改后重新运行 bootstrap，再用环境探针确认 `frontend.dist_matches_sources=true`。`check_environment.py --strict` 的退出码只覆盖依赖能力与构建匹配；还须查看其 LibreOffice、字体等字段，PDF与浏览器的真实可用性由对应导出/浏览器流程验证。
 
 ```bash
-cd '/home/hujunjie/企业赛道_创灵境_基于RAG与大模型的制药企业产品成本智能分析报告系统'
 bash 05_原型/scripts/bootstrap.sh
 bash 05_原型/scripts/start.sh
-bash 05_原型/scripts/verify.sh
-# 完成后停止本项目
-bash 05_原型/scripts/stop.sh
+05_原型/.venv/bin/python 05_原型/scripts/check_environment.py --strict
 ```
 
-页面：http://localhost:8765；OpenAPI：http://localhost:8765/docs。服务绑定127.0.0.1，Windows localhost经WSL访问。start使用本项目Python启动API8765、原mock8090和单worker；端口若被非受管进程占用则报错，不杀他人服务。stop核对PID创建时间令牌。日志位于05_原型/.runtime/{api,worker,rpa}.log。
+若显式复用 `PHARMA_PYTHON`，上面的 Python 命令改用该兼容解释器；bootstrap 不保证另建 `.venv`。WSL 不能复用 Windows venv。
 
-## 模型配置
-
-默认读取 `/home/hujunjie/api/DeepSeek/DeepSeek-重庆市AI大赛.txt`。文件只含本项目API密钥，应用内部读取，勿把内容粘贴到终端记录或提交源码。可通过环境选择外部文件，无需改源码：
+开发热更新在单独终端运行（Ctrl+C 停止该 Vite 进程）：
 
 ```bash
-export PHARMA_API_KEY_FILE='/home/hujunjie/api/DeepSeek/DeepSeek-重庆市AI大赛.txt'
-export PHARMA_MODEL_PROTOCOL='openai'
-export PHARMA_MODEL_BASE_URL='https://api.deepseek.com'
-export PHARMA_MODEL='deepseek-flash'
-bash 05_原型/scripts/start.sh
+cd 05_原型/frontend
+npm run dev -- --port 5178 --strictPort
 ```
 
-其他OpenAI兼容端点在base_url后追加 `/chat/completions`；如供应商要求/v1，应将/v1放在base_url中。Anthropic格式设 `PHARMA_MODEL_PROTOCOL=anthropic`，base_url配置服务地址，程序追加 `/v1/messages`（已有/v1时追加/messages）。Anthropic只做本地协议夹具验证，未宣称真实供应商联调通过。
+开发代理固定指向 API `127.0.0.1:8765`，开发服务器默认端口原为 5173；上面明确设为 5178，与模拟测试默认一致。若仅需交付运行，访问 8765 上由 FastAPI 提供的实际 `dist`，不必启动 Vite。修改 `PHARMA_API_PORT` 不会自动改 Vite 代理。
 
-`PHARMA_MODEL_MAX_CALLS`限制持久生成调用总数，当前默认40；`PHARMA_MODEL_MAX_REPAIRS`默认2且上限2，可设0进行单次最终联调。改变配置后须重启本项目受管进程。达到预算上限后明确规则降级，不自动增加额度、充值或切换付费服务。未知费用记录UNKNOWN。SQLite调用日志仅记录模型、usage、时间、状态和错误类别；模型原文留在私有.runtime，不进入公开源码。
+另一终端从应用根运行模拟浏览器合同测试。所有 API 由测试脚本拦截，不需真实模型或题包；Vite 必须已启动。
 
-## 接口表
-
-|方法/路径|输入|输出/行为|
-|---|---|---|
-|GET /health|无|API身份、worker心跳年龄、simulation|
-|GET /api/catalog|无|可用工厂、产品、月份、演示责任人|
-|POST /api/analyses|AnalysisRequest|确定性指标快照及snapshot_id，同步|
-|GET /api/analyses/{id}|快照ID|已固定快照|
-|GET /api/benchmarks|product/month/left/right|同月双方向差异、明细、知识证据、模型状态与findings|
-|POST /api/reports|AnalysisRequest|202＋job_id/status/cache_source_time；持久worker处理|
-|GET /api/jobs、/api/jobs/{id}|无/任务ID|队列、阶段、结果；单任务含history|
-|GET /api/artifacts/{id}|受控artifact_id|哈希校验后的Word/PDF；不接受任意路径|
-|POST /api/imports|无|202＋job_id；重验本地受控原始CSV，非任意文件上传入口|
-|POST /api/kb/build|无|202＋job_id；重建受控知识源，版本未变复用|
-|GET /api/kb|无|知识版本、来源、构建状态|
-|POST /api/kb/search|query/product可选/mode|bm25/vector/hybrid；原文、真实位置、知识版本和降级原因|
-|POST /api/actions|snapshot_id/finding/assignee/suggestion/priority|DRAFT，尚未发送|
-|PUT /api/actions/{id}|允许编辑字段|仅DRAFT可改；返回新payload_hash|
-|POST /api/actions/{id}/confirm|payload_hash|确认当前内容并事务写outbox，重复确认幂等|
-|GET /api/actions、/api/actions/{id}|无/ID|本地与远端状态分别返回|
-|POST /api/actions/{id}/refresh|无|向配置原mock查询同ID；不会再次发送|
-
-AnalysisRequest示例：
-
-```json
-{"factory":"中药一厂","product":"银黄口服液","month":"2026-05","analysis_type":"monthly","basis":"unit"}
+```bash
+TMPDIR=/tmp PHARMA_E2E_URL=http://127.0.0.1:5178 \
+  PHARMA_E2E_OUT=/tmp/yaoheng-context-ui npm --prefix 05_原型/frontend run e2e
 ```
 
-analysis_type为monthly/quarterly/special，basis为unit/total。季度month必须为03/06/09/12并有完整季度数据。跨厂页面API当前按月份比较；季度报告内部使用完整季度对标，不把月度对标当季度指标。
+真实 API 浏览器测试使用受管服务和当前构建：
 
-业务错误使用 `error.code/message` 与FAILED，参数格式验证还可能返回FastAPI标准422 detail；调用方需同时兼容。无比较期的业务数值是null/N/A及reason，不是HTTP故障。模型/向量/PDF分别降级或失败并保留原因，不能仅根据HTTP200判断全部功能通过。
+```bash
+TMPDIR=/tmp PHARMA_E2E_URL=http://127.0.0.1:8765 \
+  PHARMA_E2E_OUT=/tmp/yaoheng-live-ui npm --prefix 05_原型/frontend run e2e:live
+```
 
-## 数据、报告与恢复
+两脚本都使用本机已安装的 Chromium：通过 `PHARMA_CHROME_PATH` 指定可执行文件，或由 `PLAYWRIGHT_BROWSERS_PATH` 指向已有的兼容 Playwright 浏览器缓存。bootstrap 只安装 npm 包，不下载浏览器；缺浏览器应记录阻断，不能因 Playwright 包存在就写浏览器 PASS。真实测试仅使用合成企业，会提交机械报告；有凭据时可能触发应用模型调用。测试输出的 `qa.json` 仅证明所列页面/接口断言，提交成功不等于报告完成；图表、字体、解释和页面高度稳定后，仍须实际查看全页截图。演示素材可另运行 `npm --prefix 05_原型/frontend run demo:record`，录像需要兼容的本机 FFmpeg/Playwright 录像依赖，不能以生成视频文件代替内容检查。
 
-标准数据在 `.runtime/data` 的不可变Parquet，以current.json原子发布；知识在 `.runtime/knowledge/<version>`。任务/快照/outbox为 `.runtime/app.sqlite3`；不要在运行中随意删除数据库、CURRENT或历史版本。
+## 公开副本与配置
 
-报告位于 `07_交付/业务报告/<job_id>/`，包含report.docx、report.pdf（成功时）、report.png、record.json。`06_评测/scenario_reports.json`指向四个当前验收任务，旧目录不等于最终产物清单。不同阶段结果写入SQLite，进程恢复从安全检查点继续；版本变化会报*_VERSION_CHANGED_RESUBMIT，需要重新提交，不能静默换输入。
+全新公开源码无需题包或模型密钥，默认具备三份独立合成企业。`.env` 仅从 `05_原型/.env` 读取，shell 已导出变量优先；不执行其中的 shell 命令。无密钥试验应使用未恢复私有 `.env`、题包及旧 runtime 的独立副本，同时确认没有继承 `PHARMA_API_KEY`、`GLM_API_KEY`、`ZHIPU_API_KEY` 或密钥文件配置。缺密钥、嵌入模型、PDF工具分别影响相应能力，不应宣称全部模型/混合检索/PDF维度通过。
 
-原mock的POST已模拟发送微信，无额外notify接口。超时或400先GET同ID比较payload；未知结果停止盲发。原mock内存数据重启清空，曾成功任务查询404变REMOTE_UNKNOWN，不自动重建。sent/received/confirmed/completed代表不同含义，均为演示状态。
-
-## 验证命令与范围
-
-`verify.sh`生成 `06_评测/verification.json`，合并必要pytest、原件完整性和当前报告检查。浏览器证据由 `05_原型/tests/e2e.mjs`、`e2e_narrative.mjs`、`e2e_windows.mjs` 的实际执行产生；重跑浏览器涉及本地mock模拟确认，限本项目演示会话。
-
-最终冻结：FINAL_STATUS=PARTIAL。42项合并测试通过；S1/S3/Q2为真实DeepSeek生成通过，S2专题因未绑定文档数字触发严格拒绝而明确规则降级。四份DOCX/PDF均通过，原文与原数据哈希未变。跨产品设备误引已补校验，原错误S2已撤回，不能下载冒充通过。
-
-模型当前已记录30次生成尝试，默认有限总上限40，为用户后续演示预留最多10次。本轮验证已停止模型调用。超过上限、超时或结构/引用错误明确降级，不自动充值。真人评分填写06_评测/human_scoring.json。
+`run_acceptance.py` 默认使用三份合成场景，会生成报告并向本机模拟器确认测试任务；它不是纯读取探针。无需私有 `--private-scenarios` 参数，但模型及混合检索缺项会如实记为未满足。独立源码归档可运行该流程并获得 `source:<sha>` / `commit=null`；协作提交追溯使用 Git clone。公开仓的 `docs/current_run.json` 是开发交接索引，不包含他人机器的报告数据库，不能直接当作新机器已跑验收。为本机指定唯一 `--run-id` 和独立输出目录，再引用自己的 manifest，保留自动、开发者视觉及真人维度区别。

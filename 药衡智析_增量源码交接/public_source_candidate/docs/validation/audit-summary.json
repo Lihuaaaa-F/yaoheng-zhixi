@@ -1,0 +1,39 @@
+{
+  "baseline_commit": "acc469312c8366e4b0438e702a5f435779e7a125",
+  "method": "Real function counterexamples, isolated SQLite/fake transports, then independent synthetic regressions and separate live runs",
+  "baseline_limit": "The prior read-only audit did not rerun all 83 tests or current models; historical PASS is not a current result.",
+  "standards_findings": [
+    "Typed driver units/deduplication/scope",
+    "Real comparison path bypassing compatibility",
+    "Exact enterprise knowledge entry isolation"
+  ],
+  "spec_findings": [
+    "Mixed aggregation grain double counting",
+    "Typed driver unit and output scope",
+    "Role-bound report numeric verification",
+    "Same-factory requirement for time comparisons"
+  ],
+  "live_findings": [
+    "Valid metrics used in wrong semantic roles",
+    "Relative month lexical false positive",
+    "Repairing a whole section revalidated already accepted units",
+    "Known Chinese dates and proposed deadlines need typed binding",
+    "Decimal/unit line breaks and task/source pagination",
+    "Comparison direction labels and frozen report templates",
+    "Cross-factory explanation must be an independent required task",
+    "Concrete cost worksheet names falsely rejected as missing-evidence documents",
+    "Template prose replacement changed already-bound model text",
+    "Report cache omitted validator/parser/terminology versions",
+    "Report creation in a public source archive incorrectly required .git",
+    "Scoped S3 maintenance record was eligible but displaced by broad-query ranking",
+    "PDF footer clearance and quarterly rounding/source-period clarity"
+  ],
+  "external_pending": [
+    "Named human attribution score 0–5",
+    "Human readability and layout approval",
+    "Historical Git private-data remediation by owner",
+    "Real industry data and unseen retrieval evaluation",
+    "PowerPoint application rendering and narrated final demo"
+  ],
+  "review_status": "Dedicated regressions and actual scoped retrieval/PDF checks; final verdicts are in current_run.json. Previous failures remain recorded, never inferred away."
+}

@@ -1,0 +1,220 @@
+{
+  "run_id": "delivery_20260918_47c5806",
+  "commit": "47c58069f1bc449d6bda18815f5276d44e72acdb",
+  "status": "CHECKED_WITH_NONBLOCKING_LAYOUT_NOTES",
+  "all_layout_requirements_complete": false,
+  "method": "AI developers actually viewed all 38 final rendered pages; no human scoring inferred",
+  "human_review": "PENDING",
+  "human_attribution_score": null,
+  "scenarios": [
+    {
+      "id": "mechanical",
+      "pages_actually_viewed": 3,
+      "page_hashes": [
+        {
+          "page": 1,
+          "sha256": "17075e483a881caec0e20ffc16d2cd5411e2b00b7af330536089d2eaaf578d2a"
+        },
+        {
+          "page": 2,
+          "sha256": "2098687aba03253fe0605778d51b88a9cb30158bc422ce1718b69aa1acb26995"
+        },
+        {
+          "page": 3,
+          "sha256": "f042052e797db2e8a8da14ca368aa9026af2830e9f90521649b6e835b90e5624"
+        }
+      ]
+    },
+    {
+      "id": "chemical",
+      "pages_actually_viewed": 4,
+      "page_hashes": [
+        {
+          "page": 1,
+          "sha256": "012cab73f06c2cbba331f7b1268bb61648352e9c5c78b1cd32ac02637edfe21c"
+        },
+        {
+          "page": 2,
+          "sha256": "7b22df5c6196c8bd215b9734c341b68d1776dcc8fe5c8a65ecd97f1e34fb0cfb"
+        },
+        {
+          "page": 3,
+          "sha256": "27db7740371ca2cfe226b6a097e7e79f08b8d209745287e578c5bb239a91db61"
+        },
+        {
+          "page": 4,
+          "sha256": "2c8f366cc112c1b5fe184c90456caf3c85d61819c65c7b12a899a7c61511f596"
+        }
+      ]
+    },
+    {
+      "id": "pharma_synthetic",
+      "pages_actually_viewed": 3,
+      "page_hashes": [
+        {
+          "page": 1,
+          "sha256": "e0608d37a0830e3e568a3dc3abce963abfda745cea146f412d00cf13f5a5c4ad"
+        },
+        {
+          "page": 2,
+          "sha256": "3fe17273edc01467104a08d7a701c29b943bcc7dd163eb0f4b3b582631246e25"
+        },
+        {
+          "page": 3,
+          "sha256": "77ebae36a0f504820d821c53f39aeb8003e14572d7f6cdaa00287dc482fd8053"
+        }
+      ]
+    },
+    {
+      "id": "S1",
+      "pages_actually_viewed": 7,
+      "page_hashes": [
+        {
+          "page": 1,
+          "sha256": "e417e55c1ab6e399aa8542d7b3dc4e3e365bb71150523fc62bacbf4d7a9fbe62"
+        },
+        {
+          "page": 2,
+          "sha256": "7a8c3f2a9106424b4f3da2f744bc2232e23e01784b17eb29149a8bdde7beff7a"
+        },
+        {
+          "page": 3,
+          "sha256": "e04705309ea6d9648de6aa6949b9e48bf14a10d9e76aaf576d20241f17a20f93"
+        },
+        {
+          "page": 4,
+          "sha256": "8c71fb347f1385ca00c6ec42cf07187e8d080a788d001288e9b605452759d59c"
+        },
+        {
+          "page": 5,
+          "sha256": "cface6926d072a06b36a77665d51db2ff8a7f0fedeba85e8cb7cc189d715a560"
+        },
+        {
+          "page": 6,
+          "sha256": "e2c3b70d62aaa8b8414b984630a0c024888e425e91d4df335578cbf17ea441c2"
+        },
+        {
+          "page": 7,
+          "sha256": "3985197779b1ddb7809ca7cdb1912a01094dda6a5a89c43ef19093498531074c"
+        }
+      ]
+    },
+    {
+      "id": "S2",
+      "pages_actually_viewed": 7,
+      "page_hashes": [
+        {
+          "page": 1,
+          "sha256": "ac0407ea247b3fb50d08778a52a765f01160322ab12f562701d238bc4d51db2a"
+        },
+        {
+          "page": 2,
+          "sha256": "91df09ba58715fd79820ab4f3ba70b90336f75c4405fd936a8ed603c5750495a"
+        },
+        {
+          "page": 3,
+          "sha256": "e8d01bf90f76f4c788409f9cefa8471d5a3584aa1e62af2fd7e6dbbb1c512f19"
+        },
+        {
+          "page": 4,
+          "sha256": "9c9e07ede74dd35008892f3846912ddf3e6a04162c07c7e9965079d800cf377a"
+        },
+        {
+          "page": 5,
+          "sha256": "5d0a9f0d840e29be48056bbfb85fce800b030df708e83dec5ad29d8e9689afd4"
+        },
+        {
+          "page": 6,
+          "sha256": "8b18552a69e56842029a061c4c51753268c0f439f5ab5a1cc954b02575913580"
+        },
+        {
+          "page": 7,
+          "sha256": "10ea6c5d6d732d5a2a8e1f1d7b93f3f80e29a146c202140f25ca0b4b427bbcb3"
+        }
+      ]
+    },
+    {
+      "id": "S3",
+      "pages_actually_viewed": 7,
+      "page_hashes": [
+        {
+          "page": 1,
+          "sha256": "6e9588e52f93c06388258040ed456a9910a51c01a56b319961efb50a87fef8bd"
+        },
+        {
+          "page": 2,
+          "sha256": "afc33b6f5937c0474241b19e3199c71e636093faaf795a6d1a42697095360361"
+        },
+        {
+          "page": 3,
+          "sha256": "7844cef15f1b6bed9e45cdc72116b8842f384607875b567f490a80f52fda7a74"
+        },
+        {
+          "page": 4,
+          "sha256": "6ea8b85b1859adad92f82d8c5b16297e48e49091c28ca36bedaf7387c6a2d527"
+        },
+        {
+          "page": 5,
+          "sha256": "36a74b23b6ea9de8abf240df7f26b66c5b95cfded32420959a2856c99d92cca1"
+        },
+        {
+          "page": 6,
+          "sha256": "de921e8bc4e691895004a944497d75db39d71a941c32db2846d8b53570617c55"
+        },
+        {
+          "page": 7,
+          "sha256": "8a2dad47f73f9ca11eb1e659375c1ed8953e4a217e88af76b30a0fafc912e105"
+        }
+      ]
+    },
+    {
+      "id": "Q2",
+      "pages_actually_viewed": 7,
+      "page_hashes": [
+        {
+          "page": 1,
+          "sha256": "21194c80b3dbf8e3c1f50916fc7462a90dd99efcf98b7aa549671c43f663c132"
+        },
+        {
+          "page": 2,
+          "sha256": "ecaeb153b46bfb849b75c54ad7e3767470904d5017cf1583c3b2b78510ee107e"
+        },
+        {
+          "page": 3,
+          "sha256": "2a996cb90ce50816339ebd60edeb2f7ad94b7e891077982d32dea4490b6e6c1a"
+        },
+        {
+          "page": 4,
+          "sha256": "a9f9457b81467c068846c7fd03cc667b4c8f2e6a2cbe45911e0fd28b48fa4c16"
+        },
+        {
+          "page": 5,
+          "sha256": "8d5e7fedbb17727fa55f78629342ccb1db5c4a6e67f21cef0c3811b4512034a1"
+        },
+        {
+          "page": 6,
+          "sha256": "161c1f438e90f220d93e68fa3690924c076abdee18d555cebea492f9cfe640f0"
+        },
+        {
+          "page": 7,
+          "sha256": "45afafd43124ff8e101af017a124ec9897d4f3d713e50e1de134585bc5abefd0"
+        }
+      ]
+    }
+  ],
+  "blocking_content_error": false,
+  "remaining_layout_issues": [
+    {
+      "scenario": "S2",
+      "page": 3,
+      "issue": "One composite currency-per-package unit wraps after the slash; DOCX contains intended no-break controls, current LibreOffice still wraps this boundary. No number changed.",
+      "status": "OPEN_NONBLOCKING"
+    },
+    {
+      "scenario": "multiple",
+      "issue": "Some source/review final pages have substantial whitespace; final professional layout approval pending.",
+      "status": "OPEN_NONBLOCKING"
+    }
+  ],
+  "scope": "Developer visual inspection is separate from automated artifact checks and named human attribution/readability/layout approval."
+}

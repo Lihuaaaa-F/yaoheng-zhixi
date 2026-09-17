@@ -1,0 +1,30 @@
+{
+  "run_id": "delivery_20260918_47c5806",
+  "commit": "47c58069f1bc449d6bda18815f5276d44e72acdb",
+  "scenarios": [
+    {
+      "id": "S1",
+      "three_step_headings": true,
+      "structured_comparison": true,
+      "model_reason_contract": "PASS",
+      "quality_human": "PENDING"
+    },
+    {
+      "id": "S2",
+      "three_step_headings": true,
+      "structured_comparison": true,
+      "model_reason_contract": "PASS",
+      "quality_human": "PENDING"
+    },
+    {
+      "id": "S3",
+      "three_step_headings": true,
+      "structured_comparison": true,
+      "model_reason_contract": "PASS",
+      "quality_human": "PENDING"
+    }
+  ],
+  "format_pass_count": 3,
+  "denominator": 3,
+  "quality_human": "PENDING"
+}

@@ -1,0 +1,565 @@
+{
+  "run_id": "delivery_20260918_47c5806",
+  "commit": "47c58069f1bc449d6bda18815f5276d44e72acdb",
+  "tested_code_commit": "47c58069f1bc449d6bda18815f5276d44e72acdb",
+  "dimensions": {
+    "environment": {
+      "status": "PASS",
+      "exit_code": 0
+    },
+    "regression": {
+      "status": "PASS",
+      "exit_code": 0
+    },
+    "scenarios": {
+      "status": "PASS"
+    },
+    "retrieval": {
+      "run_id": "delivery_20260918_47c5806",
+      "revision": "47c58069f1bc449d6bda18815f5276d44e72acdb",
+      "revision_kind": "git",
+      "commit": "47c58069f1bc449d6bda18815f5276d44e72acdb",
+      "status": "PASS",
+      "scenarios": [
+        {
+          "id": "mechanical",
+          "status": "PASS",
+          "mode": "hybrid",
+          "framework": "llama-index-core BaseRetriever/TextNode",
+          "recall_status": "RECALLED",
+          "count": 2
+        },
+        {
+          "id": "chemical",
+          "status": "PASS",
+          "mode": "hybrid",
+          "framework": "llama-index-core BaseRetriever/TextNode",
+          "recall_status": "RECALLED",
+          "count": 2
+        },
+        {
+          "id": "pharma_synthetic",
+          "status": "PASS",
+          "mode": "hybrid",
+          "framework": "llama-index-core BaseRetriever/TextNode",
+          "recall_status": "RECALLED",
+          "count": 2
+        },
+        {
+          "id": "S1",
+          "status": "PASS",
+          "mode": "hybrid",
+          "framework": "llama-index-core BaseRetriever/TextNode",
+          "recall_status": "RECALLED",
+          "count": 8
+        },
+        {
+          "id": "S2",
+          "status": "PASS",
+          "mode": "hybrid",
+          "framework": "llama-index-core BaseRetriever/TextNode",
+          "recall_status": "RECALLED",
+          "count": 8
+        },
+        {
+          "id": "S3",
+          "status": "PASS",
+          "mode": "hybrid",
+          "framework": "llama-index-core BaseRetriever/TextNode",
+          "recall_status": "RECALLED",
+          "count": 8
+        },
+        {
+          "id": "Q2",
+          "status": "PASS",
+          "mode": "hybrid",
+          "framework": "llama-index-core BaseRetriever/TextNode",
+          "recall_status": "RECALLED",
+          "count": 8
+        }
+      ]
+    },
+    "rpa": {
+      "run_id": "delivery_20260918_47c5806",
+      "revision": "47c58069f1bc449d6bda18815f5276d44e72acdb",
+      "revision_kind": "git",
+      "commit": "47c58069f1bc449d6bda18815f5276d44e72acdb",
+      "status": "PASS",
+      "scenarios": [
+        {
+          "id": "mechanical",
+          "status": "PASS",
+          "action_id": "YH-9a616c07f5cceef176437f61",
+          "notification": "SIMULATED_SENT",
+          "human_acknowledgement": "NOT_ENTERED"
+        },
+        {
+          "id": "chemical",
+          "status": "PASS",
+          "action_id": "YH-24bf044e056ba28e837eb1c0",
+          "notification": "SIMULATED_SENT",
+          "human_acknowledgement": "NOT_ENTERED"
+        },
+        {
+          "id": "pharma_synthetic",
+          "status": "PASS",
+          "action_id": "YH-d9e7f5163081852bb7666b1c",
+          "notification": "SIMULATED_SENT",
+          "human_acknowledgement": "NOT_ENTERED"
+        },
+        {
+          "id": "S1",
+          "status": "PASS",
+          "action_id": "YH-a3ba9ef6c20424bf0c56c5bb",
+          "notification": "SIMULATED_SENT",
+          "human_acknowledgement": "NOT_ENTERED"
+        },
+        {
+          "id": "S2",
+          "status": "PASS",
+          "action_id": "YH-20d983c30ddfd9b31ce278cc",
+          "notification": "SIMULATED_SENT",
+          "human_acknowledgement": "NOT_ENTERED"
+        },
+        {
+          "id": "S3",
+          "status": "PASS",
+          "action_id": "YH-4c08151e670d8633e61b01a5",
+          "notification": "SIMULATED_SENT",
+          "human_acknowledgement": "NOT_ENTERED"
+        },
+        {
+          "id": "Q2",
+          "status": "PASS",
+          "action_id": "YH-c05fccae0f39177be458f0c9",
+          "notification": "SIMULATED_SENT",
+          "human_acknowledgement": "NOT_ENTERED"
+        }
+      ]
+    },
+    "browser": {
+      "status": "PASS",
+      "scope": "live public reference-pack UI and API; report submission only, final files/model/RPA not asserted",
+      "url": "http://127.0.0.1:8765",
+      "viewports": [
+        "1440x1000",
+        "390x844"
+      ],
+      "checks": [
+        "mechanical monthly: independent expected unit cost 30, unit machine hours 0.5",
+        "mechanical quarter: independent 9400 / 320 = 29.375, displayed 29.38",
+        "real quarterly benchmark both directions, stable table and chart before screenshot",
+        "chemical switch resets legal filters; monthly cost 12 and energy metric present",
+        "chemical knowledge retrieval rendered in its own context",
+        "real A → B → A restores context correctly",
+        "real heatmap, desktop and mobile rendered without horizontal overflow",
+        "real report job submitted in mechanical context"
+      ],
+      "errors": [],
+      "apiFailures": [],
+      "submitted_job": "a49363cc2ecd4d029298685f4cc066a5",
+      "commit": "47c58069f1bc449d6bda18815f5276d44e72acdb",
+      "stable_screenshots": {
+        "status": "PASS",
+        "scope": "cached report rendering only; report-generation POST blocked; no new model calls by screenshot step",
+        "captures": [
+          {
+            "name": "desktop-stable",
+            "dimensions": {
+              "width": 1440,
+              "viewportHeight": 1000,
+              "documentHeight": 3824,
+              "horizontalOverflow": false,
+              "fonts": "loaded",
+              "charts": 4,
+              "findings": 6,
+              "footerText": "成本共变仅支持原因假设；生产变更与整改完成均须人工确认。合成样例仅验证框架，不代表行业基准。"
+            },
+            "actual": {
+              "width": 1440,
+              "height": 3824
+            }
+          },
+          {
+            "name": "mobile-stable",
+            "dimensions": {
+              "width": 390,
+              "viewportHeight": 844,
+              "documentHeight": 5260,
+              "horizontalOverflow": false,
+              "fonts": "loaded",
+              "charts": 4,
+              "findings": 6,
+              "footerText": "成本共变仅支持原因假设；生产变更与整改完成均须人工确认。合成样例仅验证框架，不代表行业基准。"
+            },
+            "actual": {
+              "width": 390,
+              "height": 5260
+            }
+          }
+        ],
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/api/industry/catalog"
+          },
+          {
+            "method": "GET",
+            "path": "/api/catalog"
+          },
+          {
+            "method": "POST",
+            "path": "/api/analyses"
+          },
+          {
+            "method": "GET",
+            "path": "/api/jobs"
+          }
+        ],
+        "blocked": [],
+        "errors": []
+      },
+      "developer_visual_review": {
+        "status": "CHECKED_NO_BLOCKING_LAYOUT_FINDINGS_IN_CAPTURED_VIEWS",
+        "human_review": "PENDING",
+        "viewed": [
+          "desktop-stable.png",
+          "mobile-stable.png",
+          "benchmark-real-stable.png"
+        ],
+        "observations": [
+          "Desktop 1440×3824 and mobile 390×5260 include six findings, four charts and footer without visible clipping or horizontal document overflow.",
+          "Mobile table uses its own horizontal scrolling region; cards and full narrative remain readable in a single column.",
+          "Completed quarterly benchmark table/chart and findings visibly show B minus A, baseline A and correct piece units.",
+          "No unresolved template slots or missing Chinese glyphs observed in captured views.",
+          "This browser receipt proves listed real API/UI behavior and report submission only; final files/model/RPA acceptance and human scoring remain separate."
+        ],
+        "sha256": {
+          "desktop-stable.png": "ac2831eeab360b34cdd563710b810e22e2a12ab2e9a1487d543cbe14134e7ffe",
+          "mobile-stable.png": "89e5c39517d05b851f68f347268bb1b8d6805046821b9084447b6ebd3bf2cd67",
+          "benchmark-real-stable.png": "3063dddb65274772c2968d26e49184548031c25bcd8aad228aaf675151e264f7"
+        }
+      },
+      "model_call_boundary": "Real UI requests used the configured local application gateway; no independent model probe was issued. Stable captures read an existing analysis; exact network-call accounting belongs to the application model ledger.",
+      "run_id": "delivery_20260918_47c5806"
+    },
+    "model_live": {
+      "run_id": "delivery_20260918_47c5806",
+      "revision": "47c58069f1bc449d6bda18815f5276d44e72acdb",
+      "revision_kind": "git",
+      "commit": "47c58069f1bc449d6bda18815f5276d44e72acdb",
+      "status": "PASS",
+      "scenarios": [
+        {
+          "id": "mechanical",
+          "status": "PASS",
+          "generation_mode": "llm",
+          "model_live": true,
+          "identity": {
+            "status": "VERIFIED",
+            "requested": "deepseek-flash",
+            "returned": [
+              "deepseek-flash"
+            ],
+            "reason": "全部调用响应model经核验一致"
+          },
+          "usage": {
+            "prompt_tokens": 8963,
+            "completion_tokens": 627,
+            "total_tokens": 9590,
+            "calls": 1
+          },
+          "alert_coverage": {
+            "alert-2eda796632e9c7b7ccae": {
+              "covered": true,
+              "element_key": "labor",
+              "basis": "unit"
+            },
+            "alert-137ec08a22a8269769aa": {
+              "covered": true,
+              "element_key": "labor",
+              "basis": "total"
+            }
+          },
+          "failures": []
+        },
+        {
+          "id": "chemical",
+          "status": "PASS",
+          "generation_mode": "llm",
+          "model_live": true,
+          "identity": {
+            "status": "VERIFIED",
+            "requested": "deepseek-flash",
+            "returned": [
+              "deepseek-flash"
+            ],
+            "reason": "全部调用响应model经核验一致"
+          },
+          "usage": {
+            "prompt_tokens": 13097,
+            "completion_tokens": 920,
+            "total_tokens": 14017,
+            "calls": 1
+          },
+          "alert_coverage": {
+            "alert-7180fa304a3f76c1421f": {
+              "covered": true,
+              "element_key": "materials",
+              "basis": "unit"
+            },
+            "alert-36b5bdd2282436b46a4b": {
+              "covered": true,
+              "element_key": "materials",
+              "basis": "total"
+            },
+            "alert-ad982e3348bf26c12a0a": {
+              "covered": true,
+              "element_key": "overhead",
+              "basis": "unit"
+            },
+            "alert-bbb785065f408c5aa01f": {
+              "covered": true,
+              "element_key": "overhead",
+              "basis": "total"
+            },
+            "alert-b5d01f31f48c0b2d38f1": {
+              "covered": true,
+              "element_key": "energy",
+              "basis": "unit"
+            },
+            "alert-e22160d2cf5074473bc2": {
+              "covered": true,
+              "element_key": "energy",
+              "basis": "total"
+            }
+          },
+          "failures": []
+        },
+        {
+          "id": "pharma_synthetic",
+          "status": "PASS",
+          "generation_mode": "llm",
+          "model_live": true,
+          "identity": {
+            "status": "VERIFIED",
+            "requested": "deepseek-flash",
+            "returned": [
+              "deepseek-flash"
+            ],
+            "reason": "全部调用响应model经核验一致"
+          },
+          "usage": {
+            "prompt_tokens": 10544,
+            "completion_tokens": 965,
+            "total_tokens": 11509,
+            "calls": 1
+          },
+          "alert_coverage": {
+            "alert-3c7d1a5bc57486f2b919": {
+              "covered": true,
+              "element_key": "materials",
+              "basis": "unit"
+            },
+            "alert-0fa1fef734c6521bae28": {
+              "covered": true,
+              "element_key": "materials",
+              "basis": "total"
+            },
+            "alert-1546c926d55109a31aa2": {
+              "covered": true,
+              "element_key": "overhead",
+              "basis": "unit"
+            },
+            "alert-2d84f440937e929d6117": {
+              "covered": true,
+              "element_key": "overhead",
+              "basis": "total"
+            }
+          },
+          "failures": []
+        },
+        {
+          "id": "S1",
+          "status": "PASS",
+          "generation_mode": "llm",
+          "model_live": true,
+          "identity": {
+            "status": "VERIFIED",
+            "requested": "deepseek-flash",
+            "returned": [
+              "deepseek-flash"
+            ],
+            "reason": "全部调用响应model经核验一致"
+          },
+          "usage": {
+            "prompt_tokens": 41770,
+            "completion_tokens": 914,
+            "total_tokens": 42684,
+            "calls": 2
+          },
+          "alert_coverage": {},
+          "failures": [
+            "materials: ValueError: free business number forbidden"
+          ]
+        },
+        {
+          "id": "S2",
+          "status": "PASS",
+          "generation_mode": "llm",
+          "model_live": true,
+          "identity": {
+            "status": "VERIFIED",
+            "requested": "deepseek-flash",
+            "returned": [
+              "deepseek-flash"
+            ],
+            "reason": "全部调用响应model经核验一致"
+          },
+          "usage": {
+            "prompt_tokens": 39779,
+            "completion_tokens": 1078,
+            "total_tokens": 40857,
+            "calls": 2
+          },
+          "alert_coverage": {},
+          "failures": [
+            "benchmark: ValueError: insufficient evidence text must state an evidence limitation in every clause"
+          ]
+        },
+        {
+          "id": "S3",
+          "status": "PASS",
+          "generation_mode": "llm",
+          "model_live": true,
+          "identity": {
+            "status": "VERIFIED",
+            "requested": "deepseek-flash",
+            "returned": [
+              "deepseek-flash"
+            ],
+            "reason": "全部调用响应model经核验一致"
+          },
+          "usage": {
+            "prompt_tokens": 26311,
+            "completion_tokens": 867,
+            "total_tokens": 27178,
+            "calls": 1
+          },
+          "alert_coverage": {
+            "alert-ae6cfac6295472537aa5": {
+              "covered": true,
+              "element_key": "materials",
+              "basis": "total"
+            },
+            "alert-a3392a1012a3bdbfd2a9": {
+              "covered": true,
+              "element_key": "labor",
+              "basis": "total"
+            },
+            "alert-918366df38ec19897ded": {
+              "covered": true,
+              "element_key": "overhead",
+              "basis": "total"
+            }
+          },
+          "failures": []
+        },
+        {
+          "id": "Q2",
+          "status": "PASS",
+          "generation_mode": "llm",
+          "model_live": true,
+          "identity": {
+            "status": "VERIFIED",
+            "requested": "deepseek-flash",
+            "returned": [
+              "deepseek-flash"
+            ],
+            "reason": "全部调用响应model经核验一致"
+          },
+          "usage": {
+            "prompt_tokens": 55740,
+            "completion_tokens": 1255,
+            "total_tokens": 56995,
+            "calls": 2
+          },
+          "alert_coverage": {
+            "alert-f63295afdd8152cfe65f": {
+              "covered": true,
+              "element_key": "materials",
+              "basis": "total"
+            },
+            "alert-4dfbe0c1984e3bac496f": {
+              "covered": true,
+              "element_key": "labor",
+              "basis": "total"
+            },
+            "alert-0c80378a697b26dda64c": {
+              "covered": true,
+              "element_key": "overhead",
+              "basis": "total"
+            }
+          },
+          "failures": [
+            "materials: ValueError: hypothesis requires both evidence kinds and missing evidence"
+          ]
+        }
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "id": "mechanical",
+      "status": "PASS",
+      "job_id": "b9424ebb55f8467084ef75de58ba7fd4",
+      "generation_mode": "llm",
+      "human_review": "PENDING"
+    },
+    {
+      "id": "chemical",
+      "status": "PASS",
+      "job_id": "862412f58d5e40548c472f27e50577b5",
+      "generation_mode": "llm",
+      "human_review": "PENDING"
+    },
+    {
+      "id": "pharma_synthetic",
+      "status": "PASS",
+      "job_id": "6cf42c37b51d43029acd9a4b3bf8776c",
+      "generation_mode": "llm",
+      "human_review": "PENDING"
+    },
+    {
+      "id": "S1",
+      "status": "PASS",
+      "job_id": "98648943f8a943f094b4e58bb1e748d8",
+      "generation_mode": "llm",
+      "human_review": "PENDING"
+    },
+    {
+      "id": "S2",
+      "status": "PASS",
+      "job_id": "dc386625755a409bb87f058e9bfd82cb",
+      "generation_mode": "llm",
+      "human_review": "PENDING"
+    },
+    {
+      "id": "S3",
+      "status": "PASS",
+      "job_id": "a63bfdf7e4c949218de693e9db1c86da",
+      "generation_mode": "llm",
+      "human_review": "PENDING"
+    },
+    {
+      "id": "Q2",
+      "status": "PASS",
+      "job_id": "13dfcbce7f644207af34528b71caff40",
+      "generation_mode": "llm",
+      "human_review": "PENDING"
+    }
+  ],
+  "human_review": "PENDING",
+  "competition_ready": false,
+  "status": "PASS"
+}

@@ -1,0 +1,186 @@
+{
+  "run_id": "delivery_20260918_47c5806",
+  "revision": "47c58069f1bc449d6bda18815f5276d44e72acdb",
+  "revision_kind": "git",
+  "commit": "47c58069f1bc449d6bda18815f5276d44e72acdb",
+  "required_scenarios": [
+    "mechanical",
+    "chemical",
+    "pharma_synthetic",
+    "S1",
+    "S2",
+    "S3",
+    "Q2"
+  ],
+  "scenarios": [
+    {
+      "id": "mechanical",
+      "job_id": "b9424ebb55f8467084ef75de58ba7fd4",
+      "status": "DEGRADED",
+      "docx": "PASS",
+      "pdf": "PASS",
+      "error": null
+    },
+    {
+      "id": "chemical",
+      "job_id": "862412f58d5e40548c472f27e50577b5",
+      "status": "DEGRADED",
+      "docx": "PASS",
+      "pdf": "PASS",
+      "error": null
+    },
+    {
+      "id": "pharma_synthetic",
+      "job_id": "6cf42c37b51d43029acd9a4b3bf8776c",
+      "status": "DEGRADED",
+      "docx": "PASS",
+      "pdf": "PASS",
+      "error": null
+    },
+    {
+      "id": "S1",
+      "job_id": "98648943f8a943f094b4e58bb1e748d8",
+      "status": "DEGRADED",
+      "docx": "PASS",
+      "pdf": "PASS",
+      "error": null
+    },
+    {
+      "id": "S2",
+      "job_id": "dc386625755a409bb87f058e9bfd82cb",
+      "status": "DEGRADED",
+      "docx": "PASS",
+      "pdf": "PASS",
+      "error": null
+    },
+    {
+      "id": "S3",
+      "job_id": "a63bfdf7e4c949218de693e9db1c86da",
+      "status": "DEGRADED",
+      "docx": "PASS",
+      "pdf": "PASS",
+      "error": null
+    },
+    {
+      "id": "Q2",
+      "job_id": "13dfcbce7f644207af34528b71caff40",
+      "status": "DEGRADED",
+      "docx": "PASS",
+      "pdf": "PASS",
+      "error": null
+    }
+  ],
+  "receipts": {
+    "model_live": "validation/delivery_20260918_47c5806/model_live.json",
+    "retrieval": "validation/delivery_20260918_47c5806/retrieval.json",
+    "rpa": "validation/delivery_20260918_47c5806/rpa.json",
+    "browser": "validation/delivery_20260918_47c5806/browser.json"
+  },
+  "human_review": "PENDING",
+  "privacy": "Local only: private scenario products and prose are excluded",
+  "starting_commit": "acc469312c8366e4b0438e702a5f435779e7a125",
+  "branch": "codex/core-industry-20260917",
+  "automatic_status": "PASS",
+  "competition_ready": false,
+  "verified_at": "2026-09-18",
+  "local_manifest": "06_评测/delivery_20260918_47c5806/manifest.json",
+  "public_boundary": "No private original data, knowledge, full reports, databases, logs or recovery snapshots are included; old Git history is not cleaned",
+  "external_pending": [
+    "Named human attribution 0–5, readability and layout reviews",
+    "One nonblocking composite-unit line wrap and source-page whitespace; human layout approval remains pending",
+    "Final narrated demo edit and actual PowerPoint rendering",
+    "Real controlled industry data and unseen retrieval evaluation",
+    "Repository-owner handling of historical private assets"
+  ],
+  "test_results": {
+    "local_with_private_regressions": {
+      "passed": 256,
+      "seconds": 19.98
+    },
+    "clean_public_export": {
+      "passed": 190,
+      "seconds": 15.53
+    },
+    "public_api_without_private_data_or_key": {
+      "status": "PASS",
+      "tested_code": "47c58069f1bc449d6bda18815f5276d44e72acdb",
+      "unit_cost": "30",
+      "private_originals_present": false,
+      "dotenv_present": false,
+      "key_configured": false
+    }
+  },
+  "model": {
+    "provider": "DeepSeek official API",
+    "model": "deepseek-flash",
+    "fresh_generation_code": "47c58069f1bc449d6bda18815f5276d44e72acdb",
+    "final_cache_hits": 0,
+    "scenario_calls": 10,
+    "main_runtime_calls_before": 106,
+    "main_runtime_calls_after": 119,
+    "default_other_developers": "glm-5.3-flash or explicitly configured compatible application API",
+    "historical_glm": "Four v3 scenario passes remain historical; no new GLM call on this host",
+    "main_runtime_calls_after_scenarios": 116,
+    "additional_calls_during_following_browser_flow": 3,
+    "ledger_note": "Seven fresh scenario jobs used calls 107–116 (10 calls); subsequent actual browser flow used 117–119. Earlier and independent development ledgers are not relabeled as current scenario tests."
+  },
+  "artifacts": {
+    "scenarios": 7,
+    "pages": 38,
+    "fonts_embedded": true,
+    "no_unresolved_slots": true,
+    "developer_visual": "validation/delivery_20260918_47c5806/visual.json",
+    "all_layout_requirements_complete": false,
+    "docx": "PASS",
+    "pdf": "PASS"
+  },
+  "prior_runs": [
+    {
+      "run_id": "integration_20260917_aa79b12",
+      "status": "FAIL",
+      "reason": "model contract violations and initial RPA polling failure; actual later delivery retained separately"
+    },
+    {
+      "run_id": "integration_20260917_2340f27",
+      "status": "FAIL",
+      "reason": "S1/S3 typed dates/deadlines and repair-unit defects, report layout findings"
+    },
+    {
+      "run_id": "integration_20260918_3890a6a",
+      "status": "FAIL",
+      "reason": "synthetic pharmaceutical ConnectError; all four competition scenarios plus other two packs passed model contracts"
+    },
+    {
+      "run_id": "integration_20260918_3890a6a_retry1",
+      "status": "AUTOMATIC_PASS_BEFORE_FINAL_RENDERER",
+      "reason": "bounded retry succeeded; renderer findings subsequently repaired; prior artifacts remain unchanged"
+    },
+    {
+      "run_id": "delivery_20260918_5d3652c",
+      "status": "FAIL",
+      "reason": "Five of seven model contracts passed; S1/S2 benchmark insufficient-evidence rejected. Concrete document synonyms fixed in validator v9; offline replay passes S1 but S2 remains invalid. Original run retained, never relabeled."
+    },
+    {
+      "run_id": "final_20260918_e53ec77",
+      "status": "PARTIAL",
+      "reason": "All seven model contracts passed; S3 DOCX body binding correctly rejected post-insertion template rewrite corruption."
+    },
+    {
+      "run_id": "release_20260918_01ac9f7",
+      "status": "PARTIAL",
+      "reason": "All seven model/file/RPA contracts passed using same-round cached explanations; clean archive uncovered report Git dependency and stale test fixture, PDF visual review found footer clearance and quarter display issues; S3 scoped evidence ranking needed event reservation."
+    },
+    {
+      "run_id": "release_20260918_b939c21",
+      "status": "SUPERSEDED",
+      "reason": "Earlier automatic PASS did not require independent cross-factory model explanation; scope defect repaired."
+    },
+    {
+      "run_id": "final_20260918_618f9b2",
+      "status": "FAIL",
+      "reason": "S1/S2 cross-factory concrete evidence document names falsely rejected; all files/retrieval/RPA succeeded. Recorded original responses retained locally, validator v8 repaired with negative tests; no cache migration."
+    }
+  ],
+  "verification_exit_code": 0,
+  "verification_receipt": "validation/delivery_20260918_47c5806/verification.json"
+}
