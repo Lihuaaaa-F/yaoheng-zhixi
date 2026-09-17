@@ -1,0 +1,106 @@
+{
+  "status": "PASS",
+  "scope": "live public reference-pack UI and API; report submission only, final files/model/RPA not asserted",
+  "url": "http://127.0.0.1:8765",
+  "viewports": [
+    "1440x1000",
+    "390x844"
+  ],
+  "checks": [
+    "mechanical monthly: independent expected unit cost 30, unit machine hours 0.5",
+    "mechanical quarter: independent 9400 / 320 = 29.375, displayed 29.38",
+    "real quarterly benchmark both directions, stable table and chart before screenshot",
+    "chemical switch resets legal filters; monthly cost 12 and energy metric present",
+    "chemical knowledge retrieval rendered in its own context",
+    "real A → B → A restores context correctly",
+    "real heatmap, desktop and mobile rendered without horizontal overflow",
+    "real report job submitted in mechanical context"
+  ],
+  "errors": [],
+  "apiFailures": [],
+  "submitted_job": "a49363cc2ecd4d029298685f4cc066a5",
+  "commit": "6ff894fd389854ed11fd64cdea6bdfc2a7031cef",
+  "stable_screenshots": {
+    "status": "PASS",
+    "scope": "cached report rendering only; report-generation POST blocked; no new model calls by screenshot step",
+    "captures": [
+      {
+        "name": "desktop-stable",
+        "dimensions": {
+          "width": 1440,
+          "viewportHeight": 1000,
+          "documentHeight": 3824,
+          "horizontalOverflow": false,
+          "fonts": "loaded",
+          "charts": 4,
+          "findings": 6,
+          "footerText": "成本共变仅支持原因假设；生产变更与整改完成均须人工确认。合成样例仅验证框架，不代表行业基准。"
+        },
+        "actual": {
+          "width": 1440,
+          "height": 3824
+        }
+      },
+      {
+        "name": "mobile-stable",
+        "dimensions": {
+          "width": 390,
+          "viewportHeight": 844,
+          "documentHeight": 5260,
+          "horizontalOverflow": false,
+          "fonts": "loaded",
+          "charts": 4,
+          "findings": 6,
+          "footerText": "成本共变仅支持原因假设；生产变更与整改完成均须人工确认。合成样例仅验证框架，不代表行业基准。"
+        },
+        "actual": {
+          "width": 390,
+          "height": 5260
+        }
+      }
+    ],
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/api/industry/catalog"
+      },
+      {
+        "method": "GET",
+        "path": "/api/catalog"
+      },
+      {
+        "method": "POST",
+        "path": "/api/analyses"
+      },
+      {
+        "method": "GET",
+        "path": "/api/jobs"
+      }
+    ],
+    "blocked": [],
+    "errors": []
+  },
+  "developer_visual_review": {
+    "status": "CHECKED_NO_BLOCKING_LAYOUT_FINDINGS_IN_CAPTURED_VIEWS",
+    "human_review": "PENDING",
+    "viewed": [
+      "desktop-stable.png",
+      "mobile-stable.png",
+      "benchmark-real-stable.png"
+    ],
+    "observations": [
+      "Actual latest desktop 1440×3824 and mobile 390×5260 show all six findings, four charts and footer without visible clipping or horizontal document overflow.",
+      "Completed quarterly benchmark includes chart, comparison table and findings; B minus A and A as baseline remain visible.",
+      "No unresolved slots or missing Chinese glyphs observed in these captured views.",
+      "All three screenshots were viewed again for this browser execution; earlier static release artifacts retain their original source commit."
+    ],
+    "sha256": {
+      "desktop-stable.png": "ac2831eeab360b34cdd563710b810e22e2a12ab2e9a1487d543cbe14134e7ffe",
+      "mobile-stable.png": "89e5c39517d05b851f68f347268bb1b8d6805046821b9084447b6ebd3bf2cd67",
+      "benchmark-real-stable.png": "fa602f7484260d335048d6ca68ca51277a66a46f44748a777b74316e1478757c"
+    }
+  },
+  "model_call_boundary": "Only ordinary app UI/API requests; no independent model probe. Final model call accounting belongs to the runtime ledger.",
+  "report_submission_note": "Returned existing same-contract job a49363cc2ecd4d029298685f4cc066a5, previously submitted during 47c5806 browser run. This is a fresh browser test with result reuse, not a newly generated report claim.",
+  "run_id": "release_20260918_6ff894f"
+}

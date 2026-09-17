@@ -1,0 +1,91 @@
+{
+  "commit": "6ff894fd389854ed11fd64cdea6bdfc2a7031cef",
+  "archive_sha256": "39c63eb5d6ed5faf25222d3e0ce38ac1c87a6b96f25f1e3be392f76e439f7769",
+  "scope": "Complete authorized competition-resource archive; no Git, credentials, dotenv or copied runtime",
+  "pytest": {
+    "exit_code": 0,
+    "counts": {
+      "tests": 190,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "elapsed_seconds": 21.51,
+    "reported_seconds": 17.42,
+    "passed": 190
+  },
+  "assets": {
+    "status": "PASS",
+    "manifest": "docs/competition-assets.json",
+    "files_verified": 78,
+    "total_bytes": 9527064,
+    "classification_counts": {
+      "original": 44,
+      "historical_derived": 31,
+      "reproduction_configuration": 3
+    },
+    "source": "all paths inside this complete git archive; authorized contest originals and historical derived resources are included"
+  },
+  "http": {
+    "status": "PASS",
+    "request_status_code": 202,
+    "job_id": "971eb9712f894ece90dfed0ead6ef132",
+    "revision": "source:0fc3507d8aaf716ae52f88d608529f36acb961e9f44cdf646a0821c7923ce2f8",
+    "revision_kind": "source",
+    "commit": null,
+    "terminal_status": "DEGRADED",
+    "generation_mode": "rules",
+    "human_review_status": "PENDING",
+    "docx_status": "PASS",
+    "pdf_status": "PASS",
+    "downloads": {
+      "docx": {
+        "status_code": 200,
+        "bytes": 68210
+      },
+      "pdf": {
+        "status_code": 200,
+        "bytes": 139001
+      }
+    },
+    "identical_request_reuses_job": true,
+    "live_model_test": "BLOCKED_NO_APPLICATION_KEY"
+  },
+  "competition_import_quarterly": {
+    "status": "PASS",
+    "factory_count": 2,
+    "product_count": 3,
+    "month_count": 12,
+    "scenario": {
+      "id": "Q2",
+      "context_id": "pharmaceutical:competition",
+      "product": "银黄口服液",
+      "month": "2026-06",
+      "analysis_type": "quarterly"
+    },
+    "factory": "中药一厂",
+    "period": {
+      "start": "2026-04",
+      "end": "2026-06"
+    },
+    "total_cost": "1796180.0",
+    "quantity": "163000",
+    "unit_cost": "11.01950920245398773006134969",
+    "independent_csv_unit_cost": "11.01950920245398773006134969",
+    "independent_method": "Direct Decimal sums from three original CSV monthly rows, no production formula used to produce expected answer",
+    "model_calls": 0,
+    "exported_private_report": false,
+    "application_key_configured": false,
+    "dotenv_exists": false,
+    "revision": {
+      "revision": "source:0fc3507d8aaf716ae52f88d608529f36acb961e9f44cdf646a0821c7923ce2f8",
+      "revision_kind": "source",
+      "commit": null
+    },
+    "elapsed_seconds": 0.498
+  },
+  "application_key_configured": false,
+  "dotenv_present": false,
+  "interpreter_reused_read_only": true,
+  "source_archive_commit_is_null": true
+}

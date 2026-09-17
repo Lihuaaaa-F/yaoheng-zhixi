@@ -1,8 +1,8 @@
 {
-  "run_id": "delivery_20260918_47c5806",
-  "revision": "47c58069f1bc449d6bda18815f5276d44e72acdb",
+  "run_id": "release_20260918_6ff894f",
+  "revision": "6ff894fd389854ed11fd64cdea6bdfc2a7031cef",
   "revision_kind": "git",
-  "commit": "47c58069f1bc449d6bda18815f5276d44e72acdb",
+  "commit": "6ff894fd389854ed11fd64cdea6bdfc2a7031cef",
   "required_scenarios": [
     "mechanical",
     "chemical",
@@ -15,7 +15,7 @@
   "scenarios": [
     {
       "id": "mechanical",
-      "job_id": "b9424ebb55f8467084ef75de58ba7fd4",
+      "job_id": "a882b52a2081481481b6db959639083c",
       "status": "DEGRADED",
       "docx": "PASS",
       "pdf": "PASS",
@@ -23,7 +23,7 @@
     },
     {
       "id": "chemical",
-      "job_id": "862412f58d5e40548c472f27e50577b5",
+      "job_id": "6f83cdd441134e6ab0f78bcc4d332b97",
       "status": "DEGRADED",
       "docx": "PASS",
       "pdf": "PASS",
@@ -31,7 +31,7 @@
     },
     {
       "id": "pharma_synthetic",
-      "job_id": "6cf42c37b51d43029acd9a4b3bf8776c",
+      "job_id": "eea07536f5a54d1eb90c595b6e16ce27",
       "status": "DEGRADED",
       "docx": "PASS",
       "pdf": "PASS",
@@ -39,7 +39,7 @@
     },
     {
       "id": "S1",
-      "job_id": "98648943f8a943f094b4e58bb1e748d8",
+      "job_id": "28c10accfe4c47f3bac5fe72de0e2120",
       "status": "DEGRADED",
       "docx": "PASS",
       "pdf": "PASS",
@@ -47,7 +47,7 @@
     },
     {
       "id": "S2",
-      "job_id": "dc386625755a409bb87f058e9bfd82cb",
+      "job_id": "69f3e416e8fa4d78862eaf74a4d37a53",
       "status": "DEGRADED",
       "docx": "PASS",
       "pdf": "PASS",
@@ -55,7 +55,7 @@
     },
     {
       "id": "S3",
-      "job_id": "a63bfdf7e4c949218de693e9db1c86da",
+      "job_id": "0c270a2606f14cff8c3cbbc4b29163c0",
       "status": "DEGRADED",
       "docx": "PASS",
       "pdf": "PASS",
@@ -63,7 +63,7 @@
     },
     {
       "id": "Q2",
-      "job_id": "13dfcbce7f644207af34528b71caff40",
+      "job_id": "b494f0d51f3f46a8bb9b9b4404afd61d",
       "status": "DEGRADED",
       "docx": "PASS",
       "pdf": "PASS",
@@ -71,19 +71,19 @@
     }
   ],
   "receipts": {
-    "model_live": "validation/delivery_20260918_47c5806/model_live.json",
-    "retrieval": "validation/delivery_20260918_47c5806/retrieval.json",
-    "rpa": "validation/delivery_20260918_47c5806/rpa.json",
-    "browser": "validation/delivery_20260918_47c5806/browser.json"
+    "model_live": "validation/release_20260918_6ff894f/model_live.json",
+    "retrieval": "validation/release_20260918_6ff894f/retrieval.json",
+    "rpa": "validation/release_20260918_6ff894f/rpa.json",
+    "browser": "validation/release_20260918_6ff894f/browser.json"
   },
   "human_review": "PENDING",
-  "privacy": "Contest data and static derived deliverables published under latest explicit user authorization; no credentials, environment files, runtime databases/queues or recovery backups.",
+  "privacy": "Contest originals and static outputs included under latest explicit user authorization; credentials/env/runtime databases/queues/backups remain excluded.",
   "starting_commit": "acc469312c8366e4b0438e702a5f435779e7a125",
   "branch": "codex/core-industry-20260917",
   "automatic_status": "PASS",
   "competition_ready": false,
   "verified_at": "2026-09-18",
-  "local_manifest": "06_评测/delivery_20260918_47c5806/manifest.json",
+  "local_manifest": "06_评测/release_20260918_6ff894f/manifest.json",
   "public_boundary": "Original contest resources and static deliverables are included by latest explicit user authorization. No credentials, local environment, runtime databases, queues or recovery backups are published.",
   "external_pending": [
     "Named human attribution 0–5, readability and layout reviews",
@@ -94,11 +94,13 @@
   "test_results": {
     "local_with_private_regressions": {
       "passed": 256,
-      "seconds": 19.98
+      "seconds": 19.37,
+      "commit": "6ff894fd389854ed11fd64cdea6bdfc2a7031cef"
     },
     "clean_public_export": {
       "passed": 190,
-      "seconds": 15.53
+      "seconds": 15.53,
+      "scope": "Earlier minimal source archive without contest assets, at 47c5806; preserved as separate evidence"
     },
     "public_api_without_private_data_or_key": {
       "status": "PASS",
@@ -106,29 +108,40 @@
       "unit_cost": "30",
       "private_originals_present": false,
       "dotenv_present": false,
-      "key_configured": false
+      "key_configured": false,
+      "scope": "Earlier minimal source archive; current full archive includes authorized contest resources"
+    },
+    "complete_authorized_archive": {
+      "passed": 190,
+      "seconds": 17.42,
+      "commit": "6ff894fd389854ed11fd64cdea6bdfc2a7031cef",
+      "authorized_contest_assets_present": true,
+      "application_key_configured": false,
+      "asset_files_verified": 78,
+      "quarterly_original_import": "PASS",
+      "http_report_and_downloads": "PASS",
+      "receipt": "validation/release_20260918_6ff894f/complete_archive.json"
     }
   },
   "model": {
     "provider": "DeepSeek official API",
     "model": "deepseek-flash",
     "fresh_generation_code": "47c58069f1bc449d6bda18815f5276d44e72acdb",
-    "final_cache_hits": 0,
-    "scenario_calls": 10,
-    "main_runtime_calls_before": 106,
+    "fresh_generation_run": "delivery_20260918_47c5806",
+    "final_render_code": "6ff894fd389854ed11fd64cdea6bdfc2a7031cef",
+    "final_cache_hits": 7,
+    "final_new_calls": 0,
+    "main_runtime_calls_before": 119,
     "main_runtime_calls_after": 119,
     "default_other_developers": "glm-5.3-flash or explicitly configured compatible application API",
-    "historical_glm": "Four v3 scenario passes remain historical; no new GLM call on this host",
-    "main_runtime_calls_after_scenarios": 116,
-    "additional_calls_during_following_browser_flow": 3,
-    "ledger_note": "Seven fresh scenario jobs used calls 107–116 (10 calls); subsequent actual browser flow used 117–119. Earlier and independent development ledgers are not relabeled as current scenario tests."
+    "historical_glm": "Historical only; no new GLM run"
   },
   "artifacts": {
     "scenarios": 7,
     "pages": 38,
     "fonts_embedded": true,
     "no_unresolved_slots": true,
-    "developer_visual": "validation/delivery_20260918_47c5806/visual.json",
+    "developer_visual": "validation/release_20260918_6ff894f/visual.json",
     "all_layout_requirements_complete": false,
     "docx": "PASS",
     "pdf": "PASS"
@@ -178,9 +191,20 @@
       "run_id": "final_20260918_618f9b2",
       "status": "FAIL",
       "reason": "S1/S2 cross-factory concrete evidence document names falsely rejected; all files/retrieval/RPA succeeded. Recorded original responses retained locally, validator v8 repaired with negative tests; no cache migration."
+    },
+    {
+      "run_id": "delivery_20260918_47c5806",
+      "status": "AUTOMATIC_PASS",
+      "reason": "Seven fresh DeepSeek narrative contracts and file/RPA validation passed; current resource-release recompile reuses those verified narratives. Public static deliverables retain these exact original artifacts and reviewed pages."
     }
   ],
   "verification_exit_code": 0,
-  "verification_receipt": "validation/delivery_20260918_47c5806/verification.json",
-  "publication_authorization": "User explicitly authorized retaining original contest data and publishing all project deliverables to this public repository on 2026-09-18; credentials, environments, runtime state and recovery backups remain excluded"
+  "verification_receipt": "validation/release_20260918_6ff894f/verification.json",
+  "publication_authorization": "User explicitly authorized retaining original contest data and publishing all project deliverables to this public repository on 2026-09-18; credentials, environments, runtime state and recovery backups remain excluded",
+  "static_delivery": {
+    "path": "07_交付/release_20260918",
+    "source_run": "delivery_20260918_47c5806",
+    "source_code": "47c58069f1bc449d6bda18815f5276d44e72acdb",
+    "note": "Exact reviewed original artifacts are retained; later compile validates the complete resource release, without relabeling old model calls or static file provenance."
+  }
 }

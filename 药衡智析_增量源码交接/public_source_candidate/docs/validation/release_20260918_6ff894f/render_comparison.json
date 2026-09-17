@@ -1,0 +1,10 @@
+{
+  "run_id": "release_20260918_6ff894f",
+  "commit": "6ff894fd389854ed11fd64cdea6bdfc2a7031cef",
+  "reviewed_source_run": "delivery_20260918_47c5806",
+  "reviewed_source_code": "47c58069f1bc449d6bda18815f5276d44e72acdb",
+  "same_rendered_pixels": false,
+  "pages_compared": 38,
+  "method": "SHA256 of every actual 110 dpi page render compared to previously viewed final report pages",
+  "human_review": "PENDING"
+}
