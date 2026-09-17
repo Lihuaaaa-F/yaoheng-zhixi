@@ -66,7 +66,7 @@ def test_artifact_change_expires_review(tmp_path):
 def test_per_claim_evidence_check_replaces_aggregate_boolean():
     finding = {'claim_type': 'hypothesis', 'evidence_refs': ['ev1'], 'suggestion': ''}
     ev = {'status': 'PASS', 'evidence': [{'evidence_id': 'ev1', 'text': '工艺', 'products': ['别的产品']}]}
-    base = {'snapshot': {'product': '板蓝根颗粒'}, 'docx': {'status': 'PASS'}, 'pdf': {'status': 'PASS'},
+    base = {'snapshot': {'product': '合成审核产品'}, 'docx': {'status': 'PASS'}, 'pdf': {'status': 'PASS'},
             'evidence': ev, 'narrative': {'status': 'PASS', 'model_live': True, 'evidence_applicability_checked': True, 'findings': [finding]}}
     r = assess_report(base)
     assert r['evidence_applicability']['status'] == 'FAIL'

@@ -35,7 +35,7 @@ class JobStore:
             c.execute('BEGIN IMMEDIATE')
             if cache_key:
                 old=c.execute('SELECT id,status FROM jobs WHERE cache_key=?',(cache_key,)).fetchone()
-                if old and old['status'] not in ('FAILED','DEGRADED'):return self.get(old['id'])
+                if old and old['status'] != 'FAILED':return self.get(old['id'])
                 if old:c.execute('UPDATE jobs SET cache_key=NULL WHERE id=?',(old['id'],))
             c.execute('INSERT INTO jobs VALUES(?,?,?,?,?,?,?,?,?,?)',(id,cache_key,kind,'QUEUED','VALIDATING',json.dumps(payload,ensure_ascii=False),'{}',stamp(),stamp(),None))
         return self.get(id)

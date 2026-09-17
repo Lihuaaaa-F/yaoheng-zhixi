@@ -6,17 +6,20 @@ export function sourceLabel(e: any) {
  const location = e.page ? `第 ${e.page} 页` : e.location;
  return [name, e.heading ?? e.section, location, e.product, e.period].filter(v=>typeof v==='string'||typeof v==='number').join(' · ');
 }
-export function DeveloperDetails({value}: {value:any}) { return <details className="developer-details"><summary>开发者详情（机器审计）</summary><pre>{JSON.stringify(value,null,2)}</pre></details> }
-export function AnalysisStatus({narrative}: {narrative:any}) {
- const live = narrative?.model_live === true && narrative?.generation_mode !== 'rules';
- return <p className={live && narrative?.status === 'PASS' ? 'muted' : 'notice'}>{live ? (narrative?.status==='PASS' ? '本次有模型辅助解释；原因归因及可读性仍待人工审核。' : '本次部分解释采用基础分析，受影响章节的原因解释待复核。') : '本次采用基础分析，原因解释待复核。'} 人工归因评分：待评。</p>;
+// Business views deliberately omit engineering hashes, raw paths and debug JSON.
+export function DeveloperDetails(_props: {value:any}) { return null }
+export function AnalysisStatus({narrative,review}: {narrative:any;review?:any}) {
+ const mode=narrative?.generation_mode;
+ const generation=mode==='llm'&&narrative?.model_live===true?'模型解释':mode==='mixed'?'模型与规则混合解释':mode==='rules'?'规则分析':'解释来源待核验';
+ const verified=Boolean(review?.readability?.reviewer&&review?.visual_quality?.reviewer); const reviewedScore=review?.human_attribution_score;
+ return <p className={narrative?.status==='PASS'?'muted':'notice'}>解释来源：{generation}。解释合同：{narrative?.status==='PASS'?'已通过':'待补充或复核'}。人工审核：{verified?'已审核':review?.status==='STALE'?'原审核已失效，待重审':'待评'}{verified&&Number.isFinite(reviewedScore)?`；归因评分 ${reviewedScore}/5`:''}。</p>;
 }
 const dimensions=[['file_openable','文件可打开'],['calculation_consistency','计算一致'],['section_completeness','章节实质完整'],['evidence_applicability','证据适用'],['readability','内容可读'],['visual_quality','视觉合格'],['task_actionability','任务可执行'],['model_participation','模型实际参与']];
 const statusText=(s:any)=>({PASS:'通过',FAIL:'未通过',FAILED:'未通过',PENDING:'待评',PENDING_HUMAN:'待人工评审',NOT_RUN:'未验证',DEGRADED:'未通过',NOT_APPLICABLE:'不适用',BLOCKED:'未通过',UNVERIFIED:'未验证'}[String(s)]??'待评');
 export function Acceptance({result}:{result:any}) {
  const acceptance=result?.acceptance??result?.report_acceptance??{};
  const values=acceptance.dimensions??acceptance;
- return <div className="acceptance"><p><strong>报告验收：{acceptance.overall==='PASS'&&dimensions.every(([key])=>(values[key]?.status??values[key])==='PASS')?'合格':'尚未合格／待评'}</strong> · 文件生成成功仅代表产生文件。</p><dl>{dimensions.map(([key,label])=>{const item=values[key];let state=item?.status??item;if(key==='model_participation'&&!state)state=result?.narrative?.model_live===true?'PASS':'FAIL';return <div key={key}><dt>{label}</dt><dd title={typeof item?.reason==='string'?item.reason:undefined}>{statusText(state)}</dd></div>})}</dl><p className="muted">人工归因 0–5 分、可读性与版式评审以实际审核记录为准；历史失败记录保留。</p></div>;
+ return <div className="acceptance"><p><strong>报告验收：{acceptance.overall==='PASS'&&dimensions.every(([key])=>(values[key]?.status??values[key])==='PASS')?'合格':'尚未合格／待评'}</strong> · 文件生成成功仅代表产生文件。</p><dl>{dimensions.map(([key,label])=>{const item=values[key];let state=item?.status??item;return <div key={key}><dt>{label}</dt><dd title={typeof item?.reason==='string'?item.reason:undefined}>{statusText(state)}</dd></div>})}</dl><p className="muted">人工归因评分：{Number.isFinite(acceptance.human_attribution_score)&&values.readability?.reviewer?`${acceptance.human_attribution_score}/5（${values.readability.reviewer}）`:"待真人评审"}。可读性与版式以绑定当前产物的实际审核记录为准。</p></div>;
 }
 export function periodLabel(period:any){ if(!Array.isArray(period)) return String(period ?? ''); const p=period.map(String); return p.length>2 ? `${p[0]}–${p[p.length-1]}（${p.length}个月）` : p.join(' 至 '); }
 export function MetricDetails({value}:{value:any}) {return <><p className="muted">{value.product} {value.factory} {value.period?.start}{value.period?.end&&value.period?.end!==value.period?.start?` 至 ${value.period.end}`:""}</p>{value.row_keys?.length>0&&<p>数据来源：{[...new Set(value.row_keys.map((key:string)=>key.replace(/:\d+$/,'')))].join("；")} · {value.product} · {value.period?.end??"所选期间"}</p>}<dl className="task-details">{value.value!==undefined&&<><dt>指标数值</dt><dd>{fmt(value.value)} {value.unit}</dd></>}{value.formula&&<><dt>计算口径</dt><dd>{cleanText(value.formula)}</dd></>}{value.comparison_period&&<><dt>比较期间</dt><dd>{periodLabel(value.comparison_period)}</dd></>}{value.numerator!==undefined&&<><dt>分子</dt><dd>{fmt(value.numerator)}</dd></>}{value.denominator!==undefined&&<><dt>分母</dt><dd>{fmt(value.denominator)}</dd></>}</dl></>}

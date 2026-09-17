@@ -1,0 +1,28 @@
+[
+  {
+    "id": "shared-evidence-id",
+    "title": "成本核查规程（合成演示）",
+    "enterprise_id": "synthetic-pharma",
+    "industry_id": "pharmaceutical",
+    "products": [
+      "DEMO-01"
+    ],
+    "category": "enterprise",
+    "text": "合成演示制药成本按完工盒数归集；包装支数须使用产品规格。生产与质量变更须经企业质量流程批准。缺采购价格和实耗量不能做严格价量分解。",
+    "source": "synthetic://pharmaceutical/cost-procedure",
+    "page": 1
+  },
+  {
+    "id": "industry-note",
+    "title": "术语与限制（合成演示）",
+    "enterprise_id": "synthetic-pharma",
+    "industry_id": "pharmaceutical",
+    "products": [
+      "DEMO-01"
+    ],
+    "category": "industry",
+    "text": "合成演示：全部企业、工单/批次、数字和知识均独立编制；不是赛题原件或行业基准。 合成演示制药成本按完工盒数归集；包装支数须使用产品规格。生产与质量变更须经企业质量流程批准。缺采购价格和实耗量不能做严格价量分解。",
+    "source": "synthetic://pharmaceutical/industry-note",
+    "page": 1
+  }
+]

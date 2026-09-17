@@ -9,9 +9,9 @@ from pharma.narrative import ModelGateway
 import httpx
 
 def main():
-    ap=argparse.ArgumentParser();ap.add_argument('--output',default='glm_probe.json');a=ap.parse_args()
-    g=ModelGateway();r={'model':g.model,'endpoint':g.base_url,'protocol':g.provider,'credential_present':bool(g.key),'cost':'UNKNOWN','checked_at':time.strftime('%Y-%m-%dT%H:%M:%S%z'),'official_docs':'https://docs.z.ai/api-reference/llm/chat-completion','probes':{}}
-    if g.model!='glm-5.3-flash':raise SystemExit('Expected exact model glm-5.3-flash')
+    ap=argparse.ArgumentParser();ap.add_argument('--output',default='model_probe.json');ap.add_argument('--expected-model');a=ap.parse_args()
+    g=ModelGateway();r={'model':g.model,'endpoint':g.base_url,'protocol':g.provider,'credential_present':bool(g.key),'cost':'UNKNOWN','checked_at':time.strftime('%Y-%m-%dT%H:%M:%S%z'),'official_docs':'https://api-docs.deepseek.com/' if 'deepseek.com' in g.base_url else 'https://docs.z.ai/api-reference/llm/chat-completion','probes':{}}
+    if a.expected_model and g.model!=a.expected_model:raise SystemExit('Configured model does not match expected model')
     if '/coding/' in g.base_url:raise SystemExit('Coding endpoint forbidden for business runtime')
     if not g.key:
         r['status']='BLOCKED';r['reason']='MODEL_KEY_NOT_SET; application account/endpoint and billing must be checked on teammate machine'

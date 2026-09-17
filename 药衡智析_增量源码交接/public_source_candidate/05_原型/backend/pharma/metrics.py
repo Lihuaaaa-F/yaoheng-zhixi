@@ -7,10 +7,8 @@ from .ingestion import ingest, load_rows
 
 D = Decimal
 FORMULA_VERSION = 'cost-formulas-1.1'
-ELEMENTS = {'materials': '直接材料', 'labor': '直接人工', 'overhead': '制造费用'}
-SPECS = {'银黄口服液': ('10ml×10支/盒', 10, '元/支', '口服液类'),
-         '板蓝根颗粒': ('10g×20袋/盒', 20, '元/袋', '颗粒剂类'),
-         '六味地黄胶囊': ('0.3g×60粒/盒', 60, '元/粒', '胶囊剂类')}
+from .ingestion import _CONTRACT, source_contract, source_contract_hash
+ELEMENTS = _CONTRACT['elements']
 
 
 def contribution(delta, total_delta):
@@ -128,7 +126,7 @@ def analyze(factory, product, month, analysis_type='monthly', basis='unit'):
             rate = D(c['rate']) if c['rate'] is not None else None
             flag[b] = threshold_alert(rate)
             if flag[b]:
-                alerts.append({'element':name,'basis':b,'rate':_text(rate),'rule':'严格大于+10%或小于−10%', 'note':'总额同时受产量影响' if b=='total' else '单位要素成本'})
+                alerts.append({'alert_id':'alert-'+hashlib.sha256(f'{scope}:{key}:{b}'.encode()).hexdigest()[:20], 'element_key':key, 'metric_id':scope+':'+key+'_'+b+'_rate', 'fact_summary':f'{name} {b} 环比 {_text(rate)}%，基期 {c["base"]}，本期 {c["current"]}', 'element':name,'basis':b,'current':c['current'],'base':c['base'],'value_unit':'元/盒' if b=='unit' else '元','rate':_text(rate),'rule':'严格大于+10%或小于−10%', 'note':'总额同时受产量影响' if b=='total' else '单位要素成本'})
         elements.append({'key':key,'name':name,'unit':_text(current['elements_unit'][key]),'total':_text(current['elements_total'][key]),
             'delta':_text(delta),'contribution':contribution_value,'contribution_reason': '总变动为0或基期缺失' if contribution_value is None else None,
             'unit_mom':unit_change['rate'],'total_mom':total_change['rate'],'alerts':flag,
@@ -189,7 +187,8 @@ def analyze(factory, product, month, analysis_type='monthly', basis='unit'):
             details['reason']=None
     material_names = {r['原材料名称'] for r in details['materials']}
     details['market'] = [{**{k:v for k,v in r['data'].items() if not k.endswith('月价格') or int(k[:-3]) <= int(month[5:])},'row_key':r['row_key'],'source_hash':r['source_hash']} for r in all_rows if r['kind']=='market' and r['data']['药材名称'] in material_names]
-    spec,divisor,unit,category=SPECS[product]
+    if manifest.get('masterdata_hash')!=source_contract_hash():raise ValueError('MASTERDATA_CHANGED_DURING_ANALYSIS')
+    spec,divisor,unit,category=source_contract()['specifications'][product]
     actual_specs={r['data']['产品规格'] for r in current['rows']}
     if actual_specs != {spec}:
         raise ValueError('UNVERIFIED_PRODUCT_SPECIFICATION: '+str(actual_specs))
@@ -280,7 +279,14 @@ def analyze(factory, product, month, analysis_type='monthly', basis='unit'):
     return result
 
 
-def benchmark(product, month, left='中药二厂', right='中药一厂', analysis_type='monthly'):
+def _benchmark_factories(left, right):
+    factories=source_contract()['factories']
+    if len(factories)<2 and (left is None or right is None):raise ValueError('TWO_FACTORIES_REQUIRED')
+    return left or factories[1],right or factories[0]
+
+
+def benchmark(product, month, left=None, right=None, analysis_type='monthly'):
+    left,right=_benchmark_factories(left,right)
     a,b=analyze(left,product,month,analysis_type),analyze(right,product,month,analysis_type)
     summary=[]
     for key,name,unit in [('unit_cost','单位成本','元/盒'),('total_cost','总成本','元'),('quantity','产量','盒')]:
@@ -305,8 +311,9 @@ def benchmark(product, month, left='中药二厂', right='中药一厂', analysi
             'limits':['总成本对比受产量影响，不能作为单位效率结论','文档原因证据由报告检索流程补充；仅表内数值不能证明因果']}
 
 
-def benchmark_analysis(product,month,left='中药二厂',right='中药一厂',analysis_type='monthly'):
+def benchmark_analysis(product,month,left=None,right=None,analysis_type='monthly'):
     """Package already-calculated cross-factory metrics for constrained generation."""
+    left,right=_benchmark_factories(left,right)
     comparison=benchmark(product,month,left,right,analysis_type)
     snapshot=analyze(left,product,month,analysis_type)
     right_snapshot=analyze(right,product,month,analysis_type)
@@ -318,6 +325,6 @@ def benchmark_analysis(product,month,left='中药二厂',right='中药一厂',an
             value=row[field]
             row['metric_refs'][field] = metric_id
             snapshot['metrics'][metric_id]={**base,'metric_id':metric_id,'label':comparison['direction']+' '+row['name']+{'rate':'差异率','delta':'差异金额','contribution':'占跨厂单位成本差额'}[field],'value':value,'display':'N/A' if value is None else format(D(value).quantize(D('0.01')),'f'),'unit':unit,'formula':{'rate':'(左厂−右厂)/右厂×100','delta':'左厂−右厂','contribution':'要素跨厂差额/单位成本跨厂总差额×100'}[field],'numerator':row['delta'],'denominator':row['right'] if field=='rate' else row['denominator'] if field=='contribution' else '1','comparison_period':comparison['period'],'row_keys':base['row_keys']+right_snapshot['metrics'][key]['row_keys'],'source_hash':sorted(set(base['source_hash']+right_snapshot['metrics'][key]['source_hash']))}
-    snapshot['benchmark_context']={k:comparison[k] for k in ('direction','summary','elements','limits','period')}
+    snapshot['benchmark_context']={k:comparison[k] for k in ('left','right','direction','summary','elements','limits','period')}
     snapshot['snapshot_id']=hashlib.sha256(json.dumps(snapshot,sort_keys=True,ensure_ascii=False).encode()).hexdigest()
     return snapshot,comparison

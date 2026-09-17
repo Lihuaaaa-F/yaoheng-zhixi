@@ -7,8 +7,8 @@ if [ -n "${PHARMA_PYTHON:-}" ]; then
   echo "$PHARMA_PYTHON"
 elif [ -x "$app_dir/.venv/bin/python" ]; then
   echo "$app_dir/.venv/bin/python"
-elif [ -x "$app_dir/.venv/Scripts/python.exe" ]; then
+elif [[ "$(uname -s)" =~ ^(MINGW|MSYS|CYGWIN) ]] && [ -x "$app_dir/.venv/Scripts/python.exe" ]; then
   echo "$app_dir/.venv/Scripts/python.exe"
 else
-  echo python
+  command -v python3 || command -v python || { echo "Python interpreter missing" >&2; exit 1; }
 fi

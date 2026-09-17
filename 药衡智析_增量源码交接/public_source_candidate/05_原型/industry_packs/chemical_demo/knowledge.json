@@ -1,0 +1,28 @@
+[
+  {
+    "id": "shared-evidence-id",
+    "title": "成本核查规程（合成演示）",
+    "enterprise_id": "synthetic-chemical",
+    "industry_id": "chemical_demo",
+    "products": [
+      "DEMO-01"
+    ],
+    "category": "enterprise",
+    "text": "合成演示批次按合格成品净重归集。单位能耗为电表kWh总量除以合格产出kg；不等于采购电价。成本变化需取得电表记录、批次产出及返工记录后验证。",
+    "source": "synthetic://chemical_demo/cost-procedure",
+    "page": 1
+  },
+  {
+    "id": "industry-note",
+    "title": "术语与限制（合成演示）",
+    "enterprise_id": "synthetic-chemical",
+    "industry_id": "chemical_demo",
+    "products": [
+      "DEMO-01"
+    ],
+    "category": "industry",
+    "text": "合成演示：全部企业、工单/批次、数字和知识均独立编制；不是赛题原件或行业基准。 合成演示批次按合格成品净重归集。单位能耗为电表kWh总量除以合格产出kg；不等于采购电价。成本变化需取得电表记录、批次产出及返工记录后验证。",
+    "source": "synthetic://chemical_demo/industry-note",
+    "page": 1
+  }
+]

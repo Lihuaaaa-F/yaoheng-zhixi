@@ -2,14 +2,74 @@
 from pathlib import Path
 from datetime import datetime, timedelta
 from contextlib import contextmanager
-import hashlib,json,sqlite3,uuid
+import hashlib,json,sqlite3,uuid,re
+from datetime import date
+from typing import Literal
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from .config import DB_PATH,RPA_BASE_URL
 
 def digest(value):return hashlib.sha256(json.dumps(value,ensure_ascii=False,sort_keys=True,separators=(',',':')).encode()).hexdigest()
 
+class ExecutableAction(BaseModel):
+    """One contract at draft, merged edit and confirmation boundaries."""
+    model_config=ConfigDict(extra='forbid')
+    task_title:str=Field(min_length=1,max_length=100)
+    suggestion:str=Field(min_length=1)
+    priority:Literal['high','medium','low']
+    deadline:date
+    assignee:dict
+    source:dict
+    verification_target:str=Field(min_length=1)
+    expected_evidence:list[str]=Field(min_length=1)
+    responsible_role:str=Field(min_length=1)
+    deadline_basis:str=Field(min_length=1)
+
+    @field_validator('*',mode='before')
+    @classmethod
+    def concrete(cls,value):
+        def check(v):
+            if isinstance(v,str):
+                if not v.strip() or re.search(r'\[\[.*?\]\]|\{\{.*?\}\}',v):raise ValueError('UNRESOLVED_OR_EMPTY_ACTION_FIELD')
+            elif isinstance(v,list):
+                for x in v:check(x)
+            elif isinstance(v,dict):
+                for x in v.values():
+                    if x is not None:check(x)
+        check(value);return value
+
+    @field_validator('assignee')
+    @classmethod
+    def assignee_complete(cls,value):
+        if not all(isinstance(value.get(k),str) and value[k].strip() for k in ('name','department')):raise ValueError('REQUIRED_ASSIGNEE')
+        return value
+
+    @field_validator('source')
+    @classmethod
+    def source_complete(cls,value):
+        if not all(isinstance(value.get(k),str) and value[k].strip() for k in ('analysis_type','analysis_month','product','finding')):raise ValueError('REQUIRED_SOURCE')
+        return value
+
+def validate_action(payload,metadata):
+    return ExecutableAction.model_validate({**{k:payload[k] for k in ('task_title','suggestion','priority','deadline','assignee','source')},**action_details(metadata)})
+
 def notification_proven(remote):
-    remote=remote or {};notify=remote.get('notify_status') or {}
-    return bool((notify.get('wechat') and notify.get('sent_at')) or any(x.get('status')=='sent' and x.get('time') for x in remote.get('status_history',[])))
+    if not isinstance(remote,dict):return False
+    notify=remote.get('notify_status')
+    if isinstance(notify,dict):
+        status=notify.get('wechat');at=notify.get('sent_at')
+        # Original mock protocol is a recipient-specific Chinese receipt.
+        if isinstance(status,str) and re.fullmatch(r'已发送至 .+\(.+\)',status) and isinstance(at,str) and at.strip():return True
+    history=remote.get('status_history',[])
+    return isinstance(history,list) and any(isinstance(x,dict) and x.get('status')=='sent' and isinstance(x.get('time'),str) and bool(x['time'].strip()) for x in history)
+
+def protocol_data(body):
+    if not isinstance(body,dict) or type(body.get('code')) is not int or not isinstance(body.get('data'),dict):raise ValueError('RPA_PROTOCOL_ERROR')
+    data=body['data']
+    if data.get('status') not in ('received','sent','confirmed','in_progress','completed'):raise ValueError('RPA_PROTOCOL_STATUS')
+    if not isinstance(data.get('task_id'),str):raise ValueError('RPA_PROTOCOL_TASK_ID')
+    if data.get('notify_status') is not None and not isinstance(data['notify_status'],dict):raise ValueError('RPA_PROTOCOL_NOTIFY')
+    if 'status_history' in data and (not isinstance(data['status_history'],list) or any(not isinstance(x,dict) for x in data['status_history'])):raise ValueError('RPA_PROTOCOL_HISTORY')
+    return data
 
 def action_details(meta):
     keys=('verification_target','expected_evidence','responsible_role','deadline_basis')
@@ -39,6 +99,7 @@ class ActionStore:
         r=dict(row)
         for k in ('payload','metadata','remote'):r[k]=json.loads(r[k]) if r[k] else None
         remote=r.get('remote') or {}
+        r['responsibility_confirmation']=r['metadata'].get('responsibility_confirmation')
         r['delivery']={'http_accepted':r['status'] in ('SENT','ACCEPTED'),'notification': 'SIMULATED_SENT' if notification_proven(remote) else 'UNKNOWN','remediation':remote.get('status') if remote.get('status') in ('confirmed','in_progress','completed') else 'NOT_CONFIRMED'}
         return r
     def get(self,action_id):
@@ -50,16 +111,17 @@ class ActionStore:
         if not finding.strip() or not suggestion.strip() or not assignee.get('name') or not assignee.get('department'):raise ValueError('REQUIRED_FIELDS')
         assignee={k:v for k,v in assignee.items() if k in ('name','department','role')};assignee.setdefault('role',None)
         action_meta={'verification_target':verification_target,'expected_evidence':expected_evidence,'responsible_role':responsible_role,'deadline_basis':deadline_basis}
-        business=digest({'action_meta':action_meta,'snapshot_id':snapshot['snapshot_id'],'finding':finding,'assignee':assignee,'suggestion':suggestion,'priority':priority})
+        business=digest({'action_meta':action_meta,'context':snapshot.get('analysis_context'),'snapshot_id':snapshot['snapshot_id'],'finding':finding,'assignee':assignee,'suggestion':suggestion,'priority':priority})
         task_id='YH-'+business[:24]
         payload={'task_id':task_id,'task_title':finding[:100],'assignee':assignee,'source':{'analysis_type':snapshot['analysis_type'],'analysis_month':snapshot['month'],'product':snapshot['product'],'finding':finding+'；分析期间：'+snapshot.get('period',{}).get('start',snapshot['month'])+' 至 '+snapshot.get('period',{}).get('end',snapshot['month'])},'priority':priority,'deadline':(datetime.now()+timedelta(days=7)).strftime('%Y-%m-%d'),'created_at':now(),'suggestion':suggestion,'notify_method':'wechat'}
+        validate_action(payload,action_meta)
         with self.db() as c:
             c.execute('BEGIN IMMEDIATE')
             old=c.execute('SELECT * FROM actions WHERE business_hash=?',(business,)).fetchone()
             if old:return self._decode(old)
             if c.execute('SELECT 1 FROM actions WHERE id=?',(task_id,)).fetchone():
                 task_id='YH-'+uuid.uuid4().hex[:24];payload['task_id']=task_id
-            c.execute('INSERT INTO actions VALUES(?,?,?,?,?,?,?,?)',(task_id,business,json.dumps(payload,ensure_ascii=False),action_identity(payload,action_meta),'DRAFT',json.dumps({'snapshot_id':snapshot['snapshot_id'],'period':snapshot.get('period'),'simulation':True,**action_meta,'deadline_policy':'草稿默认建议七日内复核，用户确认前可修改；非既定业务期限'},ensure_ascii=False),None,now()))
+            c.execute('INSERT INTO actions VALUES(?,?,?,?,?,?,?,?)',(task_id,business,json.dumps(payload,ensure_ascii=False),action_identity(payload,action_meta),'DRAFT',json.dumps({'context_id':snapshot.get('context_id'),'analysis_context':snapshot.get('analysis_context'),'snapshot_id':snapshot['snapshot_id'],'period':snapshot.get('period'),'simulation':True,**action_meta,'deadline_policy':'草稿默认建议七日内复核，用户确认前可修改；非既定业务期限'},ensure_ascii=False),None,now()))
         return self.get(task_id)
     def edit(self,action_id,changes):
         with self.db() as c:
@@ -82,7 +144,8 @@ class ActionStore:
             for key in ('verification_target','expected_evidence','responsible_role','deadline_basis'):
                 if key in changes:a['metadata'][key]=changes[key]
             if not a['payload']['suggestion'].strip():raise ValueError('REQUIRED_SUGGESTION')
-            business=digest({'action_meta':action_details(a['metadata']),'snapshot_id':a['metadata']['snapshot_id'],'finding':a['payload']['source']['finding'].split('；分析期间：')[0],'assignee':a['payload']['assignee'],'suggestion':a['payload']['suggestion'],'priority':a['payload']['priority']})
+            validate_action(a['payload'],a['metadata'])
+            business=digest({'context':a['metadata'].get('analysis_context'),'action_meta':action_details(a['metadata']),'snapshot_id':a['metadata']['snapshot_id'],'finding':a['payload']['source']['finding'].split('；分析期间：')[0],'assignee':a['payload']['assignee'],'suggestion':a['payload']['suggestion'],'priority':a['payload']['priority']})
             duplicate=c.execute('SELECT id FROM actions WHERE business_hash=? AND id<>?',(business,action_id)).fetchone()
             if duplicate:raise ValueError('DUPLICATE_DRAFT_USE_EXISTING:'+duplicate['id'])
             c.execute('UPDATE actions SET payload=?,payload_hash=?,business_hash=?,metadata=?,updated=? WHERE id=?',(json.dumps(a['payload'],ensure_ascii=False),action_identity(a['payload'],a['metadata']),business,json.dumps(a['metadata'],ensure_ascii=False),now(),action_id))
@@ -90,11 +153,23 @@ class ActionStore:
     def confirm(self,action_id,payload_hash):
         with self.db() as c:
             c.execute('BEGIN IMMEDIATE');a=self._decode(c.execute('SELECT * FROM actions WHERE id=?',(action_id,)).fetchone())
+            validate_action(a['payload'],a['metadata'])
             if payload_hash!=a['payload_hash']:raise ValueError('PAYLOAD_CHANGED_RECONFIRM_REQUIRED')
             if a['status']=='DRAFT':
                 c.execute('INSERT INTO outbox(action_id,confirmed_hash,state) VALUES(?,?,?)',(action_id,payload_hash,'QUEUED'))
                 c.execute('UPDATE actions SET status=?,updated=? WHERE id=?',('QUEUED',now(),action_id))
                 c.execute('INSERT INTO action_events(action_id,state,at,detail) VALUES(?,?,?,?)',(action_id,'CONFIRMED_BY_USER',now(),payload_hash))
+        return self.get(action_id)
+    def acknowledge(self,action_id,confirmed_by,comment=''):
+        """A named human acknowledgement, distinct from outbox confirmation."""
+        if not isinstance(confirmed_by,str) or not confirmed_by.strip():raise ValueError('HUMAN_NAME_REQUIRED')
+        with self.db() as c:
+            c.execute('BEGIN IMMEDIATE')
+            a=self._decode(c.execute('SELECT * FROM actions WHERE id=?',(action_id,)).fetchone())
+            if a['status'] not in ('SENT','ACCEPTED'):raise ValueError('ACKNOWLEDGEMENT_REQUIRES_DELIVERY')
+            if a['metadata'].get('responsibility_confirmation'):return a
+            a['metadata']['responsibility_confirmation']={'status':'CONFIRMED','confirmed_by':confirmed_by.strip(),'confirmed_at':now(),'comment':str(comment)[:2000],'source':'human_entry','remediation_completed':False}
+            c.execute('UPDATE actions SET metadata=?,updated=? WHERE id=?',(json.dumps(a['metadata'],ensure_ascii=False),now(),action_id))
         return self.get(action_id)
     def pending(self):
         with self.db() as c:return [dict(r) for r in c.execute("SELECT * FROM outbox WHERE state IN ('QUEUED','SENDING')")]
@@ -104,19 +179,25 @@ class ActionStore:
             c.execute('UPDATE outbox SET state=?,last_error=? WHERE action_id=?',(state,error,action_id))
             c.execute('INSERT INTO action_events(action_id,state,at,detail) VALUES(?,?,?,?)',(action_id,state,now(),error))
         return self.get(action_id)
+    def _protocol_error(self,a,error):
+        # Preserve previously proved state and payload; quarantine unknown sends.
+        state=a['status'] if a['status'] in ('SENT','ACCEPTED') else 'DELIVERY_UNKNOWN'
+        return self._state(a['id'],state,a.get('remote'),error)
     def _reconcile(self,a,client,base_url,already_sent=False):
         import httpx
         try:
             r=client.get(base_url+'/api/rpa/tasks/'+a['id']);body=r.json()
-            if r.status_code==200 and body.get('code')==200:
-                remote=body.get('data',{})
+            if r.status_code==200:
+                remote=protocol_data(body)
+                if body['code']!=200:return self._protocol_error(a,'RPA_PROTOCOL_BUSINESS_STATUS')
                 same=all(remote.get(k)==v for k,v in a['payload'].items())
                 if not same:return self._state(a['id'],'CONFLICT',remote,'远端同ID payload 冲突')
                 if remote.get('status') in ('sent','received','confirmed','in_progress','completed'):
                     if notification_proven(a.get('remote')) and not notification_proven(remote):remote['notify_status']=a['remote'].get('notify_status',{})
                     return self._state(a['id'],'SENT' if notification_proven(remote) else 'ACCEPTED',remote)
             return self._state(a['id'],'REMOTE_UNKNOWN' if already_sent else 'DELIVERY_UNKNOWN',None,'远端不存在或结果无法确认；停止自动重发')
-        except (httpx.HTTPError,ValueError):return self._state(a['id'],'REMOTE_UNKNOWN' if already_sent else 'DELIVERY_UNKNOWN',None,'查询失败；停止自动重发')
+        except ValueError:return self._protocol_error(a,'RPA_PROTOCOL_ERROR')
+        except httpx.HTTPError:return self._state(a['id'],'REMOTE_UNKNOWN' if already_sent else 'DELIVERY_UNKNOWN',None,'查询失败；停止自动重发')
     def deliver_one(self,action_id,client=None,base_url=RPA_BASE_URL):
         import httpx
         if client is None:
@@ -134,8 +215,10 @@ class ActionStore:
             r=client.post(base_url+'/api/rpa/tasks',json=a['payload'])
             try:body=r.json()
             except ValueError:body={}
-            data=body.get('data',{});notify=data.get('notify_status') or {}
-            if r.status_code==200 and body.get('code')==200 and data.get('task_id')==action_id and data.get('status')=='sent' and notify.get('wechat') and notify.get('sent_at'):
+            if r.status_code==422:return self._state(action_id,'FAILED',None,'HTTP_422:参数被原mock拒绝')
+            try:data=protocol_data(body)
+            except ValueError:return self._reconcile(a,client,base_url)
+            if r.status_code==200 and body.get('code')==200 and data.get('task_id')==action_id and data.get('status')=='sent' and notification_proven(data):
                 data['tracking_url']=base_url+'/api/rpa/tasks/'+action_id
                 return self._state(action_id,'SENT',data)
             if r.status_code==422:return self._state(action_id,'FAILED',None,'HTTP_422:参数被原mock拒绝')

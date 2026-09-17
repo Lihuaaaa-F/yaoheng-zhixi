@@ -9,9 +9,10 @@ from .config import ROOT, PACKAGE, ARTIFACTS
 W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
 NS = {'w': W}
 PATTERN = re.compile(r'\{\{([^{}]+)\}\}')
+RESIDUAL = re.compile(r'\{\{[^{}]*\}\}|\[\[[^\[\]]*\]\]')
 TEMPLATE = ROOT / '04_方案与文档/月度成本分析报告工作模板.docx'
 MAP_PATH = ROOT / '04_方案与文档/placeholder_map.json'
-RENDERER_VERSION='reader-v9-truetype-fonts'
+RENDERER_VERSION='reader-20260918-footer-source-nbsp'
 NA = 'N/A（无可用基期或明细）'
 
 def replace_text_nodes(nodes, mapping):
@@ -114,10 +115,53 @@ def _all_paragraphs(doc):
     from docx.text.paragraph import Paragraph
     return [Paragraph(p,doc) for p in doc.element.body.iter('{'+W+'}p')]
 
+def layout_text(text):
+    """Remove only the word-joiner inserted for layout, never normalize values."""
+    return text.replace('\u2060', '').replace('\u00a0', ' ')
+
+
+def protect_number_units(paragraph):
+    """Keep a number and its unit together without destroying runs/bookmarks."""
+    nodes = list(paragraph._p.iter('{'+W+'}t'))
+    for node in nodes:
+        node.text = layout_text(node.text or '')
+    text = ''.join(node.text or '' for node in nodes)
+    if RESIDUAL.search(text):
+        return
+    unit = r'(?:万元|元|kWh|kg|吨|盒|粒|袋|支|件|小时|分钟|万盒|%|％)(?:/(?:kg|吨|盒|粒|袋|支|件|小时|分钟|万盒))?'
+    pattern = r'(?<![A-Za-z0-9_.])[-+−]?\d+(?:,\d{3})*(?:\.\d+)?[ \u00a0]*' + unit
+    boundaries = set()
+    unbreakable_spaces = set()
+    for match in re.finditer(pattern, text):
+        boundaries.update(range(match.start()+1, match.end()))
+        unbreakable_spaces.update(i for i in range(match.start(),match.end()) if text[i]==' ')
+    offset = 0
+    for node in nodes:
+        original = node.text or ''
+        node.text = ''.join(('\u2060' if offset+i in boundaries else '')+('\u00a0' if offset+i in unbreakable_spaces else char) for i,char in enumerate(original))
+        offset += len(original)
+
+
+def benchmark_labels(comparison):
+    """Factory identities come from the comparison, including stored snapshots."""
+    comparison = comparison or {}
+    left, right = comparison.get('left'), comparison.get('right')
+    if not left or not right:
+        pair = comparison.get('direction', '').partition('，以')[0]
+        if '−' in pair:
+            left, right = pair.split('−', 1)
+    if not left or not right:
+        return '比较厂', '基准厂', '未提供比较对象，不能确定差额方向'
+    direction = f'{left}−{right}，以{right}为分母'
+    if comparison.get('direction') and comparison['direction'] != direction:
+        raise ValueError('BENCHMARK_DIRECTION_CONFLICT')
+    return left, right, direction
+
+
 def build_bindings(snapshot,narrative,benchmark=None):
     m=snapshot['metrics']; els={e['key']:e for e in snapshot['elements']}; quarterly=snapshot['analysis_type']=='quarterly'
     period=snapshot.get('period',{}); label=(period.get('start','')+' 至 '+period.get('end','')) if quarterly else snapshot['month']
-    values={'报告标题':f"{snapshot['product']} {'季度成本分析' if quarterly else '专题分析' if snapshot['analysis_type']=='special' else '月度成本分析'}报告",'报告类型':{'monthly':'月度成本分析','quarterly':'季度成本分析','special':'专题分析'}[snapshot['analysis_type']],'分析月份':label,'产品名称':snapshot['product'],'产品规格':snapshot.get('specification',{'银黄口服液':'10ml×10支/盒','板蓝根颗粒':'10g×20袋/盒','六味地黄胶囊':'0.3g×60粒/盒'}.get(snapshot['product'],'')),'编制日期':datetime.now().strftime('%Y-%m-%d'),'本月产量':number(m['quantity'],0),'本月单位成本':number(m['unit_cost'],4 if quarterly else 2),'单位成本':number(m['unit_cost'],4 if quarterly else 2),'本月总成本':number(m['total_cost'])}
+    values={'报告标题':f"{snapshot['product']} {'季度成本分析' if quarterly else '专题分析' if snapshot['analysis_type']=='special' else '月度成本分析'}报告",'报告类型':{'monthly':'月度成本分析','quarterly':'季度成本分析','special':'专题分析'}[snapshot['analysis_type']],'分析月份':label,'产品名称':snapshot['product'],'产品规格':snapshot.get('specification') or '未提供规格','编制日期':datetime.now().strftime('%Y-%m-%d'),'本月产量':number(m['quantity'],0),'本月单位成本':number(m['unit_cost'],4 if quarterly else 2),'单位成本':number(m['unit_cost'],4 if quarterly else 2),'本月总成本':number(m['total_cost'])}
     # Comparison metric snapshots are the sole source of calculated fields.
     for key,cn in [('mom','单位成本环比'),('yoy','单位成本同比'),('budget','单位成本预算偏差')]:values[cn]=number(m.get(key))
     for key,prefix in [('mom','上月'),('yoy','去年'),('budget','预算')]:
@@ -159,7 +203,7 @@ def build_bindings(snapshot,narrative,benchmark=None):
         values[cn+'成本同比']=number(els[ekey].get('comparisons',{}).get('yoy',{}).get('unit',{}).get('rate'))
     findings=narrative.get('findings',[])
     def prose(section):
-        return '\n'.join(f.get('rendered_text',f.get('text','')) for f in findings if f.get('section')==section and f.get('claim_type')=='hypothesis')
+        return '\n'.join(f.get('rendered_text',f.get('text','')) for f in findings if f.get('section')==section and f.get('claim_type') in ('hypothesis','insufficient_evidence'))
     material=els['materials']
     material_text='直接材料每盒 '+number(material['unit'])+' 元，比上期变动 '+number(material.get('unit_delta'))+' 元，占单位成本变动的 '+number(material.get('unit_contribution'))+'%。'
     rows=snapshot.get('materials_summary',[])
@@ -174,9 +218,12 @@ def build_bindings(snapshot,narrative,benchmark=None):
     bridges=snapshot.get('budget_bridge') or {}
     if bridges.get('quantity_effect') is not None:
         overview+=' 相对预算总成本差额 '+number(bridges.get('total_delta'))+' 元，其中产量影响 '+number(bridges.get('quantity_effect'))+' 元，单位成本影响 '+number(bridges.get('unit_cost_effect'))+' 元；不能全部归为效率恶化。'
-    values['成本异常排查分析']=overview+'\n'+alert_text+'\n'+prose('overhead')
+    values['成本异常排查分析']=overview+'\n'+alert_text
+    values['人工成本归因分析文本']=prose('labor')
+    values['制造费用归因分析文本']=prose('overhead')
     be=(benchmark or {}).get('elements',[])
-    values['差异结构拆解分析']='二厂减一厂，差异率以一厂为基数。'+('；'.join(r['name']+'差额 '+number(r.get('delta'))+' 元/盒，占跨厂单位成本总差额 '+number(r.get('contribution'))+'%' for r in be)+'。' if be else '该期间没有可比跨厂记录。')
+    left,right,direction=benchmark_labels(benchmark)
+    values['差异结构拆解分析']=direction+'。'+('；'.join(r['name']+'差额 '+number(r.get('delta'))+' 元/盒，占跨厂单位成本总差额 '+number(r.get('contribution'))+'%' for r in be)+'。' if be else '该期间没有可比跨厂记录。')
     values['差异归因分析文本']=prose('benchmark') or '三要素差额用于定位核查重点。二厂缺原料、工时及费用明细，尚不能分解到二厂单项原料；请两厂成本会计核对同规格的领料、工时与费用分摊记录。'
     values['本月亮点']='本期单位成本 '+number(m['unit_cost'])+' 元/盒，产量 '+number(m['quantity'],0)+' 盒。管理重点是先核查贡献最大的要素，再区分产量变化和单位成本变化对总支出的影响。'
     values['需关注问题']='原料成本上涨不能直接等同采购价上涨。平均小时工资为题包折算口径，不能据此认定基础薪率上调。跨厂原料差异需补二厂明细。'
@@ -184,14 +231,100 @@ def build_bindings(snapshot,narrative,benchmark=None):
     values['合计贡献度']='100.00' if delta is not None and Decimal(delta)!=0 else 'N/A（总变动为0或无基期）'
     return values
 
-def render_docx(snapshot,narrative,evidence,output,benchmark=None):
+def sanitize_template_identity(doc):
+    """Replace author/reviewer metadata and decorative textbox branding by role.
+
+    The original template stays read-only. No original personal name or company
+    string is needed in source code to sanitize a working report.
+    """
+    labels = {'编制人': '演示编制人（模拟数据）', '审核人': '待人工审核',
+              '编制单位': '药衡智析演示团队（模拟数据）', '企业名称': '药衡智析演示企业（模拟数据）'}
+    for table in doc.tables:
+        for row in table.rows:
+            for index, cell in enumerate(row.cells[:-1]):
+                if cell.text.strip().rstrip('：:') in labels:
+                    target = row.cells[index+1]
+                    value = labels[cell.text.strip().rstrip('：:')]
+                    if target.paragraphs:
+                        _text(target.paragraphs[0], target.paragraphs[0].text, value)
+                        for paragraph in target.paragraphs[1:]:
+                            _text(paragraph, paragraph.text, '')
+    parts = [doc.part] + [section.header.part for section in doc.sections] + [section.footer.part for section in doc.sections]
+    for part in parts:
+        for watermark in part.element.xpath('.//*[local-name()="textpath"]'):
+            if watermark.get('string') is not None:watermark.set('string','药衡智析 · 成本分析')
+        for box in part.element.xpath('.//*[local-name()="txbxContent"]'):
+            nodes = list(box.iter('{'+W+'}t'))
+            if nodes:
+                nodes[0].text = '药衡智析 · 成本分析'
+                for node in nodes[1:]: node.text = ''
+    doc.core_properties.author = '药衡智析演示团队'
+    doc.core_properties.last_modified_by = '药衡智析'
+
+
+def insert_element_analysis(doc, snapshot, bindings):
+    elements = {e['key']: e for e in snapshot['elements']}
+    descriptions = [
+        ('3.3', 'labor', '人工成本归因分析文本', '平均小时工资是题包折算口径。每盒人工费用受工时、人员组成及加班影响；需核对工时台账、工资组成与返工记录，不能认定基础薪率上涨。'),
+        ('四、', 'overhead', '制造费用归因分析文本', '按费用台账和分配基数检查变化。维修事件只有在产品、期间及入账范围一致时才用于本期解释；不得将维修金额重复计入总成本。')]
+    for prefix, key, binding, caution in descriptions:
+        anchor = next((p for p in doc.paragraphs if p.text.startswith(prefix)), None)
+        if anchor is None:
+            raise ValueError('MISSING_COST_SECTION:'+key)
+        element = elements[key]
+        anchor.insert_paragraph_before(element['name']+'每盒 '+number(element['unit'])+' 元，比上期变动 '+number(element.get('unit_delta'))+' 元，占单位成本环比变动 '+number(element.get('unit_contribution'))+'%。'+caution)
+        if bindings.get(binding):
+            anchor.insert_paragraph_before(bindings[binding])
+
+
+def explanation_presence(path, narrative, scoped=True):
+    """Only body prose in its required section can satisfy a model explanation."""
     from docx import Document
+    paragraphs = Document(path).paragraphs
+    by_section = {};section = None
+    for paragraph in paragraphs:
+        text = layout_text(paragraph.text)
+        for prefix, target in [('3.1', 'materials'), ('3.2', 'labor'), ('3.3', 'overhead'), ('5.3', 'benchmark')]:
+            if text.startswith(prefix):section=target;break
+        else:
+            if re.match(r'^[一二三四五六]、|^[2456]\.',text):section=None
+        if section:
+            by_section.setdefault(section,[]).append(text)
+    all_body = [layout_text(p.text) for p in paragraphs]
+    failures=[];checked=0
+    for index,finding in enumerate((narrative or {}).get('findings',[])):
+        if finding.get('origin') not in ('model','llm') or finding.get('claim_type') not in ('hypothesis','insufficient_evidence'):
+            continue
+        checked+=1
+        expected=layout_text(finding.get('rendered_text') or finding.get('text',''))
+        candidates=by_section.get(finding.get('section'),[]) if scoped else all_body
+        if not expected or not any(expected in text for text in candidates):
+            failures.append({'finding':index,'section':finding.get('section'),'reason':'MODEL_EXPLANATION_MISSING_FROM_BODY'})
+    return {'explanation_bindings_checked':checked,'explanation_binding_failures':failures}
+
+
+def render_docx(snapshot,narrative,evidence,output,benchmark=None):
+    if snapshot.get('context_id') and snapshot['context_id']!='pharmaceutical:competition':
+        from .reference_report import render
+        result=render(snapshot,narrative,evidence,output,benchmark)
+        check=verify_docx(output,snapshot,narrative=narrative)
+        if check['status']!='PASS':raise ValueError('REPORT_EXPLANATION_BINDING_FAILED')
+        result['verification']=check
+        return result
+    from docx import Document
+    from .narrative import render_visible_text
+    narrative=json.loads(json.dumps(narrative))
+    for finding in narrative.get('findings',[]):
+        for field in ('rendered_text','suggestion','verification_target','responsible_role','deadline_basis','department'):
+            if finding.get(field):finding[field]=render_visible_text(finding[field],snapshot,evidence.get('evidence',[]),finding.get('metric_refs',[]),finding.get('evidence_quotes'))
+        finding['expected_evidence']=[render_visible_text(x,snapshot,evidence.get('evidence',[]),finding.get('metric_refs',[])) for x in finding.get('expected_evidence',[])]
     from docx.shared import Inches, Pt
     from docx.oxml import OxmlElement
     from docx.oxml.ns import qn
     if not TEMPLATE.exists():normalize_template()
     elif json.loads(MAP_PATH.read_text()).get('reader_template_version') not in ('reader-v2','reader-v3-truetype'):compact_working_template(TEMPLATE,MAP_PATH)
     meta=json.loads(MAP_PATH.read_text());doc=Document(TEMPLATE)
+    sanitize_template_identity(doc)
     values=build_bindings(snapshot,narrative,benchmark)
     for entry in meta['placeholders']:values.setdefault(entry['field'], NA)
     dynamic={k for k in values if '表格' in k}
@@ -204,7 +337,7 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
         replace_text_nodes(list(p._p.iter('{'+W+'}t')),values)
         if 'N/A' in p.text:_text(p,'）%','）')
         if before.startswith(('一、','二、','三、','四、','五、','六、')):sections.append(p.text)
-        for a,b in [('整体解决方案','成本分析报告'),('重庆创灵境数字技术有限公司','药衡智析演示团队（模拟数据）'),('龚云','演示编制人'),('ERP系统成本模块','创灵境题包模拟CSV（非实时ERP）'),('财务总监','待人工审核'),('与中药二厂','二厂−一厂，以一厂为基准')]:_text(p,a,b)
+        for a,b in [('整体解决方案','成本分析报告'),('ERP系统成本模块','创灵境题包模拟CSV（非实时ERP）'),('财务总监','待人工审核'),('与中药二厂',benchmark_labels(benchmark)[2])]:_text(p,a,b)
         if '关键提示：方案中' in p.text:_text(p,p.text,'本报告使用比赛模拟数据。事实、原因假设与缺失证据分别标注；任务仅为模拟发送。')
         if snapshot['analysis_type']=='quarterly':
             for a,b in [('本月','本季度'),('上月','上季度'),('去年同月','去年同期季度'),('分析月份','分析期间')]:_text(p,a,b)
@@ -217,15 +350,6 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
                 _text(p,'整体解决方案','药衡智析 · 模拟成本分析')
             pg=section._sectPr.find(qn('w:pgNumType'))
             if pg is not None:pg.attrib.pop(qn('w:start'),None)
-    for section in doc.sections:
-        for p in section.footer.paragraphs:
-            if '页' not in p.text:continue
-            for child in list(p._p):
-                if child.tag!=qn('w:pPr'):p._p.remove(child)
-            p.add_run('第 ')
-            for instruction in ('PAGE','NUMPAGES'):
-                run=p.add_run();field=OxmlElement('w:fldSimple');field.set(qn('w:instr'),instruction);run._r.addnext(field)
-                p.add_run(' 页 / 共 ' if instruction=='PAGE' else ' 页')
     def table(anchor,headers,rows):
         p=dynamic_anchors.get(anchor)
         if p is None:raise ValueError('模板动态块缺失:'+anchor)
@@ -247,16 +371,12 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
     table('原材料成本明细表格',['月份','原料','单位消耗成本（元/盒）','总成本（元）'],[[r['月份'],r['原材料名称'],r['单位消耗成本(元/盒)'],r['原材料总成本(元)']] for r in details.get('materials',[])])
     table('近6个月成本趋势表格',['月份','单位成本（元/盒）','产量（盒）','总成本（元）'],[[r['month'],number(r['unit_cost']),number(r['quantity'],0),number(r['total_cost'])] for r in snapshot['trend']])
     table('原材料价格跟踪表格',['药材','参考月份','市场价格','单位（非采购价）'],[[r['药材名称'],snapshot['month'],r.get(str(int(snapshot['month'][5:]))+'月价格',NA),r['单位']] for r in details.get('market',[])])
-    table('对标差异表格',['要素','二厂（元/盒）','一厂（元/盒）','差异（元/盒）','差异率（%）'],[[r.get('name','单位成本'),number(r.get('left')),number(r.get('right')),number(r.get('delta')),number(r.get('rate'))] for r in (benchmark or {}).get('summary',[])[:1]+(benchmark or {}).get('elements',[])])
+    table('对标差异表格',['要素',benchmark_labels(benchmark)[0]+'（元/盒）',benchmark_labels(benchmark)[1]+'（元/盒）','差异（元/盒）','差异率（%）'],[[r.get('name','单位成本'),number(r.get('left')),number(r.get('right')),number(r.get('delta')),number(r.get('rate'))] for r in (benchmark or {}).get('summary',[])[:1]+(benchmark or {}).get('elements',[])])
     actionable=[f for f in narrative.get('findings',[]) if f.get('suggestion','').strip()]
     table('改进建议表格',['问题与核查行动','预期证据'],[[str(i+1)+'．'+f.get('rendered_text','')+'\n核查对象：'+f.get('verification_target','待补')+'\n行动：'+f.get('suggestion'), '、'.join(f.get('expected_evidence',[]) if isinstance(f.get('expected_evidence'),list) else [f.get('expected_evidence') or '核查对象的原始记录'])] for i,f in enumerate(actionable)])
     table('整改任务表格',['责任部门／角色','优先级','期限依据与状态'],[[str(i+1)+'．'+(f.get('department') or '责任部门待定')+'／'+(f.get('responsible_role') or '待分配')+'（姓名待分配）', {'high':'高','medium':'中','low':'低'}.get(f.get('priority'),'中'), (f.get('deadline_basis') or '下次成本复核前，具体日期由用户确认')+'；待确认发送'] for i,f in enumerate(actionable)])
     output=Path(output);output.parent.mkdir(parents=True,exist_ok=True)
-    els={e['key']:e for e in snapshot['elements']}
-    for prefix,key,text in [('3.3','labor','平均小时工资是题包折算口径。每盒人工费用受工时、人员组成及加班影响；需核对工时台账、工资组成与返工记录，不能认定基础薪率上涨。'),('四、','overhead','按费用台账和分配基数检查变化。维修事件只有在产品、期间及入账范围一致时才用于本期解释；不得将维修金额重复计入总成本。')]:
-        anchor=next((p for p in doc.paragraphs if p.text.startswith(prefix)),None)
-        if anchor is not None:
-            e=els[key];anchor.insert_paragraph_before(e['name']+'每盒 '+number(e['unit'])+' 元，比上期变动 '+number(e.get('unit_delta'))+' 元，占单位成本环比变动 '+number(e.get('unit_contribution'))+'%。'+text)
+    insert_element_analysis(doc,snapshot,values)
     add_reader_charts(doc,snapshot,benchmark,dynamic_anchors,output)
     add_reader_summary(doc,snapshot,narrative,output)
     doc.add_paragraph('来源与审核说明')
@@ -272,25 +392,32 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
     audit=output.with_name('machine_audit.json')
     audit.write_text(json.dumps({'snapshot':snapshot,'narrative':narrative,'evidence':evidence,'benchmark':benchmark,'bindings':values},ensure_ascii=False,indent=2))
     temp=output.with_suffix('.tmp.docx');doc.save(temp)
-    check=verify_docx(temp,snapshot,sections)
+    check=verify_docx(temp,snapshot,sections,narrative=narrative)
     if check['status']!='PASS':raise ValueError('报告验证失败:'+json.dumps(check,ensure_ascii=False))
     temp.replace(output)
     return {'status':'PASS','scope':'file_generation','path':str(output),'sha256':hashlib.sha256(output.read_bytes()).hexdigest(),'verification':check,'bindings':values}
 
-def verify_docx(path,snapshot,sections=None):
+def verify_docx(path,snapshot,sections=None,narrative=None):
+    if snapshot.get('context_id') and snapshot['context_id']!='pharmaceutical:competition':
+        from .reference_report import verify
+        result=verify(path,snapshot)
+        result.update(explanation_presence(path,narrative,scoped=False))
+        if result['explanation_binding_failures']:result['status']='FAIL'
+        return result
+    explanation_check=explanation_presence(path,narrative)
     with ZipFile(path) as z:
         strings=[]
         for n in z.namelist():
             if n.startswith('word/') and n.endswith('.xml'):
                 xml=ET.fromstring(z.read(n));strings.append(''.join(t.text or '' for t in xml.iter('{'+W+'}t')))
-        text='\n'.join(strings)
+        text=layout_text('\n'.join(strings))
         numeric_bindings=build_bindings(snapshot,{})
         by_marker={}
         for n in z.namelist():
             if n.startswith('word/') and n.endswith('.xml'):
                 xml=ET.fromstring(z.read(n))
                 for p in xml.findall('.//w:p',NS):
-                    actual=''.join(t.text or '' for t in p.findall('.//w:t',NS))
+                    actual=layout_text(''.join(t.text or '' for t in p.findall('.//w:t',NS)))
                     for mark in p.findall('w:bookmarkStart',NS):by_marker[mark.get('{'+W+'}name')]=actual
         failures=[];checked=0
         for entry in json.loads(MAP_PATH.read_text())['placeholders']:
@@ -300,14 +427,14 @@ def verify_docx(path,snapshot,sections=None):
             if 'N/A' in expected:expected=expected.replace('）%','）')
             actual=by_marker.get(entry.get('marker'))
             checked+=1
-            if actual!=expected:failures.append({'field':field,'expected':expected,'actual':actual})
+            if actual!=layout_text(expected):failures.append({'field':field,'expected':expected,'actual':actual})
         duplicated_units=bool(re.search(r'元/盒元/盒|%%|盒盒',text))
-        residual=PATTERN.findall(text)
+        residual=RESIDUAL.findall(text)
         headings=[s for s in ['一、封面与基本信息','二、总成本概览','三、成本要素明细分析','四、重点产品专项分析','五、对标分析','六、总结与建议'] if s in text]
         numeric=number(snapshot['metrics']['unit_cost'],4 if snapshot['analysis_type']=='quarterly' else 2) in text and number(snapshot['metrics']['total_cost']) in text
         tables=sum(1 for _ in ET.fromstring(z.read('word/document.xml')).iter('{'+W+'}tbl'))
         images=len([n for n in z.namelist() if n.startswith('word/media/')])
-    return {'status':'PASS' if not residual and len(headings)==6 and numeric and tables>=11 and images>0 and not failures and checked>=70 and not duplicated_units else 'FAIL','numeric_bindings_checked':checked,'numeric_binding_failures':failures,'duplicated_units':duplicated_units,'residual_placeholders':residual,'headings':headings,'core_numbers':numeric,'tables':tables,'images':images,'semantic_bindings':'XML位置区分金额与比例','human_layout':'待全部页人工审核','scope':'文件结构与指标绑定；不是报告验收'}
+    return {'status':'PASS' if not explanation_check['explanation_binding_failures'] and not residual and len(headings)==6 and numeric and tables>=11 and images>0 and not failures and checked>=70 and not duplicated_units else 'FAIL',**explanation_check,'numeric_bindings_checked':checked,'numeric_binding_failures':failures,'duplicated_units':duplicated_units,'residual_placeholders':residual,'headings':headings,'core_numbers':numeric,'tables':tables,'images':images,'semantic_bindings':'XML位置区分金额与比例','human_layout':'待全部页人工审核','scope':'文件结构与指标绑定；不是报告验收'}
 
 def convert_pdf(docx_path,timeout=90,converter='libreoffice',_toc_pass=0):
     import os
@@ -338,8 +465,8 @@ def convert_pdf(docx_path,timeout=90,converter='libreoffice',_toc_pass=0):
                     meaningful=[line.strip() for line in lines if line.strip() and not re.match(r'^第\s*\d+\s*页',line.strip())]
                     if meaningful and (re.match(r'^[一二三四五六]、|^[2-6]\.\d+(?:\.\d+)?\s+',meaningful[-1]) or '｜' in meaningful[-1]):orphan_headings.append(meaningful[-1])
                     for heading in headings:
-                        if any(line.strip().startswith(heading) for line in lines):page_map.setdefault(heading,index)
-                if not text.strip() or '{{' in text:return {'status':'FAILED','reason':'PDF_CONTENT_INVALID'}
+                        if any(not line.startswith(chr(0x3000)) and (line.strip()==heading or line.strip().startswith(heading+'（') or line.strip().startswith(heading+' —')) for line in lines):page_map.setdefault(heading,index)
+                if not text.strip() or RESIDUAL.search(text):return {'status':'FAILED','reason':'PDF_CONTENT_INVALID'}
             pdf=path.with_suffix('.pdf');staged=pdf.with_suffix('.tmp.pdf');staged.write_bytes(target.read_bytes());staged.replace(pdf)
         from docx import Document
         d=Document(path)
@@ -363,9 +490,9 @@ def convert_pdf(docx_path,timeout=90,converter='libreoffice',_toc_pass=0):
                     start.paragraph_format.page_break_before=True;layout_changed=True
         # 竖排目录逐行回填实际页码；目录标题行(带YH_TOC书签)保持不变
         toc_lines={'一、基本信息':'一、封面与基本信息','二、总成本概览':'二、总成本概览','三、要素明细':'三、成本要素明细分析','四、专项分析':'四、重点产品专项分析','五、对标分析':'五、对标分析','六、总结与建议':'六、总结与建议'}
-        toc_updated=False
+        toc_updated=False;toc_verified={}
         for paragraph in d.paragraphs:
-            text=paragraph.text.strip()
+            text=paragraph.text
             # 目录行以全角空格开头；真实章节标题不以全角空格开头，避免污染正文
             if not text.startswith(chr(0x3000)):continue
             key=next((k for k in toc_lines if text.lstrip(chr(0x3000)).split('　')[0].startswith(k)),None)
@@ -373,10 +500,11 @@ def convert_pdf(docx_path,timeout=90,converter='libreoffice',_toc_pass=0):
             page=page_map.get(toc_lines[key])
             fresh=chr(0x3000)+key+('　·　第'+str(page)+'页' if page else '')
             if paragraph.text!=fresh:_text(paragraph,paragraph.text,fresh);toc_updated=True
+            if page and paragraph.text==fresh:toc_verified[toc_lines[key]]=page
         if _toc_pass<5 and (layout_changed or toc_updated):
             d.save(path)
             return convert_pdf(path,timeout,converter,_toc_pass+1)
-        return {'status':'PASS','scope':'file_conversion','toc_updated':len(page_map)==6,'orphan_headings':orphan_headings,'toc_pages':page_map,'path':str(pdf),'pages':pages,'sha256':hashlib.sha256(pdf.read_bytes()).hexdigest()}
+        return {'status':'PASS','scope':'file_conversion','toc_updated':len(toc_verified)==6 and toc_verified==page_map and not toc_updated,'orphan_headings':orphan_headings,'toc_pages':page_map,'path':str(pdf),'pages':pages,'sha256':hashlib.sha256(pdf.read_bytes()).hexdigest()}
     except (OSError,subprocess.TimeoutExpired) as exc:return {'status':'FAILED','reason':type(exc).__name__}
 
 
@@ -423,6 +551,45 @@ def compact_working_template(output=TEMPLATE,map_path=MAP_PATH):
     Path(map_path).write_text(json.dumps(meta,ensure_ascii=False,indent=2))
 
 
+def rebuild_report_footer(doc):
+    """Own the footer as a whole so inherited textboxes cannot corrupt page labels."""
+    from docx.oxml import OxmlElement
+    from docx.oxml.ns import qn
+    from docx.shared import Pt
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    visited = set()
+    for section in doc.sections:
+        footer = section.footer
+        if id(footer.part) in visited:
+            continue
+        visited.add(id(footer.part))
+        for node in list(footer._element):
+            footer._element.remove(node)
+        paragraph = footer.add_paragraph()
+        paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        paragraph.add_run('第 ')
+        for instruction, suffix in [('PAGE', ' 页 / 共 '), ('NUMPAGES', ' 页')]:
+            field = OxmlElement('w:fldSimple');field.set(qn('w:instr'), instruction)
+            run = OxmlElement('w:r');text = OxmlElement('w:t');text.text = '1'
+            run.append(text);field.append(run);paragraph._p.append(field)
+            paragraph.add_run(suffix)
+        for run in paragraph.runs:
+            run.font.name = 'Noto Sans SC';run.font.size = Pt(9)
+
+
+def keep_source_block(doc):
+    paragraphs = doc.paragraphs
+    starts = [i for i,p in enumerate(paragraphs) if layout_text(p.text).strip() in ('来源与审核说明', '证据来源')]
+    if not starts:
+        return
+    block = paragraphs[starts[-1]:]
+    # Only short terminal reference blocks are kept together, not unbounded lists.
+    if len(block) <= 12 and sum(len(p.text) for p in block) <= 1600:
+        for i, paragraph in enumerate(block):
+            paragraph.paragraph_format.keep_with_next = i < len(block)-1
+            paragraph.paragraph_format.keep_together = True
+
+
 def style_reader(doc):
     from docx.shared import Pt,Cm,RGBColor
     from docx.oxml import OxmlElement
@@ -437,24 +604,32 @@ def style_reader(doc):
         st.element.get_or_add_rPr().get_or_add_rFonts().set(qn('w:eastAsia'),'Noto Sans SC')
         st.paragraph_format.line_spacing=1.18;st.paragraph_format.space_after=Pt(5)
     for p in _all_paragraphs(doc):
-        text=p.text.strip();fmt=p.paragraph_format
+        protect_number_units(p)
+        text=layout_text(p.text).strip();fmt=p.paragraph_format
+        from docx.enum.text import WD_ALIGN_PARAGRAPH
+        p.alignment=WD_ALIGN_PARAGRAPH.LEFT
         fmt.page_break_before=False;fmt.widow_control=True
         fmt.line_spacing=1.15;fmt.space_before=Pt(0);fmt.space_after=Pt(5)
-        heading=bool(re.match(r'^[一二三四五六]、|^[2-6]\.\d+(?:\.\d+)?\s+',text)) or text=='来源与审核说明'
-        fmt.keep_with_next=heading or '｜' in text or (not text and bool(p._p.xpath('.//w:bookmarkStart')))
+        is_toc=p.text.startswith(chr(0x3000))
+        heading=(bool(re.match(r'^[一二三四五六]、|^[2-6]\.\d+(?:\.\d+)?\s+',text)) or text in ('来源与审核说明','证据来源') or p.style.name.startswith('Heading ')) and not is_toc
+        pp=p._p.get_or_add_pPr();wrap=pp.find(qn('w:wordWrap'))
+        if wrap is None:wrap=OxmlElement('w:wordWrap');pp.append(wrap)
+        wrap.set(qn('w:val'),'0')
+        fmt.keep_with_next=bool(fmt.keep_with_next) or heading or '｜' in text or (not text and bool(p._p.xpath('.//w:bookmarkStart')))
         if not text and not p._p.xpath('.//w:drawing'):fmt.space_after=Pt(0);fmt.line_spacing=Pt(1)
         if text.endswith('成本分析报告'):fmt.keep_with_next=True
         fmt.keep_together=True
         if heading:fmt.space_before=Pt(10);fmt.space_after=Pt(5)
+        if is_toc:fmt.space_before=Pt(0);fmt.space_after=Pt(0);fmt.line_spacing=1.0
         for r in p.runs:
-            r.font.name='Noto Sans SC';r.font.size=Pt(20 if text.endswith('成本分析报告') else 14 if re.match('^[一二三四五六]、',text) else 11.5 if heading else 10.5)
+            r.font.name='Noto Sans SC';r.font.size=Pt(9 if is_toc else 20 if text.endswith('成本分析报告') else 14 if re.match('^[一二三四五六]、',text) else 11.5 if heading else 10.5)
             r.font.bold=heading;r.font.color.rgb=RGBColor.from_string('143D50' if heading else '202D33')
             rp=r._element.get_or_add_rPr();rp.get_or_add_rFonts().set(qn('w:eastAsia'),'Noto Sans SC')
             for tag in ('spacing','position','szCs'):
                 for child in list(rp.findall(qn('w:'+tag))):rp.remove(child)
     for t in doc.tables:
         t.autofit=False
-        widths=[2.4,2.35,2.35,1.8,2.35,1.8,2.35,1.8] if len(t.columns)==8 else [17.3/len(t.columns)]*len(t.columns)
+        widths=([2.4,2.35,2.35,1.8,2.35,1.8,2.35,1.8] if len(t.columns)==8 else [11.3,6.0] if len(t.columns)==2 and '核查' in t.rows[0].cells[0].text else [17.3/len(t.columns)]*len(t.columns))
         for col,width in zip(t.columns,widths):col.width=Cm(width)
         for row in t.rows:
             for cell,width in zip(row.cells,widths):cell.width=Cm(width)
@@ -474,6 +649,9 @@ def style_reader(doc):
         if not p.text.strip() and not p._p.xpath('.//w:drawing | .//w:bookmarkStart | .//w:sectPr'):
             p._p.getparent().remove(p._p)
 
+    keep_source_block(doc)
+    rebuild_report_footer(doc)
+
 
 def add_reader_summary(doc,snapshot,narrative,output):
     from docx.oxml import OxmlElement
@@ -482,9 +660,9 @@ def add_reader_summary(doc,snapshot,narrative,output):
     first=doc.paragraphs[0]
     title=first.insert_paragraph_before(snapshot['product']+'成本分析报告')
     title.paragraph_format.keep_with_next=True
-    m=snapshot['metrics'];label=snapshot['period']['start']+' 至 '+snapshot['period']['end']
+    m=snapshot['metrics'];label=snapshot['period']['start'] if snapshot['period']['start']==snapshot['period']['end'] else snapshot['period']['start']+' 至 '+snapshot['period']['end']
     first.insert_paragraph_before(snapshot['factory']+' · '+label+' · '+snapshot.get('specification',''))
-    first.insert_paragraph_before('报告编号：'+output.parent.name+'；人工审核：待审核。')
+    first.insert_paragraph_before('人工审核：待审核。')
     mode='本次采用基础分析，原因解释待复核。' if not narrative.get('model_live') or narrative.get('status')!='PASS' else '本次采用模型辅助解释；因果归因仍待人工复核。'
     first.insert_paragraph_before(mode)
     ranked=sorted(snapshot['elements'],key=lambda e:abs(Decimal(e.get('unit_delta') or '0')),reverse=True)
@@ -495,6 +673,7 @@ def add_reader_summary(doc,snapshot,narrative,output):
     for item in toc_items:
         line=first.insert_paragraph_before('　'+item)
         line.paragraph_format.space_after=Pt(0);line.paragraph_format.keep_with_next=True
+        line.style='Normal'
     mark=OxmlElement('w:bookmarkStart');mark.set(qn('w:id'),'30000');mark.set(qn('w:name'),'YH_TOC');toc._p.insert(0,mark)
 
 
@@ -537,10 +716,10 @@ def add_reader_charts(doc,snapshot,benchmark,anchors,output):
     be=(benchmark or {}).get('elements',[])
     if be:
         fig,ax=plt.subplots(figsize=(8,2.4));pos=list(range(len(be)))
-        ax.bar([x-.18 for x in pos],[float(r['right']) for r in be],width=.35,label='一厂',color='#176C8C');ax.bar([x+.18 for x in pos],[float(r['left']) for r in be],width=.35,label='二厂',color='#82939F')
+        ax.bar([x-.18 for x in pos],[float(r['right']) for r in be],width=.35,label=benchmark_labels(benchmark)[1],color='#176C8C');ax.bar([x+.18 for x in pos],[float(r['left']) for r in be],width=.35,label=benchmark_labels(benchmark)[0],color='#82939F')
         for i,r in enumerate(be):peak=max(float(r['right']),float(r['left']));ax.text(i,peak+peak*.05,'差额 '+number(r['delta']),ha='center',bbox={'facecolor':'white','alpha':.8,'edgecolor':'none','pad':1.2})
         ax.set_xticks(pos,[r['name'] for r in be]);ax.set_ylabel('元/盒（零基线）');ax.set_ylim(0,max(float(r[k]) for r in be for k in ('left','right'))*1.3);ax.legend(ncol=2)
-        insert(fig,'benchmark',anchors['对标差异表格']._p,snapshot['product']+' · '+period_label+'｜跨厂三要素（差额＝二厂−一厂）')
+        insert(fig,'benchmark',anchors['对标差异表格']._p,snapshot['product']+' · '+period_label+'｜跨厂三要素（'+benchmark_labels(benchmark)[2]+'）')
 
 
 def assess_report(result,review=None):
@@ -576,12 +755,12 @@ def assess_report(result,review=None):
         return {'status':dim['status'],'reason':dim.get('comment') or '','reviewer':review.get('reviewer'),'reviewed_at':review.get('reviewed_at'),'review_id':review.get('id')}
     r={
       'file_openable':verdict(dx.get('status')=='PASS' and pdf.get('status')=='PASS','DOCX结构检查与PDF实际打开'),
-      'calculation_consistency':verdict(checks.get('core_numbers') and checks.get('numeric_bindings_checked',0)>=70 and not checks.get('numeric_binding_failures'),'固定快照与模板位置逐项核对'),
+      'calculation_consistency':verdict(checks.get('core_numbers') and (checks.get('numeric_bindings_checked',0)>=70 or checks.get('contract')=='generic-v1') and not checks.get('numeric_binding_failures'),'固定快照与模板位置逐项核对'),
       'section_completeness':human('section_completeness','六个固定章节的业务实质待真人评审'),
       'evidence_applicability':verdict(evidence_ok and bool(n.get('evidence_applicability_checked')) and not claim_failures,f'逐条核对{claims_checked}项结论的证据引用与适用性；'+('全部通过' if not claim_failures else '；'.join(claim_failures[:5]))),
       'readability':human('readability','真人可读性评审待完成'),
       'visual_quality':human('visual_quality','逐页渲染检查与真人版式审核待完成'),
-      'task_actionability':verdict(bool(actions) and all(f.get('verification_target') and f.get('expected_evidence') and f.get('responsible_role') and f.get('deadline_basis') for f in actions),'建议必须包含对象、预期证据、责任角色和期限依据'),
+      'task_actionability':verdict(bool(actions) and all(all(isinstance(f.get(k),str) and f[k].strip() and not RESIDUAL.search(f[k]) for k in ('suggestion','verification_target','responsible_role','deadline_basis')) and isinstance(f.get('expected_evidence'),list) and bool(f['expected_evidence']) and all(isinstance(x,str) and x.strip() and not RESIDUAL.search(x) for x in f['expected_evidence']) for f in actions),'建议必须包含对象、预期证据、责任角色和期限依据'),
       'model_participation':verdict(n.get('model_live') is True and n.get('status')=='PASS','模型实际参与、身份核验一致且解释覆盖校验通过；基础分析不视为模型通过')}
     r['overall']='PASS' if all(v['status']=='PASS' for v in r.values()) else 'FAIL' if any(v['status']=='FAIL' for v in r.values()) else 'PENDING'
     if review:

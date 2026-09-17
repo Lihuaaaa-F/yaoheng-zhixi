@@ -1,105 +1,79 @@
+"""Current-run verifier. 0=automatic dimensions pass, 1=failed, 2=incomplete.
+Human reviews remain separate and can never be inferred from automatic tests.
+"""
 from pathlib import Path
 import argparse,hashlib,json,os,subprocess,sys,time
-ROOT=Path(__file__).resolve().parents[2];APP=ROOT/'05_原型';sys.path.insert(0,str(APP/'backend'))
-from pharma.jobs import JobStore
-from pharma.reports import verify_docx
-from pharma.knowledge import Knowledge
+ROOT=Path(__file__).resolve().parents[2];APP=ROOT/'05_原型'
+sys.path.insert(0,str(APP/'backend'))
+AUTOMATIC=('environment','regression','scenarios','retrieval','rpa','browser','model_live')
 
-# Baseline contract (docs/baseline.json): a flat {relative path -> sha256} map
-# pinned at packaging time. Protected prefixes are originals that must never
-# drift; every other file may legitimately change during development.
-PROTECTED_PREFIXES=('00_赛题原始资料/','01_数据/00_原始/','02_知识库/00_原始/')
+def check_receipt(path,run_id,commit):
+    if not path or not Path(path).is_file():return {'status':'NOT_RUN','reason':'No current receipt'}
+    try:r=json.loads(Path(path).read_text())
+    except (ValueError,OSError):return {'status':'FAIL','reason':'Invalid receipt'}
+    if r.get('run_id')!=run_id or r.get('commit')!=commit:return {'status':'STALE','reason':'Receipt is not bound to this run/commit'}
+    return r
 
-def load_baseline():
-    path=ROOT/'docs/baseline.json'
-    if not path.exists():return None
-    raw=json.loads(path.read_text(encoding='utf-8'))
-    if isinstance(raw,dict) and isinstance(raw.get('files'),dict):return raw['files']  # legacy nested form
-    return {k:v['sha256'] if isinstance(v,dict) else v for k,v in raw.items()}        # flat form
+def documentation_path(path):
+    path="/"+path.lstrip("/")
+    return path.endswith(".md") or "/docs/validation/" in path or path.endswith("/docs/current_run.json")
 
-def original_manifests(baseline):
-    """Sources of truth for immutable originals: the packaged baseline plus, when
-    the workspace sits inside an intact handoff package, its outer SHA256.json
-    (team_internal/<path> pins the pre-merge originals)."""
-    manifests={k:v for k,v in baseline.items() if k.startswith(PROTECTED_PREFIXES)}
-    outer=ROOT.parent/'SHA256.json'
-    if outer.exists():
-        try:
-            for rel,sha in json.loads(outer.read_text(encoding='utf-8')).items():
-                if rel.startswith('team_internal/'):
-                    working=rel[len('team_internal/'):]
-                    if working.startswith(PROTECTED_PREFIXES):manifests.setdefault(working,sha)
-        except (ValueError,OSError):pass
-    return manifests
+def documentation_only_since(repo, tested_commit, current_commit):
+    """Permit documentation-only descendants; never relabel an old model receipt.
 
-def verify_originals(baseline):
-    protected=original_manifests(baseline)
-    changed=[k for k,expected in protected.items() if not (ROOT/k).exists() or hashlib.sha256((ROOT/k).read_bytes()).hexdigest()!=expected]
-    missing_keys=[k for k in baseline if not (ROOT/k).exists() and not k.startswith('05_原型/frontend/dist')]
-    return protected,changed,missing_keys
+    All receipts and jobs stay bound to the actual tested commit. Code, pack,
+    prompt, dependency or configuration changes always require a new run.
+    """
+    if tested_commit == current_commit:
+        return True
+    if not tested_commit or subprocess.run(['git', 'merge-base', '--is-ancestor', tested_commit, current_commit], cwd=repo, capture_output=True).returncode:
+        return False
+    paths = subprocess.check_output(['git', 'diff', '--name-only', '-z', tested_commit, current_commit], cwd=repo, text=True).split('\0')
+    return all(documentation_path(path) for path in paths if path)
 
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument('--output-dir',default=None,help='本次运行证据目录；默认 06_评测/verify_<timestamp>')
-    args=parser.parse_args()
-    out=Path(args.output_dir) if args.output_dir else ROOT/'06_评测'/('verify_'+time.strftime('%Y%m%d_%H%M%S'))
-    out.mkdir(parents=True,exist_ok=True)
-    status={'PROJECT_ROOT':str(ROOT),'python':sys.executable,'ENV_REUSE':'PASS','CORE_CALC':'NOT_RUN','DATA_INTEGRITY':'NOT_RUN','BASELINE_CONTRACT':'NOT_RUN','TEMPLATE_BINDINGS':'NOT_RUN','RAG_HYBRID_REAL':'NOT_RUN','LLM_LIVE':'NOT_RUN','DOCX_EXPORT':'NOT_RUN','PDF_EXPORT':'NOT_RUN','RPA_PROVIDED_MOCK':'NOT_RUN','RECOVERY':'NOT_RUN','E2E':'NOT_RUN','DOCKER_RUNTIME':'NOT_IN_SCOPE','HUMAN_SCORE':'PENDING','COMPETITION_READY':'PARTIAL'}
-    env={**os.environ,'PYTHONPATH':str(APP/'backend'),'ANONYMIZED_TELEMETRY':'False','OTEL_SDK_DISABLED':'true'}
-    if os.name=='nt':env['TMPDIR']=env.get('TEMP','\tmp')
-    else:env.setdefault('TMPDIR','/tmp')
-    r=subprocess.run([sys.executable,'-m','pytest','-s','-q',str(APP/'tests')],capture_output=True,text=True,env=env,timeout=600)
-    (out/'combined_tests.log').write_text(r.stdout+r.stderr,encoding='utf-8')
-    status['CORE_CALC']='PASS' if r.returncode==0 else 'FAIL';status['RECOVERY']=status['CORE_CALC']
-
-    baseline=load_baseline()
-    if baseline is None:
-        status['DATA_INTEGRITY']='FAIL';status['BASELINE_CONTRACT']='MISSING_BASELINE'
-    else:
-        protected,changed,missing=verify_originals(baseline)
-        # A vacuous protection set is a broken contract, not a pass.
-        status['DATA_INTEGRITY']='PASS' if protected and not changed else 'FAIL'
-        status['BASELINE_CONTRACT']='PASS' if not missing else 'FAIL'
-        status['protected_file_count']=len(protected);status['protected_changed']=changed[:20]
-        status['baseline_missing_paths']=[m for m in missing if not m.startswith(PROTECTED_PREFIXES)][:20]
-        if not protected:status['data_integrity_reason']='没有任何原件被钉入保护清单'
-
-    # Report checks read this runtime's own jobs; a fresh machine starts empty
-    # and reports NOT_RUN instead of crashing on foreign job ids.
-    checks=[];store=JobStore()
-    manifest=ROOT/'06_评测/incremental_20260916/scenario_reports.json'
-    if manifest.exists():
-        for entry in json.loads(manifest.read_text(encoding='utf-8')):
-            try:j=store.get(entry['job_id'])
-            except KeyError:
-                checks.append({'scenario':entry.get('scenario'),'job_id':entry['job_id'],'status':'NOT_IN_THIS_RUNTIME','note':'历史job不在当前runtime数据库；重跑generate_scenarios.py生成新证据'})
-                continue
-            result=j['result'];docx=result.get('docx',{});pdf=result.get('pdf',{});n=result.get('narrative',{})
-            item={'scenario':entry['scenario'],'job_id':j['id'],'status':j['status'],'narrative':n.get('status'),'model_live':n.get('model_live'),'model_identity':n.get('model_identity',{}).get('status'),'required_explanation_sections':n.get('required_explanation_sections'),'generation_mode':n.get('generation_mode'),'cache_hit':n.get('cache_hit'),'generated_at':n.get('generated_at'),'docx':docx.get('status'),'pdf':pdf.get('status')}
-            if docx.get('artifact_id'):
-                try:item['verification']=verify_docx(store.artifact_path(docx['artifact_id']),result['snapshot'])
-                except Exception as ex:item['verification']={'status':'FAIL','reason':type(ex).__name__}
-                checks.append(item)
-        present=[x for x in checks if x.get('status')!='NOT_IN_THIS_RUNTIME']
-        if len(present)==4:
-            status['DOCX_EXPORT']='PASS' if all(x['docx']=='PASS' and x.get('verification',{}).get('status')=='PASS' for x in present) else 'FAIL'
-            status['TEMPLATE_BINDINGS']=status['DOCX_EXPORT']
-            status['PDF_EXPORT']='PASS' if all(x['pdf']=='PASS' for x in present) else 'FAIL'
-            status['LLM_LIVE']='PASS' if all(x['narrative']=='PASS' and x['model_live'] and x.get('model_identity')=='VERIFIED' for x in present) else 'PARTIAL'
-        elif present:
-            status['DOCX_EXPORT']='PARTIAL'
-    retrieval=out/'retrieval_results.json'
-    if not retrieval.exists():retrieval=ROOT/'06_评测/retrieval_results.json'
-    if retrieval.exists():status['RAG_HYBRID_REAL']=Knowledge().status().get('status','NOT_RUN')
-    for file,key in [('browser_results.json','E2E'),('browser_results.json','RPA_PROVIDED_MOCK')]:
-        for base_dir in (out,ROOT/'06_评测/incremental_20260916'):
-            p=base_dir/file
-            if p.exists():
-                b=json.loads(p.read_text(encoding='utf-8'));status[key]=b.get('status','NOT_RUN')
-    required=['ENV_REUSE','CORE_CALC','DATA_INTEGRITY','BASELINE_CONTRACT','TEMPLATE_BINDINGS','RAG_HYBRID_REAL','LLM_LIVE','DOCX_EXPORT','PDF_EXPORT','RPA_PROVIDED_MOCK','RECOVERY','E2E']
-    status['FINAL_STATUS']='PASS' if all(status.get(k)=='PASS' for k in required) else 'PARTIAL'
-    status['PHARMA_PYTHON_NOTE']='所有入口统一经 scripts/pharma_python.sh 或当前解释器解析'
-    result={'at':time.strftime('%Y-%m-%dT%H:%M:%S%z'),'status':status,'tests_exit_code':r.returncode,'reports':checks,'limits':['LLM_LIVE需真实凭据+响应身份核验+必要解释覆盖','HUMAN_SCORE只能由真人审核录入','历史job不在当前runtime时按NOT_IN_THIS_RUNTIME记录，不冒充新证据']}
-    (out/'verification.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
-    print(json.dumps(result,ensure_ascii=False,indent=2))
-
-if __name__=='__main__':main()
+    p=argparse.ArgumentParser(description=__doc__)
+    p.add_argument('--manifest',required=True,help='Current run manifest with run_id, commit, receipts and scenario job IDs')
+    p.add_argument('--output-dir')
+    args=p.parse_args();manifest_path=Path(args.manifest).resolve();m=json.loads(manifest_path.read_text())
+    commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()
+    dirty=subprocess.check_output(['git','diff','HEAD','--name-only','-z'],cwd=ROOT,text=True).split('\0')
+    untracked=subprocess.check_output(['git','ls-files','--others','--exclude-standard','-z'],cwd=ROOT,text=True).split('\0')
+    if any(not documentation_path(path) for path in dirty+untracked if path):p.error('uncommitted code/configuration: commit before current-run verification')
+    tested_commit=m.get('commit')
+    if not documentation_only_since(ROOT,tested_commit,commit) or not m.get('run_id'):p.error('manifest requires current code commit (documentation-only descendants allowed) and run_id')
+    out=Path(args.output_dir) if args.output_dir else ROOT/'06_评测'/m['run_id'];out.mkdir(parents=True,exist_ok=True)
+    env={**os.environ,'PYTHONPATH':str(APP/'backend'),'PYTEST_DISABLE_PLUGIN_AUTOLOAD':'1','TMPDIR':'/tmp' if os.name!='nt' else os.environ.get('TEMP','.'),'OTEL_SDK_DISABLED':'true','ANONYMIZED_TELEMETRY':'False'}
+    dimensions={k:{'status':'NOT_RUN'} for k in AUTOMATIC}
+    checks=[('environment',[sys.executable,str(APP/'scripts/check_environment.py'),'--strict']),('regression',[sys.executable,'-m','pytest','-q',str(APP/'tests')])]
+    for key,cmd in checks:
+        try:
+            r=subprocess.run(cmd,cwd=ROOT,env=env,capture_output=True,text=True,timeout=600)
+            (out/(key+'.log')).write_text(r.stdout+r.stderr)
+            dimensions[key]={'status':'PASS' if r.returncode==0 else 'FAIL','exit_code':r.returncode}
+        except subprocess.TimeoutExpired:dimensions[key]={'status':'FAIL','reason':'Timeout'}
+    from pharma.jobs import JobStore
+    from pharma.reports import verify_docx
+    store=JobStore();scenario_checks=[]
+    for scenario in m.get('scenarios',[]):
+        item={'id':scenario['id'],'status':'NOT_RUN'}
+        try:
+            job=store.get(scenario['job_id']);result=job['result']
+            if job['input'].get('run_id')!=m['run_id'] or job['input'].get('commit')!=tested_commit:raise ValueError('SCENARIO_RUN_BINDING_MISMATCH')
+            for fmt in ('docx','pdf'):store.artifact_path(result[fmt]['artifact_id'])
+            check=verify_docx(store.artifact_path(result['docx']['artifact_id']),result['snapshot'],narrative=result.get('narrative'))
+            item={'id':scenario['id'],'status':check['status'],'job_id':job['id'],'generation_mode':result.get('narrative',{}).get('generation_mode'),'human_review':'PENDING'}
+        except (ValueError,KeyError,OSError) as exc:item={'id':scenario['id'],'status':'FAIL','reason':str(exc)}
+        scenario_checks.append(item)
+    expected=set(m.get('required_scenarios',[]));actual={x['id'] for x in scenario_checks}
+    if expected and actual==expected:
+        dimensions['scenarios']={'status':'PASS' if all(x['status']=='PASS' for x in scenario_checks) else 'FAIL'}
+    for key in ('retrieval','rpa','browser','model_live'):
+        ref=m.get('receipts',{}).get(key)
+        dimensions[key]=check_receipt(manifest_path.parent/ref if ref else None,m['run_id'],tested_commit)
+    failed=any(x.get('status')=='FAIL' for x in dimensions.values())
+    complete=all(x.get('status')=='PASS' for x in dimensions.values())
+    result={'run_id':m['run_id'],'commit':commit,'tested_code_commit':tested_commit,'dimensions':dimensions,'scenarios':scenario_checks,'human_review':'PENDING','competition_ready':False,'status':'FAIL' if failed else 'PASS' if complete else 'INCOMPLETE'}
+    (out/'verification.json').write_text(json.dumps(result,ensure_ascii=False,indent=2));print(json.dumps(result,ensure_ascii=False,indent=2))
+    return 1 if failed else 0 if complete else 2
+if __name__=='__main__':raise SystemExit(main())

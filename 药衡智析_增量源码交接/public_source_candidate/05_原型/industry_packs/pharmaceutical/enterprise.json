@@ -1,0 +1,19 @@
+{
+  "id": "synthetic-pharma",
+  "name": "合成演示企业·制药行业包",
+  "dataset_id": "pharmaceutical-synthetic-v1",
+  "policy_version": "synthetic-completed-cost-1",
+  "quantity_unit": "盒",
+  "currency": "CNY",
+  "products": {
+    "DEMO-01": {
+      "name": "合成口服制剂",
+      "specification": "10支/盒"
+    }
+  },
+  "responsibilities": {
+    "finance": "合成成本会计",
+    "production": "合成生产主管"
+  },
+  "source_mode": "imported_cost"
+}

@@ -1,0 +1,19 @@
+{
+  "id": "synthetic-mechanical",
+  "name": "合成演示企业·机械零部件参考包",
+  "dataset_id": "mechanical_demo-synthetic-v1",
+  "policy_version": "synthetic-completed-cost-1",
+  "quantity_unit": "件",
+  "currency": "CNY",
+  "products": {
+    "DEMO-01": {
+      "name": "合成精密连接件",
+      "specification": "1件/成品"
+    }
+  },
+  "responsibilities": {
+    "finance": "合成成本会计",
+    "production": "合成生产主管"
+  },
+  "source_mode": "imported_cost"
+}

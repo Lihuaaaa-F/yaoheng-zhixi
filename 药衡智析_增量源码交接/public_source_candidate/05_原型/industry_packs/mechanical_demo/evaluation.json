@@ -1,0 +1,23 @@
+{
+  "dataset": "synthetic",
+  "human_attribution_score": null,
+  "human_review_status": "PENDING",
+  "unimplemented": [
+    "联副产品分配",
+    "在制品计价",
+    "真实ERP连接"
+  ],
+  "golden": {
+    "2026-06": {
+      "total_cost": "3600",
+      "quantity": "120",
+      "unit_cost": "30",
+      "machine_hours_per_piece": "0.5"
+    },
+    "2026-Q2": {
+      "total_cost": "9400",
+      "quantity": "320",
+      "unit_cost": "29.375"
+    }
+  }
+}

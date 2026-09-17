@@ -56,9 +56,11 @@ def main():
         print('已停止本项目记录的进程');return
     env={**os.environ,'PYTHONPATH':str(APP/'backend'),'TMPDIR':'/tmp','MPLCONFIGDIR':str(RUN/'matplotlib'),'ANONYMIZED_TELEMETRY':'False','OTEL_SDK_DISABLED':'true'}
     mock=PACKAGE/'05_RPA接口文档'
+    rpa_module='mock_rpa_server:app' if (mock/'mock_rpa_server.py').is_file() else 'pharma.synthetic_rpa:app'
+    rpa_dir=str(mock) if (mock/'mock_rpa_server.py').is_file() else str(APP/'backend')
     api_port=int(os.getenv('PHARMA_API_PORT','8765'));rpa_port=int(os.getenv('PHARMA_RPA_PORT','8090'))
     env['RPA_BASE_URL']=f'http://127.0.0.1:{rpa_port}'
-    commands={'rpa':([str(PYTHON),'-m','uvicorn','mock_rpa_server:app','--app-dir',str(mock),'--host','127.0.0.1','--port',str(rpa_port)],rpa_port),'worker':([str(PYTHON),'-m','pharma.worker'],None),'api':([str(PYTHON),'-m','uvicorn','pharma.api:app','--host','127.0.0.1','--port',str(api_port)],api_port)}
+    commands={'rpa':([str(PYTHON),'-m','uvicorn',rpa_module,'--app-dir',rpa_dir,'--host','127.0.0.1','--port',str(rpa_port)],rpa_port),'worker':([str(PYTHON),'-m','pharma.worker'],None),'api':([str(PYTHON),'-m','uvicorn','pharma.api:app','--host','127.0.0.1','--port',str(api_port)],api_port)}
     for name,(cmd,port) in commands.items():
         if name in state and alive(state[name]):continue
         if port and occupied(port):raise SystemExit(f'端口{port}被非本项目受管进程占用；未终止其他服务')

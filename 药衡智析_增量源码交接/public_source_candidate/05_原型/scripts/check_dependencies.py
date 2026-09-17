@@ -20,10 +20,10 @@ PROBES = {
     'chromadb': ('chromadb', None),
     'llama_index.core': ('llama-index-core', None),
     'docx': ('python-docx', None),
-    'fitz': ('pymupdf', lambda: __import__('fitz').Document()),
+    'pymupdf': ('pymupdf', lambda: __import__('pymupdf').Document().is_pdf),
     'httpx': ('httpx', None),
     'pytest': ('pytest', None),
-    'jieba': ('jieba', lambda: bool(__import__('jieba').cut('成本分析'))),
+    'jieba': ('jieba', lambda: bool(list(__import__('jieba').cut('成本分析')))),
     'onnxruntime': ('onnxruntime', lambda: bool(__import__('onnxruntime').InferenceSession)),
     'tokenizers': ('tokenizers', None),
     'matplotlib': ('matplotlib', lambda: __import__('matplotlib').use('Agg') or True),
@@ -57,7 +57,7 @@ def main():
             try:
                 if importlib.util.find_spec(module) is None:
                     raise ImportError('module not importable')
-                probe()
+                if probe() is not True: raise RuntimeError("capability probe returned false")
             except Exception as exc:
                 entry['probe_error'] = type(exc).__name__ + ': ' + str(exc)[:120]
                 report['capability_failures'].append(entry)
@@ -68,6 +68,15 @@ def main():
             report['incompatible'].append(entry)
             continue
         report['ok'].append(module)
+    try:
+        import sqlite3
+        with sqlite3.connect(':memory:') as db:
+            db.execute('CREATE VIRTUAL TABLE fts_probe USING fts5(body)')
+            db.execute("INSERT INTO fts_probe VALUES ('synthetic')")
+            assert db.execute("SELECT count(*) FROM fts_probe WHERE fts_probe MATCH 'synthetic'").fetchone()[0] == 1
+        report['fts5'] = 'PASS'
+    except Exception as exc:
+        report['capability_failures'].append({'module':'sqlite3.fts5','probe_error':str(exc)})
     report['status'] = 'PASS' if not (report['missing'] or report['incompatible'] or report['capability_failures']) else 'MISSING_OR_INCOMPATIBLE'
     print(json.dumps(report, ensure_ascii=False, indent=1))
     if report['status'] != 'PASS':

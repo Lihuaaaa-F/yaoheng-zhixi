@@ -9,6 +9,7 @@ export async function api<T = any>(path: string, body?: unknown, signal?: AbortS
     return data;
 }
 export type Selection = {
+    context_id: string;
     factory: string;
     product: string;
     month: string;
@@ -17,3 +18,6 @@ export type Selection = {
 };
 export const fmt = (value: unknown, digits = 2): string => value === null || value === undefined || value === '' ? 'N/A' : Number.isFinite(Number(value)) ? Number(value).toLocaleString('zh-CN', { minimumFractionDigits: digits, maximumFractionDigits: digits }) : String(value);
 export const pct = (value: unknown) => value === null || value === undefined ? 'N/A' : `${Number(value) > 0 ? '+' : ''}${fmt(value)}%`;
+
+export const contextQuery = (contextId: string) => `context_id=${encodeURIComponent(contextId)}`;
+export type IndustryContext = { context_id: string; industry_id: string; industry_name: string; company_id: string; company_name: string; data_label?: string; capabilities?: unknown };

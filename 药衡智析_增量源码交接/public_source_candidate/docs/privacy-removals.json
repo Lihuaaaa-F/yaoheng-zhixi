@@ -1064,6 +1064,18 @@
     "药衡智析_增量源码交接/team_internal/90_工具/build_report_artifact.js",
     "药衡智析_增量源码交接/team_internal/90_工具/execute_notebook_simple.py",
     "药衡智析_增量源码交接/team_internal/90_工具/pharma_prepare_and_analyze.py",
-    "药衡智析_增量源码交接/team_internal/90_工具/validate_report_queries.py"
-  ]
+    "药衡智析_增量源码交接/team_internal/90_工具/validate_report_queries.py",
+    "药衡智析_增量源码交接/public_source_candidate/05_原型/scripts/unpack_acceptance.py"
+  ],
+  "additional_content_cleanup": {
+    "paths_relative_to_application": [
+      "05_原型/industry_packs/pharmaceutical/terminology.json",
+      "05_原型/industry_packs/pharmaceutical/source_contract.json",
+      "05_原型/backend/pharma/reports.py",
+      "05_原型/scripts/generate_scenarios.py",
+      "05_原型/scripts/unpack_acceptance.py",
+      "05_原型/tests/test_reviews.py"
+    ],
+    "scope": "Enterprise product/device relations and master data externalized; private scenario constants and answer assertions replaced by independent public synthetic references. Local unpublished intermediate commits are excluded from pushed ancestry."
+  }
 }

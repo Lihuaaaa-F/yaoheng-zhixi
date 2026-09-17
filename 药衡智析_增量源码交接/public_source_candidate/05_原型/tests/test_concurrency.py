@@ -1,7 +1,7 @@
 """Public-store regression from independent review's real concurrent failures."""
 import threading
 from concurrent.futures import ThreadPoolExecutor
-from pharma.actions import ActionStore
+from test_actions import ActionStore
 from pharma.jobs import JobStore
 
 

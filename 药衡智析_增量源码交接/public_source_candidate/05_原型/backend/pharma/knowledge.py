@@ -1,5 +1,6 @@
 """Versioned local retrieval. Documents are untrusted evidence, never instructions."""
 from pathlib import Path
+from functools import lru_cache
 import hashlib
 import json
 import os
@@ -9,9 +10,48 @@ import time
 from .config import ROOT, PACKAGE, RUNTIME
 
 EMBEDDING_SHA = '75c43b069aac4d136ba6bc1122f995fedcfd2781'
-PARSER_VERSION = 'sorted-section-event-scope-v4-substantive'
-PRODUCTS = ('银黄口服液', '板蓝根颗粒', '六味地黄胶囊')
-PRODUCT_ALIASES = {'银黄口服液': ('银黄口服液', '口服液'), '板蓝根颗粒': ('板蓝根颗粒', '板蓝根', '颗粒剂', '颗粒分装'), '六味地黄胶囊': ('六味地黄胶囊', '胶囊')}
+PARSER_VERSION = 'scope-prefilter-v7-private-terminology'
+RETRIEVER_VERSION = 'bm25-chroma-prefilter-rrf-v3-explicit-source-files'
+def _string_list(value, label):
+    if not isinstance(value,list) or any(not isinstance(x,str) or not x.strip() or len(x)>200 for x in value) or len(value)!=len(set(value)):
+        raise ValueError('INVALID_TERMINOLOGY_'+label)
+    return value
+
+
+def pharmaceutical_terminology():
+    """Only the explicit local JSON file may override public synthetic terms."""
+    from .config import APP
+    configured=os.getenv('PHARMA_PRIVATE_TERMINOLOGY_FILE')
+    path=Path(configured) if configured else APP/'industry_packs/pharmaceutical/terminology.json'
+    if path.suffix.lower()!='.json' or path.stat().st_size>1_000_000:raise ValueError('INVALID_TERMINOLOGY_FILE')
+    value=json.loads(path.read_text(encoding='utf-8'))
+    keys={'products','product_aliases','equipment_aliases','tokenizer_terms'}
+    if not isinstance(value,dict) or set(value)!=keys:raise ValueError('INVALID_TERMINOLOGY_SHAPE')
+    products=_string_list(value['products'],'PRODUCTS')
+    _string_list(value['tokenizer_terms'],'TOKENIZER')
+    for key in ('product_aliases','equipment_aliases'):
+        aliases=value[key]
+        if not isinstance(aliases,dict) or not set(aliases).issubset(products):raise ValueError('INVALID_TERMINOLOGY_MAPPING')
+        for words in aliases.values():_string_list(words,key)
+    return value
+
+
+def terminology_hash():
+    return hashlib.sha256(json.dumps(pharmaceutical_terminology(),sort_keys=True,ensure_ascii=False,separators=(',',':')).encode()).hexdigest()
+
+
+@lru_cache(maxsize=8)
+def _term_tokenizer(words):
+    import jieba
+    tokenizer=jieba.Tokenizer()
+    for word in words:tokenizer.add_word(word)
+    return tokenizer
+
+
+def source_snapshot(source_dir):
+    files = sorted(p for p in Path(source_dir).iterdir() if p.suffix.lower() in ('.pdf','.docx','.txt'))
+    fingerprints = {p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in files}
+    return hashlib.sha256(json.dumps({'sources':fingerprints,'terminology_hash':terminology_hash()},ensure_ascii=False,sort_keys=True,separators=(',',':')).encode()).hexdigest()
 
 
 def reciprocal_rank_fusion(rankings, limit=5, k=60, weights=None):
@@ -23,10 +63,8 @@ def reciprocal_rank_fusion(rankings, limit=5, k=60, weights=None):
 
 
 def tokenize(text):
-    import jieba
-    for word in ('银黄口服液','板蓝根颗粒','六味地黄胶囊','金银花','黄芩','制造费用','预防性维护','胶囊填充机','GMP'):
-        jieba.add_word(word)
-    return [x.lower() for x in jieba.cut(text) if re.search(r'[\w\u4e00-\u9fff]', x)]
+    tokenizer=_term_tokenizer(tuple(pharmaceutical_terminology()['tokenizer_terms']))
+    return [x.lower() for x in tokenizer.cut(text) if re.search(r'[\w\u4e00-\u9fff]', x)]
 
 
 class CpuEmbedding:
@@ -79,15 +117,26 @@ def parse_document(path):
             else:
                 table_index += 1
                 yield {'page': None, 'location': f'表格{table_index}', 'heading': heading, 'original_text': '\n'.join(' | '.join(c.text for c in row.cells) for row in block.rows)}
+    elif suffix == '.json':
+        records = json.loads(path.read_text(encoding='utf-8'))
+        if not isinstance(records,list): raise ValueError('knowledge records must be a list')
+        for i, record in enumerate(records,1):
+            if not isinstance(record,dict) or not isinstance(record.get('text'),str): raise ValueError('invalid knowledge record')
+            yield {**record,'page':None,'location':record.get('location',f'记录{i}'),'original_text':record['text'],'scope':record.get('scope','product' if record.get('products') else 'general')}
     elif suffix == '.txt':
         lines = path.read_text(encoding='utf-8-sig').splitlines()
         for i in range(0, len(lines), 12):
             yield {'page': None, 'location': f'行{i+1}-{min(i+12,len(lines))}', 'original_text': '\n'.join(lines[i:i+12])}
 
 
-def section_blocks(path):
+def section_blocks(path, industry_id=None):
     """Inherit explicit headings across pages, and isolate dated maintenance rows."""
-    products = [p for p in PRODUCTS if p in path.name]
+    if path.suffix.lower() == '.json' or industry_id not in (None,'pharmaceutical'):
+        yield from parse_document(path)
+        return
+    terminology=pharmaceutical_terminology()
+    aliases_by_product=terminology['product_aliases']
+    products = [p for p in terminology['products'] if p in path.name]
     scope = 'product' if products else ('general' if 'GMP' in path.name else 'unknown')
     heading, metadata = '', {}
     for block in parse_document(path):
@@ -105,7 +154,7 @@ def section_blocks(path):
             first = part.strip().splitlines()[0]
             if re.match(r'[一二三四五六七八九十]+、', first):
                 heading = first.strip()
-                declared = [p for p, aliases in PRODUCT_ALIASES.items() if any(a in heading for a in aliases)]
+                declared = [p for p, aliases in aliases_by_product.items() if any(a in heading for a in aliases)]
                 if declared: products, scope = declared, 'product'
                 elif any(x in heading for x in ('公用工程', '全厂', '折旧政策', '工厂概况', '设备利用率')):
                     products, scope = [], 'general'
@@ -120,22 +169,34 @@ def section_blocks(path):
                     period = re.match(r'\s*(20\d{2})-[^\n]*\n\s*(\d{2})\b', event)
                 if period:
                     compact = re.sub(r'\s+', '', event)
-                    event_products = [p for p,aliases in PRODUCT_ALIASES.items() if any(a in compact for a in aliases)]
+                    event_products = [p for p,aliases in aliases_by_product.items() if any(a in compact for a in aliases)]
                     event_scope = 'product' if event_products else 'unknown'
                 yield dict(block, **metadata, original_text=event, heading=heading, products=event_products,
                            scope=event_scope, event_period=f'{period[1]}-{period[2]}' if period else None)
 
 
 class Knowledge:
-    def __init__(self, root=None, vector_enabled=True, source_dir=None, reranker=None):
+    def __init__(self, root=None, vector_enabled=True, source_dir=None, reranker=None, context=None, reranker_version=None, source_files=None):
         self.root = Path(root) if root else ROOT
         runtime = self.root / '05_原型/.runtime' if root is not None else RUNTIME
         package = self.root / '00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据' if root is not None else PACKAGE
+        self.context = context.model_dump() if hasattr(context, 'model_dump') else dict(context or {})
+        if isinstance(source_files,(str,Path)): raise ValueError('SOURCE_FILES_MUST_BE_SEQUENCE')
+        self.source_files = tuple(Path(p).resolve() for p in source_files) if source_files is not None else None
+        if self.source_files is not None:
+            if not self.source_files: raise ValueError('EMPTY_EXPLICIT_SOURCE_FILES')
+            if any(p.suffix.lower() not in ('.pdf','.docx','.txt','.json') for p in self.source_files): raise ValueError('UNSUPPORTED_EXPLICIT_SOURCE_FILE')
+            if len({p.name for p in self.source_files}) != len(self.source_files): raise ValueError('DUPLICATE_SOURCE_FILENAME')
+        namespace_inputs = {'context':self.context,'source_files':[str(p) for p in self.source_files]} if self.source_files is not None else self.context
+        namespace = hashlib.sha256(json.dumps(namespace_inputs, sort_keys=True).encode()).hexdigest()[:24] if namespace_inputs else None
         self.path = runtime / 'knowledge'
+        if namespace: self.path = self.path / namespace
         self.path.mkdir(parents=True, exist_ok=True)
         self.source_dir = Path(source_dir) if source_dir else package / '03_制药知识文档'
         self.model_dir = Path(os.environ.get('PHARMA_EMBEDDING_DIR',str(runtime / 'models/bge-small-zh-v1.5')))
         self.vector_enabled = vector_enabled
+        if reranker and not reranker_version: raise ValueError('RERANKER_VERSION_REQUIRED')
+        self.reranker_version = reranker_version
         self.reranker = reranker
         self._embedding = None
         self._collection = None
@@ -162,9 +223,12 @@ class Knowledge:
             return self._build()
 
     def _build(self):
-        sources = sorted(p for p in self.source_dir.iterdir() if p.suffix.lower() in ('.pdf','.docx','.txt'))
+        # An explicit enterprise entry is an allowlist, never a hint to scan its
+        # parent. Directory mode remains for the private competition document set.
+        sources = sorted(self.source_files) if self.source_files is not None else sorted(p for p in self.source_dir.iterdir() if p.suffix.lower() in ('.pdf','.docx','.txt') or p.name == 'knowledge.json')
         fingerprints = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in sources}
-        version = hashlib.sha256(json.dumps([fingerprints, EMBEDDING_SHA, PARSER_VERSION], sort_keys=True).encode()).hexdigest()[:20]
+        terms_hash=terminology_hash()
+        version = hashlib.sha256(json.dumps([fingerprints, EMBEDDING_SHA, PARSER_VERSION, self.context, terms_hash], sort_keys=True).encode()).hexdigest()[:20]
         target = self.path / version
         manifest = target / 'manifest.json'
         if manifest.exists():
@@ -178,7 +242,9 @@ class Knowledge:
         for source in sources:
             try:
                 source_pages = set()
-                for block in section_blocks(source):
+                for block in section_blocks(source,self.context.get('industry_id')):
+                    if self.context and any(block.get(k) and block[k] != self.context.get(k) for k in ('enterprise_id','industry_id')):
+                        continue
                     if block['page'] is not None: source_pages.add(block['page'])
                     clean = re.sub(r'[ \t]+', ' ', block['original_text']).strip()
                     # Product headings and document-control cover blocks carry
@@ -201,7 +267,7 @@ class Knowledge:
                             if boundary > start: end = boundary + 1
                         text = clean[start:end]
                         ident = hashlib.sha256(f'{fingerprints[source.name]}:{block["location"]}:{block.get("heading")}:{block.get("event_period")}:{index}:{text}'.encode()).hexdigest()[:24]
-                        chunks.append(dict(block, evidence_id=ident, source=source.name, hash=fingerprints[source.name], text=text, chunk=index, knowledge_version=version))
+                        chunks.append(dict(block, evidence_id=ident, source=source.name, hash=fingerprints[source.name], text=text, chunk=index, knowledge_version=version, analysis_context=self.context))
                         if end == len(clean): break
                         start, index = max(start+1,end-80), index+1
                 pages += len(source_pages)
@@ -229,13 +295,14 @@ class Knowledge:
                 vectors = self._model().encode([c['text'] for c in chunks])
                 client = chromadb.PersistentClient(path=str(target/'chroma'), settings=chromadb.Settings(anonymized_telemetry=False))
                 collection = client.get_or_create_collection('pharma_evidence',metadata={'hnsw:space':'cosine'})
-                collection.upsert(ids=[c['evidence_id'] for c in chunks],embeddings=vectors,documents=[c['text'] for c in chunks])
+                collection.upsert(ids=[c['evidence_id'] for c in chunks],embeddings=vectors,documents=[c['text'] for c in chunks],metadatas=[{'evidence_id':c['evidence_id']} for c in chunks])
             except Exception as exc:
                 vector_error = type(exc).__name__ + ': ' + str(exc)[:180]
-        record = {'status':'PASS' if self.vector_enabled and not vector_error and not failures else 'DEGRADED','knowledge_version':version,'chunks':len(chunks),'pages':pages,'sources':fingerprints,'embedding':{'repo':'Xenova/bge-small-zh-v1.5','sha':EMBEDDING_SHA,'pooling':'CLS normalized','runtime':'CPU ONNX quantized'},'failures':failures,'vector_error':vector_error,'built_at':time.time()}
+        record = {'terminology_hash':terms_hash,'status':'PASS' if self.vector_enabled and not vector_error and not failures else 'DEGRADED','knowledge_version':version,'chunks':len(chunks),'pages':pages,'sources':fingerprints,'embedding':{'repo':'Xenova/bge-small-zh-v1.5','sha':EMBEDDING_SHA,'pooling':'CLS normalized','runtime':'CPU ONNX quantized'},'failures':failures,'vector_error':vector_error,'built_at':time.time()}
         (target/'chunks.json').write_text(json.dumps(chunks,ensure_ascii=False,indent=2))
         manifest.write_text(json.dumps(record,ensure_ascii=False,indent=2))
         # Parsing failure must not replace the last valid knowledge snapshot.
+        if terminology_hash()!=terms_hash:raise ValueError('TERMINOLOGY_CHANGED_DURING_BUILD')
         if not failures:
             (self.path/'CURRENT.tmp').write_text(version)
             os.replace(self.path/'CURRENT.tmp',self.path/'CURRENT')
@@ -247,12 +314,19 @@ class Knowledge:
         declared = chunk.get('products',[])
         if declared: return product in declared
         if chunk.get('scope') == 'general': return True
-        mentioned = [p for p in PRODUCTS if p in chunk.get('text','')]
+        if chunk.get('analysis_context',{}).get('industry_id') not in (None,'pharmaceutical'): return False
+        mentioned = [p for p in pharmaceutical_terminology()['products'] if p in chunk.get('text','')]
         return product in mentioned and len(mentioned) == 1
 
     @staticmethod
-    def evidence_applicability(chunk, product=None, factory=None, period=None, specification=None, document_version=None):
+    def evidence_applicability(chunk, product=None, factory=None, period=None, specification=None, document_version=None, context=None):
         reasons, limits = [], []
+        if context:
+            expected_context = context.model_dump() if hasattr(context, 'model_dump') else context
+            actual_context = chunk.get('analysis_context') or {}
+            for key in ('enterprise_id','industry_id','industry_version','dataset_id','knowledge_snapshot'):
+                if expected_context.get(key) and actual_context.get(key) != expected_context[key]:
+                    reasons.append('分析上下文不匹配:' + key)
         if not Knowledge.product_matches(chunk, product): reasons.append('产品范围不适用或未明确')
         for key, expected, label in [('factory', factory, '工厂'), ('specification', specification, '规格'), ('document_version', document_version, '文档版本')]:
             actual = chunk.get(key)
@@ -266,36 +340,42 @@ class Knowledge:
             if effective and end and effective[:7] > end: reasons.append('文档尚未生效')
         return {'applicable':not reasons, 'reasons':reasons, 'limits':limits, 'scope':chunk.get('scope','unknown')}
 
-    def search(self, query, product=None, mode='hybrid', limit=5, factory=None, period=None, specification=None, document_version=None):
+    def search(self, query, product=None, mode='hybrid', limit=5, factory=None, period=None, specification=None, document_version=None, context=None):
+        if context is not None and dict(context) != self.context:
+            raise ValueError('KNOWLEDGE_CONTEXT_MISMATCH')
         if mode not in ('hybrid','bm25','vector'):
             raise ValueError('mode must be hybrid, bm25 or vector')
+        if (self.path/'CURRENT').exists() and self.status().get('terminology_hash')!=terminology_hash():self.build()
         if not (self.path/'CURRENT').exists(): self.build()
         if not (self.path/'CURRENT').exists():
             return {'status':'FAILED','mode':mode,'evidence':[],'reason':'No valid knowledge snapshot'}
+        if self.status().get('terminology_hash')!=terminology_hash():raise ValueError('TERMINOLOGY_REBUILD_FAILED')
         version = (self.path/'CURRENT').read_text().strip()
         target = self.path/version
         db = sqlite3.connect(target/'fts.sqlite')
         try:
             chunks = {row[0]:json.loads(row[1]) for row in db.execute('SELECT id,body FROM chunks')}
-            applicability = {k:self.evidence_applicability(v,product,factory,period,specification,document_version) for k,v in chunks.items()}
+            applicability = {k:self.evidence_applicability(v,product,factory,period,specification,document_version,context=self.context) for k,v in chunks.items()}
             eligible = {k for k,v in applicability.items() if v['applicable']}
             tokens = list(dict.fromkeys(tokenize(query)))[:60]
             match = ' OR '.join('"'+x.replace('"','""')+'"' for x in tokens)
-            bm25 = [r[0] for r in db.execute('SELECT id FROM search WHERE search MATCH ? ORDER BY bm25(search) ASC LIMIT 100',(match,)) if r[0] in eligible] if match else []
+            db.execute('CREATE TEMP TABLE eligible(id TEXT PRIMARY KEY)')
+            db.executemany('INSERT INTO eligible VALUES (?)',[(k,) for k in eligible])
+            bm25 = [r[0] for r in db.execute('SELECT id FROM search WHERE search MATCH ? AND id IN (SELECT id FROM eligible) ORDER BY bm25(search) ASC LIMIT ?', (match, max(20,limit)))] if match and eligible else []
         finally:
             db.close()  # leaked handles block index replacement on Windows
         vec, error = [], None
-        if mode != 'bm25' and self.vector_enabled:
+        if mode != 'bm25' and self.vector_enabled and eligible:
             try:
                 import chromadb
                 if self._collection is None or self._collection[0] != version:
                     client = chromadb.PersistentClient(path=str(target/'chroma'), settings=chromadb.Settings(anonymized_telemetry=False))
                     self._collection = (version,client.get_collection('pharma_evidence'))
-                result = self._collection[1].query(query_embeddings=self._model().encode([query],query=True), n_results=min(100,len(chunks)))
+                result = self._collection[1].query(query_embeddings=self._model().encode([query],query=True), n_results=min(max(20,limit),len(eligible)), where={'evidence_id':{'$in':sorted(eligible)}})
                 vec = [k for k in result['ids'][0] if k in eligible]
             except Exception as exc:
                 error = type(exc).__name__
-        elif mode != 'bm25': error = 'VECTOR_DISABLED'
+        elif mode != 'bm25' and not self.vector_enabled: error = 'VECTOR_DISABLED'
         rankings = [bm25[:20],vec[:20]] if mode == 'hybrid' else [vec if mode == 'vector' else bm25]
         # Exact document/parameter questions favour lexical anchors; semantic
         # candidates still contribute. These fixed weights are not fit on gold.
@@ -306,7 +386,10 @@ class Knowledge:
         if mode == 'vector' and error: ids = []
         reranker_error = None
         if self.reranker and ids:
-            try: ids = self.reranker(query,ids,chunks)
+            try:
+                reranked = self.reranker(query,ids,chunks)
+                if any(k not in eligible or k not in ids for k in reranked): raise ValueError('RERANKER_OUT_OF_SCOPE')
+                ids = list(dict.fromkeys(reranked))[:limit]
             except Exception as exc: reranker_error = type(exc).__name__
         # Real LlamaIndex retriever adapter: callers consume framework-produced nodes.
         from llama_index.core.retrievers import BaseRetriever
@@ -316,4 +399,4 @@ class Knowledge:
                 return [NodeWithScore(node=TextNode(id_=k,text=chunks[k]['text'],metadata={'source':chunks[k]['source'],'location':chunks[k]['location']}),score=1/(60+i)) for i,k in enumerate(ids,1)]
         nodes = RankedRetriever().retrieve(query)
         evidence = [dict(chunks[n.node.node_id],score=n.score,applicability=applicability[n.node.node_id]) for n in nodes]
-        return {'status':status,'knowledge_version':version,'mode':mode,'evidence':evidence,'reason':error,'reranker_error':reranker_error,'fusion_weights':weights if mode=='hybrid' else None,'framework':'llama-index-core BaseRetriever/TextNode'}
+        return {'status':status,'knowledge_version':version,'mode':mode,'evidence':evidence,'reason':error,'reranker_error':reranker_error,'fusion_weights':weights if mode=='hybrid' else None,'framework':'llama-index-core BaseRetriever/TextNode','retrieval_status':'EXECUTED' if not error else 'DEGRADED','recall_status':'RECALLED' if evidence else 'NO_MATCH' if eligible else 'NO_APPLICABLE_CANDIDATES','eligible_count':len(eligible),'retriever_version':RETRIEVER_VERSION,'reranker_version':self.reranker_version,'embedding_version':EMBEDDING_SHA,'analysis_context':self.context}

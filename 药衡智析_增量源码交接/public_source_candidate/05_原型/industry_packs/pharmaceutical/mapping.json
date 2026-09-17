@@ -1,0 +1,13 @@
+{
+  "format": "canonical-json-or-csv",
+  "cost_entry": "facts.json:costs",
+  "quantity_entry": "facts.json:quantities",
+  "grain": "batch",
+  "quantity_unit": "盒",
+  "element_map": {
+    "materials": "materials",
+    "labor": "labor",
+    "overhead": "overhead"
+  },
+  "prohibition": "不可将汇总与明细并加；数量按独立生产对象去重；配置不得执行代码。"
+}

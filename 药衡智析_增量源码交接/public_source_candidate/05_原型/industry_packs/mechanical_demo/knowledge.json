@@ -1,0 +1,28 @@
+[
+  {
+    "id": "shared-evidence-id",
+    "title": "成本核查规程（合成演示）",
+    "enterprise_id": "synthetic-mechanical",
+    "industry_id": "mechanical_demo",
+    "products": [
+      "DEMO-01"
+    ],
+    "category": "enterprise",
+    "text": "合成演示工单的机时由车削工序计时器汇总。单位机时为工序机时总和除以合格件数；不等于设备综合效率。成本变化需取得工单、设备停机记录及良品检验记录后验证。",
+    "source": "synthetic://mechanical_demo/cost-procedure",
+    "page": 1
+  },
+  {
+    "id": "industry-note",
+    "title": "术语与限制（合成演示）",
+    "enterprise_id": "synthetic-mechanical",
+    "industry_id": "mechanical_demo",
+    "products": [
+      "DEMO-01"
+    ],
+    "category": "industry",
+    "text": "合成演示：全部企业、工单/批次、数字和知识均独立编制；不是赛题原件或行业基准。 合成演示工单的机时由车削工序计时器汇总。单位机时为工序机时总和除以合格件数；不等于设备综合效率。成本变化需取得工单、设备停机记录及良品检验记录后验证。",
+    "source": "synthetic://mechanical_demo/industry-note",
+    "page": 1
+  }
+]

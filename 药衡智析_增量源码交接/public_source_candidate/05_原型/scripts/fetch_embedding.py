@@ -6,10 +6,13 @@ APP=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(APP/'backend'))
 from pharma.config import RUNTIME
 root=APP.parent;manifest=json.loads((root/'docs/embedding_manifest.json').read_text())
+external=bool(os.getenv('PHARMA_EMBEDDING_DIR'))
 target=Path(os.getenv('PHARMA_EMBEDDING_DIR',str(RUNTIME/'models/bge-small-zh-v1.5')));target.mkdir(parents=True,exist_ok=True)
 for name,meta in manifest['files'].items():
  p=target/name
  if p.exists() and hashlib.sha256(p.read_bytes()).hexdigest()==meta['sha256']:print(name,'verified existing');continue
+ if external or '--check-only' in sys.argv:
+  raise SystemExit('EMBEDDING_BLOCKED: missing or incompatible asset; external files are never overwritten: '+name)
  remote='onnx/'+name if name.endswith('.onnx') else name
  url='https://huggingface.co/'+manifest['repo']+'/resolve/'+manifest['revision']+'/'+remote
  temp=p.with_suffix(p.suffix+'.download')

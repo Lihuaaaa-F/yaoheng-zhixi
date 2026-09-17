@@ -1,0 +1,18 @@
+{
+  "dataset": "synthetic",
+  "human_attribution_score": null,
+  "human_review_status": "PENDING",
+  "unimplemented": [
+    "联副产品分配",
+    "在制品计价",
+    "真实ERP连接"
+  ],
+  "golden": {
+    "2026-06": {
+      "total_cost": "2400",
+      "quantity": "200",
+      "unit_cost": "12",
+      "energy_per_kg": "3"
+    }
+  }
+}

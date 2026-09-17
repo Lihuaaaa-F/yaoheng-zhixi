@@ -1,0 +1,19 @@
+{
+  "id": "synthetic-chemical",
+  "name": "合成演示企业·化工流程参考包",
+  "dataset_id": "chemical_demo-synthetic-v1",
+  "policy_version": "synthetic-completed-cost-1",
+  "quantity_unit": "kg",
+  "currency": "CNY",
+  "products": {
+    "DEMO-01": {
+      "name": "合成水性分散液",
+      "specification": "合格成品净重kg"
+    }
+  },
+  "responsibilities": {
+    "finance": "合成成本会计",
+    "production": "合成生产主管"
+  },
+  "source_mode": "imported_cost"
+}

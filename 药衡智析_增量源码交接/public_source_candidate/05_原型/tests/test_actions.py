@@ -1,4 +1,10 @@
-from pharma.actions import ActionStore
+from pharma.actions import ActionStore as StrictActionStore
+
+class ActionStore(StrictActionStore):
+    """Legacy scenarios supply explicit synthetic fields required by v2 contract."""
+    def draft(self,*args,**kwargs):
+        defaults=dict(verification_target="合成台账",expected_evidence=["合成签字记录"],responsible_role="成本会计",deadline_basis="月度核查前")
+        return super().draft(*args,**{**defaults,**kwargs})
 
 def test_confirm_is_required_and_duplicate_confirmation_is_idempotent(tmp_path):
     s=ActionStore(tmp_path/'actions.sqlite')
@@ -23,7 +29,7 @@ def test_read_timeout_reconciles_payload_without_second_send(tmp_path):
     def handler(request):
         if request.method=='POST':
             posts.append(1);raise httpx.ReadTimeout('fixture timeout',request=request)
-        return httpx.Response(200,json={'code':200,'data':{**a['payload'],'status':'sent','notify_status':{'wechat':'模拟','sent_at':'fixture'}}})
+        return httpx.Response(200,json={'code':200,'data':{**a['payload'],'status':'sent','notify_status':{'wechat':'已发送至 演示责任人(演示部)','sent_at':'fixture'}}})
     with httpx.Client(transport=httpx.MockTransport(handler)) as c:
         assert s.deliver_one(a['id'],c)['status']=='SENT'
         assert s.deliver_one(a['id'],c)['status']=='SENT'
@@ -36,7 +42,7 @@ def test_duplicate_400_conflict_and_422_are_distinct(tmp_path):
         s,a=prepared(folder)
         def handler(request):
             if request.method=='POST':return httpx.Response(code,json={'detail':'原mock错误格式'})
-            remote={**a['payload'],'status':'sent','notify_status':{'wechat':'模拟','sent_at':'fixture'}}
+            remote={**a['payload'],'status':'sent','notify_status':{'wechat':'已发送至 演示责任人(演示部)','sent_at':'fixture'}}
             if conflict:remote['suggestion']='不同内容'
             return httpx.Response(200,json={'code':200,'data':remote})
         with httpx.Client(transport=httpx.MockTransport(handler)) as c:assert s.deliver_one(a['id'],c)['status']==expected
@@ -51,7 +57,7 @@ def test_disconnect_unknown_and_remote_restart_never_resends(tmp_path):
         assert s.deliver_one(a['id'],c)['status']=='DELIVERY_UNKNOWN'
     assert posts==['POST','GET']
     other=tmp_path/'other';other.mkdir();s,a=prepared(other)
-    def accepted(request):return httpx.Response(200,json={'code':200,'data':{'task_id':a['id'],'status':'sent','notify_status':{'wechat':'模拟','sent_at':'now'}}})
+    def accepted(request):return httpx.Response(200,json={'code':200,'data':{'task_id':a['id'],'status':'sent','notify_status':{'wechat':'已发送至 演示责任人(演示部)','sent_at':'now'}}})
     with httpx.Client(transport=httpx.MockTransport(accepted)) as c:assert s.deliver_one(a['id'],c)['status']=='SENT'
     with httpx.Client(transport=httpx.MockTransport(lambda r:httpx.Response(404,json={'detail':'restart'}))) as c:
         assert s.refresh(a['id'],c)['status']=='REMOTE_UNKNOWN'

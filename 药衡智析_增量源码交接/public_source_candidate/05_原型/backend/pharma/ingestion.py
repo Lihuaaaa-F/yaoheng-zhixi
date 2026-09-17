@@ -12,22 +12,41 @@ import stat
 import tempfile
 import zipfile
 
-from .config import ROOT, RUNTIME
+from .config import ROOT, RUNTIME, PACKAGE
 
-VERSION = 'data-contract-1'
-ORIGINAL = ROOT / '01_数据/00_原始'
+VERSION = 'data-contract-2-finite'
+ORIGINAL = PACKAGE if os.environ.get('PHARMA_DATA_PACKAGE') else ROOT / '01_数据/00_原始'
 SNAPSHOTS = RUNTIME / 'data'
 D = Decimal
-COMMON = ['工厂','产品名称','产品规格','月份']
-FIELDS = {
- 'cost': COMMON+['产量(盒)','直接材料(元/盒)','直接人工(元/盒)','制造费用(元/盒)','单位成本(元/盒)','总成本(元)'],
- 'budget': COMMON+['预算产量(盒)','预算直接材料(元/盒)','预算直接人工(元/盒)','预算制造费用(元/盒)','预算单位成本(元/盒)','预算总成本(元)'],
- 'materials': COMMON+['产量(盒)','原材料名称','单位消耗成本(元/盒)','原材料总成本(元)','占总材料成本比例'],
- 'expenses': COMMON+['产量(盒)','费用类别','单位费用(元/盒)','费用总额(元)'],
- 'labor': COMMON+['产量(盒)','直接人工总额(元)','总工时(小时)','生产人数(人)','工作天数(天)'],
- 'industry': ['产品类别','指标','行业P25','行业P50','行业P75','本厂水平(中药一厂)','对标评价'],
- 'market': ['药材名称','规格等级','单位','1月价格','2月价格','3月价格','4月价格','5月价格','6月价格','价格来源','趋势分析'],
-}
+def source_contract():
+    """Public schema stays fixed; only trusted local enterprise masterdata varies."""
+    value=json.loads((ROOT / '05_原型/industry_packs/pharmaceutical/source_contract.json').read_text())
+    configured=os.getenv('PHARMA_PRIVATE_MASTERDATA_FILE')
+    if configured:
+        path=Path(configured)
+        if path.suffix.lower()!='.json' or path.stat().st_size>1_000_000:raise ValueError('INVALID_MASTERDATA_FILE')
+        master=json.loads(path.read_text(encoding='utf-8'))
+        if not isinstance(master,dict) or set(master)!={'specifications','factories'}:raise ValueError('INVALID_MASTERDATA_SHAPE')
+        value={**value,**master}
+    factories=value['factories'];specs=value['specifications']
+    if not isinstance(factories,list) or not factories or any(not isinstance(x,str) or not x.strip() for x in factories) or len(set(factories))!=len(factories):
+        raise ValueError('INVALID_MASTERDATA_FACTORIES')
+    if not isinstance(specs,dict) or not specs:raise ValueError('INVALID_MASTERDATA_SPECIFICATIONS')
+    for product,spec in specs.items():
+        if not isinstance(product,str) or not product.strip() or not isinstance(spec,list) or len(spec)!=4:
+            raise ValueError('INVALID_MASTERDATA_SPECIFICATION')
+        if any(not isinstance(spec[i],str) or not spec[i].strip() for i in (0,2,3)) or type(spec[1]) is not int or spec[1]<=0:
+            raise ValueError('INVALID_MASTERDATA_SPECIFICATION')
+    return value
+
+
+def source_contract_hash():
+    return hashlib.sha256(json.dumps(source_contract(),sort_keys=True,ensure_ascii=False,separators=(',',':')).encode()).hexdigest()
+
+
+_CONTRACT = source_contract()
+COMMON = _CONTRACT['common']
+FIELDS = _CONTRACT['fields']
 
 
 def _hash(path):
@@ -94,6 +113,7 @@ def _read(source):
 
 
 def audit(records, errors=None):
+    contract=source_contract()
     errors = list(errors or [])
     groups = defaultdict(lambda: {'observations': 0, 'failures': []})
     def check(group, actual, expected, row, tolerance=D('0.000001')):
@@ -102,13 +122,32 @@ def audit(records, errors=None):
             failure = {'row_key': row['row_key'], 'actual': str(actual), 'expected': str(expected), 'tolerance': str(tolerance)}
             groups[group]['failures'].append(failure)
             errors.append({'group': group, **failure})
+    # Validate every numeric source value before Decimal arithmetic. Infinity is
+    # ordered and previously passed the non-negative check; NaN can raise.
+    for row in records:
+        for field, raw in row['data'].items():
+            numeric = ('(' in field or field.endswith('月价格') or field in
+                       ('行业P25', '行业P50', '行业P75', '占总材料成本比例'))
+            if not numeric:
+                continue
+            try:
+                value = D(str(raw).rstrip('%'))
+                if not value.is_finite():
+                    errors.append({'row_key': row['row_key'], 'field': field, 'error': 'NON_FINITE_NUMBER'})
+                elif value < 0 and row['kind'] != 'industry':
+                    errors.append({'row_key': row['row_key'], 'field': field, 'error': 'NEGATIVE_INPUT'})
+            except (ValueError, ArithmeticError):
+                errors.append({'row_key': row['row_key'], 'field': field, 'error': 'INVALID_NUMBER'})
+    if errors:
+        return {'status': 'INVALID', 'errors': errors, 'arithmetic_groups': {},
+                'arithmetic_observations': 0, 'continuity_groups': 0, 'continuity_failures': []}
     costs = {(r['factory'], r['product'], r['month']): r for r in records if r['kind'] == 'cost'}
     keys = set()
     continuity = defaultdict(set)
     for r in records:
         x, kind = r['data'], r['kind']
-        specs = {'银黄口服液':'10ml×10支/盒','板蓝根颗粒':'10g×20袋/盒','六味地黄胶囊':'0.3g×60粒/盒'}
-        if kind in ('cost','budget','materials','expenses','labor') and (r['factory'] not in ('中药一厂','中药二厂') or x.get('产品规格') != specs.get(r['product'])):
+        specs = {product: values[0] for product, values in contract['specifications'].items()}
+        if kind in ('cost','budget','materials','expenses','labor') and (r['factory'] not in contract['factories'] or x.get('产品规格') != specs.get(r['product'])):
             errors.append({'row_key':r['row_key'],'error':'UNKNOWN_FACTORY_PRODUCT_OR_SPECIFICATION'})
         extra = x.get('原材料名称', x.get('费用类别', x.get('指标', x.get('药材名称', ''))))
         key = (kind, r['factory'], r['product'], r['month'], x.get('产品类别', ''), extra)
@@ -185,8 +224,10 @@ def audit(records, errors=None):
 def ingest(source=None, destination=None):
     import duckdb
     source, destination = Path(source or ORIGINAL), Path(destination or SNAPSHOTS)
+    contract_hash=source_contract_hash()
     records, files, errors = _read(source)
-    version = hashlib.sha256(json.dumps([VERSION, files], sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+    if not records: errors.append({'error':'EMPTY_SOURCE_DATA'})
+    version = hashlib.sha256(json.dumps([VERSION, files, contract_hash], sort_keys=True, ensure_ascii=False).encode()).hexdigest()
     destination.mkdir(parents=True, exist_ok=True)
     current = destination / 'current.json'
     if current.exists():
@@ -197,7 +238,8 @@ def ingest(source=None, destination=None):
         result = audit(records, errors) if not errors else {'status':'INVALID','errors':errors}
     except (KeyError, ArithmeticError, ValueError) as exc:
         result = {'status':'INVALID','errors':[{'error':'INVALID_TYPED_DATA','detail':str(exc)}]}
-    manifest = {**result, 'snapshot_id': version, 'contract_version': VERSION, 'row_count': len(records),
+    if source_contract_hash()!=contract_hash:raise ValueError('MASTERDATA_CHANGED_DURING_INGESTION')
+    manifest = {**result, 'snapshot_id': version, 'contract_version': VERSION, 'masterdata_hash':contract_hash, 'row_count': len(records),
                 'files': files, 'created_at': datetime.now(timezone.utc).isoformat(), 'parquet': version + '.parquet'}
     if result['status'] != 'VALID':
         (destination / ('rejected-' + version + '.json')).write_text(json.dumps(manifest, ensure_ascii=False, indent=2))

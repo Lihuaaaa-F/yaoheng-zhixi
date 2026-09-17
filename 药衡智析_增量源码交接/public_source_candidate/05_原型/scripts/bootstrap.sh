@@ -41,8 +41,12 @@ fi
 
 # 3) Frontend: rebuild whenever any build input changes. The shipped dist
 # alone never proves the served UI matches src/config/lock.
-build_inputs="$( (find frontend/src frontend/public -type f 2>/dev/null; ls frontend/package.json frontend/package-lock.json frontend/tsconfig.json frontend/vite.config.ts frontend/index.html 2>/dev/null) | sort )"
-input_hash="$(echo "$build_inputs" | while read -r f; do [ -f "$f" ] && sha256sum "$f"; done | sha256sum | cut -d' ' -f1)"
+input_hash="$("$pharma_python" "$here/build_inputs.py")"
+lock_hash="$("$pharma_python" "$here/build_inputs.py" --lock)"
+if [ ! -f frontend/node_modules/.lock-input ] || [ "$(cat frontend/node_modules/.lock-input)" != "$lock_hash" ]; then
+  (cd frontend && npm ci --ignore-scripts)
+  printf '%s' "$lock_hash" > frontend/node_modules/.lock-input
+fi
 stale=1
 if [ -f frontend/dist/index.html ] && [ -f frontend/dist/.build-inputs ] && [ "$(cat frontend/dist/.build-inputs)" = "$input_hash" ]; then
   stale=0
@@ -59,7 +63,19 @@ fi
 # 4) Data, retrieval assets and working template.
 export PYTHONPATH="$app_dir/backend" ANONYMIZED_TELEMETRY=False OTEL_SDK_DISABLED=true
 case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) export TMPDIR="$TEMP";; *) export TMPDIR=/tmp;; esac
-"$pharma_python" -c 'from pharma.ingestion import ingest; print(ingest()["snapshot_id"])'
-"$pharma_python" scripts/fetch_embedding.py
-"$pharma_python" -c 'from pharma.knowledge import Knowledge; print(Knowledge().build())'
-"$pharma_python" -c 'from pharma.reports import TEMPLATE,normalize_template; print(normalize_template()["template_hash"] if not TEMPLATE.exists() else "工作模板已存在，复用")'
+"$pharma_python" scripts/fetch_embedding.py --check-only || echo "嵌入模型不可用：保留关键词检索，未下载或覆盖外置模型。"
+"$pharma_python" - <<'BOOTSTRAP'
+from pharma.config import PACKAGE
+from pharma.industry import context_catalog,analyze_reference
+from pharma.context_services import retrieve
+if PACKAGE.is_dir():
+    from pharma.ingestion import ingest
+    from pharma.reports import normalize_template,TEMPLATE
+    print('私有制药摄取：',ingest()['status'])
+    if not TEMPLATE.exists():normalize_template()
+for entry in context_catalog()['contexts']:
+    if entry['context_id']=='pharmaceutical:competition':continue
+    snapshot=analyze_reference(entry['context_id'])
+    evidence=retrieve(snapshot,'成本 工序 核查')
+    print(entry['context_id'],evidence['status'])
+BOOTSTRAP

@@ -1,0 +1,39 @@
+{
+  "id": "chemical_demo",
+  "version": "1.0.0",
+  "name": "化工流程参考包",
+  "core_compatibility": ">=1,<2",
+  "manufacturing_mode": "process",
+  "data_label": "合成演示：全部企业、工单/批次、数字和知识均独立编制；不是赛题原件或行业基准。",
+  "capabilities": {
+    "cost_analysis": [
+      "costs",
+      "quantities"
+    ],
+    "word_export": [
+      "word_service"
+    ],
+    "model_explanation": [
+      "model_service"
+    ],
+    "simulated_delivery": [
+      "rpa_service"
+    ],
+    "energy_per_kg": [
+      "quantities",
+      "energy_kwh"
+    ],
+    "pdf_export": [
+      "pdf_service"
+    ]
+  },
+  "elements": {
+    "materials": "材料",
+    "labor": "人工",
+    "overhead": "制造费用",
+    "energy": "独立核算能源"
+  },
+  "strategies": [
+    "energy_per_kg"
+  ]
+}
