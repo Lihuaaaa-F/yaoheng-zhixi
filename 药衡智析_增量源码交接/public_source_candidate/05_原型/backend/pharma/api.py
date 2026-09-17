@@ -2,14 +2,14 @@ from contextlib import asynccontextmanager
 from typing import Literal
 from pathlib import Path
 import hashlib,json,time,os
-from fastapi import FastAPI,HTTPException,Request
+from fastapi import FastAPI,HTTPException,Request,Query
 from fastapi.responses import FileResponse,JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel,Field,ConfigDict
 from .config import APP,RUNTIME,ROOT
 from .jobs import JobStore
 from .actions import ActionStore
-from .metrics import analyze,benchmark,benchmark_analysis,catalog
+from .metrics import benchmark_analysis
 
 store=JobStore();actions=ActionStore()
 app=FastAPI(title='药衡智析',version='0.1.0')
@@ -59,13 +59,21 @@ def selected_context(context_id=None):
     return context_id or context_catalog()['default_context_id']
 
 def scoped_analysis(req):
-    from .industry import analyze_reference,catalog as scoped_catalog
+    from .industry import analyze_reference, catalog as scoped_catalog
     cid=selected_context(req.context_id)
     options=scoped_catalog(cid)
     params=req.model_dump(exclude={'context_id','run_id'})
     params['factory']=params['factory'] or options['factories'][0]
     params['product']=params['product'] or options['products'][0]
     return analyze_reference(cid,**params)
+
+def resolved_analysis(context_id,factory,product,month,analysis_type='monthly',basis='unit'):
+    """GET 型端点的选择解析：缺省值取当前上下文目录，与 POST 口径一致。"""
+    from .industry import analyze_reference, catalog as scoped_catalog
+    cid=selected_context(context_id)
+    options=scoped_catalog(cid)
+    return analyze_reference(cid,factory=factory or options['factories'][0],product=product or options['products'][0],
+        month=month or options['months'][-1],analysis_type=analysis_type,basis=basis)
 
 @app.get('/api/industry/catalog')
 def industry_catalog():
@@ -111,23 +119,44 @@ def get_benchmark(product:str,month:str,left:str,right:str,analysis_type:Literal
     result['narrative']=generate(snapshot,result['evidence'])
     result['hypotheses']=[{**f,'hypothesis':f['rendered_text']} for f in result['narrative']['findings']]
     return result
-@app.post('/api/reports',status_code=202)
-def report(req:ReportRequest):
+def _generation_versions(snapshot,req):
+    """报告生成输入指纹：任何影响产物的组件版本变化都会使缓存失效。"""
     from .reports import TEMPLATE,normalize_template,RENDERER_VERSION
     from .narrative import PROMPT_VERSION,VALIDATOR_VERSION,ModelGateway
-    from .knowledge import Knowledge
-    snapshot=store.snapshot(scoped_analysis(req))
+    from .context_services import retrieval_policy_version
+    from .knowledge import PARSER_VERSION,RETRIEVER_VERSION,EMBEDDING_SHA,terminology_hash
     if snapshot['context_id']=='pharmaceutical:competition':
         if not TEMPLATE.exists():normalize_template()
         template_version=hashlib.sha256(TEMPLATE.read_bytes()).hexdigest()
     else:template_version=snapshot['analysis_context']['template_version']
     gateway=ModelGateway()
-    from .context_services import retrieval_policy_version
-    versions={'retrieval_policy':retrieval_policy_version(snapshot['analysis_context']),'renderer':RENDERER_VERSION,'snapshot':snapshot['snapshot_id'],'knowledge':snapshot['analysis_context']['knowledge_snapshot'],'template':template_version,'prompt':PROMPT_VERSION,'validator':VALIDATOR_VERSION,'parser':__import__('pharma.knowledge',fromlist=['PARSER_VERSION']).PARSER_VERSION,'terminology':__import__('pharma.knowledge',fromlist=['terminology_hash']).terminology_hash(),'model':gateway.model,'protocol':gateway.provider,'endpoint':gateway.base_url,'context':snapshot['analysis_context'],'model_available':bool(gateway.key),'generation_parameters':{'max_tokens':os.getenv('PHARMA_MODEL_MAX_TOKENS','8192'),'reasoning_effort':os.getenv('PHARMA_MODEL_REASONING_EFFORT','low'),'max_repairs':gateway.max_repairs},'retriever':__import__('pharma.knowledge',fromlist=['RETRIEVER_VERSION']).RETRIEVER_VERSION,'embedding':__import__('pharma.knowledge',fromlist=['EMBEDDING_SHA']).EMBEDDING_SHA,'retrieval_parameters':{'mode':'hybrid','weight_policy':'lexical-anchor:0.75/0.25;otherwise:0.5/0.5','reranker':'none','limit':8},'run_id':req.run_id}
+    return {'retrieval_policy':retrieval_policy_version(snapshot['analysis_context']),'renderer':RENDERER_VERSION,
+        'snapshot':snapshot['snapshot_id'],'knowledge':snapshot['analysis_context']['knowledge_snapshot'],
+        'template':template_version,'prompt':PROMPT_VERSION,'validator':VALIDATOR_VERSION,
+        'parser':PARSER_VERSION,'terminology':terminology_hash(),'model':gateway.model,'protocol':gateway.provider,
+        'endpoint':gateway.base_url,'context':snapshot['analysis_context'],'model_available':bool(gateway.key),
+        'generation_parameters':{'max_tokens':os.getenv('PHARMA_MODEL_MAX_TOKENS','8192'),
+            'reasoning_effort':os.getenv('PHARMA_MODEL_REASONING_EFFORT','low'),'max_repairs':gateway.max_repairs},
+        'retriever':RETRIEVER_VERSION,'embedding':EMBEDDING_SHA,
+        'retrieval_parameters':{'mode':'hybrid','weight_policy':'lexical-anchor:0.75/0.25;otherwise:0.5/0.5','reranker':'none','limit':8},
+        'run_id':req.run_id}
+
+def _enqueue_report(req:ReportRequest):
+    """报告任务入队：POST /api/reports 与 Agent 决策执行共用同一路径。"""
+    snapshot=store.snapshot(scoped_analysis(req))
+    versions=_generation_versions(snapshot,req)
     key=hashlib.sha256(json.dumps(versions,sort_keys=True).encode()).hexdigest()
     from .revision import revision_record
     revision=revision_record(ROOT)
-    j=store.enqueue('report',{'snapshot_id':snapshot['snapshot_id'],'context_id':snapshot['context_id'],'versions':versions,'run_id':req.run_id,**revision},key)
+    j=store.enqueue('report',{'snapshot_id':snapshot['snapshot_id'],'context_id':snapshot['context_id'],
+        'factory':snapshot.get('factory'),'product':snapshot.get('product'),'month':snapshot.get('month'),
+        'analysis_type':snapshot.get('analysis_type'),'basis':snapshot.get('basis'),
+        'versions':versions,'run_id':req.run_id,**revision},key)
+    return j,snapshot
+
+@app.post('/api/reports',status_code=202)
+def report(req:ReportRequest):
+    j,_=_enqueue_report(req)
     return {'job_id':j['id'],'status':j['status'],'cache_source_time':j['created']}
 @app.get('/api/jobs')
 def jobs(context_id:str|None=None):return [j for j in store.list() if context_id is None or j['input'].get('context_id')==context_id]
@@ -248,5 +277,65 @@ def acknowledge(id:str,req:AcknowledgementRequest):
 
 @app.get('/api/actions/{id}')
 def get_action(id:str):return actions.get(id)
+
+# ---- 赛题加分项端点：成本预测 / Agent自主决策 / 知识图谱 / 多模型路由 ----
+
+# GET 型端点的月份参数与 POST 合同同校验
+def _month_query():
+    return Query(default=None, pattern=r'^20\d{2}-(0[1-9]|1[0-2])$')
+
+@app.get('/api/forecast')
+def forecast(context_id:str|None=None,factory:str|None=None,product:str|None=None,month:str|None=_month_query(),
+             analysis_type:Literal['monthly','quarterly','special']='monthly',basis:Literal['unit','total']='unit',
+             horizon:int=3):
+    """成本预测：对当前口径快照的趋势序列做 Holt 外推，附 80% 区间。"""
+    from .forecasting import forecast_snapshot
+    snapshot=store.snapshot(resolved_analysis(context_id,factory,product,month,analysis_type,basis))
+    return forecast_snapshot(snapshot,horizon=horizon)
+
+@app.get('/api/agent/decision')
+def agent_decision(context_id:str|None=None,factory:str|None=None,product:str|None=None,month:str|None=_month_query(),
+                   analysis_type:Literal['monthly','quarterly','special']='monthly',basis:Literal['unit','total']='unit',
+                   with_advisory:bool=False):
+    """Agent 自主决策：确定性判断“生成报告/仅更新看板”。
+
+    with_advisory 默认关闭（GET 不应默认消耗模型预算）；前端展示说明时显式开启。
+    """
+    from .decision import evaluate,advise,DecisionStore
+    snapshot=store.snapshot(resolved_analysis(context_id,factory,product,month,analysis_type,basis))
+    evaluation=evaluate(snapshot,store.list_reports())
+    if with_advisory:evaluation=advise(evaluation,snapshot)
+    decision_id=DecisionStore().append(evaluation)
+    return {'decision_id':decision_id,**evaluation}
+
+@app.post('/api/agent/decision/{decision_id}/apply')
+def apply_decision(decision_id:int):
+    """按决策执行：REPORT_NEEDED 时入队报告任务并回写台账；重复应用幂等拒绝。"""
+    from .decision import DecisionStore
+    ledger=DecisionStore()
+    record=ledger.get(decision_id)
+    if not record:raise KeyError('DECISION_NOT_FOUND')
+    if record['decision']!='REPORT_NEEDED':raise ValueError('DECISION_NOT_REPORT_NEEDED')
+    if record['applied_job_id']:raise ValueError('DECISION_ALREADY_APPLIED:'+record['applied_job_id'])
+    selection=json.loads(record['selection'])
+    j,_=_enqueue_report(ReportRequest(**selection))
+    ledger.bind_job(decision_id,j['id'])
+    return {'job_id':j['id'],'status':j['status'],'cache_source_time':j['created']}
+
+@app.get('/api/kb/graph')
+def kb_graph(context_id:str|None=None):
+    """知识图谱：产品-药材-工序结构与来源，供检索增强与前端可视化。"""
+    from .industry import resolve_context
+    from .graph import graph_for_context
+    cid=selected_context(context_id)
+    context=resolve_context(cid).model_dump()
+    graph=graph_for_context(context).load()
+    return {**graph,'context_id':cid}
+
+@app.get('/api/model/routes')
+def model_routes():
+    """多模型协作路由状态：各任务路由的实际模型与回退情况。"""
+    from .narrative import ModelGateway
+    return ModelGateway.routes_status()
 
 if (APP/'frontend/dist').is_dir():app.mount('/',StaticFiles(directory=APP/'frontend/dist',html=True),name='ui')

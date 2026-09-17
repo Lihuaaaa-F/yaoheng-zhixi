@@ -12,3 +12,8 @@
 @media(max-width:650px){.page-heading{flex-wrap:wrap;gap:10px}.outline-label{display:inline-block;max-width:100%}}
 
 .responsibility-confirmation{margin-top:14px}.responsibility-confirmation label{display:grid;gap:6px;margin:10px 0;max-width:520px;font-size:12px}
+
+/* Agent 决策卡（赛题加分项） */
+.decision-card .decision-signals { list-style: none; padding: 0; margin: .5rem 0; display: grid; gap: .25rem; }
+.decision-card .decision-signals li { color: #5a6b72; font-size: .82rem; }
+.decision-card .decision-signals small { color: #7d8f96; }

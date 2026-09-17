@@ -1,4 +1,9 @@
-"""Single deterministic metric snapshot shared by API, charts and reports."""
+"""单一确定性指标快照：API、图表与报告共享同一份计算结果。
+
+制药原题数据专用引擎（行业包走 industry.py）：全部口径用 Decimal 计算，
+环比/同比/预算共用 change/contribution 阈值函数；±10% 严格超限才触发告警
+（恰好等于阈值不触发），贡献率允许为负或超过 100%，缺月不补零。
+"""
 from __future__ import annotations
 import hashlib
 import json

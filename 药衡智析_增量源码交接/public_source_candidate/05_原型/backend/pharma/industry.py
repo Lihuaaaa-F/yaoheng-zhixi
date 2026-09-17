@@ -1,5 +1,8 @@
-"""Typed cost facts and explicitly registered, local industry packs.
+"""类型化成本事实与显式注册的本地行业包。
 
+无进程级“当前行业”：每个任务通过 AnalysisContext 绑定不可变输入
+（数据快照哈希、策略注册表、模板与知识版本），保证同 ID 任务可复现。
+上传配置只能引用已注册的策略名，不能执行代码或 SQL。
 No process-wide active industry. A context binds immutable inputs for every job.
 Uploaded configuration names trusted strategies; it cannot execute code or SQL.
 """
@@ -383,7 +386,6 @@ def _check_scope(rows):
             ('product_version','PRODUCT_VERSION'),('policy_version','POLICY'),('source_mode','SOURCE_MODE'),
             ('period_granularity','PERIOD_GRANULARITY'),('grain','GRAIN'),('scope','SCOPE')]:
         if len({getattr(x,field) for x in rows}) != 1: raise ValueError(error+'_CONFLICT')
-    if any(x.scope != 'completed' for x in rows): raise ValueError('WIP_ALLOCATION_NOT_SUPPORTED')
 
 
 def aggregate(dataset, months, scenario='actual'):
@@ -656,7 +658,10 @@ def analyze_reference(context_id, factory=None, product=None, month=None, analys
             mk=key+'_'+b+'_rate';metrics[mk]=metric(mk,c['rate'],'%','(本期要素−基期要素)/基期要素×100',c['base'],periods['mom'],numerator=c['delta'])
             if flags[b]: alerts.append({'alert_id':'alert-'+digest([scope,key,b])[:20],'element_key':key,'element':name,'basis':b,'current':c['current'],'base':c['base'],'value_unit':money+'/'+unit if b=='unit' else money,'rate':c['rate'],'metric_id':metrics[mk]['metric_id'],'fact_summary':f'{name} {b} 环比 {c["rate"]}%，本期 {c["current"]}，基期 {c["base"]}','rule':'严格超过±10%','note':'合成演示阈值；非行业标准'})
         elements.append(item)
-    optional=[x for x in ds.optional if x.period in months and x.scenario=='actual']
+    optional=[x for x in ds.optional if x.period in months and x.scenario=='actual' and x.scope=='completed']
+    # WIP/联产口径的驱动事实（工时、能耗）不支持分摊，直接拒绝而非静默计入
+    rejected_optional=[x for x in ds.optional if x.period in months and x.scenario=='actual' and x.scope!='completed']
+    if rejected_optional: raise ValueError('WIP_ALLOCATION_NOT_SUPPORTED: optional driver facts with scope!=completed')
     for name in pack.strategies:
         fn,u,required=STRATEGIES[name]
         evaluated=fn(optional,current)

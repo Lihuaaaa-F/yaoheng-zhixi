@@ -65,14 +65,19 @@ export PYTHONPATH="$app_dir/backend" ANONYMIZED_TELEMETRY=False OTEL_SDK_DISABLE
 case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) export TMPDIR="$TEMP";; *) export TMPDIR=/tmp;; esac
 "$pharma_python" scripts/fetch_embedding.py --check-only || echo "嵌入模型不可用：保留关键词检索，未下载或覆盖外置模型。"
 "$pharma_python" - <<'BOOTSTRAP'
+import os
 from pharma.config import PACKAGE
 from pharma.industry import context_catalog,analyze_reference
 from pharma.context_services import retrieve
-if PACKAGE.is_dir():
+# 原题数据摄取只在显式启用比赛企业配置（README“启用比赛数据”）时执行；
+# 默认公共路径只验证合成包，不能拿合成合同去校验原题数据而崩溃。
+if PACKAGE.is_dir() and os.environ.get('PHARMA_DATA_PACKAGE') and os.environ.get('PHARMA_PRIVATE_MASTERDATA_FILE'):
     from pharma.ingestion import ingest
     from pharma.reports import normalize_template,TEMPLATE
     print('私有制药摄取：',ingest()['status'])
     if not TEMPLATE.exists():normalize_template()
+elif PACKAGE.is_dir():
+    print('未启用比赛企业配置：跳过原题摄取，仅构建合成包上下文')
 for entry in context_catalog()['contexts']:
     if entry['context_id']=='pharmaceutical:competition':continue
     snapshot=analyze_reference(entry['context_id'])

@@ -1,4 +1,14 @@
-"""Bounded generation: the model chooses references, the program owns numbers."""
+"""有界生成：模型只选择引用与措辞，程序拥有全部数字与绑定。
+Bounded generation: the model chooses references, the program owns numbers.
+
+核心合同：
+- 每个解释任务（explanation_tasks）由程序按告警/章节/跨厂差异生成，
+  模型输出只允许 hypothesis / insufficient_evidence 两类定性结论；
+- 任何业务数字必须来自程序计算的指标（metric_refs 绑定），模型正文
+  出现自由数字即整体拒绝（防编造）；
+- 证据引用必须与原文共享具体词组、且通过产品/期间/文档版本适用性检查；
+- 每次调用记录请求/响应 model 并核验身份，缓存键包含全链路版本指纹。
+"""
 from pathlib import Path
 from decimal import Decimal
 from typing import Literal
@@ -13,7 +23,7 @@ from pydantic import BaseModel, Field, ConfigDict
 import httpx
 from .config import RUNTIME
 
-PROMPT_VERSION = 'v16-required-cross-factory-explanation-task'
+PROMPT_VERSION = 'v18-insufficient-grammar-aligned'
 VALIDATOR_VERSION = 'claim-contract-v9-cost-document-synonyms'
 # Aliases may only be added after a live probe has verified that the upstream
 # really serves the requested model under that exact returned id.
@@ -483,6 +493,8 @@ def validate_findings(findings,snapshot,evidence):
             if not f.evidence_refs or not any(f.text_template in f.evidence_quotes[x] for x in f.evidence_refs):
                 raise ValueError('document fact must be a verbatim supported passage')
         elif re.search(r'\d|百分之[零一二三四五六七八九十百千万亿两]+|[零一二三四五六七八九十百千万亿两]+(?:元|盒|粒|袋|支|小时|个月|年(?!度)|月(?!度)|日)',checked_text):
+            # 自由业务数字禁止：定性文本中出现任何数字/中文数词+单位组合即拒绝，
+            # 合法数值只能经 numeric_fact 的 metric_refs 由程序绑定。
             raise ValueError('free business number forbidden')
         if f.claim_type == 'numeric_fact' and not f.metric_refs: raise ValueError('numeric fact requires nonempty metric references')
         if f.claim_type == 'hypothesis':
@@ -500,6 +512,7 @@ def validate_findings(findings,snapshot,evidence):
                     raise ValueError('event loss is not monthly net decline; explicitly distinguish event and monthly output')
             quote_words = set(re.findall(r'[\u4e00-\u9fff]{2,}', ''.join(f.evidence_quotes.values())))
             # At least one concrete shared phrase; ID existence alone is insufficient.
+            # 假设正文必须与引用原文共享至少一个二字词组：仅引用ID存在不算有主题关联。
             if not any(any(w[i:i+2] in plain for i in range(len(w)-1)) for w in quote_words): raise ValueError('hypothesis lacks source subject')
         if re.search(r'忽略.*指令|system prompt|api.?key|执行.*(?:shell|SQL)|curl |https?://',plain,re.I): raise ValueError('untrusted instruction content')
         text = f.text_template
@@ -552,6 +565,10 @@ def validate_findings(findings,snapshot,evidence):
 
 
 class ModelGateway:
+    # 多模型协作（赛题加分项）：按任务路由选择模型。
+    # narrative=报告解释（大模型）；decision=决策说明等轻量任务（可配小模型）。
+    ROUTES = ('narrative', 'decision')
+
     def __init__(self, client=None, runtime=None, provider=None, base_url=None, model=None, key_file=None, max_calls=None, max_repairs=None):
         self.runtime = Path(runtime) if runtime else RUNTIME
         self.runtime.mkdir(parents=True,exist_ok=True)
@@ -578,27 +595,60 @@ class ModelGateway:
     def _headers(self):
         return {'x-api-key':self.key,'anthropic-version':'2023-06-01'} if self.provider=='anthropic' else {'Authorization':'Bearer '+self.key}
 
-    def models(self):
-        if not self.key: return {'status':'BLOCKED','key_set':False}
-        try:
-            response = self.client.get(self.base_url+'/models',headers=self._headers())
-            response.raise_for_status()
-            models = [m['id'] for m in response.json().get('data',[])]
-            return {'status':'PASS','key_set':True,'models':models,'selected_model':self.model,'selected_available':self.model in models}
-        except Exception as exc: return {'status':'FAILED','key_set':True,'reason':type(exc).__name__}
+    @classmethod
+    def for_route(cls, route, **overrides):
+        """按任务路由构造网关实例（多模型协作入口）。
 
-    def complete(self,system,user):
+        配置优先级：PHARMA_MODEL_ROUTES（JSON，route→{model,base_url,protocol,key_file}）
+        → PHARMA_MODEL_<ROUTE>_MODEL/_BASE_URL/_PROTOCOL/_KEY_FILE 单变量
+        → 主配置（PHARMA_MODEL 等）回退。未配置专用小模型时与主模型同源，
+        机制就绪且行为透明，不伪造多模型实调。
+        """
+        if route not in cls.ROUTES: raise ValueError('UNKNOWN_MODEL_ROUTE')
+        config = {}
+        raw = os.getenv('PHARMA_MODEL_ROUTES')
+        if raw:
+            parsed = json.loads(raw)
+            if not isinstance(parsed, dict): raise ValueError('INVALID_MODEL_ROUTES')
+            # 路由表允许只配置部分路由：未列出的路由回退主配置
+            if route in parsed and not isinstance(parsed[route], dict): raise ValueError('INVALID_MODEL_ROUTES')
+            config = parsed.get(route) or {}
+        prefix = 'PHARMA_MODEL_' + route.upper() + '_'
+        for field in ('model', 'base_url', 'protocol', 'key_file'):
+            if field in config:
+                continue  # JSON 路由表已显式指定的字段优先
+            value = os.getenv(prefix + field.upper())
+            if value: config[field] = value
+        return cls(model=config.get('model'), base_url=config.get('base_url'),
+                   provider=config.get('protocol'), key_file=config.get('key_file'), **overrides)
+
+    @classmethod
+    def routes_status(cls):
+        """输出各路由的实际生效配置，用于验收回执与前端展示。"""
+        main = cls()
+        routes = {}
+        for route in cls.ROUTES:
+            gateway = cls.for_route(route)
+            routes[route] = {'model': gateway.model, 'protocol': gateway.provider,
+                             'base_url': gateway.base_url, 'key_set': bool(gateway.key),
+                             'dedicated': (gateway.model, gateway.base_url) != (main.model, main.base_url),
+                             'max_calls': gateway.max_calls}
+        return {'routes': routes, 'main_model': main.model, 'routing_mechanism': 'PHARMA_MODEL_ROUTES/env-fallback'}
+
+    def complete(self,system,user,operation='generate',prompt_version=None):
+        """串行执行一次模型调用；operation 分路由记账与预算，prompt_version 供
+        非叙事任务（如决策说明）传入自己的提示词版本，账本溯源不串用。"""
         from .locks import exclusive
         with exclusive(self.runtime/'model-call.lock'):
-            return self._complete(system,user)
+            return self._complete(system,user,operation,prompt_version or PROMPT_VERSION)
 
-    def _complete(self,system,user):
+    def _complete(self,system,user,operation='generate',prompt_version=None):
         if not self.key: raise RuntimeError('MODEL_KEY_NOT_SET')
         with _CALL_LOCK, sqlite3.connect(self.dbpath) as db:
             db.execute('BEGIN IMMEDIATE')
-            count = db.execute("SELECT count(*) FROM calls WHERE operation='generate'").fetchone()[0]
+            count = db.execute("SELECT count(*) FROM calls WHERE operation=?",(operation,)).fetchone()[0]
             if count >= self.max_calls: raise RuntimeError('MODEL_CALL_BUDGET_REACHED')
-            rowid = db.execute('INSERT INTO calls(created_at,model,protocol,operation,status,cost,prompt_version,requested_model) VALUES(?,?,?,?,?,?,?,?)',(time.time(),self.model,self.provider,'generate','STARTED','UNKNOWN',PROMPT_VERSION,self.model)).lastrowid
+            rowid = db.execute('INSERT INTO calls(created_at,model,protocol,operation,status,cost,prompt_version,requested_model) VALUES(?,?,?,?,?,?,?,?)',(time.time(),self.model,self.provider,operation,'STARTED','UNKNOWN',prompt_version or PROMPT_VERSION,self.model)).lastrowid
         start, usage, error, status = time.monotonic(), {}, None, 'FAILED'
         returned_model, identity_status, identity_reason = None, 'UNVERIFIED_MISSING', '响应未到达'
         try:
@@ -616,9 +666,19 @@ class ModelGateway:
                 if urlparse(self.base_url).hostname == 'api.deepseek.com':
                     body['thinking'] = {'type':'disabled'}
             else: raise ValueError('Unsupported model protocol')
-            response = self.client.post(endpoint,headers=self._headers(),json=body)
-            response.raise_for_status()
-            data = response.json()
+            # 429/5xx 有界退避重试：大提示词场景易触发供应商 TPM 限流，
+            # 立即失败会连锁拖垮整轮验收；同一逻辑调用共用一条账本记录。
+            data = None
+            for attempt in range(3):
+                try:
+                    response = self.client.post(endpoint,headers=self._headers(),json=body)
+                    response.raise_for_status()
+                    data = response.json()
+                    break
+                except httpx.HTTPStatusError as exc:
+                    retryable = exc.response.status_code == 429 or exc.response.status_code >= 500
+                    if not retryable or attempt == 2: raise
+                    time.sleep(20 * (attempt + 1))
             usage = data.get('usage',{})
             returned_model = data.get('model')
             identity_status, identity_reason = classify_identity(self.model, returned_model)
@@ -707,7 +767,7 @@ def generate(snapshot,evidence,gateway=None,use_cache=True):
         if check['applicable']: sources.append(ev)
         else: excluded.append({'evidence_id':ev['evidence_id'],'reasons':check['reasons']})
     gateway = gateway or ModelGateway()
-    version_inputs = {'snapshot':snapshot,'evidence':sources,'knowledge_version':knowledge_version,'model':gateway.model,'protocol':gateway.provider,'base_url':gateway.base_url,'prompt':PROMPT_VERSION,'template':snapshot.get('template_version','template-unset'),'validator':VALIDATOR_VERSION,'retrieval':{k:evidence.get(k) for k in ('retriever_version','retrieval_policy_version','reranker_version','embedding_version','fusion_weights','mode','analysis_context','status','recall_status')} if isinstance(evidence,dict) else None,'generation_parameters':{'max_tokens':os.getenv('PHARMA_MODEL_MAX_TOKENS','8192'),'reasoning_effort':os.getenv('PHARMA_MODEL_REASONING_EFFORT','low'),'max_repairs':gateway.max_repairs,'temperature':0}}
+    version_inputs = {'snapshot':snapshot,'evidence':sources,'knowledge_version':knowledge_version,'model':gateway.model,'protocol':gateway.provider,'base_url':gateway.base_url,'prompt':PROMPT_VERSION,'template':snapshot.get('template_version','template-unset'),'validator':VALIDATOR_VERSION,'retrieval':{k:evidence.get(k) for k in ('retriever_version','retrieval_policy_version','reranker_version','embedding_version','fusion_weights','mode','analysis_context','status','recall_status','graph_expansion')} if isinstance(evidence,dict) else None,'generation_parameters':{'max_tokens':os.getenv('PHARMA_MODEL_MAX_TOKENS','8192'),'reasoning_effort':os.getenv('PHARMA_MODEL_REASONING_EFFORT','low'),'max_repairs':gateway.max_repairs,'temperature':0}}
     key = hashlib.sha256(json.dumps(version_inputs,ensure_ascii=False,sort_keys=True,default=str).encode()).hexdigest()
     if use_cache:
         with sqlite3.connect(gateway.dbpath) as db:
@@ -718,9 +778,9 @@ def generate(snapshot,evidence,gateway=None,use_cache=True):
 输入tasks是程序创建的解释任务。benchmark是独立的同期间跨厂任务，按comparison_contract的左右方向、分母、期间与限制解释差异，不用单厂环比代替跨厂归因；没有两厂同口径明细就具体说明缺什么，并提出两厂可核查的建议。只有左厂证据不能证明右厂的原因，不编造缺失工厂明细。每个task_id只输出一条，不输出summary数字事实，不重复按单位/总额各写一条；数值事实、告警本期/基期/环比以及章节、指标、告警绑定由程序完成。
 每条只能有这些字段：task_id, claim_type, text_template, evidence_refs, evidence_quotes, missing_evidence, recommendation。
 claim_type仅hypothesis或insufficient_evidence。text_template只写定性机制或缺证说明，不写数字，不写任何[[metric:...]]插槽；不要输出metric_refs、alert_refs、section或hypothesis字段，它们由任务合同绑定，不需模型复制。
-有证据支持的机制可选hypothesis，须说“可能”、说明与原文主题有关的机制，并给具体missing_evidence。没有充分证据则选insufficient_evidence：每个独立分句明确证据不足/不能归因/需核查，只说明具体缺什么，不夹带肯定因果。仅复述数字或告警不算原因分析。
+有证据支持的机制可选hypothesis，须说“可能”、说明与原文主题有关的机制，并给具体missing_evidence。没有充分证据则选insufficient_evidence，写作语法与程序校验逐条对应：（1）text_template以逗号、分号、句号、问号、感叹号或换行切分后的每个片段，都必须至少含有下列词语之一：不能、无法、不足、尚未、尚不能、缺少、缺乏、未提供、未取得、待核、需核、需要、需补、有待、没有证据、没有记录、没有数据。推荐模板：“未提供｛具体记录｝，尚不能确认｛机制｝，需核查｛对象｝。”禁止先写背景或机制铺垫分句再补限定（如“现有证据仅支持…”“该差异体现在…”开头），这类文本整体拒绝。（2）只说明具体缺什么，不夹带肯定因果；仅复述数字或告警不算原因分析。
 evidence_quotes是对象，键为evidence_refs中的ID，值必须从对应allowed_quotes逐字选择短句；不引用则两个字段分别为空数组、空对象。不得把行情当采购价、维修事件当本期净原因、工单局部损失当月度净减产，不能额外计入费用。
-missing_evidence是具体记录或测量名称的非空数组，不写未绑定的日期、指标数值、空词或确定因果。确需日期时，只能使用输入实际/比较期间内的年月，中文年月会规范为ISO；未知日期仍拒绝。
+missing_evidence是具体记录或测量名称的非空数组，不写未绑定的日期、指标数值、空词或确定因果；每一项长度4—120字、不带句读标点，且必须含记录/合同/台账/凭证/单价/耗用/投料/工时/收率/明细/批次/日志/计量/采购价/检验报告等业务对象名词之一（如“对应车间期间批生产记录”“对应月份采购合同台账”），“相关数据”“详细信息”“进一步资料”等泛称不合格。确需日期时，只能使用输入实际/比较期间内的年月，中文年月会规范为ISO；未知日期仍拒绝。
 recommendation可为null；提供时须有suggestion、verification_target、expected_evidence(具体记录数组)、responsible_role(未知写待分配)、department、priority(high/medium/low)、deadline_basis。建议须可核查，生产工艺或质量控制变更须人工批准。deadline_basis可写月度成本结账后、月度成本分析完成后或报告完成后的一至三十个工作日建议窗口（数字形式如“月度成本结账后5个工作日内”），程序绑定为待责任人确认的期限提议，不是已确认日期；金额与比例不能放在期限字段。仅将输入中的适用证据用于本任务，不编造来源。
 合法形状示例（仅展示结构，不复制示例主题）：{"explanations":[{"task_id":"输入task_id","claim_type":"insufficient_evidence","text_template":"现有证据不足以确认差异原因，需核查对应生产记录。","evidence_refs":[],"evidence_quotes":{},"missing_evidence":["实际生产记录"],"recommendation":null}]}。
 """

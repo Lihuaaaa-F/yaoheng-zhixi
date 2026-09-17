@@ -103,7 +103,6 @@ def _read(source):
                 count += 1
                 if None in row or any(v is None or not v.strip() for v in row.values()):
                     errors.append({'file': path.name, 'line': i, 'error': 'MISSING_OR_EXTRA_FIELDS'})
-                kind = _kind(path.name)
                 records.append({'kind': kind, 'factory': row.get('工厂', ''), 'product': row.get('产品名称', ''),
                                 'month': row.get('月份', ''), 'row_key': f'{path.name}:{i}',
                                 'source_hash': raw_hash, 'data': row})

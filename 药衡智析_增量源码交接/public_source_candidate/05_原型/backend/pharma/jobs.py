@@ -48,6 +48,9 @@ class JobStore:
         with self.db() as c:return self._decode(c.execute('SELECT * FROM jobs WHERE id=?',(id,)).fetchone())
     def list(self):
         with self.db() as c:return [self._decode(r) for r in c.execute('SELECT * FROM jobs ORDER BY created DESC LIMIT 100')]
+    def list_reports(self,limit=300):
+        """报告任务专用查询：决策引擎据此判断口径匹配报告，不受通用列表截断影响。"""
+        with self.db() as c:return [self._decode(r) for r in c.execute('SELECT * FROM jobs WHERE kind=? ORDER BY created DESC LIMIT ?',('report',limit))]
     def next(self):
         with self.db() as c:
             r=c.execute("SELECT * FROM jobs WHERE status NOT IN ('SUCCEEDED','DEGRADED','FAILED') ORDER BY created LIMIT 1").fetchone()

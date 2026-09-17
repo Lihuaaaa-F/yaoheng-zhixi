@@ -1,4 +1,10 @@
-"""Versioned local retrieval. Documents are untrusted evidence, never instructions."""
+"""版本化本地检索：文档是不可信证据，绝不当作指令执行。
+Versioned local retrieval. Documents are untrusted evidence, never instructions.
+
+检索栈：jieba 分词 + SQLite FTS5（BM25）与 Chroma 向量（bge-small-zh ONNX 量化）
+双路召回，RRF 融合排序；候选先过产品/工厂/期间/规格/文档版本适用性过滤，
+再进入排名。切分保留标题继承与维修事件行隔离，版本指纹绑定词表与源文件。
+"""
 from pathlib import Path
 from functools import lru_cache
 import hashlib

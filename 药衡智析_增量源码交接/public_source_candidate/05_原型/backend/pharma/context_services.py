@@ -5,7 +5,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 from .knowledge import Knowledge, source_snapshot
 
-PURPOSE_STRATEGY_VERSION='current-period-event-reservation-v1'
+PURPOSE_STRATEGY_VERSION='current-period-event-reservation-graph-v2'
 
 
 class EventPurpose(BaseModel):
@@ -72,7 +72,18 @@ def retrieve(snapshot, query, *, mode='hybrid', limit=8):
         knowledge = Knowledge(context=context, source_files=(entry,))
     scope={'product':snapshot.get('product'),'factory':snapshot.get('factory'),
            'period':snapshot.get('period'),'specification':snapshot.get('specification'),'mode':mode,'limit':limit}
-    result=knowledge.search(query,**scope)
+    # 知识图谱增强（赛题加分项）：制药上下文且图谱存在时，把该产品的
+    # 配方药材/工序名补充进 BM25 查询词；向量检索与适用性合同保持不变。
+    expansion={'status':'NOT_APPLICABLE','terms':[]}
+    if context.get('industry_id')=='pharmaceutical':
+        try:
+            from .graph import graph_for_context
+            expansion=graph_for_context(context).expansion_terms(snapshot.get('product'),query)
+        except Exception as exc:
+            expansion={'status':'DEGRADED','terms':[],'reason':type(exc).__name__}
+    effective=query if not expansion.get('terms') else query+' '+' '.join(expansion['terms'])
+    result=knowledge.search(effective,**scope)
+    result['graph_expansion']=expansion
     result['retrieval_policy_version']=_policy_version(policy)
     diagnostic={'query_budget':1+(policy.max_supplemental_queries if policy else 0),'queries_executed':1,
                 'total_evidence_limit':limit,'status':'NOT_CONFIGURED'}

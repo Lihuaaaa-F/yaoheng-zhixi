@@ -6,7 +6,7 @@ from .actions import ActionStore
 from .locks import try_exclusive
 
 def process_job(store,job):
-    from .metrics import analyze,benchmark,benchmark_analysis
+    from .metrics import benchmark,benchmark_analysis
     from .knowledge import Knowledge
     from .narrative import generate
     from .reports import render_docx,convert_pdf,assess_report

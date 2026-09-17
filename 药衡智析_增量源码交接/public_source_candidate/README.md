@@ -1,66 +1,88 @@
-# 药衡智析
+# 药衡智析 · 产品成本智能分析报告系统
 
-通用成本分析核心＋可切换行业包。制药竞赛合同保留；机械零部件、化工为独立合成参考包，用于验证框架迁移，尚非完成行业适配。基础修复、自动验证和真人验收分别记录于 [当前运行](docs/current_run.json) 与 [实施状态](docs/implementation_status.md)。
+**基于 RAG 与大模型的制药企业产品成本智能分析报告系统**（2026 年第二届重庆市 AI 大模型创新应用大赛 · 创灵境企业出题）。通用成本分析核心＋可切换行业包：制药赛题合同完整保留，机械零部件、化工为独立合成参考包，用于验证框架横向迁移能力。
 
-## 启动
+> **English summary** — Yaoheng Zhixi is a RAG + LLM powered product-cost analysis and reporting system for a pharmaceutical contest scenario. A deterministic Decimal cost engine feeds an evidence-bound report pipeline (Word/PDF), an ECharts dashboard with attribution/waterfall/heatmap, a cross-factory three-step benchmark, and an RPA task loop against a local simulator. Bonus features implemented: knowledge-graph enhanced retrieval, multi-model routing, agent report-or-dashboard decision, and Holt-based cost forecasting. All numbers are program-owned; the model only picks references and wording under a strict validator contract.
 
-本目录为应用根（`药衡智析_增量源码交接/public_source_candidate`），外层是Git根。已合并clone无需prepare。
+## 功能总览 / Feature Map
+
+| 赛题模块 | 实现 | 入口 |
+|---|---|---|
+| 模块一 智能报告生成 | Word 模板解析（占位符+书签锚点）、RAG 增强、PDF/Word 双导出 | `05_原型/backend/pharma/reports.py` |
+| 模块二 看板与归因 | 趋势/瀑布/结构/热力图、贡献度、±10% 告警重点分析 | `metrics.py`、`frontend/src/Analysis.tsx` |
+| 模块三 对标三步法 | 找差异→拆结构→拆原因，差异表/结构树/归因文本 | `metrics.benchmark_analysis`、`industry.benchmark_reference` |
+| 模块四 RPA 闭环 | 结构化任务 JSON、模拟 RPA/微信送达、任务追踪看板 | `actions.py`、`synthetic_rpa.py` |
+| 加分 知识图谱 | 产品-药材-工序图，检索词增强+前端可视化 | `graph.py`、`/api/kb/graph` |
+| 加分 多模型协作 | 按任务路由（报告=大模型，决策说明=轻量模型），独立记账 | `ModelGateway.for_route`、`/api/model/routes` |
+| 加分 Agent 自主决策 | 确定性策略判断“生成报告/仅更新看板”+小模型说明+决策台账 | `decision.py`、`/api/agent/decision` |
+| 加分 成本预测 | Holt 双参数指数平滑，80% 区间，看板趋势叠加 | `forecasting.py`、`/api/forecast` |
+
+不包含真实 ERP 对接、真实微信发送与联副产品成本引擎；合成行业包仅验证框架迁移，不宣称行业适配完成。
+
+## 快速开始 / Quick Start
+
+本目录为应用根（`药衡智析_增量源码交接/public_source_candidate`），外层是 Git 根。已合并 clone 无需 prepare。
 
 ```bash
-bash 05_原型/scripts/bootstrap.sh
-bash 05_原型/scripts/start.sh
-# http://127.0.0.1:8765
+bash 05_原型/scripts/bootstrap.sh   # venv + 锁定依赖 + 前端按指纹构建 + 数据冒烟
+bash 05_原型/scripts/start.sh       # 启动 api(8765)/worker/模拟RPA(8090)
+# 打开 http://127.0.0.1:8765
 bash 05_原型/scripts/stop.sh
 ```
 
-Ubuntu 24.04 使用 Python 3.12（需可用的 `venv`）、Node/npm；当前 Vite 锁版本接受 Node 18、20 或 ≥22。Word→PDF 需要 LibreOffice，PDF逐页截图需要 `pdftoppm`；中文字体按环境探针确认。bootstrap 会在项目环境安装锁定依赖，首次安装需要可访问包源；系统工具不会由该脚本自动安装。默认可使用独立合成制药/机械/化工；本仓库同时按用户最新授权保留赛题原件，启用比赛数据见下文。没有嵌入模型时关键词可降级。不会自动下载大型模型或覆盖外置模型。
+**English**: same two scripts bootstrap and start the whole stack (FastAPI + worker + simulated RPA) on localhost; Windows Git Bash, Linux and WSL share one entry point. Model key is optional — narrative degrades to deterministic rules; embedding model optional — lexical retrieval remains.
 
-源码归档与 Git clone 使用相同启动命令，基础合成模式不要求比赛数据配置、模型密钥或 `.git`。全新公开副本不必创建 `.env` 即可基础启动；没有凭据时解释降级，不能记作模型通过。`start.sh` 仅启动服务，源码或锁文件变化后必须先重新运行 `bootstrap.sh`：它校验 npm 锁指纹并重建变化的前端输入。不要仅复制旧 `dist`，也不要用开发服务器截图冒充 8765 上的构建验收。
+环境要求：Python 3.12（venv）、Node/npm（Vite 锁版本接受 Node 18/20/≥22）；Word→PDF 需 LibreOffice，逐页截图需 `pdftoppm`。没有嵌入模型时关键词检索降级可用；不会自动下载大型模型或覆盖外置模型。
 
-配置文件位置为 `05_原型/.env`（示例 `05_原型/.env.example`），仅本机保存；应用根的 `.env` 不会自动读取。其他开发者设置 `PHARMA_MODEL_KEY_FILE`、`PHARMA_MODEL_BASE_URL`、`PHARMA_MODEL`；已导出的环境变量优先于该文件。协作默认模型保持 `glm-5.3-flash` 与 OpenAI 兼容适配；本机按用户追加指令使用 DeepSeek 官方应用密钥和 `deepseek-flash`。模型供应商与端点必须匹配，不使用 Coding Plan 凭据。凭据和本机绝对路径不入库。已有 `.env` 或 shell 中的密钥/私有配置会生效，不能把这种环境当作无密钥公开副本测试。
+## 模型配置 / Model Configuration
+
+配置文件 `05_原型/.env`（示例 `.env.example`，仅本机保存，不入库）：
 
 ```bash
-TMPDIR=/tmp PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 PYTHONPATH=05_原型/backend 05_原型/.venv/bin/python -m pytest -q 05_原型/tests
-05_原型/.venv/bin/python 05_原型/scripts/check_environment.py --strict
-bash 05_原型/scripts/verify.sh --manifest docs/current_run.json
+PHARMA_MODEL=glm-5.3-flash
+PHARMA_MODEL_BASE_URL=https://open.bigmodel.cn/api/paas/v4
+PHARMA_MODEL_KEY_FILE=/受控目录/your_key.txt      # 密钥只走文件路径
+# 多模型协作（可选）：轻量任务路由到更经济的模型
+PHARMA_MODEL_DECISION_MODEL=glm-4.5-air
+# 或 JSON 路由表：PHARMA_MODEL_ROUTES={"decision":{"model":"..."}}
 ```
 
-verify将模型回执绑定实际执行的代码commit；只含Markdown/验收摘要的后续文档提交可沿用该代码证据，任何代码、模板或配置变化必须新跑。本轮静态报告及展示材料按最新授权随交付发布；运行数据库、待发队列和整个运行目录不分发。其他机器须先按交接生成自己的 manifest；已有静态文件不等于本机已运行，缺本机 job 会如实失败。
+支持任意 OpenAI 兼容端点（DeepSeek、通义等）；协议可为 `openai`/`anthropic`。每次调用核验响应 model 身份并记账（预算、usage、缓存）；Coding Plan 凭据禁止用于应用运行时。
 
-verify退出0表示自动维度通过，1失败，2未完成；真人评审始终独立。默认回归使用独立合成样例；比赛原件已获本次发布授权，比赛路径须先按下文显式启用，再按对应场景清单验收。历史题包回归不能冒充当前运行。
+## 测试与验收 / Tests & Acceptance
 
-前端开发、无网络模型的模拟浏览器测试与真实服务测试的完整命令见 [API与运维](docs/api_and_operations.md#前端构建与浏览器验证)。`e2e:live` 会读取真实 API 并提交一份合成报告；若服务配置了模型密钥，可能产生模型调用。它只断言报告提交，不等于文件、RPA或真人验收通过。
+```bash
+TMPDIR=/tmp PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 PYTHONPATH=05_原型/backend 05_原型/.venv/bin/python -m pytest -q 05_原型/tests   # Windows: .venv/Scripts/python.exe
+05_原型/.venv/bin/python 05_原型/scripts/check_environment.py --strict
+bash 05_原型/scripts/verify.sh --manifest <运行目录>/manifest.json
+```
 
-## 交付边界
+当前验收索引：[docs/current_run.json](docs/current_run.json)；条款矩阵：[docs/implementation_status.md](docs/implementation_status.md)。verify 退出 0=自动维度通过，1=失败，2=未完成；真人评审（0–5 归因评分等）始终独立，AI 不代填。
 
-仓库目前公开。用户最新明确授权“保留原有赛题数据并提交所有内容”至同一协作仓库，覆盖本轮此前不发布题包及派生产物的限制。赛题原件按源字节保留，配套比赛配置和整理后的报告、页图、PPT、演示视频作为静态交付发布；行业包示例继续使用独立合成数据。密钥、`.env`、数据库、待发队列和恢复备份仍不发布。此授权不自动扩展到今后真实企业的私有知识。此前移除清单是本轮历史操作记录，不再代表当前树的资源缺失；详见 [资料边界](docs/privacy_boundary.md)。目录名不构成权限隔离。
+## 文档索引 / Documentation
 
-- [架构决策](docs/adr/0004-industry-packs.md)
-- [API与运维](docs/api_and_operations.md)
-- [检索与生成](docs/rag.md)
+- [系统架构（含架构图/RAG流程图）](docs/architecture.md)
+- [Prompt 设计与解释合同](docs/prompt_design.md)
+- [报告模板解析逻辑](docs/template_parsing.md)
+- [检索与生成合同](docs/retrieval_contracts.md) · [RAG 摘要](docs/rag.md)
+- [API 与运维](docs/api_and_operations.md)
+- [数据契约](docs/data_contract.md) · [第三方引用与许可](docs/third_party_reuse.md)
+- [架构决策记录 ADR](docs/adr/0004-industry-packs.md)
 - [行业包开发指南](docs/industry/development.md)
-- [GLM-5.3交接](docs/ZCODE_HANDOFF.md)
+- [GLM-5.3 交接](docs/ZCODE_HANDOFF.md)
 
-不包含完整ERP、业务知识图谱、多模型路由、自主决策或预测。热力图、模拟任务汇总与行业切换是独立加分项，不能替代制药基础验收。
+## 交付边界 / Delivery Boundary
 
-## 启用本次已授权的比赛数据
+仓库按用户 2026-09-18 明确授权保留原赛题数据（知识、模板与静态交付）并公开提交；密钥、`.env`、运行数据库、待发队列与恢复备份不入库。赛题数据仅限本次大赛使用（见赛题保密条款），本授权不自动扩展到今后真实企业私有资料。历史移除清单见 [资料边界](docs/privacy_boundary.md)。
 
-从本 README 所在的应用根目录执行以下命令。路径由当前目录转为绝对路径，不依赖原作者机器；已有本机 `05_原型/.env` 保持不变，显式导出的变量优先。若服务已启动，先正常执行 `bash 05_原型/scripts/stop.sh`，再设置变量并启动。
+## 启用比赛数据 / Enable Contest Data
 
 ```bash
 YAOHENG_APP_ROOT="$(pwd -P)"
 export PHARMA_DATA_PACKAGE="$YAOHENG_APP_ROOT/00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据"
 export PHARMA_PRIVATE_MASTERDATA_FILE="$YAOHENG_APP_ROOT/competition_configuration/pharmaceutical_masterdata.json"
 export PHARMA_PRIVATE_TERMINOLOGY_FILE="$YAOHENG_APP_ROOT/competition_configuration/pharmaceutical_terminology_original.json"
-test -d "$PHARMA_DATA_PACKAGE/03_制药知识文档"
-test -f "$PHARMA_PRIVATE_MASTERDATA_FILE"
-test -f "$PHARMA_PRIVATE_TERMINOLOGY_FILE"
-bash 05_原型/scripts/bootstrap.sh
-bash 05_原型/scripts/start.sh
+bash 05_原型/scripts/stop.sh 2>/dev/null; bash 05_原型/scripts/bootstrap.sh && bash 05_原型/scripts/start.sh
 ```
 
-成功加载后行业/企业选择中可用 `pharmaceutical:competition`；三个合成上下文仍独立保留。`competition_configuration/scenarios.json` 是比赛验收场景清单，可作为 `run_acceptance.py --private-scenarios` 参数；该脚本会创建报告并确认模拟任务，配置应用模型密钥时会实际调用模型，应单独计入运行和预算。
-
-`PHARMA_PRIVATE_MASTERDATA_FILE` 和 `PHARMA_PRIVATE_TERMINOLOGY_FILE` 是兼容既有加载器的变量名，其中 `PRIVATE` 不改变本次用户对这些比赛配置的发布授权。主数据明确产品规格/工厂白名单，词典明确原企业术语；不靠模型推测，不混入合成行业样例。配置内容变化会使对应快照/索引失效。只恢复原件及明确配置，不把旧源码、旧 `dist` 或整份旧运行目录覆盖回来；待发任务不随静态交付恢复或重发。
-
-无 `.git` 的公开源码归档使用 `source:<sha>` 标识固定源码集合，记录 `commit=null`，不会误认上级目录为本项目Git仓。正式 `verify.sh` 的提交追溯在协作Git clone中执行；独立归档支持启动、分析、创建报告和分维度运行记录。
+成功后行业/企业选择中出现 `pharmaceutical:competition`（S1/S2/S3/Q2 原题场景）；三个合成上下文独立保留。`competition_configuration/scenarios.json` 是比赛验收场景清单（`run_acceptance.py --private-scenarios`）。未启用时 bootstrap 跳过原题摄取，仅构建合成包，不会用合成合同校验原题数据。

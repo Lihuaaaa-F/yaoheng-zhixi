@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react';
 import * as echarts from 'echarts/core';
-import { LineChart, BarChart, PieChart, HeatmapChart } from 'echarts/charts';
+import { LineChart, BarChart, PieChart, HeatmapChart, GraphChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent, LegendComponent, VisualMapComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
-echarts.use([LineChart, BarChart, PieChart, HeatmapChart, GridComponent, TooltipComponent, LegendComponent, VisualMapComponent, CanvasRenderer]);
+echarts.use([LineChart, BarChart, PieChart, HeatmapChart, GraphChart, GridComponent, TooltipComponent, LegendComponent, VisualMapComponent, CanvasRenderer]);
 export default function Chart({ option, label }: {
     option: echarts.EChartsCoreOption;
     label: string;

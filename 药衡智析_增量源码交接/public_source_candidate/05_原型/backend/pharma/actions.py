@@ -221,7 +221,6 @@ class ActionStore:
             if r.status_code==200 and body.get('code')==200 and data.get('task_id')==action_id and data.get('status')=='sent' and notification_proven(data):
                 data['tracking_url']=base_url+'/api/rpa/tasks/'+action_id
                 return self._state(action_id,'SENT',data)
-            if r.status_code==422:return self._state(action_id,'FAILED',None,'HTTP_422:参数被原mock拒绝')
             return self._reconcile(a,client,base_url)
         except httpx.HTTPError:return self._reconcile(a,client,base_url)
     def refresh(self,action_id,client=None,base_url=RPA_BASE_URL):

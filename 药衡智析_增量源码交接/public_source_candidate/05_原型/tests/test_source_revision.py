@@ -18,10 +18,15 @@ def test_source_revision_ignores_parent_git_private_data_and_runtime(tmp_path,mo
     assert first['revision'].startswith('source:') and first['commit'] is None and first['revision_kind']=='source'
     for name in ['05_原型/.env','05_原型/.runtime/data.json','00_赛题原始资料/secret.json','07_交付/业务报告/report.docx','05_原型/frontend/dist/bundle.js']:
         p=root/name;p.parent.mkdir(parents=True,exist_ok=True);p.write_text('PRIVATE_NOT_SOURCE')
-    secret=root/'05_原型/.env';(root/'05_原型/backend/pharma/leak.py').symlink_to(secret)
+    secret=root/'05_原型/.env';leak=root/'05_原型/backend/pharma/leak.py'
+    # Windows 普通权限无法创建符号链接；无法构造该攻击面时跳过对应断言，
+    # 其余“私有数据不入指纹”的验证在任何平台都必须成立。
+    try:leak.symlink_to(secret)
+    except (OSError,NotImplementedError):leak=None
+    banned=('.env','secret.json','report.docx','bundle.js')+(( 'leak.py',) if leak else ())
     original=Path.read_bytes
     def public_only(path):
-        assert path.name not in ('.env','secret.json','report.docx','bundle.js','leak.py')
+        assert path.name not in banned
         return original(path)
     monkeypatch.setattr(Path,'read_bytes',public_only)
     assert revision.revision_record(root)==first
