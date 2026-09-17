@@ -14,7 +14,7 @@ import httpx
 from .config import RUNTIME
 
 PROMPT_VERSION = 'v16-required-cross-factory-explanation-task'
-VALIDATOR_VERSION = 'claim-contract-v8-specific-cost-documents'
+VALIDATOR_VERSION = 'claim-contract-v9-cost-document-synonyms'
 # Aliases may only be added after a live probe has verified that the upstream
 # really serves the requested model under that exact returned id.
 VERIFIED_ALIASES = {'glm-5.3-flash': {'glm-5.3-flash'}}
@@ -244,7 +244,7 @@ def _specific_missing(items):
     # Cost worksheets and allocation bases are concrete evidence artifacts too.
     # Require the business object and document kind together; accepting any
     # "table" or "explanation" would let vague missing-evidence labels through.
-    cost_document = r'成本(?:核算|归集|对比|差异分析)表|成本计算单|(?:制造费用|费用|成本)(?:归集与|归集和)?分摊口径(?:说明|依据)'
+    cost_document = r'成本(?:核算|归集|对比|对照|差异分析)表|成本核算(?:口径)?说明|成本计算单|(?:制造费用|费用|成本)(?:归集与|归集和)?分摊口径(?:说明|依据)'
     if not items or any(
         len(x.strip()) < 4 or len(x) > 120
         or re.search(r'[。；;！!?？]|已证实|导致|证明|必然|是.*原因', x)

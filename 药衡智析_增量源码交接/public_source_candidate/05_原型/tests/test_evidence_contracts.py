@@ -100,13 +100,15 @@ def test_generation_cache_context_prompt_and_retriever_changes_invalidate(tmp_pa
     assert not narrative.generate(snapshot,dict(evidence,retriever_version='r2'),gateway)['cache_hit']
     assert not narrative.generate(snapshot,dict(evidence,embedding_version='e2'),gateway)['cache_hit']
     assert not narrative.generate(snapshot,dict(evidence,retrieval_policy_version='synthetic-policy-v2'),gateway)['cache_hit']
+    monkeypatch.setattr(narrative,'VALIDATOR_VERSION','synthetic-validator-next-version')
+    assert not narrative.generate(snapshot,evidence,gateway)['cache_hit']
     monkeypatch.setattr(narrative,'PROMPT_VERSION','synthetic-next-version')
     assert not narrative.generate(snapshot,evidence,gateway)['cache_hit']
     gateway.base_url='https://synthetic.invalid/v2'
     assert not narrative.generate(snapshot,evidence,gateway)['cache_hit']
     gateway.model='synthetic-changed-model'
     assert not narrative.generate(snapshot,evidence,gateway)['cache_hit']
-    assert len(calls)==8
+    assert len(calls)==9
 
 
 def test_vector_query_receives_only_applicable_candidate_ids(tmp_path):

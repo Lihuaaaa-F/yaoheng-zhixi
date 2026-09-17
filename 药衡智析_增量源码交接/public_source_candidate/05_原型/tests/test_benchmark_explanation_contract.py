@@ -76,6 +76,9 @@ def test_explicitly_incomparable_context_does_not_promise_benchmark_attribution(
     '两厂制造费用归集与分摊口径说明',
     '直接材料成本差异分析表',
     '直接人工成本计算单',
+    '合成甲厂与合成乙厂同口径成本核算说明',
+    '两厂2031-05同产品同规格成本核算口径说明',
+    '合成甲厂与合成乙厂同口径产量与成本对照表',
 ])
 def test_specific_business_cost_documents_are_valid_missing_evidence(record):
     compiled=compile_task_explanations([explanation('benchmark',missing_evidence=[record])],snap())
@@ -84,6 +87,8 @@ def test_specific_business_cost_documents_are_valid_missing_evidence(record):
 
 @pytest.mark.parametrize('record',[
     '其他说明', '相关对比表', '有关核算表', '成本情况说明',
+    '两厂生产工艺与产能利用情况说明', '成本核算情况说明',
+    '成本核算口径说明已证实故障直接导致成本上升',
     '费用分摊口径说明已证实设备故障直接导致成本上升',
     '成本核算表证明设备故障是成本上升原因',
 ])
