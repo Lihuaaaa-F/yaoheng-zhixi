@@ -1,5 +1,0 @@
-# v4 最终固定检索回归
-
-本目录完整评测在修复实际worker查询命中空产品标题后只运行一次。该变更保留章元数据、剔除无正文的章标题/纯文控切片，未按历史保留题调参，融合权重未变。评测为已见历史开发/保留集回归，不能证明独立泛化提升。此前v3结果保留在上一级目录。
-
-最终检索结果与逐条页码在retrieval_results.json/retrieval_details.json；负例实际执行在negative_cases.xml/log及negative_case_execution.json。模型实时能力、人工归因评分与可读性评审不由该结果替代。

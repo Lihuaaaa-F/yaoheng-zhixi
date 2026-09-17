@@ -1,1 +1,0 @@
-本目录是原S2失败与旧评测证据，不是可运行源码。原件未改名为GLM运行。完整恢复基线在原工作机pharma_recovery_baselines目录。
