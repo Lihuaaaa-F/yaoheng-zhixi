@@ -138,3 +138,15 @@ def test_verify_docx_fails_when_model_explanation_is_removed(tmp_path):
     doc.save(path)
     result=verify_docx(path,snapshot,narrative=narrative)
     assert result['status']=='FAIL' and len(result['explanation_binding_failures'])==1
+
+
+def test_template_prose_rewrite_never_changes_inserted_model_text_or_split_slots(tmp_path):
+    from pharma import reports
+    doc=Document();p=doc.add_paragraph()
+    p.add_run('与模拟乙厂；本月 {{本');p.add_run('月产量}}：{{解释}}')
+    original='需核查模拟甲厂与模拟乙厂的本月成本记录。'
+    reports.rewrite_template_prose(p,[('与模拟乙厂','模拟甲厂−模拟乙厂'),('本月','本季度')])
+    reports.replace_text_nodes(list(p._p.iter('{'+reports.W+'}t')),{'本月产量':'120','解释':original})
+    assert p.text=='模拟甲厂−模拟乙厂；本季度 120：'+original
+    assert '{{' not in p.text
+    assert len(p.runs)==2

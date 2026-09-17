@@ -14,6 +14,7 @@ import httpx
 from .config import RUNTIME
 
 PROMPT_VERSION = 'v16-required-cross-factory-explanation-task'
+VALIDATOR_VERSION = 'claim-contract-v8-specific-cost-documents'
 # Aliases may only be added after a live probe has verified that the upstream
 # really serves the requested model under that exact returned id.
 VERIFIED_ALIASES = {'glm-5.3-flash': {'glm-5.3-flash'}}
@@ -706,7 +707,7 @@ def generate(snapshot,evidence,gateway=None,use_cache=True):
         if check['applicable']: sources.append(ev)
         else: excluded.append({'evidence_id':ev['evidence_id'],'reasons':check['reasons']})
     gateway = gateway or ModelGateway()
-    version_inputs = {'snapshot':snapshot,'evidence':sources,'knowledge_version':knowledge_version,'model':gateway.model,'protocol':gateway.provider,'base_url':gateway.base_url,'prompt':PROMPT_VERSION,'template':snapshot.get('template_version','template-unset'),'validator':'claim-contract-v8-specific-cost-documents','retrieval':{k:evidence.get(k) for k in ('retriever_version','reranker_version','embedding_version','fusion_weights','mode','analysis_context','status','recall_status')} if isinstance(evidence,dict) else None,'generation_parameters':{'max_tokens':os.getenv('PHARMA_MODEL_MAX_TOKENS','8192'),'reasoning_effort':os.getenv('PHARMA_MODEL_REASONING_EFFORT','low'),'max_repairs':gateway.max_repairs,'temperature':0}}
+    version_inputs = {'snapshot':snapshot,'evidence':sources,'knowledge_version':knowledge_version,'model':gateway.model,'protocol':gateway.provider,'base_url':gateway.base_url,'prompt':PROMPT_VERSION,'template':snapshot.get('template_version','template-unset'),'validator':VALIDATOR_VERSION,'retrieval':{k:evidence.get(k) for k in ('retriever_version','reranker_version','embedding_version','fusion_weights','mode','analysis_context','status','recall_status')} if isinstance(evidence,dict) else None,'generation_parameters':{'max_tokens':os.getenv('PHARMA_MODEL_MAX_TOKENS','8192'),'reasoning_effort':os.getenv('PHARMA_MODEL_REASONING_EFFORT','low'),'max_repairs':gateway.max_repairs,'temperature':0}}
     key = hashlib.sha256(json.dumps(version_inputs,ensure_ascii=False,sort_keys=True,default=str).encode()).hexdigest()
     if use_cache:
         with sqlite3.connect(gateway.dbpath) as db:

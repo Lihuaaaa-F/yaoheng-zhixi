@@ -20,7 +20,8 @@ def process_job(store,job):
             result['knowledge']=Knowledge().build();store.update(id,'SUCCEEDED' if result['knowledge']['status']=='PASS' else 'DEGRADED',result);return
         versions=payload.get('versions',{})
         from .reports import TEMPLATE,RENDERER_VERSION
-        from .narrative import ModelGateway,PROMPT_VERSION
+        from .narrative import ModelGateway,PROMPT_VERSION,VALIDATOR_VERSION
+        from .knowledge import PARSER_VERSION,RETRIEVER_VERSION,EMBEDDING_SHA,terminology_hash
         from .ingestion import ingest
         gateway=ModelGateway()
         snapshot=store.get_snapshot(payload['snapshot_id'])
@@ -29,6 +30,10 @@ def process_job(store,job):
         if snapshot.get('context_id') and resolve_context(snapshot['context_id']).model_dump()!=snapshot.get('analysis_context'):raise ValueError('CONTEXT_VERSION_CHANGED_RESUBMIT')
         for key,current in [('renderer',RENDERER_VERSION),('model',gateway.model),('protocol',gateway.provider),('endpoint',gateway.base_url),('prompt',PROMPT_VERSION)]:
             if versions.get(key) and versions[key]!=current:raise ValueError(key.upper()+'_VERSION_CHANGED_RESUBMIT')
+        # A legacy job without these bindings cannot reuse partial/completed
+        # results under a different validation or knowledge parsing contract.
+        for key,current in [('validator',VALIDATOR_VERSION),('parser',PARSER_VERSION),('terminology',terminology_hash()),('retriever',RETRIEVER_VERSION),('embedding',EMBEDDING_SHA)]:
+            if versions.get(key)!=current:raise ValueError(key.upper()+'_VERSION_CHANGED_RESUBMIT')
         if not synthetic and versions.get('template') and hashlib.sha256(TEMPLATE.read_bytes()).hexdigest()!=versions['template']:
             raise ValueError('TEMPLATE_VERSION_CHANGED_RESUBMIT')
         # resolve_context above binds source knowledge; retrieval records its

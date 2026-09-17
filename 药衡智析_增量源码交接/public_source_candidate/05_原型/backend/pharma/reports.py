@@ -12,7 +12,7 @@ PATTERN = re.compile(r'\{\{([^{}]+)\}\}')
 RESIDUAL = re.compile(r'\{\{[^{}]*\}\}|\[\[[^\[\]]*\]\]')
 TEMPLATE = ROOT / '04_方案与文档/月度成本分析报告工作模板.docx'
 MAP_PATH = ROOT / '04_方案与文档/placeholder_map.json'
-RENDERER_VERSION='reader-20260918-footer-source-nbsp'
+RENDERER_VERSION='reader-20260918-static-template-prose'
 NA = 'N/A（无可用基期或明细）'
 
 def replace_text_nodes(nodes, mapping):
@@ -110,6 +110,29 @@ def _text(paragraph, old, new):
     if nodes:
         nodes[0].text=combined.replace(old,new)
         for n in nodes[1:]:n.text=''
+
+def rewrite_template_prose(paragraph, replacements):
+    """Rewrite only static template text before inserting bound user/model values.
+
+    Placeholder ranges remain untouched even when their names contain the same
+    words as a label; existing runs and bookmarks retain their positions.
+    """
+    nodes=list(paragraph._p.iter('{'+W+'}t'))
+    for old,new in replacements:
+        text=''.join(n.text or '' for n in nodes)
+        protected=[m.span() for m in RESIDUAL.finditer(text)]
+        spans=[];pos=0
+        for node in nodes:
+            size=len(node.text or '');spans.append((pos,pos+size,node));pos+=size
+        for match in reversed(list(re.finditer(re.escape(old),text))):
+            start,end=match.span()
+            if any(start<b and end>a for a,b in protected):continue
+            touched=[(a,b,n) for a,b,n in spans if b>start and a<end]
+            for index,(a,b,node) in enumerate(touched):
+                value=node.text or ''
+                node.text=value[:max(0,start-a)]+(new if index==0 else '')+value[min(len(value),end-a):]
+                node.set('{http://www.w3.org/XML/1998/namespace}space','preserve')
+
 
 def _all_paragraphs(doc):
     from docx.text.paragraph import Paragraph
@@ -334,13 +357,14 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
         before=p.text
         for field in dynamic:
             if '{{'+field+'}}' in before:dynamic_anchors[field]=p
+        replacements=[('整体解决方案','成本分析报告'),('ERP系统成本模块','创灵境题包模拟CSV（非实时ERP）'),('财务总监','待人工审核'),('与中药二厂',benchmark_labels(benchmark)[2])]
+        if snapshot['analysis_type']=='quarterly':
+            replacements += [('本月','本季度'),('上月','上季度'),('去年同月','去年同期季度'),('分析月份','分析期间')]
+        rewrite_template_prose(p,replacements)
+        if '关键提示：方案中' in before:_text(p,p.text,'本报告使用比赛模拟数据。事实、原因假设与缺失证据分别标注；任务仅为模拟发送。')
         replace_text_nodes(list(p._p.iter('{'+W+'}t')),values)
         if 'N/A' in p.text:_text(p,'）%','）')
         if before.startswith(('一、','二、','三、','四、','五、','六、')):sections.append(p.text)
-        for a,b in [('整体解决方案','成本分析报告'),('ERP系统成本模块','创灵境题包模拟CSV（非实时ERP）'),('财务总监','待人工审核'),('与中药二厂',benchmark_labels(benchmark)[2])]:_text(p,a,b)
-        if '关键提示：方案中' in p.text:_text(p,p.text,'本报告使用比赛模拟数据。事实、原因假设与缺失证据分别标注；任务仅为模拟发送。')
-        if snapshot['analysis_type']=='quarterly':
-            for a,b in [('本月','本季度'),('上月','上季度'),('去年同月','去年同期季度'),('分析月份','分析期间')]:_text(p,a,b)
     for p in _all_paragraphs(doc):
         if '近6个月单位成本趋势' in p.text:_text(p,'近6个月单位成本趋势','可用期间单位成本趋势（截至 '+snapshot['month']+'，共 '+str(len(snapshot['trend']))+' 个月）')
     for section in doc.sections:

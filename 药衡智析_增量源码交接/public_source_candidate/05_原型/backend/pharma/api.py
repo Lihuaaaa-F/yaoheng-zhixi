@@ -114,7 +114,7 @@ def get_benchmark(product:str,month:str,left:str,right:str,analysis_type:Literal
 @app.post('/api/reports',status_code=202)
 def report(req:ReportRequest):
     from .reports import TEMPLATE,normalize_template,RENDERER_VERSION
-    from .narrative import PROMPT_VERSION,ModelGateway
+    from .narrative import PROMPT_VERSION,VALIDATOR_VERSION,ModelGateway
     from .knowledge import Knowledge
     snapshot=store.snapshot(scoped_analysis(req))
     if snapshot['context_id']=='pharmaceutical:competition':
@@ -122,7 +122,7 @@ def report(req:ReportRequest):
         template_version=hashlib.sha256(TEMPLATE.read_bytes()).hexdigest()
     else:template_version=snapshot['analysis_context']['template_version']
     gateway=ModelGateway()
-    versions={'renderer':RENDERER_VERSION,'snapshot':snapshot['snapshot_id'],'knowledge':snapshot['analysis_context']['knowledge_snapshot'],'template':template_version,'prompt':PROMPT_VERSION,'model':gateway.model,'protocol':gateway.provider,'endpoint':gateway.base_url,'context':snapshot['analysis_context'],'model_available':bool(gateway.key),'generation_parameters':{'max_tokens':os.getenv('PHARMA_MODEL_MAX_TOKENS','8192'),'reasoning_effort':os.getenv('PHARMA_MODEL_REASONING_EFFORT','low'),'max_repairs':gateway.max_repairs},'retriever':__import__('pharma.knowledge',fromlist=['RETRIEVER_VERSION']).RETRIEVER_VERSION,'embedding':__import__('pharma.knowledge',fromlist=['EMBEDDING_SHA']).EMBEDDING_SHA,'retrieval_parameters':{'mode':'hybrid','weight_policy':'lexical-anchor:0.75/0.25;otherwise:0.5/0.5','reranker':'none','limit':8},'run_id':req.run_id}
+    versions={'renderer':RENDERER_VERSION,'snapshot':snapshot['snapshot_id'],'knowledge':snapshot['analysis_context']['knowledge_snapshot'],'template':template_version,'prompt':PROMPT_VERSION,'validator':VALIDATOR_VERSION,'parser':__import__('pharma.knowledge',fromlist=['PARSER_VERSION']).PARSER_VERSION,'terminology':__import__('pharma.knowledge',fromlist=['terminology_hash']).terminology_hash(),'model':gateway.model,'protocol':gateway.provider,'endpoint':gateway.base_url,'context':snapshot['analysis_context'],'model_available':bool(gateway.key),'generation_parameters':{'max_tokens':os.getenv('PHARMA_MODEL_MAX_TOKENS','8192'),'reasoning_effort':os.getenv('PHARMA_MODEL_REASONING_EFFORT','low'),'max_repairs':gateway.max_repairs},'retriever':__import__('pharma.knowledge',fromlist=['RETRIEVER_VERSION']).RETRIEVER_VERSION,'embedding':__import__('pharma.knowledge',fromlist=['EMBEDDING_SHA']).EMBEDDING_SHA,'retrieval_parameters':{'mode':'hybrid','weight_policy':'lexical-anchor:0.75/0.25;otherwise:0.5/0.5','reranker':'none','limit':8},'run_id':req.run_id}
     key=hashlib.sha256(json.dumps(versions,sort_keys=True).encode()).hexdigest()
     commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=APP,text=True).strip()
     j=store.enqueue('report',{'snapshot_id':snapshot['snapshot_id'],'context_id':snapshot['context_id'],'versions':versions,'run_id':req.run_id,'commit':commit},key)
