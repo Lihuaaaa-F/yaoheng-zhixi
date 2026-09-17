@@ -1,0 +1,20 @@
+{
+  "version": "1.0.0",
+  "max_supplemental_queries": 1,
+  "purpose": {
+    "id": "current_period_maintenance",
+    "query_terms": [
+      "维修",
+      "停机",
+      "故障",
+      "磨损"
+    ],
+    "event_match_terms": [
+      "维修",
+      "停机",
+      "故障",
+      "磨损"
+    ],
+    "reserved_slots": 1
+  }
+}

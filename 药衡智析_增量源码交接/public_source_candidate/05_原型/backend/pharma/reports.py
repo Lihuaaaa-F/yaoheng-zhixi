@@ -12,7 +12,7 @@ PATTERN = re.compile(r'\{\{([^{}]+)\}\}')
 RESIDUAL = re.compile(r'\{\{[^{}]*\}\}|\[\[[^\[\]]*\]\]')
 TEMPLATE = ROOT / '04_方案与文档/月度成本分析报告工作模板.docx'
 MAP_PATH = ROOT / '04_方案与文档/placeholder_map.json'
-RENDERER_VERSION='reader-20260918-static-template-prose'
+RENDERER_VERSION='reader-20260918-footer-unit-period-v2'
 NA = 'N/A（无可用基期或明细）'
 
 def replace_text_nodes(nodes, mapping):
@@ -140,11 +140,14 @@ def _all_paragraphs(doc):
 
 def layout_text(text):
     """Remove only the word-joiner inserted for layout, never normalize values."""
-    return text.replace('\u2060', '').replace('\u00a0', ' ')
+    return text.replace('\u2060', '').replace('\ufeff', '').replace('\u00a0', ' ')
 
 
 def protect_number_units(paragraph):
-    """Keep a number and its unit together without destroying runs/bookmarks."""
+    """Keep a number and its unit together without destroying runs/bookmarks.
+
+    LibreOffice ignores U+2060 at some CJK template boundaries; U+FEFF is
+    its supported zero-width no-break space. This is layout, not recoding."""
     nodes = list(paragraph._p.iter('{'+W+'}t'))
     for node in nodes:
         node.text = layout_text(node.text or '')
@@ -161,8 +164,18 @@ def protect_number_units(paragraph):
     offset = 0
     for node in nodes:
         original = node.text or ''
-        node.text = ''.join(('\u2060' if offset+i in boundaries else '')+('\u00a0' if offset+i in unbreakable_spaces else char) for i,char in enumerate(original))
+        node.text = ''.join(('\ufeff' if offset+i in boundaries else '')+('\u00a0' if offset+i in unbreakable_spaces else char) for i,char in enumerate(original))
         offset += len(original)
+
+
+def report_period_label(snapshot):
+    period = snapshot.get('period') or {}
+    start, end = period.get('start'), period.get('end')
+    return (start if start == end else start+' 至 '+end) if start and end else snapshot.get('month', '期间未提供')
+
+
+def benchmark_precision(snapshot):
+    return 4 if snapshot.get('analysis_type') == 'quarterly' else 2
 
 
 def benchmark_labels(comparison):
@@ -395,7 +408,7 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
     table('原材料成本明细表格',['月份','原料','单位消耗成本（元/盒）','总成本（元）'],[[r['月份'],r['原材料名称'],r['单位消耗成本(元/盒)'],r['原材料总成本(元)']] for r in details.get('materials',[])])
     table('近6个月成本趋势表格',['月份','单位成本（元/盒）','产量（盒）','总成本（元）'],[[r['month'],number(r['unit_cost']),number(r['quantity'],0),number(r['total_cost'])] for r in snapshot['trend']])
     table('原材料价格跟踪表格',['药材','参考月份','市场价格','单位（非采购价）'],[[r['药材名称'],snapshot['month'],r.get(str(int(snapshot['month'][5:]))+'月价格',NA),r['单位']] for r in details.get('market',[])])
-    table('对标差异表格',['要素',benchmark_labels(benchmark)[0]+'（元/盒）',benchmark_labels(benchmark)[1]+'（元/盒）','差异（元/盒）','差异率（%）'],[[r.get('name','单位成本'),number(r.get('left')),number(r.get('right')),number(r.get('delta')),number(r.get('rate'))] for r in (benchmark or {}).get('summary',[])[:1]+(benchmark or {}).get('elements',[])])
+    table('对标差异表格',['要素',benchmark_labels(benchmark)[0]+'（元/盒）',benchmark_labels(benchmark)[1]+'（元/盒）','差异（元/盒）','差异率（%）'],[[r.get('name','单位成本'),number(r.get('left'),benchmark_precision(snapshot)),number(r.get('right'),benchmark_precision(snapshot)),number(r.get('delta'),benchmark_precision(snapshot)),number(r.get('rate'))] for r in (benchmark or {}).get('summary',[])[:1]+(benchmark or {}).get('elements',[])])
     actionable=[f for f in narrative.get('findings',[]) if f.get('suggestion','').strip()]
     table('改进建议表格',['问题与核查行动','预期证据'],[[str(i+1)+'．'+f.get('rendered_text','')+'\n核查对象：'+f.get('verification_target','待补')+'\n行动：'+f.get('suggestion'), '、'.join(f.get('expected_evidence',[]) if isinstance(f.get('expected_evidence'),list) else [f.get('expected_evidence') or '核查对象的原始记录'])] for i,f in enumerate(actionable)])
     table('整改任务表格',['责任部门／角色','优先级','期限依据与状态'],[[str(i+1)+'．'+(f.get('department') or '责任部门待定')+'／'+(f.get('responsible_role') or '待分配')+'（姓名待分配）', {'high':'高','medium':'中','low':'低'}.get(f.get('priority'),'中'), (f.get('deadline_basis') or '下次成本复核前，具体日期由用户确认')+'；待确认发送'] for i,f in enumerate(actionable)])
@@ -404,7 +417,7 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
     add_reader_charts(doc,snapshot,benchmark,dynamic_anchors,output)
     add_reader_summary(doc,snapshot,narrative,output)
     doc.add_paragraph('来源与审核说明')
-    doc.add_paragraph('数据来源：成本汇总表、原材料明细表、人工与制造费用表 · '+snapshot['product']+' · '+snapshot['factory']+' · '+snapshot['month']+'。金额以元、单位成本以元/盒计；季度按产量加权。')
+    doc.add_paragraph('数据来源：成本汇总表、原材料明细表、人工与制造费用表 · '+snapshot['product']+' · '+snapshot['factory']+' · '+report_period_label(snapshot)+'。金额以元、单位成本以元/盒计；季度按产量加权。')
     source_map={e['evidence_id']:e for e in evidence.get('evidence',[])}
     used=set()
     for f in narrative.get('findings',[]):
@@ -620,7 +633,8 @@ def style_reader(doc):
     from docx.oxml.ns import qn
     for section in doc.sections:
         section.page_width=Cm(21);section.page_height=Cm(29.7)
-        section.top_margin=Cm(1.7);section.bottom_margin=Cm(1.6)
+        section.top_margin=Cm(1.7);section.bottom_margin=Cm(2.2)
+        section.footer_distance=Cm(1.0)
         section.left_margin=Cm(1.7);section.right_margin=Cm(1.7)
     for name in ('Normal','Body Text','Table Normal','Title','Heading 1','Heading 2','Heading 3'):
         if name not in doc.styles:continue

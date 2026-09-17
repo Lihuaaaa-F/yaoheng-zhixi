@@ -4,7 +4,7 @@ Shares the report compiler's typography, conversion and artifact contracts.
 from pathlib import Path
 import hashlib,json,re
 from docx import Document
-from .reports import style_reader,number,RESIDUAL,layout_text,benchmark_labels
+from .reports import style_reader,number,RESIDUAL,layout_text,benchmark_labels,benchmark_precision,report_period_label
 
 HEADINGS=['一、封面与基本信息','二、总成本概览','三、成本要素明细分析','四、重点产品专项分析','五、对标分析','六、总结与建议']
 
@@ -88,7 +88,7 @@ def verify(path, snapshot, benchmark=None):
         for column, key in enumerate(('left', 'right', 'delta'), 1):
             bind('benchmark:' + element['key'] + ':' + key,
                  table_value(4, benchmark_headers, element.get('name', element['key']), column),
-                 number(element.get(key)))
+                 number(element.get(key),benchmark_precision(snapshot)))
     residual = RESIDUAL.findall('\n'.join(all_text))
     headings_valid = len(headings) == 6 and observed == headings
     core = not any(item['binding'].startswith('core:') for item in failures)
@@ -118,7 +118,7 @@ def render(snapshot,narrative,evidence,output,benchmark=None):
     for index,heading in enumerate(headings):
         doc.add_heading(heading,1)
         if index==0:
-            period_label=snapshot['period']['start'] if snapshot['period']['start']==snapshot['period']['end'] else snapshot['period']['start']+' 至 '+snapshot['period']['end']
+            period_label=report_period_label(snapshot)
             paragraph(snapshot['factory']+' · '+period_label)
             paragraph('规格：'+snapshot['specification']+'；币种：'+snapshot['currency']+'；口径：完工产出。')
         elif index==1:
@@ -149,7 +149,7 @@ def render(snapshot,narrative,evidence,output,benchmark=None):
             if benchmark and benchmark.get('elements'):
                 left,right,direction=benchmark_labels(benchmark)
                 paragraph(direction)
-                table(['要素',left+'（'+unit+'）',right+'（'+unit+'）','差异（'+unit+'）'],[[e.get('name',e.get('key','')),number(e.get('left')),number(e.get('right')),number(e.get('delta'))] for e in benchmark['elements']])
+                table(['要素',left+'（'+unit+'）',right+'（'+unit+'）','差异（'+unit+'）'],[[e.get('name',e.get('key','')),number(e.get('left'),benchmark_precision(snapshot)),number(e.get('right'),benchmark_precision(snapshot)),number(e.get('delta'),benchmark_precision(snapshot))] for e in benchmark['elements']])
             else:paragraph('未选择跨厂比较；不构造明细或归因。')
             paragraph(snapshot['details']['reason'])
         else:

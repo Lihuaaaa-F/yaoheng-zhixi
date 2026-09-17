@@ -13,7 +13,7 @@ def test_numeric_unit_group_preserves_runs_and_bookmark():
     p.add_run('本期变动 0.2');p.add_run('2 元/盒；产量 1200.00 件。')
     original=p.text
     style_reader(doc)
-    assert '0\u2060.\u20602\u20602' in p.text
+    assert '0\ufeff.\ufeff2\ufeff2' in p.text
     assert layout_text(p.text) == original
     assert p._p.xpath('.//w:bookmarkStart[@w:name="metric_position"]')
     once=p.text;style_reader(doc);assert p.text==once
@@ -92,7 +92,7 @@ def test_number_unit_space_is_nonbreaking_and_short_source_block_stays_together(
     source=doc.add_paragraph('来源与审核说明');entry=doc.add_paragraph('独立合成文档，第1页')
     final=doc.add_paragraph('人工归因评分待真实评审。')
     style_reader(doc)
-    assert '0.18\u00a0元' in p.text.replace('\u2060','')
+    assert '0.18\u00a0元' in p.text.replace('\ufeff','')
     assert source.paragraph_format.keep_with_next and entry.paragraph_format.keep_with_next
     assert not final.paragraph_format.keep_with_next
 
@@ -150,3 +150,59 @@ def test_template_prose_rewrite_never_changes_inserted_model_text_or_split_slots
     assert p.text=='模拟甲厂−模拟乙厂；本季度 120：'+original
     assert '{{' not in p.text
     assert len(p.runs)==2
+
+
+def test_footer_body_clearance_and_full_period_label():
+    from pharma.reports import report_period_label, benchmark_precision
+    doc=Document();doc.add_paragraph('独立合成正文');style_reader(doc)
+    section=doc.sections[0]
+    assert section.bottom_margin.cm == pytest.approx(2.2,abs=.01)
+    assert section.footer_distance.cm == pytest.approx(1.0,abs=.01)
+    assert section.bottom_margin.pt-section.footer_distance.pt > 30
+    context={'month':'2026-06','analysis_type':'quarterly','period':{'start':'2026-04','end':'2026-06'}}
+    assert report_period_label(context)=='2026-04 至 2026-06'
+    assert benchmark_precision(context)==4
+    assert report_period_label({'period':{'start':'2026-06','end':'2026-06'}})=='2026-06'
+
+
+def test_quarterly_benchmark_preserves_small_difference(tmp_path):
+    from pharma.reference_report import render,verify
+    from pharma.reports import layout_text
+    snapshot=analyze_reference('mechanical_demo:synthetic-mechanical',month='2026-06',analysis_type='quarterly')
+    snapshot['trend']=[]
+    comparison={'left':'合成工厂甲','right':'合成工厂乙','elements':[
+        {'key':'material','name':'合成材料','left':'8.1234','right':'8.1212','delta':'0.0022'}]}
+    path=tmp_path/'quarter.docx'
+    result=render(snapshot,{'findings':[]},{'evidence':[]},path,comparison)
+    assert result['status']=='PASS'
+    assert verify(path,snapshot,comparison)['status']=='PASS'
+    rows=[[layout_text(c.text) for c in r.cells] for t in Document(path).tables for r in t.rows]
+    assert ['合成材料','8.1234','8.1212','0.0022'] in rows
+
+
+def test_actual_pdf_number_unit_groups_and_footer_clearance(tmp_path):
+    import shutil,re
+    import pymupdf
+    from pharma.reports import convert_pdf
+    if not shutil.which('libreoffice'):pytest.skip('LibreOffice unavailable')
+    doc=Document()
+    # Independent synthetic fixture moves the same amount across line ends.
+    for n in range(31,43):
+        doc.add_paragraph('合'*n+' 12345.67 元；合成产量 345.00 件。')
+    style_reader(doc);path=tmp_path/'group.docx';doc.save(path)
+    converted=convert_pdf(path)
+    assert converted['status']=='PASS',converted
+    pdf=pymupdf.open(path.with_suffix('.pdf'))
+    occurrences=0
+    for page in pdf:
+        lines=[line for block in page.get_text('dict')['blocks'] for line in block.get('lines',[])]
+        body=[];foot=[]
+        for line in lines:
+            text=''.join(s['text'] for s in line['spans'])
+            if re.match(r'^第\s*\d+\s*页',text):foot.append(line['bbox'])
+            else:body.append(line['bbox'])
+            if '12345.67' in text:
+                occurrences+=1
+                assert '12345.67 元' in text.replace('\u00a0',' ')
+        assert min(b[1] for b in foot)-max(b[3] for b in body)>10
+    assert occurrences==12

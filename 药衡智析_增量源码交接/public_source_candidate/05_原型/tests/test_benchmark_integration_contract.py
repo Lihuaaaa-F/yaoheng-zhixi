@@ -23,7 +23,7 @@ def test_reference_report_worker_passes_cross_metrics_to_generation(tmp_path, mo
     from pharma import worker, industry, narrative, context_services
     snapshot=industry.analyze_reference('mechanical_demo:synthetic-mechanical',month='2026-06')
     from pharma.knowledge import PARSER_VERSION,RETRIEVER_VERSION,EMBEDDING_SHA,terminology_hash
-    versions={'validator':narrative.VALIDATOR_VERSION,'parser':PARSER_VERSION,'retriever':RETRIEVER_VERSION,'embedding':EMBEDDING_SHA,'terminology':terminology_hash()}
+    versions={'retrieval_policy':context_services.retrieval_policy_version(snapshot['analysis_context']),'validator':narrative.VALIDATOR_VERSION,'parser':PARSER_VERSION,'retriever':RETRIEVER_VERSION,'embedding':EMBEDDING_SHA,'terminology':terminology_hash()}
     store=JobStore(tmp_path/'db');store.snapshot(snapshot);job=store.enqueue('report',{'snapshot_id':snapshot['snapshot_id'],'versions':versions})
     captured=[]
     monkeypatch.setattr(context_services,'retrieve',lambda *a,**k:{'status':'PASS','evidence':[]})

@@ -11,7 +11,7 @@ from .config import ROOT, PACKAGE, RUNTIME
 
 EMBEDDING_SHA = '75c43b069aac4d136ba6bc1122f995fedcfd2781'
 PARSER_VERSION = 'scope-prefilter-v7-private-terminology'
-RETRIEVER_VERSION = 'bm25-chroma-prefilter-rrf-v3-explicit-source-files'
+RETRIEVER_VERSION = 'bm25-chroma-prefilter-rrf-v4-purpose-event-scope'
 def _string_list(value, label):
     if not isinstance(value,list) or any(not isinstance(x,str) or not x.strip() or len(x)>200 for x in value) or len(value)!=len(set(value)):
         raise ValueError('INVALID_TERMINOLOGY_'+label)
@@ -340,7 +340,7 @@ class Knowledge:
             if effective and end and effective[:7] > end: reasons.append('文档尚未生效')
         return {'applicable':not reasons, 'reasons':reasons, 'limits':limits, 'scope':chunk.get('scope','unknown')}
 
-    def search(self, query, product=None, mode='hybrid', limit=5, factory=None, period=None, specification=None, document_version=None, context=None):
+    def search(self, query, product=None, mode='hybrid', limit=5, factory=None, period=None, specification=None, document_version=None, context=None, event_only=False):
         if context is not None and dict(context) != self.context:
             raise ValueError('KNOWLEDGE_CONTEXT_MISMATCH')
         if mode not in ('hybrid','bm25','vector'):
@@ -357,6 +357,10 @@ class Knowledge:
             chunks = {row[0]:json.loads(row[1]) for row in db.execute('SELECT id,body FROM chunks')}
             applicability = {k:self.evidence_applicability(v,product,factory,period,specification,document_version,context=self.context) for k,v in chunks.items()}
             eligible = {k for k,v in applicability.items() if v['applicable']}
+            if event_only:
+                # Purpose retrieval still applies all normal scope checks, then
+                # restricts candidates before either BM25 or vector ranking.
+                eligible = {k for k in eligible if period and period.get('start') and period.get('end') and chunks[k].get('event_period')}
             tokens = list(dict.fromkeys(tokenize(query)))[:60]
             match = ' OR '.join('"'+x.replace('"','""')+'"' for x in tokens)
             db.execute('CREATE TEMP TABLE eligible(id TEXT PRIMARY KEY)')

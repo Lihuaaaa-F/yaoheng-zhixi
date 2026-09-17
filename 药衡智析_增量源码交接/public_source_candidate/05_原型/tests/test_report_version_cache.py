@@ -27,12 +27,13 @@ def submit(client):
 
 
 def mutate(monkeypatch,kind):
-    if kind=='validator':monkeypatch.setattr(narrative,'VALIDATOR_VERSION','synthetic-validator-v-next',raising=False)
+    if kind=='retrieval_policy':monkeypatch.setattr(context_services,'retrieval_policy_version',lambda context:'synthetic-policy-v-next')
+    elif kind=='validator':monkeypatch.setattr(narrative,'VALIDATOR_VERSION','synthetic-validator-v-next',raising=False)
     elif kind=='parser':monkeypatch.setattr(knowledge,'PARSER_VERSION','synthetic-parser-v-next')
     elif kind=='terminology':monkeypatch.setattr(knowledge,'terminology_hash',lambda:'synthetic-terms-v-next')
 
 
-@pytest.mark.parametrize('kind',['validator','parser','terminology'])
+@pytest.mark.parametrize('kind',['validator','parser','terminology','retrieval_policy'])
 def test_completed_report_reused_only_when_all_generation_versions_match(service,monkeypatch,kind):
     client,store=service
     first=submit(client);store.update(first,'DEGRADED',{'execution_status':'COMPLETED'})
@@ -43,7 +44,7 @@ def test_completed_report_reused_only_when_all_generation_versions_match(service
     assert submit(client)==second
 
 
-@pytest.mark.parametrize('kind',['validator','parser','terminology'])
+@pytest.mark.parametrize('kind',['validator','parser','terminology','retrieval_policy'])
 def test_worker_rejects_changed_version_before_reusing_partial_result(service,monkeypatch,kind):
     client,store=service
     id=submit(client)
@@ -56,7 +57,7 @@ def test_worker_rejects_changed_version_before_reusing_partial_result(service,mo
     assert not any(row['stage']=='RENDERING_DOCX' for row in store.history(id))
 
 
-@pytest.mark.parametrize('kind',['validator','parser','terminology'])
+@pytest.mark.parametrize('kind',['validator','parser','terminology','retrieval_policy'])
 def test_worker_rejects_old_unbound_version_contract(service,kind):
     client,store=service
     id=submit(client);job=store.get(id)

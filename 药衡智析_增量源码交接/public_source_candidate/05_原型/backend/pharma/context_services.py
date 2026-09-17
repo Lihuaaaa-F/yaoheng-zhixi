@@ -1,10 +1,63 @@
 """Scope-bound service adapters shared by HTTP handlers and queued jobs."""
 from hashlib import sha256
+import json
+from typing import Literal
+from pydantic import BaseModel, ConfigDict, Field
 from .knowledge import Knowledge, source_snapshot
+
+PURPOSE_STRATEGY_VERSION='current-period-event-reservation-v1'
+
+
+class EventPurpose(BaseModel):
+    model_config=ConfigDict(extra='forbid')
+    id:str=Field(min_length=1,max_length=80,pattern=r'^[a-z_]+$')
+    query_terms:list[str]=Field(min_length=1,max_length=4)
+    event_match_terms:list[str]=Field(min_length=1,max_length=4)
+    reserved_slots:Literal[1]=1
+
+
+class RetrievalPolicy(BaseModel):
+    model_config=ConfigDict(extra='forbid')
+    version:str=Field(min_length=1,max_length=40)
+    max_supplemental_queries:Literal[1]=1
+    purpose:EventPurpose
+
+
+def retrieval_policy(context):
+    """Only an installed, validated pack can supply this bounded JSON policy."""
+    if not context or not context.get('industry_id'):return None
+    from .industry import PACKS,load_pack
+    pack=load_pack(context['industry_id'])
+    path=PACKS/pack.id/'retrieval.json'
+    if not path.is_file():return None
+    policy=RetrievalPolicy.model_validate(json.loads(path.read_text(encoding='utf-8')))
+    for term in [*policy.purpose.query_terms,*policy.purpose.event_match_terms]:
+        if not term.strip() or len(term)>40 or any(c in term for c in ('[',']','{','}','\n')):
+            raise ValueError('INVALID_RETRIEVAL_PURPOSE_TERM')
+    return policy
+
+
+def _policy_version(policy):
+    value={'strategy':PURPOSE_STRATEGY_VERSION,'policy':policy.model_dump() if policy else None}
+    return sha256(json.dumps(value,sort_keys=True,ensure_ascii=False,separators=(',',':')).encode()).hexdigest()
+
+
+def retrieval_policy_version(context):
+    return _policy_version(retrieval_policy(context))
+
+
+def _matching_event(row,snapshot,purpose):
+    period=snapshot.get('period') or {};event=row.get('event_period')
+    if not event or not period.get('start') or not period.get('end') or not period['start']<=event<=period['end']:return False
+    if not any(term in row.get('text','') for term in purpose.event_match_terms):return False
+    return Knowledge.evidence_applicability(row,product=snapshot.get('product'),factory=snapshot.get('factory'),
+        period=period,specification=snapshot.get('specification'),context=snapshot.get('analysis_context'))['applicable']
 
 
 def retrieve(snapshot, query, *, mode='hybrid', limit=8):
+    if not isinstance(limit,int) or isinstance(limit,bool) or not 1<=limit<=100:raise ValueError('INVALID_RETRIEVAL_LIMIT')
     context = snapshot.get('analysis_context') or {}
+    policy=retrieval_policy(context)
     if not context:
         knowledge = Knowledge()
     elif context.get('industry_id') == 'pharmaceutical' and context.get('enterprise_id') == 'competition':
@@ -17,6 +70,35 @@ def retrieve(snapshot, query, *, mode='hybrid', limit=8):
         if sha256(entry.read_bytes()).hexdigest() != context.get('knowledge_snapshot'):
             raise ValueError('KNOWLEDGE_SNAPSHOT_CHANGED')
         knowledge = Knowledge(context=context, source_files=(entry,))
-    return knowledge.search(query, product=snapshot.get('product'), factory=snapshot.get('factory'),
-                            period=snapshot.get('period'), specification=snapshot.get('specification'),
-                            mode=mode, limit=limit)
+    scope={'product':snapshot.get('product'),'factory':snapshot.get('factory'),
+           'period':snapshot.get('period'),'specification':snapshot.get('specification'),'mode':mode,'limit':limit}
+    result=knowledge.search(query,**scope)
+    result['retrieval_policy_version']=_policy_version(policy)
+    diagnostic={'query_budget':1+(policy.max_supplemental_queries if policy else 0),'queries_executed':1,
+                'total_evidence_limit':limit,'status':'NOT_CONFIGURED'}
+    result['purpose_retrieval']=diagnostic
+    if not policy:return result
+    purpose=policy.purpose;diagnostic['purpose_id']=purpose.id
+    if any(_matching_event(row,snapshot,purpose) for row in result.get('evidence',[])):
+        diagnostic['status']='ALREADY_COVERED';return result
+    period=snapshot.get('period') or {}
+    if not snapshot.get('product') or not period.get('start') or not period.get('end'):
+        diagnostic['status']='MISSING_EVENT_SCOPE';return result
+    supplemental_query=snapshot['product']+' '+' '.join(purpose.query_terms)
+    extra=knowledge.search(supplemental_query,**scope,event_only=True)
+    if extra.get('knowledge_version')!=result.get('knowledge_version'):raise ValueError('KNOWLEDGE_CHANGED_DURING_PURPOSE_RETRIEVAL')
+    selected=[row for row in extra.get('evidence',[]) if _matching_event(row,snapshot,purpose)][:purpose.reserved_slots]
+    diagnostic.update(queries_executed=2,status='RECALLED' if selected else 'NO_APPLICABLE_EVENT_RECALLED',
+                      eligible_event_count=extra.get('eligible_count'),selected_count=len(selected),
+                      retrieval_status=extra.get('retrieval_status'),reason=extra.get('reason'))
+    if selected:
+        ids={row['evidence_id'] for row in selected}
+        baseline=[];seen=set(ids)
+        for row in result.get('evidence',[]):
+            if row['evidence_id'] not in seen:baseline.append(row);seen.add(row['evidence_id'])
+        result['evidence']=baseline[:max(0,limit-len(selected))]+[{**row,'retrieval_purpose':purpose.id} for row in selected]
+        result['recall_status']='RECALLED'
+    if extra.get('status')!='PASS':
+        result['status']='DEGRADED';result['retrieval_status']='DEGRADED'
+        result['reason']=result.get('reason') or 'PURPOSE_RETRIEVAL_'+str(extra.get('reason') or extra.get('status'))
+    return result

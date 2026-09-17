@@ -23,6 +23,7 @@ def process_job(store,job):
         from .narrative import ModelGateway,PROMPT_VERSION,VALIDATOR_VERSION
         from .knowledge import PARSER_VERSION,RETRIEVER_VERSION,EMBEDDING_SHA,terminology_hash
         from .ingestion import ingest
+        from .context_services import retrieval_policy_version
         gateway=ModelGateway()
         snapshot=store.get_snapshot(payload['snapshot_id'])
         synthetic=bool(snapshot.get('context_id') and snapshot['context_id']!='pharmaceutical:competition')
@@ -32,7 +33,7 @@ def process_job(store,job):
             if versions.get(key) and versions[key]!=current:raise ValueError(key.upper()+'_VERSION_CHANGED_RESUBMIT')
         # A legacy job without these bindings cannot reuse partial/completed
         # results under a different validation or knowledge parsing contract.
-        for key,current in [('validator',VALIDATOR_VERSION),('parser',PARSER_VERSION),('terminology',terminology_hash()),('retriever',RETRIEVER_VERSION),('embedding',EMBEDDING_SHA)]:
+        for key,current in [('retrieval_policy',retrieval_policy_version(snapshot.get('analysis_context') or {})),('validator',VALIDATOR_VERSION),('parser',PARSER_VERSION),('terminology',terminology_hash()),('retriever',RETRIEVER_VERSION),('embedding',EMBEDDING_SHA)]:
             if versions.get(key)!=current:raise ValueError(key.upper()+'_VERSION_CHANGED_RESUBMIT')
         if not synthetic and versions.get('template') and hashlib.sha256(TEMPLATE.read_bytes()).hexdigest()!=versions['template']:
             raise ValueError('TEMPLATE_VERSION_CHANGED_RESUBMIT')
