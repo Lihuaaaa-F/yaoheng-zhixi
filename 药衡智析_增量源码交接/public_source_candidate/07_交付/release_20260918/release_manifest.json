@@ -1,0 +1,372 @@
+{
+  "release": "release_20260918",
+  "source_commit": "47c58069f1bc449d6bda18815f5276d44e72acdb",
+  "source_run": "delivery_20260918_47c5806",
+  "human_review": "PENDING",
+  "provider": "DeepSeek official application API",
+  "model": "deepseek-flash",
+  "report_artifact_resolution": "JobStore.artifact_path; final-state and source hash checked before copying",
+  "scenarios": [
+    {
+      "id": "mechanical",
+      "job_id": "b9424ebb55f8467084ef75de58ba7fd4",
+      "files": [
+        {
+          "path": "reports/mechanical.docx",
+          "sha256": "8add0659f67759a9b8eae9d88d4b14791e12a66ff026cfee873a84bd95c06e91",
+          "bytes": 68796
+        },
+        {
+          "path": "reports/mechanical.pdf",
+          "sha256": "602276cd2dedd3dec190eb3e1054d0bc180cbf4fe4ead93555b352ea58e47b4e",
+          "bytes": 165640
+        }
+      ],
+      "page_images": [
+        {
+          "path": "pages/mechanical/page-01.png",
+          "sha256": "17075e483a881caec0e20ffc16d2cd5411e2b00b7af330536089d2eaaf578d2a",
+          "bytes": 163618
+        },
+        {
+          "path": "pages/mechanical/page-02.png",
+          "sha256": "2098687aba03253fe0605778d51b88a9cb30158bc422ce1718b69aa1acb26995",
+          "bytes": 217804
+        },
+        {
+          "path": "pages/mechanical/page-03.png",
+          "sha256": "f042052e797db2e8a8da14ca368aa9026af2830e9f90521649b6e835b90e5624",
+          "bytes": 114791
+        }
+      ],
+      "pages": 3
+    },
+    {
+      "id": "chemical",
+      "job_id": "862412f58d5e40548c472f27e50577b5",
+      "files": [
+        {
+          "path": "reports/chemical.docx",
+          "sha256": "dccc4eb9a6518e9efe5db8a2fb58d3733d68fc6404057db38282ada506a4b193",
+          "bytes": 66344
+        },
+        {
+          "path": "reports/chemical.pdf",
+          "sha256": "d2ff932e5a961a1e7ccbbefa8b1c1b854522939f802384cadca0b452b3072f2a",
+          "bytes": 195149
+        }
+      ],
+      "page_images": [
+        {
+          "path": "pages/chemical/page-01.png",
+          "sha256": "012cab73f06c2cbba331f7b1268bb61648352e9c5c78b1cd32ac02637edfe21c",
+          "bytes": 160419
+        },
+        {
+          "path": "pages/chemical/page-02.png",
+          "sha256": "7b22df5c6196c8bd215b9734c341b68d1776dcc8fe5c8a65ecd97f1e34fb0cfb",
+          "bytes": 278592
+        },
+        {
+          "path": "pages/chemical/page-03.png",
+          "sha256": "27db7740371ca2cfe226b6a097e7e79f08b8d209745287e578c5bb239a91db61",
+          "bytes": 250780
+        },
+        {
+          "path": "pages/chemical/page-04.png",
+          "sha256": "2c8f366cc112c1b5fe184c90456caf3c85d61819c65c7b12a899a7c61511f596",
+          "bytes": 18801
+        }
+      ],
+      "pages": 4
+    },
+    {
+      "id": "pharma_synthetic",
+      "job_id": "6cf42c37b51d43029acd9a4b3bf8776c",
+      "files": [
+        {
+          "path": "reports/pharma_synthetic.docx",
+          "sha256": "abfff6e053b0bc4163e6eb596a948b106e5367a39bc7d62ada4ae5b25d1b831f",
+          "bytes": 69134
+        },
+        {
+          "path": "reports/pharma_synthetic.pdf",
+          "sha256": "b4e63738e8accdef87dbb0699be766439323c3b3ab2867cce6426356703335d6",
+          "bytes": 173691
+        }
+      ],
+      "page_images": [
+        {
+          "path": "pages/pharma_synthetic/page-01.png",
+          "sha256": "e0608d37a0830e3e568a3dc3abce963abfda745cea146f412d00cf13f5a5c4ad",
+          "bytes": 169787
+        },
+        {
+          "path": "pages/pharma_synthetic/page-02.png",
+          "sha256": "3fe17273edc01467104a08d7a701c29b943bcc7dd163eb0f4b3b582631246e25",
+          "bytes": 250154
+        },
+        {
+          "path": "pages/pharma_synthetic/page-03.png",
+          "sha256": "77ebae36a0f504820d821c53f39aeb8003e14572d7f6cdaa00287dc482fd8053",
+          "bytes": 180026
+        }
+      ],
+      "pages": 3
+    },
+    {
+      "id": "S1",
+      "job_id": "98648943f8a943f094b4e58bb1e748d8",
+      "files": [
+        {
+          "path": "reports/S1.docx",
+          "sha256": "1c52fffe30d933c58434694efac8e2a71aeaee253dff1e7431b648a9b2006f14",
+          "bytes": 145544
+        },
+        {
+          "path": "reports/S1.pdf",
+          "sha256": "eb618985a6dedfdc4abb0e4bf1d5c0a24c1d08a69a258f7e0f9f1c70c11d2866",
+          "bytes": 496425
+        }
+      ],
+      "page_images": [
+        {
+          "path": "pages/S1/page-01.png",
+          "sha256": "e417e55c1ab6e399aa8542d7b3dc4e3e365bb71150523fc62bacbf4d7a9fbe62",
+          "bytes": 134091
+        },
+        {
+          "path": "pages/S1/page-02.png",
+          "sha256": "7a8c3f2a9106424b4f3da2f744bc2232e23e01784b17eb29149a8bdde7beff7a",
+          "bytes": 113112
+        },
+        {
+          "path": "pages/S1/page-03.png",
+          "sha256": "e04705309ea6d9648de6aa6949b9e48bf14a10d9e76aaf576d20241f17a20f93",
+          "bytes": 207613
+        },
+        {
+          "path": "pages/S1/page-04.png",
+          "sha256": "8c71fb347f1385ca00c6ec42cf07187e8d080a788d001288e9b605452759d59c",
+          "bytes": 113839
+        },
+        {
+          "path": "pages/S1/page-05.png",
+          "sha256": "cface6926d072a06b36a77665d51db2ff8a7f0fedeba85e8cb7cc189d715a560",
+          "bytes": 166272
+        },
+        {
+          "path": "pages/S1/page-06.png",
+          "sha256": "e2c3b70d62aaa8b8414b984630a0c024888e425e91d4df335578cbf17ea441c2",
+          "bytes": 269585
+        },
+        {
+          "path": "pages/S1/page-07.png",
+          "sha256": "3985197779b1ddb7809ca7cdb1912a01094dda6a5a89c43ef19093498531074c",
+          "bytes": 44246
+        }
+      ],
+      "pages": 7
+    },
+    {
+      "id": "S2",
+      "job_id": "dc386625755a409bb87f058e9bfd82cb",
+      "files": [
+        {
+          "path": "reports/S2.docx",
+          "sha256": "f69a1da3f7e34c3870176919c7ad4e4b60c3bca7f948342449b0ab281e931087",
+          "bytes": 148249
+        },
+        {
+          "path": "reports/S2.pdf",
+          "sha256": "b0ba44fe187eb318646414be5ea7015afd7719d7b7dc8f71ddefa3b45d4e771f",
+          "bytes": 487497
+        }
+      ],
+      "page_images": [
+        {
+          "path": "pages/S2/page-01.png",
+          "sha256": "ac0407ea247b3fb50d08778a52a765f01160322ab12f562701d238bc4d51db2a",
+          "bytes": 134791
+        },
+        {
+          "path": "pages/S2/page-02.png",
+          "sha256": "91df09ba58715fd79820ab4f3ba70b90336f75c4405fd936a8ed603c5750495a",
+          "bytes": 102068
+        },
+        {
+          "path": "pages/S2/page-03.png",
+          "sha256": "e8d01bf90f76f4c788409f9cefa8471d5a3584aa1e62af2fd7e6dbbb1c512f19",
+          "bytes": 205265
+        },
+        {
+          "path": "pages/S2/page-04.png",
+          "sha256": "9c9e07ede74dd35008892f3846912ddf3e6a04162c07c7e9965079d800cf377a",
+          "bytes": 110883
+        },
+        {
+          "path": "pages/S2/page-05.png",
+          "sha256": "5d0a9f0d840e29be48056bbfb85fce800b030df708e83dec5ad29d8e9689afd4",
+          "bytes": 192888
+        },
+        {
+          "path": "pages/S2/page-06.png",
+          "sha256": "8b18552a69e56842029a061c4c51753268c0f439f5ab5a1cc954b02575913580",
+          "bytes": 269257
+        },
+        {
+          "path": "pages/S2/page-07.png",
+          "sha256": "10ea6c5d6d732d5a2a8e1f1d7b93f3f80e29a146c202140f25ca0b4b427bbcb3",
+          "bytes": 52918
+        }
+      ],
+      "pages": 7
+    },
+    {
+      "id": "S3",
+      "job_id": "a63bfdf7e4c949218de693e9db1c86da",
+      "files": [
+        {
+          "path": "reports/S3.docx",
+          "sha256": "444b3b66672c5b8e78a71129db3d6c0dc35b9cf27aceb9eb9c9f1b035c7220c5",
+          "bytes": 148893
+        },
+        {
+          "path": "reports/S3.pdf",
+          "sha256": "5a492dc01591f1976eac79d8d04ce5164d11af94d607e0c9e2b0764a2726aaec",
+          "bytes": 537051
+        }
+      ],
+      "page_images": [
+        {
+          "path": "pages/S3/page-01.png",
+          "sha256": "6e9588e52f93c06388258040ed456a9910a51c01a56b319961efb50a87fef8bd",
+          "bytes": 137444
+        },
+        {
+          "path": "pages/S3/page-02.png",
+          "sha256": "afc33b6f5937c0474241b19e3199c71e636093faaf795a6d1a42697095360361",
+          "bytes": 120713
+        },
+        {
+          "path": "pages/S3/page-03.png",
+          "sha256": "7844cef15f1b6bed9e45cdc72116b8842f384607875b567f490a80f52fda7a74",
+          "bytes": 268068
+        },
+        {
+          "path": "pages/S3/page-04.png",
+          "sha256": "6ea8b85b1859adad92f82d8c5b16297e48e49091c28ca36bedaf7387c6a2d527",
+          "bytes": 121234
+        },
+        {
+          "path": "pages/S3/page-05.png",
+          "sha256": "36a74b23b6ea9de8abf240df7f26b66c5b95cfded32420959a2856c99d92cca1",
+          "bytes": 194481
+        },
+        {
+          "path": "pages/S3/page-06.png",
+          "sha256": "de921e8bc4e691895004a944497d75db39d71a941c32db2846d8b53570617c55",
+          "bytes": 279134
+        },
+        {
+          "path": "pages/S3/page-07.png",
+          "sha256": "8a2dad47f73f9ca11eb1e659375c1ed8953e4a217e88af76b30a0fafc912e105",
+          "bytes": 64055
+        }
+      ],
+      "pages": 7
+    },
+    {
+      "id": "Q2",
+      "job_id": "13dfcbce7f644207af34528b71caff40",
+      "files": [
+        {
+          "path": "reports/Q2.docx",
+          "sha256": "51bcbc0205b6c81df6ca23abe2d711126fe7b9039b5165a32a8dbdb1840d7c9f",
+          "bytes": 152230
+        },
+        {
+          "path": "reports/Q2.pdf",
+          "sha256": "e5a69fe8b907de1bac86be30d63274830cc9e39920b34c64cc971c21050cb63a",
+          "bytes": 545505
+        }
+      ],
+      "page_images": [
+        {
+          "path": "pages/Q2/page-01.png",
+          "sha256": "21194c80b3dbf8e3c1f50916fc7462a90dd99efcf98b7aa549671c43f663c132",
+          "bytes": 138658
+        },
+        {
+          "path": "pages/Q2/page-02.png",
+          "sha256": "ecaeb153b46bfb849b75c54ad7e3767470904d5017cf1583c3b2b78510ee107e",
+          "bytes": 134020
+        },
+        {
+          "path": "pages/Q2/page-03.png",
+          "sha256": "2a996cb90ce50816339ebd60edeb2f7ad94b7e891077982d32dea4490b6e6c1a",
+          "bytes": 243306
+        },
+        {
+          "path": "pages/Q2/page-04.png",
+          "sha256": "a9f9457b81467c068846c7fd03cc667b4c8f2e6a2cbe45911e0fd28b48fa4c16",
+          "bytes": 144798
+        },
+        {
+          "path": "pages/Q2/page-05.png",
+          "sha256": "8d5e7fedbb17727fa55f78629342ccb1db5c4a6e67f21cef0c3811b4512034a1",
+          "bytes": 190835
+        },
+        {
+          "path": "pages/Q2/page-06.png",
+          "sha256": "161c1f438e90f220d93e68fa3690924c076abdee18d555cebea492f9cfe640f0",
+          "bytes": 281987
+        },
+        {
+          "path": "pages/Q2/page-07.png",
+          "sha256": "45afafd43124ff8e101af017a124ec9897d4f3d713e50e1de134585bc5abefd0",
+          "bytes": 44908
+        }
+      ],
+      "pages": 7
+    }
+  ],
+  "ui": [
+    {
+      "path": "ui/desktop-stable.png",
+      "sha256": "ac2831eeab360b34cdd563710b810e22e2a12ab2e9a1487d543cbe14134e7ffe",
+      "bytes": 536181
+    },
+    {
+      "path": "ui/mobile-stable.png",
+      "sha256": "89e5c39517d05b851f68f347268bb1b8d6805046821b9084447b6ebd3bf2cd67",
+      "bytes": 462425
+    },
+    {
+      "path": "ui/benchmark-real-stable.png",
+      "sha256": "3063dddb65274772c2968d26e49184548031c25bcd8aad228aaf675151e264f7",
+      "bytes": 639916
+    }
+  ],
+  "demo": [
+    {
+      "path": "demo/synthetic-framework-demo.mp4",
+      "sha256": "710a4ca0877bf00e5f9e46bf234488f53eb6a170ac6473eaf98b1372bf971ed2",
+      "bytes": 1125541
+    },
+    {
+      "path": "demo/药衡智析_演示与答辩稿.pptx",
+      "sha256": "3052d0f9363292db1325643a76d63beabca1954c0d14f59f4c3271bde590cdd5",
+      "bytes": 38552
+    },
+    {
+      "path": "demo/药衡智析_演示与答辩稿_阅读版.pdf",
+      "sha256": "a156e319b51068df772583d8273ff8883d859096c075ae3ca70c3a2acde1bd79",
+      "bytes": 10632235
+    }
+  ],
+  "demo_video_seconds": 37.68,
+  "demo_slides": 8,
+  "reading_pdf_pages": 8,
+  "demo_note": "Existing earlier demonstration material, not represented as newly recorded at the final source commit. Reading PDF is not native PowerPoint rendering."
+}

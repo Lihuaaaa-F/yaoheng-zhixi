@@ -77,20 +77,19 @@
     "browser": "validation/delivery_20260918_47c5806/browser.json"
   },
   "human_review": "PENDING",
-  "privacy": "Local only: private scenario products and prose are excluded",
+  "privacy": "Contest data and static derived deliverables published under latest explicit user authorization; no credentials, environment files, runtime databases/queues or recovery backups.",
   "starting_commit": "acc469312c8366e4b0438e702a5f435779e7a125",
   "branch": "codex/core-industry-20260917",
   "automatic_status": "PASS",
   "competition_ready": false,
   "verified_at": "2026-09-18",
   "local_manifest": "06_评测/delivery_20260918_47c5806/manifest.json",
-  "public_boundary": "No private original data, knowledge, full reports, databases, logs or recovery snapshots are included; old Git history is not cleaned",
+  "public_boundary": "Original contest resources and static deliverables are included by latest explicit user authorization. No credentials, local environment, runtime databases, queues or recovery backups are published.",
   "external_pending": [
     "Named human attribution 0–5, readability and layout reviews",
     "One nonblocking composite-unit line wrap and source-page whitespace; human layout approval remains pending",
     "Final narrated demo edit and actual PowerPoint rendering",
-    "Real controlled industry data and unseen retrieval evaluation",
-    "Repository-owner handling of historical private assets"
+    "Real controlled industry data and unseen retrieval evaluation"
   ],
   "test_results": {
     "local_with_private_regressions": {
@@ -182,5 +181,6 @@
     }
   ],
   "verification_exit_code": 0,
-  "verification_receipt": "validation/delivery_20260918_47c5806/verification.json"
+  "verification_receipt": "validation/delivery_20260918_47c5806/verification.json",
+  "publication_authorization": "User explicitly authorized retaining original contest data and publishing all project deliverables to this public repository on 2026-09-18; credentials, environments, runtime state and recovery backups remain excluded"
 }

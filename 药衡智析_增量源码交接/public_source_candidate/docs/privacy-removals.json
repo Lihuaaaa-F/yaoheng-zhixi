@@ -1,6 +1,6 @@
 {
   "base_commit": "acc469312c8366e4b0438e702a5f435779e7a125",
-  "scope": "tracked paths removed from current tree; history NOT purged",
+  "scope": "Historical removals earlier in this run; superseded for authorized contest resources by explicit user instruction on 2026-09-18. Current restored resources are recorded in competition-assets.json. No shared Git history was purged.",
   "paths": [
     "7.（创灵境）2026年第二届重庆市AI大模型创新应用大赛企业出题.docx",
     "药衡智析/增量源码交接/public_source_candidate/05_原型/scripts/verify.py",
@@ -1077,5 +1077,6 @@
       "05_原型/tests/test_reviews.py"
     ],
     "scope": "Enterprise product/device relations and master data externalized; private scenario constants and answer assertions replaced by independent public synthetic references. Local unpublished intermediate commits are excluded from pushed ancestry."
-  }
+  },
+  "current_authorization": "publication-authorization.md"
 }

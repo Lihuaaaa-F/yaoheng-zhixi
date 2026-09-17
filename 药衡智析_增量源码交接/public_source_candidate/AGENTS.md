@@ -2,7 +2,7 @@
 
 Git根为本目录上两级；本目录是应用项目根，源码05_原型。所有命令显式cwd。main为协作默认分支，日常使用工作分支，不force push。用户已授权本轮修改、普通commit/push；不修改可见性或共享历史。
 
-先读README、docs/current_run.json、docs/implementation_status.md和相关ADR。唯一当前验收入口为docs/current_run.json；历史原件/报告/回执只留工程外恢复归档。原题只读，公开仓不能包含题包、私有知识、派生完整报告、旧golden或恢复备份。gitignore不代替移除tracked。
+先读README、docs/current_run.json、docs/implementation_status.md和相关ADR。唯一当前验收入口为docs/current_run.json；历史运行必须明确标历史，不冒充本轮通过。用户最新已明确授权“保留原有赛题数据并提交所有内容”到同一公开协作仓库，覆盖此前题包及派生报告不发布的限制。赛题原件保持源字节，只读使用；本轮比赛数据、知识、比赛配置与整理后的静态报告/展示材料可发布。行业包及默认测试继续使用独立合成样例，不把比赛数据改名作为合成样例。密钥、.env、数据库、待发队列及恢复备份仍不发布，真实企业未来资料不因本次授权自动公开。privacy-removals.json是此前清理的历史清单，不代表现状。逐项检查tracked/staged，gitignore不能代替检查。
 
 数值用Decimal，数量独立去重；缺失不补零。证据相关不等于证实因果，任务须确认后发送；模拟送达不等于整改完成。真人0—5评分仅真人署名录入。
 

@@ -1,14 +1,14 @@
 # 行业包开发与验收合同
 
-本轮采用模块化单体。`backend/pharma/industry.py` 提供规范化事实、聚合、可比性与不可变 `AnalysisContext`。现有制药专用导入/指标适配器保留在 `ingestion.py` / `metrics.py`，公共 `industry_packs/pharmaceutical/source_contract.json` 仅保留来源字段、要素定义及合成主数据白名单；原企业产品规格与工厂主数据通过 `PHARMA_PRIVATE_MASTERDATA_FILE` 外置，原企业词典通过 `PHARMA_PRIVATE_TERMINOLOGY_FILE` 外置。没有换栈、引入插件框架或复制后端。新增第三方依赖：无。
+本轮采用模块化单体。`backend/pharma/industry.py` 提供规范化事实、聚合、可比性与不可变 `AnalysisContext`。现有制药专用导入/指标适配器保留在 `ingestion.py` / `metrics.py`，公共 `industry_packs/pharmaceutical/source_contract.json` 仅保留来源字段、要素定义及合成主数据白名单；本次已授权发布的比赛主数据与词典单独保存在应用根 `competition_configuration/`，通过既有 `PHARMA_PRIVATE_MASTERDATA_FILE` 与 `PHARMA_PRIVATE_TERMINOLOGY_FILE` 显式加载，不与包内合成主数据混淆。没有换栈、引入插件框架或复制后端。新增第三方依赖：无。
 
 ## 包和企业不是同一个维度
 
 `industry_packs/<id>/manifest.json` 有稳定 ID、版本、`>=1,<2` 核心兼容声明、制造模式、能力所需事实、字段映射/知识/模板/评测入口和可信策略名称。目录为本机管理员安装位置，不接收用户上传 Python、SQL、网络安装命令。`STRATEGIES` 仅允许部署代码注册。`mapping.json` 当前是包映射声明与扩展接口；通用 `import_csv` 仅接受规范字段名，尚未执行任意来源列映射。
 
-`enterprise.json` 是公开合成企业配置，含企业 ID、数据集、政策、币种、计量单位、产品版本和岗位。真实企业主数据与知识应使用工程外配置，密钥只从项目环境变量/受控文件读取。行业政策不能由行业名称推定。每包默认一个合成企业；同包可通过 `register_enterprise(pack_id, configuration_path)` 注册多个本地企业配置。注册表在忽略的运行目录，配置与专属 `facts.json` / `knowledge.json` 可在工程外；无上传执行能力。每份配置有独立企业ID、数据集/政策/主数据，并校验事实的企业、产品版本、单位和币种。ERP连接与管理员安装界面未实现。
+`enterprise.json` 是公开合成企业配置，含企业 ID、数据集、政策、币种、计量单位、产品版本和岗位。本次用户授权仅涵盖该比赛资料与交付，不自动授权今后真实企业主数据或知识公开；真实企业资料默认使用工程外受控配置，密钥只从项目环境变量/受控文件读取。行业政策不能由行业名称推定。每包默认一个合成企业；同包可通过 `register_enterprise(pack_id, configuration_path)` 注册多个本地企业配置。注册表在忽略的运行目录，配置与专属 `facts.json` / `knowledge.json` 可在工程外；无上传执行能力。每份配置有独立企业ID、数据集/政策/主数据，并校验事实的企业、产品版本、单位和币种。ERP连接与管理员安装界面未实现。
 
-现有三个包有独立合成企业：制药 `pharmaceutical:synthetic-pharma`、机械 `mechanical_demo:synthetic-mechanical`、化工 `chemical_demo:synthetic-chemical`。两制造样例用于框架验证，不是完整行业适配。三个包均使用 `DEMO-01`，机械/化工均使用相同原始文档 ID，隔离以完整上下文为准。配置了工程外 `PHARMA_DATA_PACKAGE` 才显示 `pharmaceutical:competition`；私有原题不随源码分发。
+现有三个包有独立合成企业：制药 `pharmaceutical:synthetic-pharma`、机械 `mechanical_demo:synthetic-mechanical`、化工 `chemical_demo:synthetic-chemical`。两制造样例用于框架验证，不是完整行业适配。三个包均使用 `DEMO-01`，机械/化工均使用相同原始文档 ID，隔离以完整上下文为准。显式配置 `PHARMA_DATA_PACKAGE` 才显示 `pharmaceutical:competition`。赛题原件现按用户最新授权随仓库保留，可指向本仓库原件目录，也可指向经核验一致的工程外副本；应用根 README 提供绝对路径启用命令。赛题原件按源字节保留，不能用修改或改名的赛题数据冒充独立合成行业包。
 
 ## 事实与聚合
 
@@ -52,7 +52,7 @@
 4. 接报告→结构化核查任务→人工确认→模拟送达闭环，检查 Word/PDF 每页与前端。模型不足、缺知识或缺数据应降级；真人归因0–5、可读性、版式仍由真人签署。
 5. 公共接口不足时提交最小反例与向后兼容提议，由核心维护者修改 `industry.py` 和通用验收一次。行业研究者默认所有权为 `industry_packs/<新包>/`、独立 `tests/test_<新包>.py` 和本台账；不要改 API/outbox/worker 的隔离合同。
 
-复现：在 `05_原型` 中运行 `PYTHONPATH=backend .venv/bin/python -m pytest -s tests/test_industry.py -q`。原题回归仅本机工程外资料存在时运行对应私有测试。`-s` 是本WSL当前 pytest 文件描述符捕获环境兼容选择。
+复现：在 `05_原型` 中运行 `PYTHONPATH=backend .venv/bin/python -m pytest -s tests/test_industry.py -q`。原题回归须先配置比赛数据与配套主数据/词典，按 `competition_configuration/scenarios.json` 执行；恢复发布原件不等于回归已在本机通过。`-s` 是本WSL当前 pytest 文件描述符捕获环境兼容选择。
 
 ## 最终数值合同补充
 
@@ -62,4 +62,4 @@
 
 机时按小时计，分钟/秒用已知时间比例精确换算；能耗按kWh计，Wh/MWh按SI比例换算；件不能冒充kg。单位能耗产出允许kg/吨的已知质量换算。转换后的真实分子、分母及驱动来源行写入指标，不把60分钟标为60小时或把MWh当kWh。公式版本 `normalized-cost-2-typed-drivers` 使旧计算缓存失效。
 
-私有制药企业主数据通过 `PHARMA_PRIVATE_MASTERDATA_FILE` 指向受控JSON（仅产品规格/工厂白名单），词典通过 `PHARMA_PRIVATE_TERMINOLOGY_FILE` 指向受控JSON。两者不是包内公共知识或自动推断结果；修改后对应快照/索引版本失效，保持原制药严格校验。没有这两份原企业配置时，只跑独立合成包，不伪造原场景。具体JSON格式及测试以加载器和对应公开合成负例为准。
+比赛主数据与词典是独立的企业配置，不是合成包知识或自动推断结果；即使本次获准公开，也保持原制药严格校验和内容哈希。缺少任一必要配置时不能伪造比赛原场景。既有变量名中的 `PRIVATE` 仅为兼容加载接口；未来真实企业配置的披露需要独立授权。旧删除清单保留为历史过程记录，恢复不得覆盖新源码、构建或整份运行状态；密钥、环境文件、数据库、待发队列与恢复备份不属于本次发布内容。

@@ -8,7 +8,7 @@
 
 ## 实际完成
 
-安全取得协作main后保存旧项目和上游私有快照，以新clone替换原工作位置；未导回旧源码、dist或队列。保留模型身份/usage、summary-only阻断、ReviewStore、人审API、已有安全合并成果。当前树删除私有原件与派生报告的跟踪，以三个独立合成包支持公开启动。历史GLM四场景v3模型参与PASS与视觉NEEDS_FIX仍在工程外历史归档，不替代本轮。
+安全取得协作main后保存旧项目和上游私有快照，以新clone替换原工作位置；未导回旧源码、dist或队列。保留模型身份/usage、summary-only阻断、ReviewStore、人审API、已有安全合并成果。本轮先按初始授权移除私料跟踪，随后用户明确要求保留原有赛题数据并公开提交所有项目内容；现恢复原题数据、知识、模板与本轮静态交付，三个独立合成包继续用于框架验证。历史GLM四场景v3模型参与PASS与视觉NEEDS_FIX仍在工程外历史归档，不替代本轮。
 
 核心采用Pydantic合同、显式策略注册、不可变AnalysisContext和原模块化单体；没有替换Python/FastAPI/React/ECharts/DuckDB/SQLite/Chroma/LlamaIndex。新增行业不复制后台。制药原合同仍严格；机械工单/件/机时与化工批次/kg/能耗、四要素为框架迁移证明，非完成行业落地。见 `adr/0004-industry-packs.md`、`industry/development.md`。
 
@@ -29,15 +29,15 @@ TMPDIR=/tmp PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 PYTHONPATH=05_原型/backend \
 bash 05_原型/scripts/verify.sh --manifest 06_评测/YOUR_UNIQUE_RUN/manifest.json
 ```
 
-公开运行默认三合成场景。原题四场景列表通过 `--private-scenarios /external/private-scenarios.json` 受控传入，包含 `id/context_id/product/month/analysis_type`，不发布该文件。runner向本机模拟器执行测试确认，责任人明确“合成验收责任人”，不是真人整改签收。浏览器另运行 `05_原型/frontend/e2e-context.mjs` 和 `e2e-live.mjs`；设置已有Chrome的 `PHARMA_CHROME_PATH`、`TMPDIR=/tmp` 和独立 `PHARMA_E2E_OUT`，完成后将真实新receipt绑定同run/代码commit。模型/浏览器未跑不能写PASS。
+公开运行默认三合成场景。原题四场景列表通过 `--private-scenarios competition_configuration/scenarios.json` 传入，包含 `id/context_id/product/month/analysis_type`；按README启用比赛企业配置。runner向本机模拟器执行测试确认，责任人明确“合成验收责任人”，不是真人整改签收。浏览器另运行 `05_原型/frontend/e2e-context.mjs` 和 `e2e-live.mjs`；设置已有Chrome的 `PHARMA_CHROME_PATH`、`TMPDIR=/tmp` 和独立 `PHARMA_E2E_OUT`，完成后将真实新receipt绑定同run/代码commit。模型/浏览器未跑不能写PASS。
 
 环境复用：WSL Python3.12项目venv、现有Node依赖及只读外部bge-small-zh-v1.5；核对锁指纹、FTS5、字体与两模型文件哈希，不覆写外部缓存、不下载大型模型。前端17个构建输入统一指纹，本次实际重建。运行依赖无新增；演示PPT可选 `requirements-docs.lock`（python-pptx 1.0.2/MIT、XlsxWriter 3.2.9/BSD-2-Clause），只装项目环境。
 
 ## 凭据、私有恢复与状态
 
-本机按用户指定的受控DeepSeek密钥文件配置 `PHARMA_MODEL_KEY_FILE`、官方 `PHARMA_MODEL_BASE_URL`、`PHARMA_MODEL=deepseek-flash`；其他开发者使用其明确指定的应用API。仓库默认保留glm-5.3-flash适配。本机实调属于DeepSeek，不追认为GLM重跑；Coding Plan凭据不进入应用。用户已明确允许必要赛题资料发送给模型厂商；原件、知识、派生完整报告仍不得公开提交。
+本机按用户指定的受控DeepSeek密钥文件配置 `PHARMA_MODEL_KEY_FILE`、官方 `PHARMA_MODEL_BASE_URL`、`PHARMA_MODEL=deepseek-flash`；其他开发者使用其明确指定的应用API。仓库默认保留glm-5.3-flash适配。本机实调属于DeepSeek，不追认为GLM重跑；Coding Plan凭据不进入应用。用户已明确允许必要赛题资料发送给模型厂商，并在2026-09-18进一步授权保留原赛题数据及本轮交付公开提交；凭据、环境、运行数据库和恢复备份仍不发布。
 
-工程外恢复点包含旧树、只读上游私有快照、逐文件校验及本机环境恢复记录。以 `PHARMA_DATA_PACKAGE` 指向外部原模拟数据目录，仅恢复原件白名单和环境配置；不复制旧源码、dist、数据库或队列。旧待发任务和审核记录隔离保留，若需迁移须逐任务核对状态/幂等标识后另建迁移记录，不重发。已合并clone无需prepare。精确移除路径见 `privacy-removals.json`；旧Git历史/已下载副本需仓库负责人另行处理，本轮未改可见性、历史或强推。
+工程外恢复点包含旧树、只读上游私有快照、逐文件校验及本机环境恢复记录。以 `PHARMA_DATA_PACKAGE` 指向外部原模拟数据目录，仅恢复原件白名单和环境配置；不复制旧源码、dist、数据库或队列。旧待发任务和审核记录隔离保留，若需迁移须逐任务核对状态/幂等标识后另建迁移记录，不重发。已合并clone无需prepare。`privacy-removals.json`记录本轮早期删除历史；最新恢复路径与原件哈希见 `competition-assets.json`，发布授权见 `publication-authorization.md`。本轮未改可见性、共享历史或强推。
 
 ## 文件所有权和下一步验收
 
@@ -64,6 +64,8 @@ GLM-5.3先处理当前manifest的版式遗留并组织真人评审，固定未�
 
 ## 交付与历史边界
 
-同仓工作分支只普通push，不强推。起点acc4693与删除私有资产提交480cf48保留共享祖先；本地开发中间提交曾含待清理素材，未发送远端，已整理为e53ec77及后续公开代码提交。本机审计ref不属于交付分支，不得使用 `git push --all`。这不清除原共享历史中的私有资料；负责人后续处理范围见privacy-removals.json。
+同仓工作分支只普通push，不强推。起点acc4693与删除私有资产提交480cf48保留共享祖先；本地开发中间提交曾含待清理素材，未发送远端，已整理为e53ec77及后续公开代码提交。本机审计ref不属于交付分支，不得使用 `git push --all`。旧共享历史保持原样；当前赛题资产由用户最新明确授权纳入交付，未来真实企业资料仍须独立授权。
 
 公开源码归档无需.git可启动并生成合成报告；其回执声明source revision且commit为null。正式带Git交付的verify仍核对真实commit与run_id，二者不能互相冒充。旧任务/审核库隔离，不迁移或重复发送；本轮验收任务只在本机题包模拟器，通知和整改确认状态分开。
+
+当前完整静态交付在 `07_交付/release_20260918`：原受测运行七份DOCX/PDF、逐页图、稳定UI截图及演示视频/PPT草稿，来源与文件SHA在该目录清单。资源发布不把历史模型回执改成本轮，也不把文件存在或模拟送达算成人工通过。

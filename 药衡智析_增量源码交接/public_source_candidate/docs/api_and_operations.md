@@ -20,7 +20,7 @@
 | POST /api/actions/{id}/acknowledge | 已送达任务的本人署名责任确认；不等于整改完成 |
 | POST /api/actions/{id}/refresh | 查询模拟API，严格响应合同；协议错误不抹掉已证明状态 |
 
-发送前确认与责任人整改确认不同；GET返回sent/confirmed/completed分别保存，模拟微信不是真实集成。重启SENDING先GET核对，不盲目重发。旧runtime整体隔离，不恢复待发队列。本轮恢复仅复用兼容依赖和只读模型，私有原件路径由PHARMA_DATA_PACKAGE指定。
+发送前确认与责任人整改确认不同；GET返回sent/confirmed/completed分别保存，模拟微信不是真实集成。重启SENDING先GET核对，不盲目重发。旧runtime整体隔离，不恢复待发队列。本轮恢复仅复用兼容依赖和只读模型，原题资料路径由PHARMA_DATA_PACKAGE指定；当前授权原件及复现配置也随仓库交付。
 
 bootstrap采用同一build_inputs.py指纹，node_modules锁指纹不一致则npm ci。缺模型允许基础降级，外置模型不改写。进程管理仅操作记录PID+启动标识。生成与分析按上下文固定，无全局行业切换。
 
@@ -67,6 +67,6 @@ TMPDIR=/tmp PHARMA_E2E_URL=http://127.0.0.1:8765 \
 
 ## 公开副本与配置
 
-全新公开源码无需题包或模型密钥，默认具备三份独立合成企业。`.env` 仅从 `05_原型/.env` 读取，shell 已导出变量优先；不执行其中的 shell 命令。无密钥试验应使用未恢复私有 `.env`、题包及旧 runtime 的独立副本，同时确认没有继承 `PHARMA_API_KEY`、`GLM_API_KEY`、`ZHIPU_API_KEY` 或密钥文件配置。缺密钥、嵌入模型、PDF工具分别影响相应能力，不应宣称全部模型/混合检索/PDF维度通过。
+全新公开源码无需题包或模型密钥，默认具备三份独立合成企业。`.env` 仅从 `05_原型/.env` 读取，shell 已导出变量优先；不执行其中的 shell 命令。无密钥试验应使用未恢复 `.env` 或旧 runtime 的独立副本；若同时证明无题包模式，需明确另导出仅源码与合成包的最小副本，同时确认没有继承 `PHARMA_API_KEY`、`GLM_API_KEY`、`ZHIPU_API_KEY` 或密钥文件配置。缺密钥、嵌入模型、PDF工具分别影响相应能力，不应宣称全部模型/混合检索/PDF维度通过。
 
-`run_acceptance.py` 默认使用三份合成场景，会生成报告并向本机模拟器确认测试任务；它不是纯读取探针。无需私有 `--private-scenarios` 参数，但模型及混合检索缺项会如实记为未满足。独立源码归档可运行该流程并获得 `source:<sha>` / `commit=null`；协作提交追溯使用 Git clone。公开仓的 `docs/current_run.json` 是开发交接索引，不包含他人机器的报告数据库，不能直接当作新机器已跑验收。为本机指定唯一 `--run-id` 和独立输出目录，再引用自己的 manifest，保留自动、开发者视觉及真人维度区别。
+`run_acceptance.py` 默认使用三份合成场景，会生成报告并向本机模拟器确认测试任务；它不是纯读取探针。三合成场景无需 `--private-scenarios` 参数；启用原题配置后可指向competition_configuration/scenarios.json，但模型及混合检索缺项会如实记为未满足。独立源码归档可运行该流程并获得 `source:<sha>` / `commit=null`；协作提交追溯使用 Git clone。公开仓的 `docs/current_run.json` 是开发交接索引，不包含他人机器的报告数据库，不能直接当作新机器已跑验收。为本机指定唯一 `--run-id` 和独立输出目录，再引用自己的 manifest，保留自动、开发者视觉及真人维度区别。

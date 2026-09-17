@@ -1,0 +1,12 @@
+# Preserve binary delivery assets and the exact bytes of original contest resources.
+*.pdf binary
+*.docx binary
+*.pptx binary
+*.png binary
+*.jpg binary
+*.mp4 binary
+*.webm binary
+*.zip binary
+药衡智析_增量源码交接/public_source_candidate/00_赛题原始资料/** -text -whitespace
+药衡智析_增量源码交接/public_source_candidate/01_数据/** -text -whitespace
+药衡智析_增量源码交接/public_source_candidate/02_知识库/** -text -whitespace

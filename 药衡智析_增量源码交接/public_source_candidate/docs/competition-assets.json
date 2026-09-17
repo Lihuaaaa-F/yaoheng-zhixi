@@ -1,0 +1,746 @@
+{
+  "schema_version": 1,
+  "verified_at": "2026-09-17T17:55:05.343938+00:00",
+  "authorization": "用户明确要求保留原有赛题数据并随协作仓库提交；不含密钥、环境文件、任务队列、恢复备份。",
+  "source_policy": "仅按既有快照逐字节核对或复制；未改原件、未恢复旧应用源码、未覆盖.runtime。",
+  "historical_data_notice": "01_数据的清洗/分析输出与02_知识库的解析/清洗/索引为上游历史整理结果，不代表本轮重新计算、建索引或验收通过。",
+  "file_count": 78,
+  "total_bytes": 9527064,
+  "classification_counts": {
+    "original": 44,
+    "historical_derived": 31,
+    "reproduction_configuration": 3
+  },
+  "directories": {
+    "00_赛题原始资料": {
+      "files": 28,
+      "bytes": 5636390
+    },
+    "01_数据": {
+      "files": 23,
+      "bytes": 73346
+    },
+    "02_知识库": {
+      "files": 24,
+      "bytes": 3815704
+    },
+    "competition_configuration": {
+      "files": 3,
+      "bytes": 1624
+    }
+  },
+  "files": [
+    {
+      "path": "00_赛题原始资料/7.（创灵境）2026年第二届重庆市AI大模型创新应用大赛企业出题.docx",
+      "sha256": "99a284a536eeb4d4da86b0285a0f280e1f85c0fe4d4d20b3ff7634f6281c2a6f",
+      "bytes": 35554,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "00_赛题原始资料/7.（创灵境）2026年第二届重庆市AI大模型创新应用大赛企业出题.docx",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "00_赛题原始资料/创灵境_考题模拟数据1.1.zip",
+      "sha256": "99b20a025648042911c42943fb052f418cddafd21b2d1fb2e13888066b6df3a7",
+      "bytes": 2095253,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "00_赛题原始资料/创灵境_考题模拟数据1.1.zip",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/01_成本明细数据/中药一厂_人工工时明细_2026年1-6月.csv",
+      "sha256": "cb4d519b474fe144dcbba64988039e60d5207c3bc44c5927e903bdf5ba4bf323",
+      "bytes": 1565,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/01_成本明细数据/中药一厂_人工工时明细_2026年1-6月.csv",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/01_成本明细数据/中药一厂_制造费用明细_2026年1-6月.csv",
+      "sha256": "9fe8245f517e8cd787d58e9113f93d08521043975a4997dead3329e12caee90f",
+      "bytes": 8086,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/01_成本明细数据/中药一厂_制造费用明细_2026年1-6月.csv",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/01_成本明细数据/中药一厂_原材料消耗明细_2026年1-6月.csv",
+      "sha256": "911cb2ac45043f027848df6ad7daea55c0f3d6b4d2a2397a783abfb1b71be8d5",
+      "bytes": 10175,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/01_成本明细数据/中药一厂_原材料消耗明细_2026年1-6月.csv",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/01_成本明细数据/中药一厂_成本汇总_2025年1-6月.csv",
+      "sha256": "a0d573417032d3fa865af82567fc81e1cad151678fe4f4fd77464f259fc3d96b",
+      "bytes": 1780,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/01_成本明细数据/中药一厂_成本汇总_2025年1-6月.csv",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/01_成本明细数据/中药一厂_成本汇总_2026年1-6月.csv",
+      "sha256": "08b6be09c9297d8df82b346cfa83507f34a278d7a000187960768d9bb4931c26",
+      "bytes": 1779,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/01_成本明细数据/中药一厂_成本汇总_2026年1-6月.csv",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/01_成本明细数据/中药一厂_预算数据_2026年.csv",
+      "sha256": "987526c99f4a98a2775830c110506460a6027eafcf9d6cf7a07a01eb74cef9aa",
+      "bytes": 1779,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/01_成本明细数据/中药一厂_预算数据_2026年.csv",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/01_成本明细数据/中药二厂_成本汇总_2025年1-6月.csv",
+      "sha256": "37dfacdddb93cda4d1d0df4f42043b48bc27429121d58384dfec51d7bb42eb09",
+      "bytes": 1779,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/01_成本明细数据/中药二厂_成本汇总_2025年1-6月.csv",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/01_成本明细数据/中药二厂_成本汇总_2026年1-6月.csv",
+      "sha256": "8cb6f41faaa944f98060b0ae2e3fc989420cad0d0b03227dd160127567f3b240",
+      "bytes": 1781,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/01_成本明细数据/中药二厂_成本汇总_2026年1-6月.csv",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/02_行业参考数据/药材市场价格行情_2026年上半年.csv",
+      "sha256": "44210be6e6fdb89e0212e544f63cd5f8cfe72389716019c1ddffcc5032cdf94c",
+      "bytes": 1583,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/02_行业参考数据/药材市场价格行情_2026年上半年.csv",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/02_行业参考数据/行业成本基准数据_2026.csv",
+      "sha256": "31fa1383e2cf2c9d38da3eee3d5398b207c1806a6b67bb18e222f6eddf4154ed",
+      "bytes": 1378,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/02_行业参考数据/行业成本基准数据_2026.csv",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/03_制药知识文档/GMP法规核心摘要_2010修订版.pdf",
+      "sha256": "2e599f526df282da063695de31a7007b97c7ff1ad16d7a97c91747f32534a048",
+      "bytes": 815792,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/03_制药知识文档/GMP法规核心摘要_2010修订版.pdf",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/03_制药知识文档/产品配方文档_六味地黄胶囊.pdf",
+      "sha256": "281a6829ed15ce1df55d9c13f16fd5052e26276a6d30020520967657431eb4e7",
+      "bytes": 436675,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/03_制药知识文档/产品配方文档_六味地黄胶囊.pdf",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/03_制药知识文档/产品配方文档_板蓝根颗粒.pdf",
+      "sha256": "5f1dd55e4a388b190fc74c601f0589574bccbfa716a2025ea3e79857dd2eec47",
+      "bytes": 386196,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/03_制药知识文档/产品配方文档_板蓝根颗粒.pdf",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/03_制药知识文档/产品配方文档_银黄口服液.pdf",
+      "sha256": "834aa8a81c2938dfb9e6ec28b8743ea0e667c237e06a6609415d97fe3b85b5ad",
+      "bytes": 345398,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/03_制药知识文档/产品配方文档_银黄口服液.pdf",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/03_制药知识文档/生产工艺文档_中药一厂.pdf",
+      "sha256": "aa7d48f697f2caa2bedf5b16e84a4d4765d3c92a52a619a7a93360764d7d8e00",
+      "bytes": 542078,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/03_制药知识文档/生产工艺文档_中药一厂.pdf",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/03_制药知识文档/药品生产质量管理规范GMP.pdf",
+      "sha256": "871f86bfaa610bb0db8b84b0f45606019fe889ec437695baf150cbe696cfa102",
+      "bytes": 483607,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/03_制药知识文档/药品生产质量管理规范GMP.pdf",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/03_制药知识文档/车间设备清单_中药一厂.pdf",
+      "sha256": "1e3808fc86fece94d3736690f087c218b8e082e6defe869e68bbdfdcdce7e503",
+      "bytes": 375424,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/03_制药知识文档/车间设备清单_中药一厂.pdf",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/04_报告模板/月度成本分析报告模板.docx",
+      "sha256": "188cbf06bd08df87acb1d9b4f33a0a13074a971249f14a9b0f1ca15544c509d6",
+      "bytes": 35829,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/04_报告模板/月度成本分析报告模板.docx",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/04_报告模板/月度成本分析报告模板.md",
+      "sha256": "483b9159311f9ddba2bae6a9d900f0a4f9389bc44e8d47198e2208f64b20e18e",
+      "bytes": 6131,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/04_报告模板/月度成本分析报告模板.md",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/05_RPA接口文档/Dockerfile",
+      "sha256": "83d5da6eb23a6400c9fac4e1a44a65c9c7c10a5c77b35cec85be1db51aa652e4",
+      "bytes": 185,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/05_RPA接口文档/Dockerfile",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/05_RPA接口文档/mock_rpa_server.py",
+      "sha256": "b6fce8123830cba27b27f167b7ee2c8cdb905d878a8dff65683aeadf676a5d1e",
+      "bytes": 8471,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/05_RPA接口文档/mock_rpa_server.py",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/05_RPA接口文档/requirements.txt",
+      "sha256": "72b7dd981782e40c30a580b5bc5233a96ece788ba1e69d7686917830d40ee106",
+      "bytes": 26,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/05_RPA接口文档/requirements.txt",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/05_RPA接口文档/模拟RPA接口文档.md",
+      "sha256": "3996d3c28ca62c44c84f3c74e715316a4a090f837602c03df817793f8c9d9b14",
+      "bytes": 10167,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/05_RPA接口文档/模拟RPA接口文档.md",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/README.md",
+      "sha256": "082518cfe7044f2d1cad85eab2aac78671fe83b8daeed8d0ea19035ba207833c",
+      "bytes": 11058,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/README.md",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/问题检查报告.md",
+      "sha256": "14551b4b2780d9891df8fd700bee98046c02efa68227242d53a6c4e8f7af4a2c",
+      "bytes": 3201,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/问题检查报告.md",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "00_赛题原始资料/赛题要求_企业出题创灵境.md",
+      "sha256": "fd270e382464210f8bd64703d82d75e7d25ff2d7afa38c8b1c0599c7e0f761aa",
+      "bytes": 13660,
+      "classification": "historical_derived",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "00_赛题原始资料/赛题要求_企业出题创灵境.md",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "01_数据/00_原始/01_成本明细数据/中药一厂_人工工时明细_2026年1-6月.csv",
+      "sha256": "cb4d519b474fe144dcbba64988039e60d5207c3bc44c5927e903bdf5ba4bf323",
+      "bytes": 1565,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "01_数据/00_原始/01_成本明细数据/中药一厂_人工工时明细_2026年1-6月.csv",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "01_数据/00_原始/01_成本明细数据/中药一厂_制造费用明细_2026年1-6月.csv",
+      "sha256": "9fe8245f517e8cd787d58e9113f93d08521043975a4997dead3329e12caee90f",
+      "bytes": 8086,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "01_数据/00_原始/01_成本明细数据/中药一厂_制造费用明细_2026年1-6月.csv",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "01_数据/00_原始/01_成本明细数据/中药一厂_原材料消耗明细_2026年1-6月.csv",
+      "sha256": "911cb2ac45043f027848df6ad7daea55c0f3d6b4d2a2397a783abfb1b71be8d5",
+      "bytes": 10175,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "01_数据/00_原始/01_成本明细数据/中药一厂_原材料消耗明细_2026年1-6月.csv",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "01_数据/00_原始/01_成本明细数据/中药一厂_成本汇总_2025年1-6月.csv",
+      "sha256": "a0d573417032d3fa865af82567fc81e1cad151678fe4f4fd77464f259fc3d96b",
+      "bytes": 1780,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "01_数据/00_原始/01_成本明细数据/中药一厂_成本汇总_2025年1-6月.csv",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "01_数据/00_原始/01_成本明细数据/中药一厂_成本汇总_2026年1-6月.csv",
+      "sha256": "08b6be09c9297d8df82b346cfa83507f34a278d7a000187960768d9bb4931c26",
+      "bytes": 1779,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "01_数据/00_原始/01_成本明细数据/中药一厂_成本汇总_2026年1-6月.csv",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "01_数据/00_原始/01_成本明细数据/中药一厂_预算数据_2026年.csv",
+      "sha256": "987526c99f4a98a2775830c110506460a6027eafcf9d6cf7a07a01eb74cef9aa",
+      "bytes": 1779,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "01_数据/00_原始/01_成本明细数据/中药一厂_预算数据_2026年.csv",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "01_数据/00_原始/01_成本明细数据/中药二厂_成本汇总_2025年1-6月.csv",
+      "sha256": "37dfacdddb93cda4d1d0df4f42043b48bc27429121d58384dfec51d7bb42eb09",
+      "bytes": 1779,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "01_数据/00_原始/01_成本明细数据/中药二厂_成本汇总_2025年1-6月.csv",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "01_数据/00_原始/01_成本明细数据/中药二厂_成本汇总_2026年1-6月.csv",
+      "sha256": "8cb6f41faaa944f98060b0ae2e3fc989420cad0d0b03227dd160127567f3b240",
+      "bytes": 1781,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "01_数据/00_原始/01_成本明细数据/中药二厂_成本汇总_2026年1-6月.csv",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "01_数据/00_原始/02_行业参考数据/药材市场价格行情_2026年上半年.csv",
+      "sha256": "44210be6e6fdb89e0212e544f63cd5f8cfe72389716019c1ddffcc5032cdf94c",
+      "bytes": 1583,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "01_数据/00_原始/02_行业参考数据/药材市场价格行情_2026年上半年.csv",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "01_数据/00_原始/02_行业参考数据/行业成本基准数据_2026.csv",
+      "sha256": "31fa1383e2cf2c9d38da3eee3d5398b207c1806a6b67bb18e222f6eddf4154ed",
+      "bytes": 1378,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "01_数据/00_原始/02_行业参考数据/行业成本基准数据_2026.csv",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "01_数据/01_清洗/01_成本明细数据/中药一厂_人工工时明细_2026年1-6月.csv",
+      "sha256": "a1f2f1b0812a3a199c9362b73be9186e38ce1a7fbdf8ea41f13d539f71d15402",
+      "bytes": 1546,
+      "classification": "historical_derived",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "01_数据/01_清洗/01_成本明细数据/中药一厂_人工工时明细_2026年1-6月.csv",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "01_数据/01_清洗/01_成本明细数据/中药一厂_制造费用明细_2026年1-6月.csv",
+      "sha256": "9fd9ccf6b8c6114d53675fca4933bef265872e2b1ccaa361904977bba4a3ff2c",
+      "bytes": 7995,
+      "classification": "historical_derived",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "01_数据/01_清洗/01_成本明细数据/中药一厂_制造费用明细_2026年1-6月.csv",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "01_数据/01_清洗/01_成本明细数据/中药一厂_原材料消耗明细_2026年1-6月.csv",
+      "sha256": "4728d32d66ca1bbdf63341e65cd44daed68d04a3f0b7e4a01e9757f8adfa83f8",
+      "bytes": 10066,
+      "classification": "historical_derived",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "01_数据/01_清洗/01_成本明细数据/中药一厂_原材料消耗明细_2026年1-6月.csv",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "01_数据/01_清洗/01_成本明细数据/中药一厂_成本汇总_2025年1-6月.csv",
+      "sha256": "9fb6ecda35d15b734aabb9fa8948bfdb4c47d4f9009c892431d9e3858e6da9c9",
+      "bytes": 1761,
+      "classification": "historical_derived",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "01_数据/01_清洗/01_成本明细数据/中药一厂_成本汇总_2025年1-6月.csv",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "01_数据/01_清洗/01_成本明细数据/中药一厂_成本汇总_2026年1-6月.csv",
+      "sha256": "11b01bb840c6ee2eb49f498e826b83be7771d89694b210eb9e34960bc245ace3",
+      "bytes": 1760,
+      "classification": "historical_derived",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "01_数据/01_清洗/01_成本明细数据/中药一厂_成本汇总_2026年1-6月.csv",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "01_数据/01_清洗/01_成本明细数据/中药一厂_预算数据_2026年.csv",
+      "sha256": "8432a52ef196df1d29b77542a472a9ebc81fa84291aeda69bb2bef0f177bc798",
+      "bytes": 1760,
+      "classification": "historical_derived",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "01_数据/01_清洗/01_成本明细数据/中药一厂_预算数据_2026年.csv",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "01_数据/01_清洗/01_成本明细数据/中药二厂_成本汇总_2025年1-6月.csv",
+      "sha256": "9fd05d6759ffa2616e1df1d77126a5bc4f41a0bbacbf6a8fd20fcdd5835b17ae",
+      "bytes": 1760,
+      "classification": "historical_derived",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "01_数据/01_清洗/01_成本明细数据/中药二厂_成本汇总_2025年1-6月.csv",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "01_数据/01_清洗/01_成本明细数据/中药二厂_成本汇总_2026年1-6月.csv",
+      "sha256": "d28f09dbe1c7bc18aa38c884e0d3eed22fe42b0363c3962345e08bc7c52f3589",
+      "bytes": 1762,
+      "classification": "historical_derived",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "01_数据/01_清洗/01_成本明细数据/中药二厂_成本汇总_2026年1-6月.csv",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "01_数据/01_清洗/02_行业参考数据/药材市场价格行情_2026年上半年.csv",
+      "sha256": "609367ba6847556f048b31ddf98e529e622cca26a452adb7faba6e9472f9b00f",
+      "bytes": 1583,
+      "classification": "historical_derived",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "01_数据/01_清洗/02_行业参考数据/药材市场价格行情_2026年上半年.csv",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "01_数据/01_清洗/02_行业参考数据/行业成本基准数据_2026.csv",
+      "sha256": "007ca9f4340bf904570ce0db1355206fd2a9af8d244823205e96db2892beecaf",
+      "bytes": 1360,
+      "classification": "historical_derived",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "01_数据/01_清洗/02_行业参考数据/行业成本基准数据_2026.csv",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "01_数据/02_分析输出/产品月度成本指标.csv",
+      "sha256": "97a4fe94065d650a2f682fa35620509635bea04fb93bedf106ace3dfbfd6a6ca",
+      "bytes": 8180,
+      "classification": "historical_derived",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "01_数据/02_分析输出/产品月度成本指标.csv",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "01_数据/02_分析输出/成本波动阈值告警.csv",
+      "sha256": "f01a374e9c81e3db89b3a42940c4d6a5447684986a1296e42bf13f196eed6295",
+      "bytes": 5,
+      "classification": "historical_derived",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "01_数据/02_分析输出/成本波动阈值告警.csv",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "01_数据/02_分析输出/推荐三场景指标.csv",
+      "sha256": "d9781f3d5b0f82615e904b4822c269e494d2b3dcff4d2beda5f2eeeac189995a",
+      "bytes": 2123,
+      "classification": "historical_derived",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "01_数据/02_分析输出/推荐三场景指标.csv",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "02_知识库/00_原始/GMP法规核心摘要_2010修订版.pdf",
+      "sha256": "2e599f526df282da063695de31a7007b97c7ff1ad16d7a97c91747f32534a048",
+      "bytes": 815792,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "02_知识库/00_原始/GMP法规核心摘要_2010修订版.pdf",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "02_知识库/00_原始/产品配方文档_六味地黄胶囊.pdf",
+      "sha256": "281a6829ed15ce1df55d9c13f16fd5052e26276a6d30020520967657431eb4e7",
+      "bytes": 436675,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "02_知识库/00_原始/产品配方文档_六味地黄胶囊.pdf",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "02_知识库/00_原始/产品配方文档_板蓝根颗粒.pdf",
+      "sha256": "5f1dd55e4a388b190fc74c601f0589574bccbfa716a2025ea3e79857dd2eec47",
+      "bytes": 386196,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "02_知识库/00_原始/产品配方文档_板蓝根颗粒.pdf",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "02_知识库/00_原始/产品配方文档_银黄口服液.pdf",
+      "sha256": "834aa8a81c2938dfb9e6ec28b8743ea0e667c237e06a6609415d97fe3b85b5ad",
+      "bytes": 345398,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "02_知识库/00_原始/产品配方文档_银黄口服液.pdf",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "02_知识库/00_原始/生产工艺文档_中药一厂.pdf",
+      "sha256": "aa7d48f697f2caa2bedf5b16e84a4d4765d3c92a52a619a7a93360764d7d8e00",
+      "bytes": 542078,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "02_知识库/00_原始/生产工艺文档_中药一厂.pdf",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "02_知识库/00_原始/药品生产质量管理规范GMP.pdf",
+      "sha256": "871f86bfaa610bb0db8b84b0f45606019fe889ec437695baf150cbe696cfa102",
+      "bytes": 483607,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "02_知识库/00_原始/药品生产质量管理规范GMP.pdf",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "02_知识库/00_原始/车间设备清单_中药一厂.pdf",
+      "sha256": "1e3808fc86fece94d3736690f087c218b8e082e6defe869e68bbdfdcdce7e503",
+      "bytes": 375424,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "02_知识库/00_原始/车间设备清单_中药一厂.pdf",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "02_知识库/01_解析/GMP法规核心摘要_2010修订版.md",
+      "sha256": "ad1d200f6e14433ae7cfe290ce81689f32148e968a89480b262160409ec6eb34",
+      "bytes": 8717,
+      "classification": "historical_derived",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "02_知识库/01_解析/GMP法规核心摘要_2010修订版.md",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "02_知识库/01_解析/产品配方文档_六味地黄胶囊.md",
+      "sha256": "f55293ee4a361d1dec21fc52adc9c3c55d76310a35c5d6b42d1b06a5a9f5807a",
+      "bytes": 2830,
+      "classification": "historical_derived",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "02_知识库/01_解析/产品配方文档_六味地黄胶囊.md",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "02_知识库/01_解析/产品配方文档_板蓝根颗粒.md",
+      "sha256": "e673b6974f469161be90cef07815eac99b946dbcb2e392c6ae3987bc3382c105",
+      "bytes": 1863,
+      "classification": "historical_derived",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "02_知识库/01_解析/产品配方文档_板蓝根颗粒.md",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "02_知识库/01_解析/产品配方文档_银黄口服液.md",
+      "sha256": "3b7c29199f8389362f1b0ace79b3ea90b5377b662ee1859bbc83ce1767e8f9d5",
+      "bytes": 1876,
+      "classification": "historical_derived",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "02_知识库/01_解析/产品配方文档_银黄口服液.md",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "02_知识库/01_解析/生产工艺文档_中药一厂.md",
+      "sha256": "4e4a6f9c6beca89dbe43be73b4231d763d4a0fa97cd5d1c6e535f6b19c6b9884",
+      "bytes": 5711,
+      "classification": "historical_derived",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "02_知识库/01_解析/生产工艺文档_中药一厂.md",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "02_知识库/01_解析/药品生产质量管理规范GMP.md",
+      "sha256": "654c7c464286bdeb7c45ce9a8567f505351a99a6b6e7c17157bf13cf08b3acb5",
+      "bytes": 103512,
+      "classification": "historical_derived",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "02_知识库/01_解析/药品生产质量管理规范GMP.md",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "02_知识库/01_解析/车间设备清单_中药一厂.md",
+      "sha256": "453c18791161a85eb0243c1cff880bf21236302ed7e8aedc41b961603922e8de",
+      "bytes": 4320,
+      "classification": "historical_derived",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "02_知识库/01_解析/车间设备清单_中药一厂.md",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "02_知识库/02_清洗/GMP法规核心摘要_2010修订版.md",
+      "sha256": "ad1d200f6e14433ae7cfe290ce81689f32148e968a89480b262160409ec6eb34",
+      "bytes": 8717,
+      "classification": "historical_derived",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "02_知识库/02_清洗/GMP法规核心摘要_2010修订版.md",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "02_知识库/02_清洗/产品配方文档_六味地黄胶囊.md",
+      "sha256": "90f130bdf556a29fc396ff46a9e03e1787ad420be7900a7ef416f3d36d177ba1",
+      "bytes": 2706,
+      "classification": "historical_derived",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "02_知识库/02_清洗/产品配方文档_六味地黄胶囊.md",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "02_知识库/02_清洗/产品配方文档_板蓝根颗粒.md",
+      "sha256": "dd61f58b2bff64b6fd7de32f8968944e07ae48228742a70a0c579d2ba269880b",
+      "bytes": 1785,
+      "classification": "historical_derived",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "02_知识库/02_清洗/产品配方文档_板蓝根颗粒.md",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "02_知识库/02_清洗/产品配方文档_银黄口服液.md",
+      "sha256": "9281fef3b2ffb8534314af230fc01141ff625ff5608fe5b9da9aaf51361aa9bd",
+      "bytes": 1868,
+      "classification": "historical_derived",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "02_知识库/02_清洗/产品配方文档_银黄口服液.md",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "02_知识库/02_清洗/生产工艺文档_中药一厂.md",
+      "sha256": "14ccb01000a03a811bf79d1ae48fd95667bf44eacd67464d1158cd4fe0f77b52",
+      "bytes": 5227,
+      "classification": "historical_derived",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "02_知识库/02_清洗/生产工艺文档_中药一厂.md",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "02_知识库/02_清洗/药品生产质量管理规范GMP.md",
+      "sha256": "1aa4d8dbdb3f7a5169e4ec6df6687b70569b8f48b7711bb5915488d5f1ea72c6",
+      "bytes": 97662,
+      "classification": "historical_derived",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "02_知识库/02_清洗/药品生产质量管理规范GMP.md",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "02_知识库/02_清洗/车间设备清单_中药一厂.md",
+      "sha256": "509d0a3d821449c0e20ea9d36b5666210d4b82fced400840b1cfde7e3d7565b6",
+      "bytes": 3871,
+      "classification": "historical_derived",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "02_知识库/02_清洗/车间设备清单_中药一厂.md",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "02_知识库/03_索引/chunks.jsonl",
+      "sha256": "3dd6f4e4db56e368e9cf5cd641bbe27a1519e007544b1cdda7bd2a0c13c8d124",
+      "bytes": 177561,
+      "classification": "historical_derived",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "02_知识库/03_索引/chunks.jsonl",
+      "verified_byte_identical": true,
+      "usage": "历史知识索引资料，仅存档；不得覆盖或作为当前.runtime索引验收结果。"
+    },
+    {
+      "path": "02_知识库/03_索引/corpus_build_summary.json",
+      "sha256": "7431c462d31a97d6a63c9e12d993dcc4c454e94759d7070139a1954dc345b5eb",
+      "bytes": 199,
+      "classification": "historical_derived",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "02_知识库/03_索引/corpus_build_summary.json",
+      "verified_byte_identical": true,
+      "usage": "历史知识索引资料，仅存档；不得覆盖或作为当前.runtime索引验收结果。"
+    },
+    {
+      "path": "02_知识库/03_索引/document_manifest.csv",
+      "sha256": "244fd00215fff0b05078293deae0f5d6ccbfdaa088010c23a59cb473be24e76f",
+      "bytes": 2109,
+      "classification": "historical_derived",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "02_知识库/03_索引/document_manifest.csv",
+      "verified_byte_identical": true,
+      "usage": "历史知识索引资料，仅存档；不得覆盖或作为当前.runtime索引验收结果。"
+    },
+    {
+      "path": "competition_configuration/pharmaceutical_masterdata.json",
+      "sha256": "63e55cb4fb9ee5c95bf3a32a291c49c101b69ec90c0cadab0d412ef4794ab3b0",
+      "bytes": 406,
+      "classification": "reproduction_configuration",
+      "source_snapshot": "private_configuration",
+      "source_relative_path": "pharmaceutical_masterdata.json",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "competition_configuration/pharmaceutical_terminology_original.json",
+      "sha256": "c3eb4a12bd74fae9a775bc14573e3005a54cb4dee4220bc8b3095ed783d01936",
+      "bytes": 669,
+      "classification": "reproduction_configuration",
+      "source_snapshot": "private_configuration",
+      "source_relative_path": "pharmaceutical_terminology_original.json",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "competition_configuration/scenarios.json",
+      "sha256": "a873d08591851dde69bdccf227407494d46e7c3bf17b537660408551132783c5",
+      "bytes": 549,
+      "classification": "reproduction_configuration",
+      "source_snapshot": "recovery_scenario_manifest",
+      "source_relative_path": "private-scenarios.json",
+      "verified_byte_identical": true
+    }
+  ],
+  "excluded": [
+    {
+      "path": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/05_RPA接口文档/__pycache__/mock_rpa_server.cpython-312.pyc",
+      "classification": "generated_bytecode_cache",
+      "reason": "运行产生的Python字节码，不属于题包原件或历史整理成果；不恢复或发布。"
+    }
+  ]
+}

@@ -4,7 +4,7 @@
 
 ## 适用范围与快照
 
-`context_services.retrieve(snapshot, query)` 是API和worker共享入口。竞赛企业读取外置私有资料，合成企业仅读取其行业包 `knowledge.json`。完整不可变 `analysis_context` 决定索引目录；每个证据单元均绑定企业、数据集、行业及版本、知识快照。引用时再次核对范围，缺少绑定也不能当跨企业通用证据。
+`context_services.retrieve(snapshot, query)` 是API和worker共享入口。竞赛企业读取PHARMA_DATA_PACKAGE指定的原题资料（可用本仓授权保留原件或工程外副本），合成企业仅读取其行业包 `knowledge.json`。完整不可变 `analysis_context` 决定索引目录；每个证据单元均绑定企业、数据集、行业及版本、知识快照。引用时再次核对范围，缺少绑定也不能当跨企业通用证据。
 
 `knowledge_snapshot` 是原始知识源指纹，`knowledge_version` 是包含解析器、嵌入版本和上下文的索引版本，二者不能直接比较。读取前校验源与绑定指纹一致。索引解析失败不会替换 `CURRENT`；向量不可用明确降级，可保留词法召回。`status` 表示检索执行质量；`recall_status` 分别表达有召回、无匹配、无适用候选，不能把检索成功直接说成证据充分。
 

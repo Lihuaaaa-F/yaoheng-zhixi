@@ -31,9 +31,9 @@
   "external_pending": [
     "Named human attribution score 0–5",
     "Human readability and layout approval",
-    "Historical Git private-data remediation by owner",
     "Real industry data and unseen retrieval evaluation",
     "PowerPoint application rendering and narrated final demo"
   ],
-  "review_status": "Dedicated regressions and actual scoped retrieval/PDF checks; final verdicts are in current_run.json. Previous failures remain recorded, never inferred away."
+  "review_status": "Dedicated regressions and actual scoped retrieval/PDF checks; final verdicts are in current_run.json. Previous failures remain recorded, never inferred away.",
+  "publication_scope": "Latest user authorization supersedes earlier exclusion of original contest materials; historical removal and restoration are both recorded."
 }

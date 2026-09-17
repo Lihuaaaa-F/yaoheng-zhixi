@@ -1,3 +1,3 @@
 # 工作区入口
 
-进入public_source_candidate阅读README。当前为完整Git协作源码，无需再次prepare。原team_internal已移出当前公开树；私有原件通过外部路径配置，不能复制旧源码/runtime覆盖新代码。恢复校验工具支持workspace/release/originals三种明确模式。
+进入public_source_candidate阅读README。当前为完整Git源码，无需再次prepare。原赛题资源按用户最新授权在00_赛题原始资料等目录保留；competition_configuration为可复现比赛企业配置，最新静态交付在07_交付/release_20260918。密钥、环境、队列与备份不发布，也不复制旧源码/runtime覆盖新代码。

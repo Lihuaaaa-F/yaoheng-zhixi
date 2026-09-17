@@ -21,7 +21,7 @@
 | 三场景/真人0–5/RPA率/三步法率 | verify/current manifest/ReviewStore | 分维度回执 | 本轮自动维度PASS；真人评分PENDING，AI不填 |
 | Python/Web/OpenAI兼容/一键启动 | FastAPI/React/requirements.lock/bootstrap | 本机探针、干净公开导出测试 | 已实现已验证；无密钥基础降级 |
 | 架构/RAG/Prompt/模板/API文档 | docs与包模板 | 本轮原位文档 | 已实现；细分行业深研继续 |
-| 公开源码交付 | 同仓工作分支 | staged/tracked清理与远端核验 | 当前树已清私料；旧历史尚待负责人处理 |
+| 公开源码交付 | 同仓工作分支 | staged/tracked清理与远端核验 | 按用户最新明确授权恢复原赛题资产并纳入静态交付；密钥/运行态仍排除 |
 | ≤5分钟视频/决赛PPT | record-demo/build_demo_deck | 37.68秒合成视频/8页PPTX稿 | 已生成演示素材；最终讲解剪辑及PowerPoint实渲染待完成 |
 | 加分：热力图 | Analysis/ECharts | 真实浏览器 | 已实现已验证 |
 | 加分：生成/送达/责任人确认看板 | Tasks/acknowledge | UI合同、状态计算 | 已实现；真人责任确认需实际本人填写，演示不冒签 |
