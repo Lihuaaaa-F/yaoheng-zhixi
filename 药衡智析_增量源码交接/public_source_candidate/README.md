@@ -24,6 +24,7 @@
 本目录为应用根（`药衡智析_增量源码交接/public_source_candidate`），外层是 Git 根。已合并 clone 无需 prepare。
 
 ```bash
+cd 药衡智析_增量源码交接/public_source_candidate   # 仓库根克隆后先进应用根
 bash 05_原型/scripts/bootstrap.sh   # venv + 锁定依赖 + 前端按指纹构建 + 数据冒烟
 bash 05_原型/scripts/start.sh       # 启动 api(8765)/worker/模拟RPA(8090)
 # 打开 http://127.0.0.1:8765
@@ -32,11 +33,14 @@ bash 05_原型/scripts/stop.sh
 
 **English**: same two scripts bootstrap and start the whole stack (FastAPI + worker + simulated RPA) on localhost; Windows Git Bash, Linux and WSL share one entry point. Model key is optional — narrative degrades to deterministic rules; embedding model optional — lexical retrieval remains.
 
-环境要求：Python 3.12（venv）、Node/npm（Vite 锁版本接受 Node 18/20/≥22）；Word→PDF 需 LibreOffice，逐页截图需 `pdftoppm`。没有嵌入模型时关键词检索降级可用；不会自动下载大型模型或覆盖外置模型。
+环境要求：Python 3.12（venv）、Node/npm（Vite 锁版本接受 Node 18/20/≥22）；Word→PDF 需 LibreOffice，逐页截图需 `pdftoppm`。Windows：LibreOffice 默认安装即可被自动探测（亦可将 `program` 目录加入 PATH）；Poppler for Windows 解压后把 `bin` 加入 PATH。没有嵌入模型时关键词检索降级可用；不会自动下载大型模型或覆盖外置模型。
+
+**Network / English**: on restricted networks set pip/npm mirrors first (`PIP_INDEX_URL`, `npm_config registry`); offline reviews should pre-build once online (node_modules are required even when `frontend/dist` matches). Common troubleshooting: port conflict → change `PHARMA_API_PORT`/`PHARMA_RPA_PORT` in `05_原型/.env`; no response on 8765 → check worker log under `05_原型/.runtime`; on Windows run scripts from Git Bash.
 
 ## 模型配置 / Model Configuration
 
-配置文件 `05_原型/.env`（示例 `.env.example`，仅本机保存，不入库）：
+配置文件 `05_原型/.env`（示例 `.env.example`，仅本机保存，不入库）。可选初始化：
+`cp 05_原型/.env.example 05_原型/.env`（无密钥、无 .env 也可基础启动）：
 
 ```bash
 PHARMA_MODEL=glm-5.3-flash

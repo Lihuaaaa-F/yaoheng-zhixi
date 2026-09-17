@@ -1,0 +1,272 @@
+{
+  "run_id": "release_20260918_bc854cc",
+  "revision": "bc854cc217340dbd394f65ee7b9a84257c33bde7",
+  "revision_kind": "git",
+  "commit": "bc854cc217340dbd394f65ee7b9a84257c33bde7",
+  "status": "PASS",
+  "scenarios": [
+    {
+      "id": "mechanical",
+      "status": "PASS",
+      "generation_mode": "llm",
+      "model_live": true,
+      "identity": {
+        "status": "VERIFIED",
+        "requested": "glm-5.3-flash",
+        "returned": [
+          "glm-5.3-flash"
+        ],
+        "reason": "全部调用响应model经核验一致"
+      },
+      "usage": {
+        "prompt_tokens": 9143,
+        "completion_tokens": 552,
+        "total_tokens": 9695,
+        "calls": 1
+      },
+      "alert_coverage": {
+        "alert-2eda796632e9c7b7ccae": {
+          "covered": true,
+          "element_key": "labor",
+          "basis": "unit"
+        },
+        "alert-137ec08a22a8269769aa": {
+          "covered": true,
+          "element_key": "labor",
+          "basis": "total"
+        }
+      },
+      "failures": []
+    },
+    {
+      "id": "chemical",
+      "status": "PASS",
+      "generation_mode": "llm",
+      "model_live": true,
+      "identity": {
+        "status": "VERIFIED",
+        "requested": "glm-5.3-flash",
+        "returned": [
+          "glm-5.3-flash"
+        ],
+        "reason": "全部调用响应model经核验一致"
+      },
+      "usage": {
+        "prompt_tokens": 26886,
+        "completion_tokens": 1786,
+        "total_tokens": 28672,
+        "calls": 2
+      },
+      "alert_coverage": {
+        "alert-7180fa304a3f76c1421f": {
+          "covered": true,
+          "element_key": "materials",
+          "basis": "unit"
+        },
+        "alert-36b5bdd2282436b46a4b": {
+          "covered": true,
+          "element_key": "materials",
+          "basis": "total"
+        },
+        "alert-ad982e3348bf26c12a0a": {
+          "covered": true,
+          "element_key": "overhead",
+          "basis": "unit"
+        },
+        "alert-bbb785065f408c5aa01f": {
+          "covered": true,
+          "element_key": "overhead",
+          "basis": "total"
+        },
+        "alert-b5d01f31f48c0b2d38f1": {
+          "covered": true,
+          "element_key": "energy",
+          "basis": "unit"
+        },
+        "alert-e22160d2cf5074473bc2": {
+          "covered": true,
+          "element_key": "energy",
+          "basis": "total"
+        }
+      },
+      "failures": [
+        "materials: ValueError: free business number forbidden",
+        "materials: ValueError: free business number forbidden",
+        "overhead: ValueError: missing evidence must name specific records or measurements",
+        "energy: ValueError: free business number forbidden"
+      ]
+    },
+    {
+      "id": "pharma_synthetic",
+      "status": "PASS",
+      "generation_mode": "llm",
+      "model_live": true,
+      "identity": {
+        "status": "VERIFIED",
+        "requested": "glm-5.3-flash",
+        "returned": [
+          "glm-5.3-flash"
+        ],
+        "reason": "全部调用响应model经核验一致"
+      },
+      "usage": {
+        "prompt_tokens": 11072,
+        "completion_tokens": 980,
+        "total_tokens": 12052,
+        "calls": 1
+      },
+      "alert_coverage": {
+        "alert-3c7d1a5bc57486f2b919": {
+          "covered": true,
+          "element_key": "materials",
+          "basis": "unit"
+        },
+        "alert-0fa1fef734c6521bae28": {
+          "covered": true,
+          "element_key": "materials",
+          "basis": "total"
+        },
+        "alert-1546c926d55109a31aa2": {
+          "covered": true,
+          "element_key": "overhead",
+          "basis": "unit"
+        },
+        "alert-2d84f440937e929d6117": {
+          "covered": true,
+          "element_key": "overhead",
+          "basis": "total"
+        }
+      },
+      "failures": []
+    },
+    {
+      "id": "S1",
+      "status": "PASS",
+      "generation_mode": "llm",
+      "model_live": true,
+      "identity": {
+        "status": "VERIFIED",
+        "requested": "glm-5.3-flash",
+        "returned": [
+          "glm-5.3-flash"
+        ],
+        "reason": "全部调用响应model经核验一致"
+      },
+      "usage": {
+        "prompt_tokens": 41813,
+        "completion_tokens": 1223,
+        "total_tokens": 43036,
+        "calls": 2
+      },
+      "alert_coverage": {},
+      "failures": [
+        "benchmark: ValueError: missing evidence must name specific records or measurements",
+        "benchmark: ValueError: missing evidence must name specific records or measurements"
+      ]
+    },
+    {
+      "id": "S2",
+      "status": "PASS",
+      "generation_mode": "llm",
+      "model_live": true,
+      "identity": {
+        "status": "VERIFIED",
+        "requested": "glm-5.3-flash",
+        "returned": [
+          "glm-5.3-flash"
+        ],
+        "reason": "全部调用响应model经核验一致"
+      },
+      "usage": {
+        "prompt_tokens": 39883,
+        "completion_tokens": 1241,
+        "total_tokens": 41124,
+        "calls": 2
+      },
+      "alert_coverage": {},
+      "failures": [
+        "materials: ValueError: free business number forbidden",
+        "materials: ValueError: free business number forbidden"
+      ]
+    },
+    {
+      "id": "S3",
+      "status": "PASS",
+      "generation_mode": "llm",
+      "model_live": true,
+      "identity": {
+        "status": "VERIFIED",
+        "requested": "glm-5.3-flash",
+        "returned": [
+          "glm-5.3-flash"
+        ],
+        "reason": "全部调用响应model经核验一致"
+      },
+      "usage": {
+        "prompt_tokens": 81814,
+        "completion_tokens": 2339,
+        "total_tokens": 84153,
+        "calls": 3
+      },
+      "alert_coverage": {
+        "alert-ae6cfac6295472537aa5": {
+          "covered": true,
+          "element_key": "materials",
+          "basis": "total"
+        },
+        "alert-a3392a1012a3bdbfd2a9": {
+          "covered": true,
+          "element_key": "labor",
+          "basis": "total"
+        },
+        "alert-918366df38ec19897ded": {
+          "covered": true,
+          "element_key": "overhead",
+          "basis": "total"
+        }
+      },
+      "failures": [
+        "materials: ValueError: free business number forbidden",
+        "materials: ValueError: insufficient evidence text must state an evidence limitation in every clause"
+      ]
+    },
+    {
+      "id": "Q2",
+      "status": "PASS",
+      "generation_mode": "llm",
+      "model_live": true,
+      "identity": {
+        "status": "VERIFIED",
+        "requested": "glm-5.3-flash",
+        "returned": [
+          "glm-5.3-flash"
+        ],
+        "reason": "全部调用响应model经核验一致"
+      },
+      "usage": {
+        "prompt_tokens": 28721,
+        "completion_tokens": 1029,
+        "total_tokens": 29750,
+        "calls": 1
+      },
+      "alert_coverage": {
+        "alert-f63295afdd8152cfe65f": {
+          "covered": true,
+          "element_key": "materials",
+          "basis": "total"
+        },
+        "alert-4dfbe0c1984e3bac496f": {
+          "covered": true,
+          "element_key": "labor",
+          "basis": "total"
+        },
+        "alert-0c80378a697b26dda64c": {
+          "covered": true,
+          "element_key": "overhead",
+          "basis": "total"
+        }
+      },
+      "failures": []
+    }
+  ]
+}

@@ -1,0 +1,508 @@
+{
+  "run_id": "release_20260918_26efd3a_air2",
+  "commit": "26efd3a39301af8ac05c64990cd37fc99db05dd4",
+  "tested_code_commit": "26efd3a39301af8ac05c64990cd37fc99db05dd4",
+  "dimensions": {
+    "environment": {
+      "status": "PASS",
+      "exit_code": 0
+    },
+    "regression": {
+      "status": "PASS",
+      "exit_code": 0
+    },
+    "scenarios": {
+      "status": "PASS"
+    },
+    "retrieval": {
+      "run_id": "release_20260918_26efd3a_air2",
+      "revision": "26efd3a39301af8ac05c64990cd37fc99db05dd4",
+      "revision_kind": "git",
+      "commit": "26efd3a39301af8ac05c64990cd37fc99db05dd4",
+      "status": "PASS",
+      "scenarios": [
+        {
+          "id": "mechanical",
+          "status": "PASS",
+          "mode": "hybrid",
+          "framework": "llama-index-core BaseRetriever/TextNode",
+          "recall_status": "RECALLED",
+          "count": 2
+        },
+        {
+          "id": "chemical",
+          "status": "PASS",
+          "mode": "hybrid",
+          "framework": "llama-index-core BaseRetriever/TextNode",
+          "recall_status": "RECALLED",
+          "count": 2
+        },
+        {
+          "id": "pharma_synthetic",
+          "status": "PASS",
+          "mode": "hybrid",
+          "framework": "llama-index-core BaseRetriever/TextNode",
+          "recall_status": "RECALLED",
+          "count": 2
+        },
+        {
+          "id": "S1",
+          "status": "PASS",
+          "mode": "hybrid",
+          "framework": "llama-index-core BaseRetriever/TextNode",
+          "recall_status": "RECALLED",
+          "count": 8
+        },
+        {
+          "id": "S2",
+          "status": "PASS",
+          "mode": "hybrid",
+          "framework": "llama-index-core BaseRetriever/TextNode",
+          "recall_status": "RECALLED",
+          "count": 8
+        },
+        {
+          "id": "S3",
+          "status": "PASS",
+          "mode": "hybrid",
+          "framework": "llama-index-core BaseRetriever/TextNode",
+          "recall_status": "RECALLED",
+          "count": 8
+        },
+        {
+          "id": "Q2",
+          "status": "PASS",
+          "mode": "hybrid",
+          "framework": "llama-index-core BaseRetriever/TextNode",
+          "recall_status": "RECALLED",
+          "count": 8
+        }
+      ]
+    },
+    "rpa": {
+      "run_id": "release_20260918_26efd3a_air2",
+      "revision": "26efd3a39301af8ac05c64990cd37fc99db05dd4",
+      "revision_kind": "git",
+      "commit": "26efd3a39301af8ac05c64990cd37fc99db05dd4",
+      "status": "PASS",
+      "scenarios": [
+        {
+          "id": "mechanical",
+          "status": "PASS",
+          "action_id": "YH-22a93c231dda3f3752857c26",
+          "notification": "SIMULATED_SENT",
+          "human_acknowledgement": "NOT_ENTERED"
+        },
+        {
+          "id": "chemical",
+          "status": "PASS",
+          "action_id": "YH-d859acb40c3d7e59dfd5d99f",
+          "notification": "SIMULATED_SENT",
+          "human_acknowledgement": "NOT_ENTERED"
+        },
+        {
+          "id": "pharma_synthetic",
+          "status": "PASS",
+          "action_id": "YH-0a733d1249683a50d06203b9",
+          "notification": "SIMULATED_SENT",
+          "human_acknowledgement": "NOT_ENTERED"
+        },
+        {
+          "id": "S1",
+          "status": "PASS",
+          "action_id": "YH-2b5c836450f44a3dbff2ae22",
+          "notification": "SIMULATED_SENT",
+          "human_acknowledgement": "NOT_ENTERED"
+        },
+        {
+          "id": "S2",
+          "status": "PASS",
+          "action_id": "YH-3806192ed367568b4bfc1dd8",
+          "notification": "SIMULATED_SENT",
+          "human_acknowledgement": "NOT_ENTERED"
+        },
+        {
+          "id": "S3",
+          "status": "PASS",
+          "action_id": "YH-634fad1b44aef0382a5c8958",
+          "notification": "SIMULATED_SENT",
+          "human_acknowledgement": "NOT_ENTERED"
+        },
+        {
+          "id": "Q2",
+          "status": "PASS",
+          "action_id": "YH-2c54a7fae5e489ccd2b0af3d",
+          "notification": "SIMULATED_SENT",
+          "human_acknowledgement": "NOT_ENTERED"
+        }
+      ]
+    },
+    "browser": {
+      "status": "PASS",
+      "scope": "live real-API UI suite (8 checks incl. report submission) + mocked browser contract suite (10 checks); file/model/RPA quality not asserted here",
+      "run_id": "release_20260918_26efd3a_air2",
+      "commit": "26efd3a39301af8ac05c64990cd37fc99db05dd4",
+      "live": {
+        "url": "http://127.0.0.1:8765",
+        "viewports": [
+          "1440x1000",
+          "390x844"
+        ],
+        "checks": [
+          "mechanical monthly: independent expected unit cost 30, unit machine hours 0.5",
+          "mechanical quarter: independent 9400 / 320 = 29.375, displayed 29.38",
+          "real quarterly benchmark both directions, stable table and chart before screenshot",
+          "chemical switch resets legal filters; monthly cost 12 and energy metric present",
+          "chemical knowledge retrieval rendered in its own context",
+          "real A → B → A restores context correctly",
+          "real heatmap, desktop and mobile rendered without horizontal overflow",
+          "real report job submitted in mechanical context"
+        ],
+        "submitted_job": "040208b4b9754398bd5d823c5a5a9b07",
+        "errors": [],
+        "apiFailures": []
+      },
+      "mocked": {
+        "checks": [
+          "page identity and meaningful metrics",
+          "context changes data and units",
+          "A → B → A discards delayed responses",
+          "quarterly benchmark and arbitrary factory pair",
+          "knowledge scope carries immutable context",
+          "report submits fixed context; task summary distinguishes delivery and owner confirmation",
+          "manual owner confirmation starts blank and updates a separate signed confirmation count (mock only)",
+          "concurrent browser sessions keep independent selected contexts",
+          "desktop/mobile no horizontal overflow; heatmap rendered",
+          "no runtime/console errors"
+        ],
+        "errors": []
+      },
+      "note": "Run bound to glm-4.5-air narrative (glm-5.3-flash quota exhausted code 1113); e2e report submission hits narrative cache."
+    },
+    "model_live": {
+      "run_id": "release_20260918_26efd3a_air2",
+      "revision": "26efd3a39301af8ac05c64990cd37fc99db05dd4",
+      "revision_kind": "git",
+      "commit": "26efd3a39301af8ac05c64990cd37fc99db05dd4",
+      "status": "FAIL",
+      "scenarios": [
+        {
+          "id": "mechanical",
+          "status": "PASS",
+          "generation_mode": "llm",
+          "model_live": true,
+          "identity": {
+            "status": "VERIFIED",
+            "requested": "glm-4.5-air",
+            "returned": [
+              "glm-4.5-air"
+            ],
+            "reason": "全部调用响应model经核验一致"
+          },
+          "usage": {
+            "prompt_tokens": 9136,
+            "completion_tokens": 1496,
+            "total_tokens": 10632,
+            "calls": 1
+          },
+          "alert_coverage": {
+            "alert-2eda796632e9c7b7ccae": {
+              "covered": true,
+              "element_key": "labor",
+              "basis": "unit"
+            },
+            "alert-137ec08a22a8269769aa": {
+              "covered": true,
+              "element_key": "labor",
+              "basis": "total"
+            }
+          },
+          "failures": []
+        },
+        {
+          "id": "chemical",
+          "status": "PASS",
+          "generation_mode": "llm",
+          "model_live": true,
+          "identity": {
+            "status": "VERIFIED",
+            "requested": "glm-4.5-air",
+            "returned": [
+              "glm-4.5-air"
+            ],
+            "reason": "全部调用响应model经核验一致"
+          },
+          "usage": {
+            "prompt_tokens": 40665,
+            "completion_tokens": 9972,
+            "total_tokens": 50637,
+            "calls": 3
+          },
+          "alert_coverage": {
+            "alert-7180fa304a3f76c1421f": {
+              "covered": true,
+              "element_key": "materials",
+              "basis": "unit"
+            },
+            "alert-36b5bdd2282436b46a4b": {
+              "covered": true,
+              "element_key": "materials",
+              "basis": "total"
+            },
+            "alert-ad982e3348bf26c12a0a": {
+              "covered": true,
+              "element_key": "overhead",
+              "basis": "unit"
+            },
+            "alert-bbb785065f408c5aa01f": {
+              "covered": true,
+              "element_key": "overhead",
+              "basis": "total"
+            },
+            "alert-b5d01f31f48c0b2d38f1": {
+              "covered": true,
+              "element_key": "energy",
+              "basis": "unit"
+            },
+            "alert-e22160d2cf5074473bc2": {
+              "covered": true,
+              "element_key": "energy",
+              "basis": "total"
+            }
+          },
+          "failures": [
+            "materials: ValueError: free business number forbidden",
+            "overhead: ValueError: free business number forbidden",
+            "energy: ValueError: free business number forbidden",
+            "benchmark: ValueError: free business number forbidden"
+          ]
+        },
+        {
+          "id": "pharma_synthetic",
+          "status": "PASS",
+          "generation_mode": "llm",
+          "model_live": true,
+          "identity": {
+            "status": "VERIFIED",
+            "requested": "glm-4.5-air",
+            "returned": [
+              "glm-4.5-air"
+            ],
+            "reason": "全部调用响应model经核验一致"
+          },
+          "usage": {
+            "prompt_tokens": 11065,
+            "completion_tokens": 2524,
+            "total_tokens": 13589,
+            "calls": 1
+          },
+          "alert_coverage": {
+            "alert-3c7d1a5bc57486f2b919": {
+              "covered": true,
+              "element_key": "materials",
+              "basis": "unit"
+            },
+            "alert-0fa1fef734c6521bae28": {
+              "covered": true,
+              "element_key": "materials",
+              "basis": "total"
+            },
+            "alert-1546c926d55109a31aa2": {
+              "covered": true,
+              "element_key": "overhead",
+              "basis": "unit"
+            },
+            "alert-2d84f440937e929d6117": {
+              "covered": true,
+              "element_key": "overhead",
+              "basis": "total"
+            }
+          },
+          "failures": []
+        },
+        {
+          "id": "S1",
+          "status": "PASS",
+          "generation_mode": "llm",
+          "model_live": true,
+          "identity": {
+            "status": "VERIFIED",
+            "requested": "glm-4.5-air",
+            "returned": [
+              "glm-4.5-air"
+            ],
+            "reason": "全部调用响应model经核验一致"
+          },
+          "usage": {
+            "prompt_tokens": 20827,
+            "completion_tokens": 1612,
+            "total_tokens": 22439,
+            "calls": 1
+          },
+          "alert_coverage": {},
+          "failures": []
+        },
+        {
+          "id": "S2",
+          "status": "PASS",
+          "generation_mode": "llm",
+          "model_live": true,
+          "identity": {
+            "status": "VERIFIED",
+            "requested": "glm-4.5-air",
+            "returned": [
+              "glm-4.5-air"
+            ],
+            "reason": "全部调用响应model经核验一致"
+          },
+          "usage": {
+            "prompt_tokens": 19866,
+            "completion_tokens": 1946,
+            "total_tokens": 21812,
+            "calls": 1
+          },
+          "alert_coverage": {},
+          "failures": []
+        },
+        {
+          "id": "S3",
+          "status": "PASS",
+          "generation_mode": "llm",
+          "model_live": true,
+          "identity": {
+            "status": "VERIFIED",
+            "requested": "glm-4.5-air",
+            "returned": [
+              "glm-4.5-air"
+            ],
+            "reason": "全部调用响应model经核验一致"
+          },
+          "usage": {
+            "prompt_tokens": 27138,
+            "completion_tokens": 1418,
+            "total_tokens": 28556,
+            "calls": 1
+          },
+          "alert_coverage": {
+            "alert-ae6cfac6295472537aa5": {
+              "covered": true,
+              "element_key": "materials",
+              "basis": "total"
+            },
+            "alert-a3392a1012a3bdbfd2a9": {
+              "covered": true,
+              "element_key": "labor",
+              "basis": "total"
+            },
+            "alert-918366df38ec19897ded": {
+              "covered": true,
+              "element_key": "overhead",
+              "basis": "total"
+            }
+          },
+          "failures": []
+        },
+        {
+          "id": "Q2",
+          "status": "DEGRADED",
+          "generation_mode": "mixed",
+          "model_live": true,
+          "identity": {
+            "status": "VERIFIED",
+            "requested": "glm-4.5-air",
+            "returned": [
+              "glm-4.5-air"
+            ],
+            "reason": "全部调用响应model经核验一致"
+          },
+          "usage": {
+            "prompt_tokens": 86770,
+            "completion_tokens": 7098,
+            "total_tokens": 93868,
+            "calls": 3
+          },
+          "alert_coverage": {
+            "alert-f63295afdd8152cfe65f": {
+              "covered": true,
+              "element_key": "materials",
+              "basis": "total"
+            },
+            "alert-4dfbe0c1984e3bac496f": {
+              "covered": true,
+              "element_key": "labor",
+              "basis": "total"
+            },
+            "alert-0c80378a697b26dda64c": {
+              "covered": true,
+              "element_key": "overhead",
+              "basis": "total"
+            }
+          },
+          "failures": [
+            "labor: ValueError: missing evidence must name specific records or measurements",
+            "labor: ValueError: missing evidence must name specific records or measurements",
+            "benchmark: ValueError: missing evidence must name specific records or measurements",
+            "benchmark: ValueError: missing evidence must name specific records or measurements",
+            "labor: ValueError: missing evidence must name specific records or measurements",
+            "labor: ValueError: free business number forbidden",
+            "labor: ValueError: free business number forbidden"
+          ]
+        }
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "id": "mechanical",
+      "status": "PASS",
+      "job_id": "daa3929f9a424ac09a74a72320b9f646",
+      "generation_mode": "llm",
+      "human_review": "PENDING"
+    },
+    {
+      "id": "chemical",
+      "status": "PASS",
+      "job_id": "dd7ba90834844c289eb3554bdcb53975",
+      "generation_mode": "llm",
+      "human_review": "PENDING"
+    },
+    {
+      "id": "pharma_synthetic",
+      "status": "PASS",
+      "job_id": "87040866f5bb4bf4a061892080180356",
+      "generation_mode": "llm",
+      "human_review": "PENDING"
+    },
+    {
+      "id": "S1",
+      "status": "PASS",
+      "job_id": "537568ffe72944029731e24111a30f1e",
+      "generation_mode": "llm",
+      "human_review": "PENDING"
+    },
+    {
+      "id": "S2",
+      "status": "PASS",
+      "job_id": "4169bdda16fe48d0934b4c6818acfc90",
+      "generation_mode": "llm",
+      "human_review": "PENDING"
+    },
+    {
+      "id": "S3",
+      "status": "PASS",
+      "job_id": "62a69bdfc5514d2283a58b68de496934",
+      "generation_mode": "llm",
+      "human_review": "PENDING"
+    },
+    {
+      "id": "Q2",
+      "status": "PASS",
+      "job_id": "a7e7b9f6a84d4bf2abbe6118867704e9",
+      "generation_mode": "mixed",
+      "human_review": "PENDING"
+    }
+  ],
+  "human_review": "PENDING",
+  "competition_ready": false,
+  "status": "FAIL"
+}

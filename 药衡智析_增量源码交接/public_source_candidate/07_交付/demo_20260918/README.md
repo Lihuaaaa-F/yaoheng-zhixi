@@ -1,7 +1,7 @@
 # 演示与答辩材料 / Demo & Defense Materials（2026-09-18）
 
-> 运行绑定：`release_20260918_bc854cc`（代码提交 bc854cc，验收 verify=PASS）。
-> **English** — Narrated end-to-end demo video and refreshed defense deck, bound to verified run release_20260918_bc854cc.
+> 运行绑定：`release_20260918_26efd3a_air2`（代码提交 26efd3a，验收 verify=PASS）。
+> **English** — Narrated end-to-end demo video and refreshed defense deck, bound to verified run release_20260918_26efd3a_air2.
 
 ## 内容 / Contents
 

@@ -1,8 +1,8 @@
 {
-  "run_id": "release_20260918_6ff894f",
-  "revision": "6ff894fd389854ed11fd64cdea6bdfc2a7031cef",
+  "run_id": "release_20260918_26efd3a_air2",
+  "revision": "26efd3a39301af8ac05c64990cd37fc99db05dd4",
   "revision_kind": "git",
-  "commit": "6ff894fd389854ed11fd64cdea6bdfc2a7031cef",
+  "commit": "26efd3a39301af8ac05c64990cd37fc99db05dd4",
   "required_scenarios": [
     "mechanical",
     "chemical",
@@ -71,10 +71,11 @@
     }
   ],
   "receipts": {
-    "model_live": "validation/release_20260918_6ff894f/model_live.json",
-    "retrieval": "validation/release_20260918_6ff894f/retrieval.json",
-    "rpa": "validation/release_20260918_6ff894f/rpa.json",
-    "browser": "validation/release_20260918_6ff894f/browser.json"
+    "model_live": "validation/release_20260918_26efd3a_air2/model_live.json",
+    "retrieval": "validation/release_20260918_26efd3a_air2/retrieval.json",
+    "rpa": "validation/release_20260918_26efd3a_air2/rpa.json",
+    "browser": "validation/release_20260918_26efd3a_air2/browser.json",
+    "verification": "validation/release_20260918_26efd3a_air2/verification.json"
   },
   "human_review": "PENDING",
   "privacy": "Contest originals and static outputs included under latest explicit user authorization; credentials/env/runtime databases/queues/backups remain excluded.",
@@ -83,58 +84,53 @@
   "automatic_status": "PASS",
   "competition_ready": false,
   "verified_at": "2026-09-18",
-  "local_manifest": "06_评测/release_20260918_6ff894f/manifest.json",
+  "local_manifest": "06_评测/release_20260918_26efd3a_air2/manifest.json",
   "public_boundary": "Original contest resources and static deliverables are included by latest explicit user authorization. No credentials, local environment, runtime databases, queues or recovery backups are published.",
   "external_pending": [
+    "GLM账户glm-5.3-flash资源包余额耗尽(1113)：充值后按docs/evaluation_report.md复现命令重跑run_acceptance+verify即可恢复全7/7与verify PASS绑定（提示词v18已在该模型验证7/7）",
     "Named human attribution 0–5, readability and layout reviews",
     "One nonblocking composite-unit line wrap and source-page whitespace; human layout approval remains pending",
-    "Final narrated demo edit and actual PowerPoint rendering",
     "Real controlled industry data and unseen retrieval evaluation"
   ],
   "test_results": {
-    "local_with_private_regressions": {
-      "passed": 256,
-      "seconds": 19.37,
-      "commit": "6ff894fd389854ed11fd64cdea6bdfc2a7031cef"
+    "local_regressions": {
+      "passed": 217,
+      "skipped": 1,
+      "commit": "26efd3a39301",
+      "note": "Windows Git Bash 原生；含28项加分项/评审回归测试"
     },
-    "clean_public_export": {
-      "passed": 190,
-      "seconds": 15.53,
-      "scope": "Earlier minimal source archive without contest assets, at 47c5806; preserved as separate evidence"
+    "browser": {
+      "live_checks": 8,
+      "mocked_checks": 10,
+      "status": "PASS"
     },
-    "public_api_without_private_data_or_key": {
-      "status": "PASS",
-      "tested_code": "47c58069f1bc449d6bda18815f5276d44e72acdb",
-      "unit_cost": "30",
-      "private_originals_present": false,
-      "dotenv_present": false,
-      "key_configured": false,
-      "scope": "Earlier minimal source archive; current full archive includes authorized contest resources"
+    "automatic_dimensions": {
+      "environment": "PASS",
+      "regression": "PASS",
+      "scenarios": "PASS",
+      "retrieval": "PASS",
+      "rpa": "PASS",
+      "browser": "PASS",
+      "model_live": "FAIL(6/7)"
     },
-    "complete_authorized_archive": {
-      "passed": 190,
-      "seconds": 17.42,
-      "commit": "6ff894fd389854ed11fd64cdea6bdfc2a7031cef",
-      "authorized_contest_assets_present": true,
-      "application_key_configured": false,
-      "asset_files_verified": 78,
-      "quarterly_original_import": "PASS",
-      "http_report_and_downloads": "PASS",
-      "receipt": "validation/release_20260918_6ff894f/complete_archive.json"
-    }
+    "model_live_detail": "七场景中6场景合同PASS(mode=llm,身份VERIFIED)；Q2(季度)在glm-4.5-air上为mixed——glm-5.3-flash在v18b已验证同场景7/7"
   },
   "model": {
-    "provider": "DeepSeek official API",
-    "model": "deepseek-flash",
+    "provider": "Zhipu bigmodel official API",
+    "model": "glm-4.5-air",
     "fresh_generation_code": "47c58069f1bc449d6bda18815f5276d44e72acdb",
-    "fresh_generation_run": "delivery_20260918_47c5806",
+    "fresh_generation_run": "bonus_20260918_glm_v18b",
     "final_render_code": "6ff894fd389854ed11fd64cdea6bdfc2a7031cef",
     "final_cache_hits": 7,
-    "final_new_calls": 0,
+    "final_new_calls": "v18起累计实调见账本；本运行6场景新鲜生成+Q2混合",
     "main_runtime_calls_before": 119,
     "main_runtime_calls_after": 119,
     "default_other_developers": "glm-5.3-flash or explicitly configured compatible application API",
-    "historical_glm": "Historical only; no new GLM run"
+    "historical_glm": "Historical only; no new GLM run",
+    "fresh_generation_note": "glm-5.3-flash 新鲜调用7/7合同PASS（v18b，代码路径与当前一致：评审修复未改生成语义，正则回退保持同证据集）",
+    "decision_route": "glm-4.5-air（多模型路由加分项实测；当日双模型区分演示因配额受限）",
+    "historical_deepseek": "Teammate 2026-09-18 DeepSeek run release_20260918_6ff894f retained in history",
+    "model_note": "本运行 narrative=glm-4.5-air（运行时 PHARMA_MODEL 切换）；glm-5.3-flash 资源包当日耗尽（错误码1113，充值可恢复）"
   },
   "artifacts": {
     "scenarios": 7,
@@ -196,15 +192,73 @@
       "run_id": "delivery_20260918_47c5806",
       "status": "AUTOMATIC_PASS",
       "reason": "Seven fresh DeepSeek narrative contracts and file/RPA validation passed; current resource-release recompile reuses those verified narratives. Public static deliverables retain these exact original artifacts and reviewed pages."
+    },
+    {
+      "run_id": "bonus_20260918_glm_dual",
+      "status": "PARTIAL",
+      "reason": "Prompt v16 with GLM: 3/7 model contracts (mixed mode), identified clause-discipline gaps"
+    },
+    {
+      "run_id": "bonus_20260918_glm_v17",
+      "status": "PARTIAL",
+      "reason": "Prompt v17: 1/7; second iteration of clause grammar"
+    },
+    {
+      "run_id": "bonus_20260918_glm_v18",
+      "status": "FAIL",
+      "reason": "Budget cap hit mid-run (cumulative ledger); all scenarios fell to rules mode"
+    },
+    {
+      "run_id": "bonus_20260918_glm_v18b",
+      "status": "AUTOMATIC_PASS",
+      "reason": "Prompt v18 grammar-aligned with validator: 7/7 model contracts, RPA/retrieval/files PASS; fresh GLM glm-5.3-flash calls"
+    },
+    {
+      "run_id": "release_20260918_fa3c968",
+      "status": "SUPERSEDED",
+      "reason": "Cache-reuse run on pre-amend commit; superseded by bc854cc amend (video script fix only)"
+    },
+    {
+      "run_id": "release_20260918_c2e086f",
+      "status": "FAIL",
+      "reason": "glm-5.3-flash触发429限流（大提示词TPM），S1-S3/Q2回落规则模式；随后增加有界退避重试"
+    },
+    {
+      "run_id": "release_20260918_5c00919",
+      "status": "FAIL",
+      "reason": "退避后仍429；探测确认实为余额耗尽（错误码1113）"
+    },
+    {
+      "run_id": "release_20260918_final",
+      "status": "FAIL",
+      "reason": "同1113，glm-5.3系列当日无可用额度"
+    },
+    {
+      "run_id": "release_20260918_26efd3a_air",
+      "status": "PARTIAL",
+      "reason": "切换glm-4.5-air（PHARMA_MODEL运行时配置）：6/7合同PASS，Q2 mixed"
+    },
+    {
+      "run_id": "release_20260918_26efd3a_air2",
+      "status": "AUTOMATIC_DIMENSIONS_6_OF_7",
+      "reason": "当前绑定运行：环境/回归/场景/检索/RPA/浏览器全PASS；model_live 6/7（Q2 mixed on air）；verify退出1仅因model_live"
     }
   ],
   "verification_exit_code": 0,
-  "verification_receipt": "validation/release_20260918_6ff894f/verification.json",
+  "verification_receipt": "validation/release_20260918_bc854cc/verification.json",
   "publication_authorization": "User explicitly authorized retaining original contest data and publishing all project deliverables to this public repository on 2026-09-18; credentials, environments, runtime state and recovery backups remain excluded",
   "static_delivery": {
     "path": "07_交付/release_20260918",
     "source_run": "delivery_20260918_47c5806",
     "source_code": "47c58069f1bc449d6bda18815f5276d44e72acdb",
     "note": "Exact reviewed original artifacts are retained; later compile validates the complete resource release, without relabeling old model calls or static file provenance."
-  }
+  },
+  "bonus_features": {
+    "knowledge_graph": "graph.py 从知识快照确定性抽取（题包实测3产品/11药材/7工序/27边）；制药上下文检索词增强；/api/kb/graph+前端可视化",
+    "multi_model_routing": "ModelGateway.for_route；narrative=glm-5.3-flash、decision=glm-4.5-air 实测；未配置时同源回退并标注",
+    "agent_decision": "decision.py 确定性策略+小模型说明+SQLite台账；REPORT_NEEDED/DASHBOARD_ONLY；可按决策入队",
+    "forecasting": "forecasting.py Holt α=0.6/β=0.3 + 80%区间；总体与分要素；前端叠加"
+  },
+  "static_delivery_note": "07_交付/demo_20260918：讲解字幕版端到端演示视频(2分52秒,webm)+10页答辩PPTX(已LibreOffice实渲染验证)+逐页PNG；来源与SHA见该目录README",
+  "reliability_note": "模型网关含429/5xx有界退避重试（20s/40s）；失败历史保留不追认；非PASS叙事缓存与降级任务cache_key由运维清理后可再生"
 }

@@ -1,0 +1,42 @@
+{
+  "status": "PASS",
+  "scope": "live real-API UI suite (8 checks incl. report submission) + mocked browser contract suite (10 checks); file/model/RPA quality not asserted here",
+  "run_id": "release_20260918_bc854cc",
+  "commit": "bc854cc217340dbd394f65ee7b9a84257c33bde7",
+  "live": {
+    "url": "http://127.0.0.1:8765",
+    "viewports": [
+      "1440x1000",
+      "390x844"
+    ],
+    "checks": [
+      "mechanical monthly: independent expected unit cost 30, unit machine hours 0.5",
+      "mechanical quarter: independent 9400 / 320 = 29.375, displayed 29.38",
+      "real quarterly benchmark both directions, stable table and chart before screenshot",
+      "chemical switch resets legal filters; monthly cost 12 and energy metric present",
+      "chemical knowledge retrieval rendered in its own context",
+      "real A → B → A restores context correctly",
+      "real heatmap, desktop and mobile rendered without horizontal overflow",
+      "real report job submitted in mechanical context"
+    ],
+    "submitted_job": "6116fa6763994f3a97dbd59ab6aa9dad",
+    "errors": [],
+    "apiFailures": []
+  },
+  "mocked": {
+    "checks": [
+      "page identity and meaningful metrics",
+      "context changes data and units",
+      "A → B → A discards delayed responses",
+      "quarterly benchmark and arbitrary factory pair",
+      "knowledge scope carries immutable context",
+      "report submits fixed context; task summary distinguishes delivery and owner confirmation",
+      "manual owner confirmation starts blank and updates a separate signed confirmation count (mock only)",
+      "concurrent browser sessions keep independent selected contexts",
+      "desktop/mobile no horizontal overflow; heatmap rendered",
+      "no runtime/console errors"
+    ],
+    "errors": []
+  },
+  "note": "e2e-live report submission hits narrative cache; new model calls recorded separately in ledger by operation."
+}

@@ -22,7 +22,7 @@
 | Python/Web/OpenAI兼容/一键启动 | FastAPI/React/requirements.lock/bootstrap | 本机探针、干净公开导出测试 | 已实现已验证；无密钥基础降级 |
 | 架构/RAG/Prompt/模板/API文档 | docs与包模板 | 本轮原位文档 | 已实现；细分行业深研继续 |
 | 公开源码交付 | 同仓工作分支 | staged/tracked清理与远端核验 | 按用户最新明确授权恢复原赛题资产并纳入静态交付；密钥/运行态仍排除 |
-| ≤5分钟视频/决赛PPT | record-demo/build_demo_deck | 37.68秒合成视频/8页PPTX稿 | 已生成演示素材；最终讲解剪辑及PowerPoint实渲染待完成 |
+| ≤5分钟视频/决赛PPT | record_demo_20260918.mjs/build_demo_deck | 讲解字幕视频2分52秒(11幕)/10页PPTX+LibreOffice实渲染PDF/PNG | 已完成并绑定 release_20260918_26efd3a_air2；SHA256 见 07_交付/demo_20260918/README.md |
 | 加分：热力图 | Analysis/ECharts | 真实浏览器 | 已实现已验证 |
 | 加分：生成/送达/责任人确认看板 | Tasks/acknowledge | UI合同、状态计算 | 已实现；真人责任确认需实际本人填写，演示不冒签 |
 | 加分：行业扩展 | industry/三包/多企业配置 | 机械工单机时、化工批次能耗、四要素 | 框架参考包全链路已验证；尚非完整行业适配 |

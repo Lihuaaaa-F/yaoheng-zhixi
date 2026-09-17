@@ -1,6 +1,6 @@
 # Prompt 设计与解释合同 / Prompt Design & Explanation Contract
 
-> 版本：Prompt v16（`required-cross-factory-explanation-task`），校验器 v9（`claim-contract-v9-cost-document-synonyms`）。
+> 版本：Prompt v18（`insufficient-grammar-aligned`），校验器 v9（`claim-contract-v9-cost-document-synonyms`）。v16→v18 迭代：缺证分句语法与程序校验逐字对齐，使 GLM 默认模型七场景解释合同 7/7（v16/v17 两轮实测失败记录保留于 current_run.json prior_runs）。
 > 本文档说明大模型在报告链路中的角色边界、系统提示词结构与程序侧校验合同。
 
 ## 1. 设计原则 / Design Principles

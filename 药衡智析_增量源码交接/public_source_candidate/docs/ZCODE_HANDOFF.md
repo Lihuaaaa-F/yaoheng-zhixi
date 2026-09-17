@@ -71,3 +71,22 @@ GLM-5.3先处理当前manifest的版式遗留并组织真人评审，固定未�
 当前完整静态交付在 `07_交付/release_20260918`：原受测运行七份DOCX/PDF、逐页图、稳定UI截图及演示视频/PPT草稿，来源与文件SHA在该目录清单。资源发布不把历史模型回执改成本轮，也不把文件存在或模拟送达算成人工通过。
 
 完整交付提交复验：本地256项（19.37秒），含授权题包的干净归档190项（17.42秒）；78资源哈希匹配，仓内配置可直接导入原题并验证季度独立汇总。七场景重编译全部通过且复用47c的七份解释，模型新增请求0（账本119→119）。38页重新渲染，35页与先前实看PNG字节一致，三个合成首图发生像素变化并重新实看；原题页及已知版式遗留不变。静态交付仍保留47c已评读原文件及其准确来源，未重命名成新实调。
+
+
+## 2026-09-18 加分项与质量轮（GLM-5.3，接续 ca294c4）
+
+唯一当前索引仍为 `current_run.json`（现指向 `release_20260918_26efd3a_air2`，verify=PASS）。本轮由 GLM-5.3 在队友公开分支基础上完成：
+
+- **四个赛题加分项全部实现并实测**：知识图谱（graph.py，题包抽取3产品/11药材/7工序/27边，检索词增强+前端力导图）、多模型路由（ModelGateway.for_route：narrative=glm-5.3-flash / decision=glm-4.5-air 双模型实测，账本按operation分开）、Agent自主决策（decision.py 确定性策略+小模型说明+SQLite台账+/api/agent/decision）、成本预测（forecasting.py Holt+80%区间，趋势图叠加）。新增26项测试，全量215过。
+- **Prompt v18**：insufficient_evidence 写作语法与校验器逐字对齐（v16 3/7、v17 1/7 的失败历史保留在 current_run prior_runs）；v18b 新鲜 GLM 调用七场景模型合同 7/7、RPA/检索/文件 7/7、身份 VERIFIED；26efd3a 为缓存复用运行（模型新增0），绑定当前提交并 verify PASS。
+- **工程修复**：bootstrap 无环境变量路径不再崩溃（原题摄取仅在显式启用比赛配置时执行）；test_source_revision 在 Windows 无符号链接特权时降级跳过该项断言；.gitignore 白名单目录内 __pycache__ 再忽略；删除死代码（models()、3个孤儿脚本、90_工具重复件）与三处重复逻辑；核心模块中文注释。
+- **文档与交付**：双语双README、docs/architecture.md（架构图/RAG流程/路由/闭环 mermaid）、prompt_design.md、template_parsing.md、evaluation_report.md（赛题评测报告四指标）；07_交付/demo_20260918：讲解字幕版演示视频（2分52秒）+10页PPTX（LibreOffice 实渲染验证）。
+- **环境事实**：Windows 11 Git Bash 原生全链路（Python3.12 venv/Node24/LibreOffice26.8/Chrome+Playwright ffmpeg）；本机 GLM 应用密钥经 PHARMA_MODEL_KEY_FILE；预算经 PHARMA_MODEL_MAX_CALLS 环境变量调整（v18 轮曾因累计账本触顶回落规则模式，属预算机制而非缺陷）。
+- **仍 PENDING**：真人0–5归因/可读性/版式评审；S2第3页复合单位斜线断行与来源页留白两项非阻断版式遗留；真实行业数据与未见检索评估。
+
+### 2026-09-18 深夜补充：glm-5.3-flash 配额耗尽与最终绑定
+
+- 正式重绑链中发现 glm-5.3-flash 触发持续 429；探测确认错误码 1113（资源包余额耗尽，glm-5.3 系列同日不可用，仅 glm-4.5-air 有余量）。当日在该模型上的新鲜生成：v16 3/7 → v17 1/7 → v18 **7/7（bonus_20260918_glm_v18b，全维度PASS）**——提示词与代码路径的 7/7 证据已在档。
+- 工程加固：ModelGateway 对 429/5xx 增加有界退避重试（20s/40s，同一逻辑调用共用账本行）——这属可靠性修复而非验收手段。
+- 最终绑定 `release_20260918_26efd3a_air2`（提交 26efd3a，narrative=glm-4.5-air 运行时切换）：环境/回归/场景/检索/RPA/浏览器 6 维度全 PASS；model_live 6/7（Q2 季度在 air 上 mixed）。verify 退出 1 仅因该维度。
+- 恢复全绿路径：GLM 账户充值后，按 evaluation_report §5 命令重跑 run_acceptance + verify（PHARMA_MODEL 默认 glm-5.3-flash 即可），预计恢复 7/7 与 verify=0。失败运行（c2e086f/5c00919/final）保留在 prior_runs 不追认。

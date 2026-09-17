@@ -1,0 +1,58 @@
+{
+  "run_id": "release_20260918_26efd3a_air2",
+  "revision": "26efd3a39301af8ac05c64990cd37fc99db05dd4",
+  "revision_kind": "git",
+  "commit": "26efd3a39301af8ac05c64990cd37fc99db05dd4",
+  "status": "PASS",
+  "scenarios": [
+    {
+      "id": "mechanical",
+      "status": "PASS",
+      "action_id": "YH-22a93c231dda3f3752857c26",
+      "notification": "SIMULATED_SENT",
+      "human_acknowledgement": "NOT_ENTERED"
+    },
+    {
+      "id": "chemical",
+      "status": "PASS",
+      "action_id": "YH-d859acb40c3d7e59dfd5d99f",
+      "notification": "SIMULATED_SENT",
+      "human_acknowledgement": "NOT_ENTERED"
+    },
+    {
+      "id": "pharma_synthetic",
+      "status": "PASS",
+      "action_id": "YH-0a733d1249683a50d06203b9",
+      "notification": "SIMULATED_SENT",
+      "human_acknowledgement": "NOT_ENTERED"
+    },
+    {
+      "id": "S1",
+      "status": "PASS",
+      "action_id": "YH-2b5c836450f44a3dbff2ae22",
+      "notification": "SIMULATED_SENT",
+      "human_acknowledgement": "NOT_ENTERED"
+    },
+    {
+      "id": "S2",
+      "status": "PASS",
+      "action_id": "YH-3806192ed367568b4bfc1dd8",
+      "notification": "SIMULATED_SENT",
+      "human_acknowledgement": "NOT_ENTERED"
+    },
+    {
+      "id": "S3",
+      "status": "PASS",
+      "action_id": "YH-634fad1b44aef0382a5c8958",
+      "notification": "SIMULATED_SENT",
+      "human_acknowledgement": "NOT_ENTERED"
+    },
+    {
+      "id": "Q2",
+      "status": "PASS",
+      "action_id": "YH-2c54a7fae5e489ccd2b0af3d",
+      "notification": "SIMULATED_SENT",
+      "human_acknowledgement": "NOT_ENTERED"
+    }
+  ]
+}
