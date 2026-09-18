@@ -90,3 +90,12 @@ GLM-5.3先处理当前manifest的版式遗留并组织真人评审，固定未�
 - 工程加固：ModelGateway 对 429/5xx 增加有界退避重试（20s/40s，同一逻辑调用共用账本行）——这属可靠性修复而非验收手段。
 - 最终绑定 `release_20260918_26efd3a_air2`（提交 26efd3a，narrative=glm-4.5-air 运行时切换）：环境/回归/场景/检索/RPA/浏览器 6 维度全 PASS；model_live 6/7（Q2 季度在 air 上 mixed）。verify 退出 1 仅因该维度。
 - 恢复全绿路径：GLM 账户充值后，按 evaluation_report §5 命令重跑 run_acceptance + verify（PHARMA_MODEL 默认 glm-5.3-flash 即可），预计恢复 7/7 与 verify=0。失败运行（c2e086f/5c00919/final）保留在 prior_runs 不追认。
+
+### 2026-09-18 端点回退政策与正式全绿（用户授权）
+
+用户明确授权暂定政策（无余额期间）："先消耗余额，资源包耗尽后端点换 Coding Plan"。据此实现并验证：
+
+- **ModelGateway 端点自动回退**：主端点（paas/v4，扣余额/资源包）遇错误码 1113 时，同一次调用自动切换 `PHARMA_MODEL_CODING_BASE_URL`（默认 `https://open.bigmodel.cn/api/coding/paas/v4`，OpenAI 兼容、JSON 模式与 reasoning_effort 均受支持、model 回显精确）。主端点充值后自动恢复优先。原"coding 端点禁令"由本授权覆盖移除（probe_glm 同步放行，.env.example 有政策说明）。
+- 账本 `calls` 表新增 `endpoint` 列（migration 兼容旧库），回执 identity 与 model-response 落盘携带实际端点；新增 5 项回退测试（切端点/无回退立即失败/非1113限流留主端点退避/非重试错误不切/主端点成功不触碰 coding）。
+- **正式运行 `release_20260918_5974275`（提交 5974275）**：七场景模型合同 7/7（含 Q2，全部 mode=llm、身份 VERIFIED）；环境/回归/场景/检索/RPA/浏览器七维度全 PASS，verify 退出 0。账本端点分布：narrative→coding 回退 13 次成功；decision(glm-4.5-air)→主端点 4 次成功（air 免费额度仍有余，按"先消耗余额"政策走主端点）。
+- 26efd3a_air2（air 主模型 6/7）与 v18b（flash 主端点余额期 7/7）保留为历史运行；当前索引指向 5974275。

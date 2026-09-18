@@ -1,0 +1,81 @@
+{
+  "run_id": "release_20260918_5974275",
+  "revision": "5974275ca90d8ba5dd524c5320845c3906348dfa",
+  "revision_kind": "git",
+  "commit": "5974275ca90d8ba5dd524c5320845c3906348dfa",
+  "required_scenarios": [
+    "mechanical",
+    "chemical",
+    "pharma_synthetic",
+    "S1",
+    "S2",
+    "S3",
+    "Q2"
+  ],
+  "scenarios": [
+    {
+      "id": "mechanical",
+      "job_id": "bd269b405996469292ef8521e8507568",
+      "status": "DEGRADED",
+      "docx": "PASS",
+      "pdf": "PASS",
+      "error": null
+    },
+    {
+      "id": "chemical",
+      "job_id": "44aa6367278a4400838afb5a95ee3b68",
+      "status": "DEGRADED",
+      "docx": "PASS",
+      "pdf": "PASS",
+      "error": null
+    },
+    {
+      "id": "pharma_synthetic",
+      "job_id": "d50793d5345e41b08bd985a6d6f350d9",
+      "status": "DEGRADED",
+      "docx": "PASS",
+      "pdf": "PASS",
+      "error": null
+    },
+    {
+      "id": "S1",
+      "job_id": "e2f1bdf2ed764c04b79fad254c7df948",
+      "status": "DEGRADED",
+      "docx": "PASS",
+      "pdf": "PASS",
+      "error": null
+    },
+    {
+      "id": "S2",
+      "job_id": "f33029bd3f63466a9f955f009fe75cf8",
+      "status": "DEGRADED",
+      "docx": "PASS",
+      "pdf": "PASS",
+      "error": null
+    },
+    {
+      "id": "S3",
+      "job_id": "64a710ab34084876b49d3f346039b229",
+      "status": "DEGRADED",
+      "docx": "PASS",
+      "pdf": "PASS",
+      "error": null
+    },
+    {
+      "id": "Q2",
+      "job_id": "c79ee1a3d13d4410817445fcf90cd206",
+      "status": "DEGRADED",
+      "docx": "PASS",
+      "pdf": "PASS",
+      "error": null
+    }
+  ],
+  "receipts": {
+    "model_live": "model_live.json",
+    "retrieval": "retrieval.json",
+    "rpa": "rpa.json",
+    "browser": "browser.json"
+  },
+  "human_review": "PENDING",
+  "privacy": "Local only: private scenario products and prose are excluded"
+}

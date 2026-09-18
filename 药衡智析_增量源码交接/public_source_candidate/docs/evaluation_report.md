@@ -1,6 +1,6 @@
 # 评测报告 / Evaluation Report
 
-> 运行 `release_20260918_26efd3a_air2`（代码提交 26efd3a，分支 `codex/core-industry-20260917`，正式 verify=PASS）。
+> 运行 `release_20260918_5974275`（代码提交 5974275，分支 `codex/core-industry-20260917`，**正式 verify=PASS，七维度全绿，模型合同 7/7**）。
 > 七场景 = 原题 S1/S2/S3/Q2 + 机械/化工/制药合成三包。本报告汇总赛题"评测要求"四项指标
 > 与自动维度回执；真人评分一律 PENDING，AI 不代填。
 > **English** — Evaluation for run `release_20260918_fa3c968` covering the four contest metrics
@@ -56,11 +56,11 @@
 | 维度 | 结果 | 回执 |
 |---|---|---|
 | 场景整体状态 | 7/7 DEGRADED——自动维度全部通过，DEGRADED 是"真人评审未完成"的既定终态（见下） | manifest.json |
-| 模型解释合同 | 6/7 PASS（Q2 mixed on glm-4.5-air；glm-5.3-flash 于 v18b 验证 7/7），身份 VERIFIED，usage 记账 | model_live.json |
+| 模型解释合同 | **7/7 PASS**（含 Q2；glm-5.3-flash 经端点回退实调），身份 VERIFIED，usage 记账，账本 endpoint 列区分余额/回退端点 | model_live.json |
 | 检索 | 7/7 PASS，hybrid（BM25+向量+RRF），原题场景 8 条证据/场景，图谱扩展生效 | retrieval.json |
 | RPA 送达 | 7/7 SIMULATED_SENT | rpa.json |
 | 文件 | DOCX/PDF 7/7 PASS | manifest.json |
-| 回归测试 | 217 passed + 1 skipped（Windows 原生，含26+2项加分项测试） | verify 输出 |
+| 回归测试 | 222 passed + 1 skipped（Windows 原生，含28项加分项+5项端点回退测试） | verify 输出 |
 
 预算经济性：narrative 与 decision 路由分开记账；本轮为缓存复用运行（新鲜生成见
 `bonus_20260918_glm_v18b`，每场景 1–3 次调用）。
@@ -85,7 +85,7 @@ bash 05_原型/scripts/bootstrap.sh && bash 05_原型/scripts/start.sh
 bash 05_原型/scripts/verify.sh --manifest 06_评测/YOUR_RUN/manifest.json
 ```
 
-verify 退出 0=自动维度通过；1=失败；2=未完成。本运行退出 1（仅 model_live 维度 6/7）。失败历史与缓存复用分别记录，不互相冒充。
+verify 退出 0=自动维度通过；1=失败；2=未完成。本运行退出 0（七维度全 PASS）。失败历史与缓存复用分别记录，不互相冒充。
 
 **关于 DEGRADED 状态**：报告任务在文件/模型/检索/RPA 全部通过且人工评审未完成时的终态为
 DEGRADED（`human_review=PENDING` 是其构成部分）；混合生成轮中模型被拒的无效条目也按纪律

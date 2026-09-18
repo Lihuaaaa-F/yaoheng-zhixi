@@ -1,8 +1,8 @@
 {
-  "run_id": "release_20260918_26efd3a_air2",
-  "revision": "26efd3a39301af8ac05c64990cd37fc99db05dd4",
+  "run_id": "release_20260918_5974275",
+  "revision": "5974275ca90d8ba5dd524c5320845c3906348dfa",
   "revision_kind": "git",
-  "commit": "26efd3a39301af8ac05c64990cd37fc99db05dd4",
+  "commit": "5974275ca90d8ba5dd524c5320845c3906348dfa",
   "required_scenarios": [
     "mechanical",
     "chemical",
@@ -71,11 +71,10 @@
     }
   ],
   "receipts": {
-    "model_live": "validation/release_20260918_26efd3a_air2/model_live.json",
-    "retrieval": "validation/release_20260918_26efd3a_air2/retrieval.json",
-    "rpa": "validation/release_20260918_26efd3a_air2/rpa.json",
-    "browser": "validation/release_20260918_26efd3a_air2/browser.json",
-    "verification": "validation/release_20260918_26efd3a_air2/verification.json"
+    "model_live": "validation/release_20260918_5974275/model_live.json",
+    "retrieval": "validation/release_20260918_5974275/retrieval.json",
+    "rpa": "validation/release_20260918_5974275/rpa.json",
+    "browser": "validation/release_20260918_5974275/browser.json"
   },
   "human_review": "PENDING",
   "privacy": "Contest originals and static outputs included under latest explicit user authorization; credentials/env/runtime databases/queues/backups remain excluded.",
@@ -84,20 +83,20 @@
   "automatic_status": "PASS",
   "competition_ready": false,
   "verified_at": "2026-09-18",
-  "local_manifest": "06_评测/release_20260918_26efd3a_air2/manifest.json",
+  "local_manifest": "06_评测/release_20260918_5974275/manifest.json",
   "public_boundary": "Original contest resources and static deliverables are included by latest explicit user authorization. No credentials, local environment, runtime databases, queues or recovery backups are published.",
   "external_pending": [
-    "GLM账户glm-5.3-flash资源包余额耗尽(1113)：充值后按docs/evaluation_report.md复现命令重跑run_acceptance+verify即可恢复全7/7与verify PASS绑定（提示词v18已在该模型验证7/7）",
     "Named human attribution 0–5, readability and layout reviews",
     "One nonblocking composite-unit line wrap and source-page whitespace; human layout approval remains pending",
-    "Real controlled industry data and unseen retrieval evaluation"
+    "Real controlled industry data and unseen retrieval evaluation",
+    "GLM账户现金余额/资源包仍为空：当前依赖用户授权的Coding Plan端点回退（暂定政策）；充值后主端点自动恢复优先，无需改代码"
   ],
   "test_results": {
     "local_regressions": {
-      "passed": 217,
+      "passed": 222,
       "skipped": 1,
-      "commit": "26efd3a39301",
-      "note": "Windows Git Bash 原生；含28项加分项/评审回归测试"
+      "commit": "5974275ca90d",
+      "note": "含5项端点回退测试"
     },
     "browser": {
       "live_checks": 8,
@@ -111,26 +110,22 @@
       "retrieval": "PASS",
       "rpa": "PASS",
       "browser": "PASS",
-      "model_live": "FAIL(6/7)"
+      "model_live": "PASS(7/7)"
     },
-    "model_live_detail": "七场景中6场景合同PASS(mode=llm,身份VERIFIED)；Q2(季度)在glm-4.5-air上为mixed——glm-5.3-flash在v18b已验证同场景7/7"
+    "verify_exit_code": 0
   },
   "model": {
     "provider": "Zhipu bigmodel official API",
-    "model": "glm-4.5-air",
-    "fresh_generation_code": "47c58069f1bc449d6bda18815f5276d44e72acdb",
-    "fresh_generation_run": "bonus_20260918_glm_v18b",
-    "final_render_code": "6ff894fd389854ed11fd64cdea6bdfc2a7031cef",
-    "final_cache_hits": 7,
-    "final_new_calls": "v18起累计实调见账本；本运行6场景新鲜生成+Q2混合",
-    "main_runtime_calls_before": 119,
-    "main_runtime_calls_after": 119,
-    "default_other_developers": "glm-5.3-flash or explicitly configured compatible application API",
-    "historical_glm": "Historical only; no new GLM run",
-    "fresh_generation_note": "glm-5.3-flash 新鲜调用7/7合同PASS（v18b，代码路径与当前一致：评审修复未改生成语义，正则回退保持同证据集）",
-    "decision_route": "glm-4.5-air（多模型路由加分项实测；当日双模型区分演示因配额受限）",
-    "historical_deepseek": "Teammate 2026-09-18 DeepSeek run release_20260918_6ff894f retained in history",
-    "model_note": "本运行 narrative=glm-4.5-air（运行时 PHARMA_MODEL 切换）；glm-5.3-flash 资源包当日耗尽（错误码1113，充值可恢复）"
+    "model": "glm-5.3-flash",
+    "endpoint_policy": "用户2026-09-18授权暂定：主端点先消耗余额/资源包，错误码1113（额度耗尽）自动切换Coding Plan端点；主端点充值后自动恢复优先（PHARMA_MODEL_CODING_BASE_URL，置空禁用）",
+    "fresh_generation": {
+      "run": "release_20260918_5974275",
+      "model_contracts": "7/7 PASS（含Q2季度场景）",
+      "identity": "VERIFIED",
+      "ledger_endpoints": "narrative→coding回退端点13次成功；decision(glm-4.5-air)→主端点4次成功（air免费额度仍有余，按政策先消耗）"
+    },
+    "decision_route": "glm-4.5-air（多模型路由加分项；走主端点余额）",
+    "historical": "v18b为glm-5.3-flash主端点余额期验证（7/7在档）；26efd3a_air2为air主模型期（6/7）；本运行为端点回退政策下的正式7/7"
   },
   "artifacts": {
     "scenarios": 7,
@@ -242,10 +237,15 @@
       "run_id": "release_20260918_26efd3a_air2",
       "status": "AUTOMATIC_DIMENSIONS_6_OF_7",
       "reason": "当前绑定运行：环境/回归/场景/检索/RPA/浏览器全PASS；model_live 6/7（Q2 mixed on air）；verify退出1仅因model_live"
+    },
+    {
+      "run_id": "release_20260918_5974275",
+      "status": "PASS",
+      "reason": "端点回退政策实施后正式运行：glm-5.3-flash主端点1113→Coding Plan端点回退，七场景模型合同7/7（含Q2），全部维度PASS，verify退出0"
     }
   ],
   "verification_exit_code": 0,
-  "verification_receipt": "validation/release_20260918_bc854cc/verification.json",
+  "verification_receipt": "validation/release_20260918_5974275/verification.json",
   "publication_authorization": "User explicitly authorized retaining original contest data and publishing all project deliverables to this public repository on 2026-09-18; credentials, environments, runtime state and recovery backups remain excluded",
   "static_delivery": {
     "path": "07_交付/release_20260918",
@@ -260,5 +260,5 @@
     "forecasting": "forecasting.py Holt α=0.6/β=0.3 + 80%区间；总体与分要素；前端叠加"
   },
   "static_delivery_note": "07_交付/demo_20260918：讲解字幕版端到端演示视频(2分52秒,webm)+10页答辩PPTX(已LibreOffice实渲染验证)+逐页PNG；来源与SHA见该目录README",
-  "reliability_note": "模型网关含429/5xx有界退避重试（20s/40s）；失败历史保留不追认；非PASS叙事缓存与降级任务cache_key由运维清理后可再生"
+  "reliability_note": "模型网关：1113自动端点回退（先余额后套餐）；非1113的429/5xx有界退避（20s/40s）；失败历史保留不追认"
 }

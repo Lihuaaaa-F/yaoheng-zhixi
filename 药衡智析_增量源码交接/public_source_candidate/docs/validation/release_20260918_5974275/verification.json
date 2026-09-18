@@ -1,0 +1,518 @@
+{
+  "run_id": "release_20260918_5974275",
+  "commit": "5974275ca90d8ba5dd524c5320845c3906348dfa",
+  "tested_code_commit": "5974275ca90d8ba5dd524c5320845c3906348dfa",
+  "dimensions": {
+    "environment": {
+      "status": "PASS",
+      "exit_code": 0
+    },
+    "regression": {
+      "status": "PASS",
+      "exit_code": 0
+    },
+    "scenarios": {
+      "status": "PASS"
+    },
+    "retrieval": {
+      "run_id": "release_20260918_5974275",
+      "revision": "5974275ca90d8ba5dd524c5320845c3906348dfa",
+      "revision_kind": "git",
+      "commit": "5974275ca90d8ba5dd524c5320845c3906348dfa",
+      "status": "PASS",
+      "scenarios": [
+        {
+          "id": "mechanical",
+          "status": "PASS",
+          "mode": "hybrid",
+          "framework": "llama-index-core BaseRetriever/TextNode",
+          "recall_status": "RECALLED",
+          "count": 2
+        },
+        {
+          "id": "chemical",
+          "status": "PASS",
+          "mode": "hybrid",
+          "framework": "llama-index-core BaseRetriever/TextNode",
+          "recall_status": "RECALLED",
+          "count": 2
+        },
+        {
+          "id": "pharma_synthetic",
+          "status": "PASS",
+          "mode": "hybrid",
+          "framework": "llama-index-core BaseRetriever/TextNode",
+          "recall_status": "RECALLED",
+          "count": 2
+        },
+        {
+          "id": "S1",
+          "status": "PASS",
+          "mode": "hybrid",
+          "framework": "llama-index-core BaseRetriever/TextNode",
+          "recall_status": "RECALLED",
+          "count": 8
+        },
+        {
+          "id": "S2",
+          "status": "PASS",
+          "mode": "hybrid",
+          "framework": "llama-index-core BaseRetriever/TextNode",
+          "recall_status": "RECALLED",
+          "count": 8
+        },
+        {
+          "id": "S3",
+          "status": "PASS",
+          "mode": "hybrid",
+          "framework": "llama-index-core BaseRetriever/TextNode",
+          "recall_status": "RECALLED",
+          "count": 8
+        },
+        {
+          "id": "Q2",
+          "status": "PASS",
+          "mode": "hybrid",
+          "framework": "llama-index-core BaseRetriever/TextNode",
+          "recall_status": "RECALLED",
+          "count": 8
+        }
+      ]
+    },
+    "rpa": {
+      "run_id": "release_20260918_5974275",
+      "revision": "5974275ca90d8ba5dd524c5320845c3906348dfa",
+      "revision_kind": "git",
+      "commit": "5974275ca90d8ba5dd524c5320845c3906348dfa",
+      "status": "PASS",
+      "scenarios": [
+        {
+          "id": "mechanical",
+          "status": "PASS",
+          "action_id": "YH-22a93c231dda3f3752857c26",
+          "notification": "SIMULATED_SENT",
+          "human_acknowledgement": "NOT_ENTERED"
+        },
+        {
+          "id": "chemical",
+          "status": "PASS",
+          "action_id": "YH-d859acb40c3d7e59dfd5d99f",
+          "notification": "SIMULATED_SENT",
+          "human_acknowledgement": "NOT_ENTERED"
+        },
+        {
+          "id": "pharma_synthetic",
+          "status": "PASS",
+          "action_id": "YH-0a733d1249683a50d06203b9",
+          "notification": "SIMULATED_SENT",
+          "human_acknowledgement": "NOT_ENTERED"
+        },
+        {
+          "id": "S1",
+          "status": "PASS",
+          "action_id": "YH-2b5c836450f44a3dbff2ae22",
+          "notification": "SIMULATED_SENT",
+          "human_acknowledgement": "NOT_ENTERED"
+        },
+        {
+          "id": "S2",
+          "status": "PASS",
+          "action_id": "YH-3806192ed367568b4bfc1dd8",
+          "notification": "SIMULATED_SENT",
+          "human_acknowledgement": "NOT_ENTERED"
+        },
+        {
+          "id": "S3",
+          "status": "PASS",
+          "action_id": "YH-634fad1b44aef0382a5c8958",
+          "notification": "SIMULATED_SENT",
+          "human_acknowledgement": "NOT_ENTERED"
+        },
+        {
+          "id": "Q2",
+          "status": "PASS",
+          "action_id": "YH-2c54a7fae5e489ccd2b0af3d",
+          "notification": "SIMULATED_SENT",
+          "human_acknowledgement": "NOT_ENTERED"
+        }
+      ]
+    },
+    "browser": {
+      "status": "PASS",
+      "scope": "live real-API UI suite (8 checks incl. report submission) + mocked browser contract suite (10 checks); file/model/RPA quality not asserted here",
+      "run_id": "release_20260918_5974275",
+      "commit": "5974275ca90d8ba5dd524c5320845c3906348dfa",
+      "live": {
+        "url": "http://127.0.0.1:8765",
+        "viewports": [
+          "1440x1000",
+          "390x844"
+        ],
+        "checks": [
+          "mechanical monthly: independent expected unit cost 30, unit machine hours 0.5",
+          "mechanical quarter: independent 9400 / 320 = 29.375, displayed 29.38",
+          "real quarterly benchmark both directions, stable table and chart before screenshot",
+          "chemical switch resets legal filters; monthly cost 12 and energy metric present",
+          "chemical knowledge retrieval rendered in its own context",
+          "real A → B → A restores context correctly",
+          "real heatmap, desktop and mobile rendered without horizontal overflow",
+          "real report job submitted in mechanical context"
+        ],
+        "submitted_job": "274cbf06b58644ddaba18960e2cdd250",
+        "errors": [],
+        "apiFailures": []
+      },
+      "mocked": {
+        "checks": [
+          "page identity and meaningful metrics",
+          "context changes data and units",
+          "A → B → A discards delayed responses",
+          "quarterly benchmark and arbitrary factory pair",
+          "knowledge scope carries immutable context",
+          "report submits fixed context; task summary distinguishes delivery and owner confirmation",
+          "manual owner confirmation starts blank and updates a separate signed confirmation count (mock only)",
+          "concurrent browser sessions keep independent selected contexts",
+          "desktop/mobile no horizontal overflow; heatmap rendered",
+          "no runtime/console errors"
+        ],
+        "errors": []
+      },
+      "note": "narrative via endpoint failover (primary 1113 -> Coding Plan endpoint, user-authorized 2026-09-18); e2e report submission hits narrative cache."
+    },
+    "model_live": {
+      "run_id": "release_20260918_5974275",
+      "revision": "5974275ca90d8ba5dd524c5320845c3906348dfa",
+      "revision_kind": "git",
+      "commit": "5974275ca90d8ba5dd524c5320845c3906348dfa",
+      "status": "PASS",
+      "scenarios": [
+        {
+          "id": "mechanical",
+          "status": "PASS",
+          "generation_mode": "llm",
+          "model_live": true,
+          "identity": {
+            "status": "VERIFIED",
+            "requested": "glm-5.3-flash",
+            "returned": [
+              "glm-5.3-flash"
+            ],
+            "reason": "全部调用响应model经核验一致"
+          },
+          "usage": {
+            "prompt_tokens": 9143,
+            "completion_tokens": 622,
+            "total_tokens": 9765,
+            "calls": 1
+          },
+          "alert_coverage": {
+            "alert-2eda796632e9c7b7ccae": {
+              "covered": true,
+              "element_key": "labor",
+              "basis": "unit"
+            },
+            "alert-137ec08a22a8269769aa": {
+              "covered": true,
+              "element_key": "labor",
+              "basis": "total"
+            }
+          },
+          "failures": []
+        },
+        {
+          "id": "chemical",
+          "status": "PASS",
+          "generation_mode": "llm",
+          "model_live": true,
+          "identity": {
+            "status": "VERIFIED",
+            "requested": "glm-5.3-flash",
+            "returned": [
+              "glm-5.3-flash"
+            ],
+            "reason": "全部调用响应model经核验一致"
+          },
+          "usage": {
+            "prompt_tokens": 13319,
+            "completion_tokens": 1058,
+            "total_tokens": 14377,
+            "calls": 1
+          },
+          "alert_coverage": {
+            "alert-7180fa304a3f76c1421f": {
+              "covered": true,
+              "element_key": "materials",
+              "basis": "unit"
+            },
+            "alert-36b5bdd2282436b46a4b": {
+              "covered": true,
+              "element_key": "materials",
+              "basis": "total"
+            },
+            "alert-ad982e3348bf26c12a0a": {
+              "covered": true,
+              "element_key": "overhead",
+              "basis": "unit"
+            },
+            "alert-bbb785065f408c5aa01f": {
+              "covered": true,
+              "element_key": "overhead",
+              "basis": "total"
+            },
+            "alert-b5d01f31f48c0b2d38f1": {
+              "covered": true,
+              "element_key": "energy",
+              "basis": "unit"
+            },
+            "alert-e22160d2cf5074473bc2": {
+              "covered": true,
+              "element_key": "energy",
+              "basis": "total"
+            }
+          },
+          "failures": []
+        },
+        {
+          "id": "pharma_synthetic",
+          "status": "PASS",
+          "generation_mode": "llm",
+          "model_live": true,
+          "identity": {
+            "status": "VERIFIED",
+            "requested": "glm-5.3-flash",
+            "returned": [
+              "glm-5.3-flash"
+            ],
+            "reason": "全部调用响应model经核验一致"
+          },
+          "usage": {
+            "prompt_tokens": 22470,
+            "completion_tokens": 1599,
+            "total_tokens": 24069,
+            "calls": 2
+          },
+          "alert_coverage": {
+            "alert-3c7d1a5bc57486f2b919": {
+              "covered": true,
+              "element_key": "materials",
+              "basis": "unit"
+            },
+            "alert-0fa1fef734c6521bae28": {
+              "covered": true,
+              "element_key": "materials",
+              "basis": "total"
+            },
+            "alert-1546c926d55109a31aa2": {
+              "covered": true,
+              "element_key": "overhead",
+              "basis": "unit"
+            },
+            "alert-2d84f440937e929d6117": {
+              "covered": true,
+              "element_key": "overhead",
+              "basis": "total"
+            }
+          },
+          "failures": [
+            "materials/explanation: ValidationError: 1 validation error for TaskExplanation\nevidence_quotes.74787baee71e7622c86cd9db\n  Input should be a valid string [type=string_type, input_value=['缺采购价格和实...严格价量分解。'], input_type=li",
+            "benchmark/explanation: ValidationError: 1 validation error for TaskExplanation\nevidence_quotes.dddb57db7c88127947e1c04d\n  Input should be a valid string [type=string_type, input_value=['缺采购价格和实...严格价量分解。'], input_type=li",
+            "materials: ValueError: unsupported quote",
+            "benchmark: ValueError: unsupported quote"
+          ]
+        },
+        {
+          "id": "S1",
+          "status": "PASS",
+          "generation_mode": "llm",
+          "model_live": true,
+          "identity": {
+            "status": "VERIFIED",
+            "requested": "glm-5.3-flash",
+            "returned": [
+              "glm-5.3-flash"
+            ],
+            "reason": "全部调用响应model经核验一致"
+          },
+          "usage": {
+            "prompt_tokens": 62965,
+            "completion_tokens": 1727,
+            "total_tokens": 64692,
+            "calls": 3
+          },
+          "alert_coverage": {},
+          "failures": [
+            "materials: ValueError: free business number forbidden",
+            "benchmark: ValueError: insufficient evidence text must state an evidence limitation in every clause",
+            "materials: ValueError: unsupported quote",
+            "benchmark: ValueError: missing evidence must name specific records or measurements"
+          ]
+        },
+        {
+          "id": "S2",
+          "status": "PASS",
+          "generation_mode": "llm",
+          "model_live": true,
+          "identity": {
+            "status": "VERIFIED",
+            "requested": "glm-5.3-flash",
+            "returned": [
+              "glm-5.3-flash"
+            ],
+            "reason": "全部调用响应model经核验一致"
+          },
+          "usage": {
+            "prompt_tokens": 39862,
+            "completion_tokens": 751,
+            "total_tokens": 40613,
+            "calls": 2
+          },
+          "alert_coverage": {},
+          "failures": [
+            "benchmark: ValueError: insufficient evidence text must state an evidence limitation in every clause"
+          ]
+        },
+        {
+          "id": "S3",
+          "status": "PASS",
+          "generation_mode": "llm",
+          "model_live": true,
+          "identity": {
+            "status": "VERIFIED",
+            "requested": "glm-5.3-flash",
+            "returned": [
+              "glm-5.3-flash"
+            ],
+            "reason": "全部调用响应model经核验一致"
+          },
+          "usage": {
+            "prompt_tokens": 54406,
+            "completion_tokens": 1846,
+            "total_tokens": 56252,
+            "calls": 2
+          },
+          "alert_coverage": {
+            "alert-ae6cfac6295472537aa5": {
+              "covered": true,
+              "element_key": "materials",
+              "basis": "total"
+            },
+            "alert-a3392a1012a3bdbfd2a9": {
+              "covered": true,
+              "element_key": "labor",
+              "basis": "total"
+            },
+            "alert-918366df38ec19897ded": {
+              "covered": true,
+              "element_key": "overhead",
+              "basis": "total"
+            }
+          },
+          "failures": [
+            "benchmark: ValueError: insufficient evidence text must state an evidence limitation in every clause"
+          ]
+        },
+        {
+          "id": "Q2",
+          "status": "PASS",
+          "generation_mode": "llm",
+          "model_live": true,
+          "identity": {
+            "status": "VERIFIED",
+            "requested": "glm-5.3-flash",
+            "returned": [
+              "glm-5.3-flash"
+            ],
+            "reason": "全部调用响应model经核验一致"
+          },
+          "usage": {
+            "prompt_tokens": 57844,
+            "completion_tokens": 2650,
+            "total_tokens": 60494,
+            "calls": 2
+          },
+          "alert_coverage": {
+            "alert-f63295afdd8152cfe65f": {
+              "covered": true,
+              "element_key": "materials",
+              "basis": "total"
+            },
+            "alert-4dfbe0c1984e3bac496f": {
+              "covered": true,
+              "element_key": "labor",
+              "basis": "total"
+            },
+            "alert-0c80378a697b26dda64c": {
+              "covered": true,
+              "element_key": "overhead",
+              "basis": "total"
+            }
+          },
+          "failures": [
+            "materials: ValueError: insufficient evidence text must state an evidence limitation in every clause",
+            "materials: ValueError: free business number forbidden",
+            "labor: ValueError: free business number forbidden",
+            "labor: ValueError: free business number forbidden",
+            "overhead: ValueError: free business number forbidden",
+            "overhead: ValueError: free business number forbidden",
+            "benchmark: ValueError: insufficient evidence text must state an evidence limitation in every clause",
+            "benchmark: ValueError: free business number forbidden"
+          ]
+        }
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "id": "mechanical",
+      "status": "PASS",
+      "job_id": "bd269b405996469292ef8521e8507568",
+      "generation_mode": "llm",
+      "human_review": "PENDING"
+    },
+    {
+      "id": "chemical",
+      "status": "PASS",
+      "job_id": "44aa6367278a4400838afb5a95ee3b68",
+      "generation_mode": "llm",
+      "human_review": "PENDING"
+    },
+    {
+      "id": "pharma_synthetic",
+      "status": "PASS",
+      "job_id": "d50793d5345e41b08bd985a6d6f350d9",
+      "generation_mode": "llm",
+      "human_review": "PENDING"
+    },
+    {
+      "id": "S1",
+      "status": "PASS",
+      "job_id": "e2f1bdf2ed764c04b79fad254c7df948",
+      "generation_mode": "llm",
+      "human_review": "PENDING"
+    },
+    {
+      "id": "S2",
+      "status": "PASS",
+      "job_id": "f33029bd3f63466a9f955f009fe75cf8",
+      "generation_mode": "llm",
+      "human_review": "PENDING"
+    },
+    {
+      "id": "S3",
+      "status": "PASS",
+      "job_id": "64a710ab34084876b49d3f346039b229",
+      "generation_mode": "llm",
+      "human_review": "PENDING"
+    },
+    {
+      "id": "Q2",
+      "status": "PASS",
+      "job_id": "c79ee1a3d13d4410817445fcf90cd206",
+      "generation_mode": "llm",
+      "human_review": "PENDING"
+    }
+  ],
+  "human_review": "PENDING",
+  "competition_ready": false,
+  "status": "PASS"
+}

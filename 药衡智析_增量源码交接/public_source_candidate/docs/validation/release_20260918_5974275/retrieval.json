@@ -1,0 +1,65 @@
+{
+  "run_id": "release_20260918_5974275",
+  "revision": "5974275ca90d8ba5dd524c5320845c3906348dfa",
+  "revision_kind": "git",
+  "commit": "5974275ca90d8ba5dd524c5320845c3906348dfa",
+  "status": "PASS",
+  "scenarios": [
+    {
+      "id": "mechanical",
+      "status": "PASS",
+      "mode": "hybrid",
+      "framework": "llama-index-core BaseRetriever/TextNode",
+      "recall_status": "RECALLED",
+      "count": 2
+    },
+    {
+      "id": "chemical",
+      "status": "PASS",
+      "mode": "hybrid",
+      "framework": "llama-index-core BaseRetriever/TextNode",
+      "recall_status": "RECALLED",
+      "count": 2
+    },
+    {
+      "id": "pharma_synthetic",
+      "status": "PASS",
+      "mode": "hybrid",
+      "framework": "llama-index-core BaseRetriever/TextNode",
+      "recall_status": "RECALLED",
+      "count": 2
+    },
+    {
+      "id": "S1",
+      "status": "PASS",
+      "mode": "hybrid",
+      "framework": "llama-index-core BaseRetriever/TextNode",
+      "recall_status": "RECALLED",
+      "count": 8
+    },
+    {
+      "id": "S2",
+      "status": "PASS",
+      "mode": "hybrid",
+      "framework": "llama-index-core BaseRetriever/TextNode",
+      "recall_status": "RECALLED",
+      "count": 8
+    },
+    {
+      "id": "S3",
+      "status": "PASS",
+      "mode": "hybrid",
+      "framework": "llama-index-core BaseRetriever/TextNode",
+      "recall_status": "RECALLED",
+      "count": 8
+    },
+    {
+      "id": "Q2",
+      "status": "PASS",
+      "mode": "hybrid",
+      "framework": "llama-index-core BaseRetriever/TextNode",
+      "recall_status": "RECALLED",
+      "count": 8
+    }
+  ]
+}
