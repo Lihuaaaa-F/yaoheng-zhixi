@@ -43,6 +43,15 @@ def classify_identity(requested, returned):
     return 'MISMATCH', '响应model为' + returned + '，与请求' + requested + '不一致'
 
 
+def _quota_exhausted(response):
+    """识别智谱计费层错误码 1113（余额不足或无可用资源包）。"""
+    try:
+        code = str((response.json() or {}).get('error', {}).get('code', ''))
+    except Exception:
+        return False
+    return code == '1113'
+
+
 def normalize_finding(value):
     """Coerce common model output shape variants before strict validation.
 
@@ -574,8 +583,10 @@ class ModelGateway:
         self.runtime.mkdir(parents=True,exist_ok=True)
         self.provider = provider or os.getenv('PHARMA_MODEL_PROTOCOL','openai')
         self.base_url = (base_url or os.getenv('PHARMA_MODEL_BASE_URL','https://open.bigmodel.cn/api/paas/v4')).rstrip('/')
-        if '/coding/' in self.base_url or '/api/coding' in self.base_url:
-            raise ValueError('CODING_ENDPOINT_FORBIDDEN_FOR_APPLICATION_RUNTIME')
+        # Coding Plan 端点（用户 2026-09-18 授权的暂定政策）：主端点余额/资源包
+        # 耗尽（错误码 1113）后自动切换至此继续运行；主端点恢复后自动优先，
+        # 无需改代码。置 PHARMA_MODEL_CODING_BASE_URL='' 可禁用。
+        self.coding_base_url = os.getenv('PHARMA_MODEL_CODING_BASE_URL','https://open.bigmodel.cn/api/coding/paas/v4').rstrip('/')
         self.model = model or os.getenv('PHARMA_MODEL','glm-5.3-flash')
         keypath_value = key_file or os.getenv('PHARMA_MODEL_KEY_FILE') or os.getenv('PHARMA_API_KEY_FILE')
         keypath = Path(keypath_value) if keypath_value else None
@@ -588,7 +599,7 @@ class ModelGateway:
             db.execute('CREATE TABLE IF NOT EXISTS calls (id INTEGER PRIMARY KEY, created_at REAL, model TEXT, protocol TEXT, operation TEXT, status TEXT, elapsed REAL, usage TEXT, cost TEXT, error TEXT, prompt_version TEXT)')
             db.execute('CREATE TABLE IF NOT EXISTS cache (key TEXT PRIMARY KEY, created_at REAL, result TEXT)')
             # Old runtimes recorded only the requested model; migrate in place.
-            for column in ('requested_model', 'returned_model', 'identity_status'):
+            for column in ('requested_model', 'returned_model', 'identity_status', 'endpoint'):
                 try: db.execute(f'ALTER TABLE calls ADD COLUMN {column} TEXT')
                 except sqlite3.OperationalError: pass
 
@@ -648,15 +659,14 @@ class ModelGateway:
             db.execute('BEGIN IMMEDIATE')
             count = db.execute("SELECT count(*) FROM calls WHERE operation=?",(operation,)).fetchone()[0]
             if count >= self.max_calls: raise RuntimeError('MODEL_CALL_BUDGET_REACHED')
-            rowid = db.execute('INSERT INTO calls(created_at,model,protocol,operation,status,cost,prompt_version,requested_model) VALUES(?,?,?,?,?,?,?,?)',(time.time(),self.model,self.provider,operation,'STARTED','UNKNOWN',prompt_version or PROMPT_VERSION,self.model)).lastrowid
+            rowid = db.execute('INSERT INTO calls(created_at,model,protocol,operation,status,cost,prompt_version,requested_model,endpoint) VALUES(?,?,?,?,?,?,?,?,?)',(time.time(),self.model,self.provider,operation,'STARTED','UNKNOWN',prompt_version or PROMPT_VERSION,self.model,self.base_url)).lastrowid
         start, usage, error, status = time.monotonic(), {}, None, 'FAILED'
         returned_model, identity_status, identity_reason = None, 'UNVERIFIED_MISSING', '响应未到达'
+        used_endpoint = self.base_url
         try:
             if self.provider == 'anthropic':
-                endpoint = self.base_url + ('/messages' if self.base_url.endswith('/v1') else '/v1/messages')
                 body = {'model':self.model,'max_tokens':2500,'system':system,'messages':[{'role':'user','content':user}]}
             elif self.provider == 'openai':
-                endpoint = self.base_url+'/chat/completions'
                 body = {'model':self.model,'max_tokens':int(os.getenv('PHARMA_MODEL_MAX_TOKENS','8192')),'temperature':0,'response_format':{'type':'json_object'},'messages':[{'role':'system','content':system},{'role':'user','content':user}]}
                 if self.model == 'glm-5.3-flash':
                     effort=os.getenv('PHARMA_MODEL_REASONING_EFFORT','low')
@@ -666,33 +676,50 @@ class ModelGateway:
                 if urlparse(self.base_url).hostname == 'api.deepseek.com':
                     body['thinking'] = {'type':'disabled'}
             else: raise ValueError('Unsupported model protocol')
-            # 429/5xx 有界退避重试：大提示词场景易触发供应商 TPM 限流，
-            # 立即失败会连锁拖垮整轮验收；同一逻辑调用共用一条账本记录。
+            def _chat_url(base):
+                # 按协议拼完整对话端点；anthropic 兼容 /v1 结尾时直接挂 /messages
+                base = base.rstrip('/')
+                return base + ('/messages' if self.provider == 'anthropic' and base.endswith('/v1')
+                               else '/v1/messages' if self.provider == 'anthropic'
+                               else '/chat/completions')
+            # 端点策略（用户 2026-09-18 授权暂定）：主端点先消耗余额/资源包；
+            # 错误码 1113（额度耗尽）时自动切换 Coding Plan 端点完成本次调用，
+            # 主端点恢复（充值）后自动回到主端点。非 1113 的 429/5xx 走退避重试。
+            candidates = [_chat_url(self.base_url)]
+            if self.coding_base_url and self.coding_base_url != self.base_url:
+                candidates.append(_chat_url(self.coding_base_url))
             data = None
-            for attempt in range(3):
-                try:
-                    response = self.client.post(endpoint,headers=self._headers(),json=body)
-                    response.raise_for_status()
-                    data = response.json()
-                    break
-                except httpx.HTTPStatusError as exc:
-                    retryable = exc.response.status_code == 429 or exc.response.status_code >= 500
-                    if not retryable or attempt == 2: raise
-                    time.sleep(20 * (attempt + 1))
+            for index, endpoint in enumerate(candidates):
+                last = index == len(candidates) - 1
+                for attempt in range(3):
+                    try:
+                        response = self.client.post(endpoint,headers=self._headers(),json=body)
+                        response.raise_for_status()
+                        data = response.json()
+                        used_endpoint = endpoint
+                        break
+                    except httpx.HTTPStatusError as exc:
+                        quota = _quota_exhausted(exc.response)
+                        if quota and not last: break        # 余额耗尽：切备用端点
+                        if quota: raise                     # 无备用端点，退避无法恢复
+                        retryable = exc.response.status_code == 429 or exc.response.status_code >= 500
+                        if not retryable or attempt == 2: raise
+                        time.sleep(20 * (attempt + 1))
+                if data is not None: break
             usage = data.get('usage',{})
             returned_model = data.get('model')
             identity_status, identity_reason = classify_identity(self.model, returned_model)
             text = ''.join(x.get('text','') for x in data['content'] if x.get('type')=='text') if self.provider=='anthropic' else data['choices'][0]['message']['content']
-            (self.runtime / f'model-response-{rowid}.json').write_text(json.dumps({'requested_model':self.model,'returned_model':returned_model,'identity_status':identity_status,'response_text':text,'usage':usage},ensure_ascii=False,indent=2))
+            (self.runtime / f'model-response-{rowid}.json').write_text(json.dumps({'requested_model':self.model,'returned_model':returned_model,'identity_status':identity_status,'endpoint':used_endpoint,'response_text':text,'usage':usage},ensure_ascii=False,indent=2))
             status = 'PASS'
-            return text,usage,{'requested_model':self.model,'returned_model':returned_model,'identity_status':identity_status,'reason':identity_reason,'call_id':rowid}
+            return text,usage,{'requested_model':self.model,'returned_model':returned_model,'identity_status':identity_status,'reason':identity_reason,'call_id':rowid,'endpoint':used_endpoint}
         except Exception as exc:
             error = type(exc).__name__
             if isinstance(exc,httpx.HTTPStatusError): error += ':'+str(exc.response.status_code)
             raise
         finally:
             with sqlite3.connect(self.dbpath) as db:
-                db.execute('UPDATE calls SET status=?,elapsed=?,usage=?,error=?,returned_model=?,identity_status=? WHERE id=?',(status,time.monotonic()-start,json.dumps(usage),error,returned_model,identity_status,rowid))
+                db.execute('UPDATE calls SET status=?,elapsed=?,usage=?,error=?,returned_model=?,identity_status=?,endpoint=? WHERE id=?',(status,time.monotonic()-start,json.dumps(usage),error,returned_model,identity_status,used_endpoint,rowid))
 
 
 def rule_findings(snapshot,evidence):
