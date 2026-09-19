@@ -1,0 +1,48 @@
+{
+  "status": "PASS",
+  "scope": "Recorded application workflow and four sampled screenshots; not professional report review",
+  "run_id": "delivery_20260919_final",
+  "attempt_id": "demo-20260919-final-attempt1",
+  "job_id": "e6b7b2f514654b219ab9a164e9022e47",
+  "tested_code": {
+    "revision": "04011c2a595a5d9f8efdd8de92bd5fd1dfcd8830",
+    "commit": "04011c2a595a5d9f8efdd8de92bd5fd1dfcd8830",
+    "revision_kind": "git"
+  },
+  "video_seconds": 59.16,
+  "checks": {
+    "loopback_simulation_preflight": "PASS",
+    "selection_updates": "PASS",
+    "same_run_report_cache_reuse": "PASS",
+    "word_pdf_actual_download_hashes": "PASS",
+    "report_bound_draft": "PASS",
+    "local_simulated_confirmation_and_receipt": "PASS",
+    "console_and_page_errors": "PASS",
+    "1366x768_sampled_text_and_chart_legibility": "PASS"
+  },
+  "human_review": "PENDING",
+  "responsibility_acknowledgement": "NOT_PERFORMED",
+  "screenshots": [
+    {
+      "path": "analysis_1366x768.png",
+      "sha256": "5c00ac63a906e70b26d68df65f805b46d5bdb984437d913f03952a68033c08a2"
+    },
+    {
+      "path": "charts_1366x768.png",
+      "sha256": "406fdb39e4c84d6d9db36fb0cf36e07105c1a135cbd247f3d2e1936270799d92"
+    },
+    {
+      "path": "report_download_frame.png",
+      "sha256": "9f9fd2c086d939c572c4aebad29ebe9fef88f0284bafeb6e016a557a92884608"
+    },
+    {
+      "path": "simulated_delivery_1366x768.png",
+      "sha256": "2512c1e3823fad1fa2a273a8b10eaf7aac549841cf8d472716cfc6ee21e2e6d4"
+    }
+  ],
+  "limits": [
+    "Video QA sampled key frames; no claim of frame-by-frame human review",
+    "Downloaded report professional content and formal layout need signed human review",
+    "Earlier interrupted recording draft remains visibly pending; it was not sent"
+  ]
+}

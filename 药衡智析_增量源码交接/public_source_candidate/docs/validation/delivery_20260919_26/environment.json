@@ -1,0 +1,60 @@
+{
+  "python": "3.12.3",
+  "python_executable": "/home/hujunjie/企业赛道_创灵境_基于RAG与大模型的制药企业产品成本智能分析报告系统/药衡智析_增量源码交接/public_source_candidate/05_原型/.venv/bin/python",
+  "system": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+  "dependency_report": {
+    "python": "3.12.3",
+    "executable": "/home/hujunjie/企业赛道_创灵境_基于RAG与大模型的制药企业产品成本智能分析报告系统/药衡智析_增量源码交接/public_source_candidate/05_原型/.venv/bin/python",
+    "missing": [],
+    "incompatible": [],
+    "capability_failures": [],
+    "ok": [
+      "fastapi",
+      "pydantic",
+      "uvicorn",
+      "duckdb",
+      "chromadb",
+      "llama_index.core",
+      "docx",
+      "pymupdf",
+      "httpx",
+      "pytest",
+      "jieba",
+      "onnxruntime",
+      "tokenizers",
+      "matplotlib",
+      "multipart"
+    ],
+    "fts5": "PASS",
+    "status": "PASS"
+  },
+  "commands": {
+    "node": "/mnt/d/AI_Tools/nodejs/current/bin/node",
+    "npm": "/mnt/d/AI_Tools/nodejs/current/bin/npm",
+    "libreoffice": "/usr/bin/libreoffice",
+    "soffice": "/usr/bin/soffice",
+    "pdftoppm": "/usr/bin/pdftoppm"
+  },
+  "runtime": "/home/hujunjie/企业赛道_创灵境_基于RAG与大模型的制药企业产品成本智能分析报告系统/药衡智析_增量源码交接/public_source_candidate/05_原型/.runtime/delivery_20260919",
+  "data_package_present": true,
+  "frontend": {
+    "dist_present": true,
+    "build_inputs_tracked": 20,
+    "dist_matches_sources": true,
+    "current_input_hash": "36fb13177ad6",
+    "dist_input_hash": "36fb13177ad6"
+  },
+  "font": "NotoSansCJK-Regular.ttc: \"Noto Sans CJK SC\" \"Regular\"",
+  "project_truetype_fonts": true,
+  "locks": {
+    "requirements.lock": true,
+    "frontend/package-lock.json": true
+  },
+  "base_mode": "synthetic-pack-ready",
+  "formal_model": "SEPARATE_PROBE_REQUIRED",
+  "note": "PDF导出在Linux用libreoffice；Windows验收须另行安装LibreOffice/soffice后再测",
+  "status": "PASS",
+  "run_id": "delivery_20260919_26",
+  "attempt_id": "936ed175fc514902af2edf26c6d06f1e",
+  "commit": "7bef1ce8e915ebd6697915d55d8d47da7bfab2d0"
+}

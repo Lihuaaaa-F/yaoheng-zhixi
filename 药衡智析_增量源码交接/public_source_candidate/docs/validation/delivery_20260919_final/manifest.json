@@ -1,0 +1,181 @@
+{
+  "run_id": "delivery_20260919_final",
+  "attempt_id": "2b260558de0d42e495a7cea235702b41",
+  "revision": "04011c2a595a5d9f8efdd8de92bd5fd1dfcd8830",
+  "revision_kind": "git",
+  "commit": "04011c2a595a5d9f8efdd8de92bd5fd1dfcd8830",
+  "required_scenarios": [
+    "mechanical",
+    "chemical",
+    "pharma_synthetic",
+    "S1",
+    "S2",
+    "S3",
+    "Q2"
+  ],
+  "scenarios": [
+    {
+      "id": "mechanical",
+      "job_id": "47177aed125642a2893fdf8f29273f64",
+      "attempt_id": "2b260558de0d42e495a7cea235702b41",
+      "status": "DEGRADED",
+      "docx": "PASS",
+      "pdf": "PASS",
+      "error": null,
+      "snapshot_id": "6c67ce424b3484d6bcc43efca0163047ff021b587263ad9ff0604ee02cba7d99",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "47177aed125642a2893fdf8f29273f64-docx",
+          "sha256": "77365f2c945fb0045458e4fa16bf7a2ead7d5ee8ebbaa05c7797eaac2a1b2c08",
+          "bytes": 68773
+        },
+        "pdf": {
+          "artifact_id": "47177aed125642a2893fdf8f29273f64-pdf",
+          "sha256": "a6bb4bd9746f1d7241292d347bf3eff552737252da28c3fcbbea51589859da80",
+          "bytes": 164158
+        }
+      }
+    },
+    {
+      "id": "chemical",
+      "job_id": "af76eaa5a12c41bb99dcb7dde8dd482a",
+      "attempt_id": "2b260558de0d42e495a7cea235702b41",
+      "status": "DEGRADED",
+      "docx": "PASS",
+      "pdf": "PASS",
+      "error": null,
+      "snapshot_id": "f3128b3f989d66b0793ed63e7f5b30ff74b252dbe2f59f9739798db7d785a212",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "af76eaa5a12c41bb99dcb7dde8dd482a-docx",
+          "sha256": "ce285ccfb09901591461baa81126e60d98c554e7e91c4a6ce65339a9ee8d2e66",
+          "bytes": 66302
+        },
+        "pdf": {
+          "artifact_id": "af76eaa5a12c41bb99dcb7dde8dd482a-pdf",
+          "sha256": "34f0dd253cbe747b4770a7911df2eb62e612160f136bf7e20d6871511d99e2c4",
+          "bytes": 193859
+        }
+      }
+    },
+    {
+      "id": "pharma_synthetic",
+      "job_id": "8536eb2ea8064ee895e33e58ee25382b",
+      "attempt_id": "2b260558de0d42e495a7cea235702b41",
+      "status": "DEGRADED",
+      "docx": "PASS",
+      "pdf": "PASS",
+      "error": null,
+      "snapshot_id": "85392549bfba20d61814c82dd26b77719d5b96db5bfc2d740cbd32201dcd67f8",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "8536eb2ea8064ee895e33e58ee25382b-docx",
+          "sha256": "65da25a2bad37813ef81cc5533102d6cde23c795eed0fa3737a6adaeb2432d28",
+          "bytes": 69015
+        },
+        "pdf": {
+          "artifact_id": "8536eb2ea8064ee895e33e58ee25382b-pdf",
+          "sha256": "49822faba87805893359642cf08e72376749db9487292c2c3cd22182b0eab074",
+          "bytes": 174606
+        }
+      }
+    },
+    {
+      "id": "S1",
+      "job_id": "e6b7b2f514654b219ab9a164e9022e47",
+      "attempt_id": "2b260558de0d42e495a7cea235702b41",
+      "status": "DEGRADED",
+      "docx": "PASS",
+      "pdf": "PASS",
+      "error": null,
+      "snapshot_id": "3a4f905e080e0eb729af4ffa31d9ee31475b5737760bffb68e7a9143a14de9ae",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "e6b7b2f514654b219ab9a164e9022e47-docx",
+          "sha256": "d02c71b20b3879e34446aa51122ab70cabcdb72c14db5e72dd921faa2de8b70c",
+          "bytes": 145684
+        },
+        "pdf": {
+          "artifact_id": "e6b7b2f514654b219ab9a164e9022e47-pdf",
+          "sha256": "89198651a897b31362e8defbdeda221cd787cc11ff504217d95b58e214bfd0ef",
+          "bytes": 495002
+        }
+      }
+    },
+    {
+      "id": "S2",
+      "job_id": "4093d2051205465a84e131b01034abf8",
+      "attempt_id": "2b260558de0d42e495a7cea235702b41",
+      "status": "DEGRADED",
+      "docx": "PASS",
+      "pdf": "PASS",
+      "error": null,
+      "snapshot_id": "4eda1ee3a4878a9548f67f6e4bc25ca8f37084b162ffc21dac43c072186b6fa8",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "4093d2051205465a84e131b01034abf8-docx",
+          "sha256": "051f0dc7bc4eac11d0d44eb83d1dcbbac63f121cd7aede2f8fb322316ba65115",
+          "bytes": 148186
+        },
+        "pdf": {
+          "artifact_id": "4093d2051205465a84e131b01034abf8-pdf",
+          "sha256": "d2a8f412c4af99b9c1ba53bf9e6d374a494e867ffc978b46c5f0f8ce2f74eba7",
+          "bytes": 489091
+        }
+      }
+    },
+    {
+      "id": "S3",
+      "job_id": "8e668ea2d65f4cbaba44b75d013055ae",
+      "attempt_id": "2b260558de0d42e495a7cea235702b41",
+      "status": "DEGRADED",
+      "docx": "PASS",
+      "pdf": "PASS",
+      "error": null,
+      "snapshot_id": "ad3f7bf69b7b7268209ea6aff74c841f7fe083bbedcf0ba33f3f7fe423dce291",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "8e668ea2d65f4cbaba44b75d013055ae-docx",
+          "sha256": "95f6a94be59c771481700fe941e620f1eda34a47b6e106b40979ca701f4132f0",
+          "bytes": 148879
+        },
+        "pdf": {
+          "artifact_id": "8e668ea2d65f4cbaba44b75d013055ae-pdf",
+          "sha256": "71e2dd65268cd5466135a8a12905107a7772d62e39dba4a2cbeb6e0fa6610073",
+          "bytes": 535685
+        }
+      }
+    },
+    {
+      "id": "Q2",
+      "job_id": "e3f3b76cb3374fac9ab3f0478664ef53",
+      "attempt_id": "2b260558de0d42e495a7cea235702b41",
+      "status": "DEGRADED",
+      "docx": "PASS",
+      "pdf": "PASS",
+      "error": null,
+      "snapshot_id": "3c0fb50030687b2e2e761e90f8ebc9dc7d28f89b9fcc289a6a5190e60502ef30",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "e3f3b76cb3374fac9ab3f0478664ef53-docx",
+          "sha256": "8231d8286f9236ef068b1dad5e07eb5159fdcd5e60e439651801eca931c4ec70",
+          "bytes": 152370
+        },
+        "pdf": {
+          "artifact_id": "e3f3b76cb3374fac9ab3f0478664ef53-pdf",
+          "sha256": "5da05f8fcfe74a9329ad2b2b8f2ae8cb8a487024f9b438542101bf71cc1d1cbb",
+          "bytes": 558090
+        }
+      }
+    }
+  ],
+  "receipts": {
+    "model_live": "model_live.json",
+    "retrieval": "retrieval.json",
+    "rpa": "rpa.json",
+    "browser": "browser.json"
+  },
+  "human_review": "PENDING",
+  "competition_ready": false,
+  "model_provenance": "model_provenance.json"
+}

@@ -1,0 +1,28 @@
+{
+  "run_id": "delivery_20260919_final",
+  "attempt_id": "2b260558de0d42e495a7cea235702b41",
+  "commit": "04011c2a595a5d9f8efdd8de92bd5fd1dfcd8830",
+  "status": "PASS",
+  "full_suite": {
+    "passed": 346,
+    "failed": 1,
+    "note": "Includes preserved local historical tests excluded from Git; failed old Coding-policy fixture corrected and rerun"
+  },
+  "targeted_final": {
+    "gateway_and_historical_retrieval": 70,
+    "dashboard_and_provenance": 8,
+    "deck_binding": 6,
+    "recording_script": 1
+  },
+  "scope": "Full existing local suite once, then targeted regressions only; no paid calls",
+  "human_review": "PENDING",
+  "source_test_commit": "7bef1ce8e915ebd6697915d55d8d47da7bfab2d0",
+  "current_change_scope": "display labels and recording timings; targeted real and synthetic browser reruns passed; backend calculation unchanged",
+  "github_ci": {
+    "commit": "04011c2a595a5d9f8efdd8de92bd5fd1dfcd8830",
+    "passed": 287,
+    "skipped": 1,
+    "url": "https://github.com/Lihuaaaa-F/yaoheng-zhixi/actions/runs/35436891332",
+    "note": "Final frozen commit CI success; locked clean checkout tests, frontend build, recording boundary test"
+  }
+}

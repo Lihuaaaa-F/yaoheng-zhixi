@@ -1,0 +1,429 @@
+{
+  "run_id": "delivery_20260919_26",
+  "attempt_id": "936ed175fc514902af2edf26c6d06f1e",
+  "commit": "7bef1ce8e915ebd6697915d55d8d47da7bfab2d0",
+  "status": "NEEDS_FIX",
+  "scope": "Live DOM dashboard/filter/grid checks only; report generation/download/RPA not exercised by this browser run",
+  "viewport": {
+    "width": 1366,
+    "height": 768
+  },
+  "browser": "Browser plugin not available; existing local Chromium via Playwright",
+  "scenarios": [
+    {
+      "id": "mechanical",
+      "job_id": "d45e9aaaf3d044d894f4423de8fe4e19",
+      "snapshot_id": "6c67ce424b3484d6bcc43efca0163047ff021b587263ad9ff0604ee02cba7d99",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "d45e9aaaf3d044d894f4423de8fe4e19-docx",
+          "sha256": "9202b2871160e14c55bf423d538900f68c64c4960f9ae785f9f099d2c8fc37c9",
+          "bytes": 68773
+        },
+        "pdf": {
+          "artifact_id": "d45e9aaaf3d044d894f4423de8fe4e19-pdf",
+          "sha256": "e2ae11bcfa2d97572444a5e9ce7cdf1334bf441d5399fa7e57eb7e712245d280",
+          "bytes": 164158
+        }
+      },
+      "tested_selection": {
+        "context_id": "mechanical_demo:synthetic-mechanical",
+        "factory": "示范工厂A",
+        "product": "DEMO-01",
+        "month": "2026-06",
+        "analysis_type": "monthly",
+        "basis": "unit"
+      },
+      "status": "PASS",
+      "dom_checks": [
+        "exact selected snapshot matches run job",
+        "deterministic focus and missing-data explanation visible",
+        "product-month heatmap rendered and element selector responds",
+        "precise value/missing-state table opens",
+        "no horizontal viewport overflow",
+        "real grid exact-value click changed month and regenerated deterministic analysis"
+      ],
+      "grid_products": [
+        "DEMO-01"
+      ],
+      "grid_months": [
+        "2026-01",
+        "2026-02",
+        "2026-03",
+        "2026-04",
+        "2026-05",
+        "2026-06"
+      ],
+      "screenshots": [
+        "mechanical-focus.png",
+        "mechanical-grid.png"
+      ],
+      "screenshot_hashes": {
+        "mechanical-focus.png": "f615e2b1e2bf4efeec11d1f695105a30c34681fb5ce500a41bbf6e82225d646b",
+        "mechanical-grid.png": "908a3034cf330c813ec05fac96d3cb39b1847fafc9443ad076c10dd1645d5953"
+      }
+    },
+    {
+      "id": "chemical",
+      "job_id": "1dcb3690ed9f42d4822608a9b43749c5",
+      "snapshot_id": "f3128b3f989d66b0793ed63e7f5b30ff74b252dbe2f59f9739798db7d785a212",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "1dcb3690ed9f42d4822608a9b43749c5-docx",
+          "sha256": "11b9a48413c113de6b9bb75dcfcad7b3f9671c89d969622450b3c4f5acaca070",
+          "bytes": 66302
+        },
+        "pdf": {
+          "artifact_id": "1dcb3690ed9f42d4822608a9b43749c5-pdf",
+          "sha256": "3da0efcf947c0a99945cf2e91af07d8fd6631ec0a71447f34c634ef39ab0780b",
+          "bytes": 193859
+        }
+      },
+      "tested_selection": {
+        "context_id": "chemical_demo:synthetic-chemical",
+        "factory": "示范工厂A",
+        "product": "DEMO-01",
+        "month": "2026-06",
+        "analysis_type": "monthly",
+        "basis": "unit"
+      },
+      "status": "PASS",
+      "dom_checks": [
+        "exact selected snapshot matches run job",
+        "deterministic focus and missing-data explanation visible",
+        "product-month heatmap rendered and element selector responds",
+        "precise value/missing-state table opens",
+        "no horizontal viewport overflow"
+      ],
+      "grid_products": [
+        "DEMO-01"
+      ],
+      "grid_months": [
+        "2026-01",
+        "2026-02",
+        "2026-03",
+        "2026-04",
+        "2026-05",
+        "2026-06"
+      ],
+      "screenshots": [
+        "chemical-focus.png",
+        "chemical-grid.png"
+      ],
+      "screenshot_hashes": {
+        "chemical-focus.png": "d9d49bffb0145f97a69807b75549ca8d4b28bb545a2c83557c5e44b6737b96cd",
+        "chemical-grid.png": "34c5d4a05514e241672c5b226cfe72fdf0169ab452dddea184656bf7c8b4716a"
+      }
+    },
+    {
+      "id": "pharma_synthetic",
+      "job_id": "13caf6dc08c140c9b36697471e12e9d8",
+      "snapshot_id": "85392549bfba20d61814c82dd26b77719d5b96db5bfc2d740cbd32201dcd67f8",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "13caf6dc08c140c9b36697471e12e9d8-docx",
+          "sha256": "8af2eb21714b6622eb2d7fe7a3061db727cbed1a3268a20eb07de2ef57bb582a",
+          "bytes": 69015
+        },
+        "pdf": {
+          "artifact_id": "13caf6dc08c140c9b36697471e12e9d8-pdf",
+          "sha256": "0c5064d4f92266d865f0931456810ed02b9fe2736fbbb06168f463b12691a120",
+          "bytes": 174606
+        }
+      },
+      "tested_selection": {
+        "context_id": "pharmaceutical:synthetic-pharma",
+        "factory": "示范工厂A",
+        "product": "DEMO-01",
+        "month": "2026-06",
+        "analysis_type": "monthly",
+        "basis": "unit"
+      },
+      "status": "PASS",
+      "dom_checks": [
+        "exact selected snapshot matches run job",
+        "deterministic focus and missing-data explanation visible",
+        "product-month heatmap rendered and element selector responds",
+        "precise value/missing-state table opens",
+        "no horizontal viewport overflow"
+      ],
+      "grid_products": [
+        "DEMO-01"
+      ],
+      "grid_months": [
+        "2026-01",
+        "2026-02",
+        "2026-03",
+        "2026-04",
+        "2026-05",
+        "2026-06"
+      ],
+      "screenshots": [
+        "pharma_synthetic-focus.png",
+        "pharma_synthetic-grid.png"
+      ],
+      "screenshot_hashes": {
+        "pharma_synthetic-focus.png": "66e2a733ef3ad8e35436179fd0330b394827c3abd6471ee4d46f7f9f6604d662",
+        "pharma_synthetic-grid.png": "2df6a60c73740cfd16a7a155a146a6e63aec7efd5457c136fe658cedac941ce6"
+      }
+    },
+    {
+      "id": "S1",
+      "job_id": "ca15a27a2fc34d7f8b285682ec9f1e77",
+      "snapshot_id": "3a4f905e080e0eb729af4ffa31d9ee31475b5737760bffb68e7a9143a14de9ae",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "ca15a27a2fc34d7f8b285682ec9f1e77-docx",
+          "sha256": "31d97e13ce443337893568da2137420b687b6725ad2b41bb03238fc72dba814a",
+          "bytes": 145684
+        },
+        "pdf": {
+          "artifact_id": "ca15a27a2fc34d7f8b285682ec9f1e77-pdf",
+          "sha256": "8ceda7f16e2c043e05815ed33217fc12b5314e621530b149c4d78f4a1e494f34",
+          "bytes": 495002
+        }
+      },
+      "tested_selection": {
+        "context_id": "pharmaceutical:competition",
+        "factory": "中药一厂",
+        "product": "银黄口服液",
+        "month": "2026-05",
+        "analysis_type": "monthly",
+        "basis": "unit"
+      },
+      "status": "PASS",
+      "dom_checks": [
+        "exact selected snapshot matches run job",
+        "deterministic focus and missing-data explanation visible",
+        "product-month heatmap rendered and element selector responds",
+        "precise value/missing-state table opens",
+        "no horizontal viewport overflow",
+        "live pharmaceutical knowledge graph visible"
+      ],
+      "grid_products": [
+        "六味地黄胶囊",
+        "板蓝根颗粒",
+        "银黄口服液"
+      ],
+      "grid_months": [
+        "2025-12",
+        "2026-01",
+        "2026-02",
+        "2026-03",
+        "2026-04",
+        "2026-05"
+      ],
+      "screenshots": [
+        "S1-focus.png",
+        "S1-grid.png",
+        "S1-graph.png"
+      ],
+      "screenshot_hashes": {
+        "S1-focus.png": "daf84125ac462271316726c01c46112cfa624c95ef848db876ffed6a6f3bd5bb",
+        "S1-grid.png": "dd3b480da803de060cc9ca952fa85baa466acc1604d68fb89fe2183eefe29c6a",
+        "S1-graph.png": "68ca0787373f9e9b0553a10fec14088194cf3f548414c2463d15d149e8060cba"
+      }
+    },
+    {
+      "id": "S2",
+      "job_id": "dd524bb205fe4d8ca8e1cf8faaea69be",
+      "snapshot_id": "4eda1ee3a4878a9548f67f6e4bc25ca8f37084b162ffc21dac43c072186b6fa8",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "dd524bb205fe4d8ca8e1cf8faaea69be-docx",
+          "sha256": "2eccae865f23cf94d969884af76e7e04c1bf453a16383c2c626b02d00735bcb7",
+          "bytes": 148186
+        },
+        "pdf": {
+          "artifact_id": "dd524bb205fe4d8ca8e1cf8faaea69be-pdf",
+          "sha256": "e8f851e099c7d7fe77b0227cca8ab718ab68d3be5d4216f1e8430e8d03e06533",
+          "bytes": 489091
+        }
+      },
+      "tested_selection": {
+        "context_id": "pharmaceutical:competition",
+        "factory": "中药一厂",
+        "product": "板蓝根颗粒",
+        "month": "2026-05",
+        "analysis_type": "special",
+        "basis": "unit"
+      },
+      "status": "PASS",
+      "dom_checks": [
+        "exact selected snapshot matches run job",
+        "deterministic focus and missing-data explanation visible",
+        "product-month heatmap rendered and element selector responds",
+        "precise value/missing-state table opens",
+        "no horizontal viewport overflow"
+      ],
+      "grid_products": [
+        "六味地黄胶囊",
+        "板蓝根颗粒",
+        "银黄口服液"
+      ],
+      "grid_months": [
+        "2025-12",
+        "2026-01",
+        "2026-02",
+        "2026-03",
+        "2026-04",
+        "2026-05"
+      ],
+      "screenshots": [
+        "S2-focus.png",
+        "S2-grid.png"
+      ],
+      "screenshot_hashes": {
+        "S2-focus.png": "9c968752407f6a891ebfc02b68f58a603531811b8d56cdae0286095b04f152ab",
+        "S2-grid.png": "e835c009c0ecdb84a6f1ff61571c807597ae07b8f935fe65992044078a62e366"
+      }
+    },
+    {
+      "id": "S3",
+      "job_id": "6b44a3078d1648bdb5858d8bf1d0c173",
+      "snapshot_id": "ad3f7bf69b7b7268209ea6aff74c841f7fe083bbedcf0ba33f3f7fe423dce291",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "6b44a3078d1648bdb5858d8bf1d0c173-docx",
+          "sha256": "19e6ec09dfc95447a9351c8d483bc5a0f1961c67c411beb5784f7d1b3fe7ecd2",
+          "bytes": 148879
+        },
+        "pdf": {
+          "artifact_id": "6b44a3078d1648bdb5858d8bf1d0c173-pdf",
+          "sha256": "e568eeb0f3336f0c2386adcde5c864aedfe34b5243a9e9b43ae0bd562e7fd775",
+          "bytes": 535685
+        }
+      },
+      "tested_selection": {
+        "context_id": "pharmaceutical:competition",
+        "factory": "中药一厂",
+        "product": "六味地黄胶囊",
+        "month": "2026-03",
+        "analysis_type": "monthly",
+        "basis": "unit"
+      },
+      "status": "PASS",
+      "dom_checks": [
+        "exact selected snapshot matches run job",
+        "deterministic focus and missing-data explanation visible",
+        "product-month heatmap rendered and element selector responds",
+        "precise value/missing-state table opens",
+        "no horizontal viewport overflow"
+      ],
+      "grid_products": [
+        "六味地黄胶囊",
+        "板蓝根颗粒",
+        "银黄口服液"
+      ],
+      "grid_months": [
+        "2025-10",
+        "2025-11",
+        "2025-12",
+        "2026-01",
+        "2026-02",
+        "2026-03"
+      ],
+      "screenshots": [
+        "S3-focus.png",
+        "S3-grid.png"
+      ],
+      "screenshot_hashes": {
+        "S3-focus.png": "2d44beb925c7281bc8e6a1b4223910b5af40048fa940710a2c9804070051b7dd",
+        "S3-grid.png": "30e8ad69959893bc020d6a47133d756f3a3d57d4b97842ba68819b9e643c7269"
+      }
+    },
+    {
+      "id": "Q2",
+      "job_id": "e4474a02324f4bcd99574980d1a817ac",
+      "snapshot_id": "3c0fb50030687b2e2e761e90f8ebc9dc7d28f89b9fcc289a6a5190e60502ef30",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "e4474a02324f4bcd99574980d1a817ac-docx",
+          "sha256": "33afbbb4124d2480627d1032255aac0475086a84d1f318f8d2100e6f9bfdb792",
+          "bytes": 152370
+        },
+        "pdf": {
+          "artifact_id": "e4474a02324f4bcd99574980d1a817ac-pdf",
+          "sha256": "a0001ee1ab69af6cc11b4874fec12774edf05bbf5e4a7beca7d339773c24489f",
+          "bytes": 558090
+        }
+      },
+      "tested_selection": {
+        "context_id": "pharmaceutical:competition",
+        "factory": "中药一厂",
+        "product": "银黄口服液",
+        "month": "2026-06",
+        "analysis_type": "quarterly",
+        "basis": "unit"
+      },
+      "status": "PASS",
+      "dom_checks": [
+        "exact selected snapshot matches run job",
+        "deterministic focus and missing-data explanation visible",
+        "product-month heatmap rendered and element selector responds",
+        "precise value/missing-state table opens",
+        "no horizontal viewport overflow"
+      ],
+      "grid_products": [
+        "六味地黄胶囊",
+        "板蓝根颗粒",
+        "银黄口服液"
+      ],
+      "grid_months": [
+        "2026-01",
+        "2026-02",
+        "2026-03",
+        "2026-04",
+        "2026-05",
+        "2026-06"
+      ],
+      "screenshots": [
+        "Q2-focus.png",
+        "Q2-grid.png"
+      ],
+      "screenshot_hashes": {
+        "Q2-focus.png": "37b495b8f172c6c0706e499486fc07f3fb6c1f2544595c778565430a2ddaa5db",
+        "Q2-grid.png": "dddffca9d0895def3a16f3d13431a2758a7ca466acf7aa708f36ca95a51214b7"
+      }
+    }
+  ],
+  "checks": [
+    "seven actual dashboard selections across three industries",
+    "no model-generating endpoint visited",
+    "no page errors or console errors",
+    "manifest job/snapshot/artifact bindings verified; artifact bytes not inspected in this browser run"
+  ],
+  "errors": [],
+  "blocked_model_requests": [],
+  "synthetic_comparison": {
+    "path": "/tmp/yaoheng-dashboard-ui/qa.json",
+    "scope": "Independent two-product API-mocked browser contract; separate from this live evidence"
+  },
+  "dom_status": "PASS",
+  "visual_status": "NEEDS_FIX",
+  "visual_findings": [
+    {
+      "id": "HEATMAP_DECIMAL_LABEL_OVERLAP",
+      "severity": "medium",
+      "scenario": "chemical",
+      "screenshot": "chemical-grid.png",
+      "finding": "材料成本循环小数以完整Decimal显示，2026-03/04相邻网格标签重叠。tooltip与精确表应保留完整值，图内标签需限定显示精度。"
+    },
+    {
+      "id": "FOCUS_EXCESS_PRECISION",
+      "severity": "low",
+      "scenarios": [
+        "mechanical",
+        "Q2"
+      ],
+      "finding": "自动重点段落与标题显示长达28位的小数，阅读负担大；目前没有整页横向溢出。"
+    }
+  ],
+  "visual_inspected": [
+    "mechanical-focus.png",
+    "chemical-grid.png",
+    "S1-grid.png",
+    "S1-graph.png",
+    "Q2-focus.png"
+  ]
+}

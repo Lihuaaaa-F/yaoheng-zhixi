@@ -1,0 +1,139 @@
+{
+  "run_id": "delivery_20260919_final",
+  "attempt_id": "2b260558de0d42e495a7cea235702b41",
+  "commit": "04011c2a595a5d9f8efdd8de92bd5fd1dfcd8830",
+  "fresh_calls_this_attempt": 0,
+  "fresh_calls_source_run": "delivery_20260919_26",
+  "fresh_calls_source_commit": "7bef1ce8e915ebd6697915d55d8d47da7bfab2d0",
+  "calls": [
+    {
+      "model": "deepseek-flash",
+      "status": "PASS",
+      "elapsed": 6.17661170700012,
+      "usage": "{\"prompt_tokens\": 11780, \"completion_tokens\": 508, \"total_tokens\": 12288, \"prompt_tokens_details\": {\"cached_tokens\": 128}, \"prompt_cache_hit_tokens\": 128, \"prompt_cache_miss_tokens\": 11652}",
+      "cost": "UNKNOWN",
+      "requested_model": "deepseek-flash",
+      "returned_model": "deepseek-flash",
+      "identity_status": "VERIFIED_EXACT",
+      "endpoint": "https://api.deepseek.com/chat/completions"
+    },
+    {
+      "model": "deepseek-flash",
+      "status": "PASS",
+      "elapsed": 7.719908400999884,
+      "usage": "{\"prompt_tokens\": 20769, \"completion_tokens\": 1078, \"total_tokens\": 21847, \"prompt_tokens_details\": {\"cached_tokens\": 768}, \"prompt_cache_hit_tokens\": 768, \"prompt_cache_miss_tokens\": 20001}",
+      "cost": "UNKNOWN",
+      "requested_model": "deepseek-flash",
+      "returned_model": "deepseek-flash",
+      "identity_status": "VERIFIED_EXACT",
+      "endpoint": "https://api.deepseek.com/chat/completions"
+    },
+    {
+      "model": "deepseek-flash",
+      "status": "PASS",
+      "elapsed": 8.273566376999952,
+      "usage": "{\"prompt_tokens\": 15741, \"completion_tokens\": 970, \"total_tokens\": 16711, \"prompt_tokens_details\": {\"cached_tokens\": 768}, \"prompt_cache_hit_tokens\": 768, \"prompt_cache_miss_tokens\": 14973}",
+      "cost": "UNKNOWN",
+      "requested_model": "deepseek-flash",
+      "returned_model": "deepseek-flash",
+      "identity_status": "VERIFIED_EXACT",
+      "endpoint": "https://api.deepseek.com/chat/completions"
+    },
+    {
+      "model": "deepseek-flash",
+      "status": "PASS",
+      "elapsed": 5.12168794299987,
+      "usage": "{\"prompt_tokens\": 21184, \"completion_tokens\": 748, \"total_tokens\": 21932, \"prompt_tokens_details\": {\"cached_tokens\": 768}, \"prompt_cache_hit_tokens\": 768, \"prompt_cache_miss_tokens\": 20416}",
+      "cost": "UNKNOWN",
+      "requested_model": "deepseek-flash",
+      "returned_model": "deepseek-flash",
+      "identity_status": "VERIFIED_EXACT",
+      "endpoint": "https://api.deepseek.com/chat/completions"
+    },
+    {
+      "model": "deepseek-flash",
+      "status": "PASS",
+      "elapsed": 7.120251853000127,
+      "usage": "{\"prompt_tokens\": 20136, \"completion_tokens\": 842, \"total_tokens\": 20978, \"prompt_tokens_details\": {\"cached_tokens\": 768}, \"prompt_cache_hit_tokens\": 768, \"prompt_cache_miss_tokens\": 19368}",
+      "cost": "UNKNOWN",
+      "requested_model": "deepseek-flash",
+      "returned_model": "deepseek-flash",
+      "identity_status": "VERIFIED_EXACT",
+      "endpoint": "https://api.deepseek.com/chat/completions"
+    },
+    {
+      "model": "deepseek-flash",
+      "status": "PASS",
+      "elapsed": 8.929531890999897,
+      "usage": "{\"prompt_tokens\": 26605, \"completion_tokens\": 1218, \"total_tokens\": 27823, \"prompt_tokens_details\": {\"cached_tokens\": 768}, \"prompt_cache_hit_tokens\": 768, \"prompt_cache_miss_tokens\": 25837}",
+      "cost": "UNKNOWN",
+      "requested_model": "deepseek-flash",
+      "returned_model": "deepseek-flash",
+      "identity_status": "VERIFIED_EXACT",
+      "endpoint": "https://api.deepseek.com/chat/completions"
+    },
+    {
+      "model": "deepseek-flash",
+      "status": "PASS",
+      "elapsed": 10.509924567000098,
+      "usage": "{\"prompt_tokens\": 28162, \"completion_tokens\": 1586, \"total_tokens\": 29748, \"prompt_tokens_details\": {\"cached_tokens\": 768}, \"prompt_cache_hit_tokens\": 768, \"prompt_cache_miss_tokens\": 27394}",
+      "cost": "UNKNOWN",
+      "requested_model": "deepseek-flash",
+      "returned_model": "deepseek-flash",
+      "identity_status": "VERIFIED_EXACT",
+      "endpoint": "https://api.deepseek.com/chat/completions"
+    }
+  ],
+  "cache": [
+    {
+      "id": "mechanical",
+      "job_id": "47177aed125642a2893fdf8f29273f64",
+      "cache_hit": true,
+      "cache_source_time": 1789812489.7549546,
+      "model": "deepseek-flash"
+    },
+    {
+      "id": "chemical",
+      "job_id": "af76eaa5a12c41bb99dcb7dde8dd482a",
+      "cache_hit": true,
+      "cache_source_time": 1789812499.3774765,
+      "model": "deepseek-flash"
+    },
+    {
+      "id": "pharma_synthetic",
+      "job_id": "8536eb2ea8064ee895e33e58ee25382b",
+      "cache_hit": true,
+      "cache_source_time": 1789812509.2220118,
+      "model": "deepseek-flash"
+    },
+    {
+      "id": "S1",
+      "job_id": "e6b7b2f514654b219ab9a164e9022e47",
+      "cache_hit": true,
+      "cache_source_time": 1789812519.4584265,
+      "model": "deepseek-flash"
+    },
+    {
+      "id": "S2",
+      "job_id": "4093d2051205465a84e131b01034abf8",
+      "cache_hit": true,
+      "cache_source_time": 1789812530.4844997,
+      "model": "deepseek-flash"
+    },
+    {
+      "id": "S3",
+      "job_id": "8e668ea2d65f4cbaba44b75d013055ae",
+      "cache_hit": true,
+      "cache_source_time": 1789812543.2796326,
+      "model": "deepseek-flash"
+    },
+    {
+      "id": "Q2",
+      "job_id": "e3f3b76cb3374fac9ab3f0478664ef53",
+      "cache_hit": true,
+      "cache_source_time": 1789812556.9087217,
+      "model": "deepseek-flash"
+    }
+  ],
+  "note": "Latest user instruction: local DeepSeek tests; teammate GLM tests remain historical/separate"
+}

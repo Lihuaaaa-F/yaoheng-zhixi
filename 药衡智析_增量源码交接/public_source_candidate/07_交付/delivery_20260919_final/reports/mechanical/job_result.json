@@ -1,0 +1,4517 @@
+{
+  "snapshot": {
+    "snapshot_contract_version": "analysis-snapshot-2-frozen-template",
+    "report_template": {
+      "version": "pack-template-2-semantic-sections",
+      "sections": [
+        "一、基本信息",
+        "二、总成本概览",
+        "三、成本要素结构",
+        "四、工序机时分析与核查",
+        "五、行业与工厂对标",
+        "六、改进建议"
+      ],
+      "required_notice": "合成演示：全部企业、工单/批次、数字和知识均独立编制；不是赛题原件或行业基准。",
+      "responsibility_roles": [
+        "成本会计",
+        "生产主管"
+      ],
+      "professional_limits": [
+        "不能从已归集成本反推采购单价与实际耗量",
+        "联副产品与在制品分配未实现"
+      ]
+    },
+    "context_id": "mechanical_demo:synthetic-mechanical",
+    "analysis_context": {
+      "enterprise_id": "synthetic-mechanical",
+      "dataset_id": "mechanical_demo-synthetic-v1",
+      "industry_id": "mechanical_demo",
+      "industry_version": "1.0.0",
+      "policy_version": "synthetic-completed-cost-1",
+      "data_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4",
+      "knowledge_snapshot": "ab2965fcf461d80dd93991026bbf8b801461e003c21f8c2f07cb4a369e0c6f0b",
+      "template_version": "74126424ac33b62b181e970bce6d2f92fb6fad7b7775df92913a03e5287323a8",
+      "formula_version": "normalized-cost-3-comparison-evidence",
+      "enterprise_config_version": "046e25c8600f81a500f262957037f9b53f6110e786b0e7d1f428c8f07508d1ab"
+    },
+    "context_hash": "e09ddf32ea41878c8fce30f2afebe828144c708e5b9fdc2566d7a87b72e2df4d",
+    "data_version": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4",
+    "snapshot_id": "6c67ce424b3484d6bcc43efca0163047ff021b587263ad9ff0604ee02cba7d99",
+    "formula_version": "normalized-cost-3-comparison-evidence",
+    "factory": "示范工厂A",
+    "product": "DEMO-01",
+    "month": "2026-06",
+    "analysis_type": "monthly",
+    "basis": "unit",
+    "specification": "1件/成品",
+    "period": {
+      "start": "2026-06",
+      "end": "2026-06"
+    },
+    "metrics": {
+      "unit_cost": {
+        "metric_id": "e09ddf32ea41878c8fce30f2afebe828144c708e5b9fdc2566d7a87b72e2df4d:示范工厂A:DEMO-01:2026-06:monthly:unit:unit_cost",
+        "value": "30",
+        "display": "30.00",
+        "unit": "元/件",
+        "formula": "Σ金额/Σ独立产量",
+        "formula_version": "normalized-cost-3-comparison-evidence",
+        "numerator": "3600",
+        "denominator": "120",
+        "comparison_period": null,
+        "period": [
+          "2026-06"
+        ],
+        "basis": "unit",
+        "sources": {
+          "current": {
+            "cost_rows": [
+              "示范工厂A:2026-06:actual:materials",
+              "示范工厂A:2026-06:actual:labor",
+              "示范工厂A:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3600",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          },
+          "base": null
+        },
+        "row_keys": [
+          "示范工厂A:2026-06:actual:materials",
+          "示范工厂A:2026-06:actual:labor",
+          "示范工厂A:2026-06:actual:overhead",
+          "示范工厂A:2026-06:actual:q"
+        ],
+        "source_hash": [
+          "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+        ],
+        "reason": null
+      },
+      "total_cost": {
+        "metric_id": "e09ddf32ea41878c8fce30f2afebe828144c708e5b9fdc2566d7a87b72e2df4d:示范工厂A:DEMO-01:2026-06:monthly:unit:total_cost",
+        "value": "3600",
+        "display": "3600.00",
+        "unit": "元",
+        "formula": "Σ成本明细金额",
+        "formula_version": "normalized-cost-3-comparison-evidence",
+        "numerator": "3600",
+        "denominator": "1",
+        "comparison_period": null,
+        "period": [
+          "2026-06"
+        ],
+        "basis": "total",
+        "sources": {
+          "current": {
+            "cost_rows": [
+              "示范工厂A:2026-06:actual:materials",
+              "示范工厂A:2026-06:actual:labor",
+              "示范工厂A:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3600",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          },
+          "base": null
+        },
+        "row_keys": [
+          "示范工厂A:2026-06:actual:materials",
+          "示范工厂A:2026-06:actual:labor",
+          "示范工厂A:2026-06:actual:overhead",
+          "示范工厂A:2026-06:actual:q"
+        ],
+        "source_hash": [
+          "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+        ],
+        "reason": null
+      },
+      "quantity": {
+        "metric_id": "e09ddf32ea41878c8fce30f2afebe828144c708e5b9fdc2566d7a87b72e2df4d:示范工厂A:DEMO-01:2026-06:monthly:unit:quantity",
+        "value": "120",
+        "display": "120.00",
+        "unit": "件",
+        "formula": "Σ独立生产对象产量",
+        "formula_version": "normalized-cost-3-comparison-evidence",
+        "numerator": "120",
+        "denominator": "1",
+        "comparison_period": null,
+        "period": [
+          "2026-06"
+        ],
+        "basis": "quantity",
+        "sources": {
+          "current": {
+            "cost_rows": [
+              "示范工厂A:2026-06:actual:materials",
+              "示范工厂A:2026-06:actual:labor",
+              "示范工厂A:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3600",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          },
+          "base": null
+        },
+        "row_keys": [
+          "示范工厂A:2026-06:actual:materials",
+          "示范工厂A:2026-06:actual:labor",
+          "示范工厂A:2026-06:actual:overhead",
+          "示范工厂A:2026-06:actual:q"
+        ],
+        "source_hash": [
+          "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+        ],
+        "reason": null
+      },
+      "mom": {
+        "metric_id": "e09ddf32ea41878c8fce30f2afebe828144c708e5b9fdc2566d7a87b72e2df4d:示范工厂A:DEMO-01:2026-06:monthly:unit:mom",
+        "value": "5.882352941176470588235294130",
+        "display": "5.88",
+        "unit": "%",
+        "formula": "(本期−基期)/基期×100",
+        "formula_version": "normalized-cost-3-comparison-evidence",
+        "numerator": "1.66666666666666666666666667",
+        "denominator": "28.33333333333333333333333333",
+        "comparison_period": [
+          "2026-05"
+        ],
+        "period": [
+          "2026-06"
+        ],
+        "basis": "unit",
+        "sources": {
+          "current": {
+            "cost_rows": [
+              "示范工厂A:2026-06:actual:materials",
+              "示范工厂A:2026-06:actual:labor",
+              "示范工厂A:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3600",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          },
+          "base": {
+            "cost_rows": [
+              "示范工厂A:2026-05:actual:materials",
+              "示范工厂A:2026-05:actual:labor",
+              "示范工厂A:2026-05:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-05:actual:q"
+            ],
+            "period": [
+              "2026-05"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3400",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          }
+        },
+        "row_keys": [
+          "示范工厂A:2026-06:actual:materials",
+          "示范工厂A:2026-06:actual:labor",
+          "示范工厂A:2026-06:actual:overhead",
+          "示范工厂A:2026-06:actual:q",
+          "示范工厂A:2026-05:actual:materials",
+          "示范工厂A:2026-05:actual:labor",
+          "示范工厂A:2026-05:actual:overhead",
+          "示范工厂A:2026-05:actual:q"
+        ],
+        "source_hash": [
+          "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+        ],
+        "reason": null
+      },
+      "yoy": {
+        "metric_id": "e09ddf32ea41878c8fce30f2afebe828144c708e5b9fdc2566d7a87b72e2df4d:示范工厂A:DEMO-01:2026-06:monthly:unit:yoy",
+        "value": null,
+        "display": "N/A",
+        "unit": "%",
+        "formula": "(本期−基期)/基期×100",
+        "formula_version": "normalized-cost-3-comparison-evidence",
+        "numerator": null,
+        "denominator": null,
+        "comparison_period": [
+          "2025-06"
+        ],
+        "period": [
+          "2026-06"
+        ],
+        "basis": "unit",
+        "sources": {
+          "current": {
+            "cost_rows": [
+              "示范工厂A:2026-06:actual:materials",
+              "示范工厂A:2026-06:actual:labor",
+              "示范工厂A:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3600",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          },
+          "base": null
+        },
+        "row_keys": [
+          "示范工厂A:2026-06:actual:materials",
+          "示范工厂A:2026-06:actual:labor",
+          "示范工厂A:2026-06:actual:overhead",
+          "示范工厂A:2026-06:actual:q"
+        ],
+        "source_hash": [
+          "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+        ],
+        "reason": "缺少完整基期或分母为零"
+      },
+      "budget": {
+        "metric_id": "e09ddf32ea41878c8fce30f2afebe828144c708e5b9fdc2566d7a87b72e2df4d:示范工厂A:DEMO-01:2026-06:monthly:unit:budget",
+        "value": "11.11111111111111111111111111",
+        "display": "11.11",
+        "unit": "%",
+        "formula": "(本期−基期)/基期×100",
+        "formula_version": "normalized-cost-3-comparison-evidence",
+        "numerator": "3",
+        "denominator": "27",
+        "comparison_period": [
+          "2026-06"
+        ],
+        "period": [
+          "2026-06"
+        ],
+        "basis": "unit",
+        "sources": {
+          "current": {
+            "cost_rows": [
+              "示范工厂A:2026-06:actual:materials",
+              "示范工厂A:2026-06:actual:labor",
+              "示范工厂A:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3600",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          },
+          "base": {
+            "cost_rows": [
+              "示范工厂A:2026-06:budget:materials",
+              "示范工厂A:2026-06:budget:labor",
+              "示范工厂A:2026-06:budget:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-06:budget:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "budget",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3240",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          }
+        },
+        "row_keys": [
+          "示范工厂A:2026-06:actual:materials",
+          "示范工厂A:2026-06:actual:labor",
+          "示范工厂A:2026-06:actual:overhead",
+          "示范工厂A:2026-06:actual:q",
+          "示范工厂A:2026-06:budget:materials",
+          "示范工厂A:2026-06:budget:labor",
+          "示范工厂A:2026-06:budget:overhead",
+          "示范工厂A:2026-06:budget:q"
+        ],
+        "source_hash": [
+          "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+        ],
+        "reason": null
+      },
+      "materials": {
+        "metric_id": "e09ddf32ea41878c8fce30f2afebe828144c708e5b9fdc2566d7a87b72e2df4d:示范工厂A:DEMO-01:2026-06:monthly:unit:materials",
+        "value": "15",
+        "display": "15.00",
+        "unit": "元/件",
+        "formula": "Σ要素金额/Σ产量",
+        "formula_version": "normalized-cost-3-comparison-evidence",
+        "numerator": "1800",
+        "denominator": "120",
+        "comparison_period": null,
+        "period": [
+          "2026-06"
+        ],
+        "basis": "unit",
+        "sources": {
+          "current": {
+            "cost_rows": [
+              "示范工厂A:2026-06:actual:materials",
+              "示范工厂A:2026-06:actual:labor",
+              "示范工厂A:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3600",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          },
+          "base": null
+        },
+        "row_keys": [
+          "示范工厂A:2026-06:actual:materials",
+          "示范工厂A:2026-06:actual:labor",
+          "示范工厂A:2026-06:actual:overhead",
+          "示范工厂A:2026-06:actual:q"
+        ],
+        "source_hash": [
+          "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+        ],
+        "reason": null
+      },
+      "materials_unit_rate": {
+        "metric_id": "e09ddf32ea41878c8fce30f2afebe828144c708e5b9fdc2566d7a87b72e2df4d:示范工厂A:DEMO-01:2026-06:monthly:unit:materials_unit_rate",
+        "value": "0",
+        "display": "0.00",
+        "unit": "%",
+        "formula": "(本期要素−基期要素)/基期要素×100",
+        "formula_version": "normalized-cost-3-comparison-evidence",
+        "numerator": "0",
+        "denominator": "15",
+        "comparison_period": [
+          "2026-05"
+        ],
+        "period": [
+          "2026-06"
+        ],
+        "basis": "unit",
+        "sources": {
+          "current": {
+            "cost_rows": [
+              "示范工厂A:2026-06:actual:materials",
+              "示范工厂A:2026-06:actual:labor",
+              "示范工厂A:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3600",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          },
+          "base": {
+            "cost_rows": [
+              "示范工厂A:2026-05:actual:materials",
+              "示范工厂A:2026-05:actual:labor",
+              "示范工厂A:2026-05:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-05:actual:q"
+            ],
+            "period": [
+              "2026-05"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3400",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          }
+        },
+        "row_keys": [
+          "示范工厂A:2026-06:actual:materials",
+          "示范工厂A:2026-06:actual:labor",
+          "示范工厂A:2026-06:actual:overhead",
+          "示范工厂A:2026-06:actual:q",
+          "示范工厂A:2026-05:actual:materials",
+          "示范工厂A:2026-05:actual:labor",
+          "示范工厂A:2026-05:actual:overhead",
+          "示范工厂A:2026-05:actual:q"
+        ],
+        "source_hash": [
+          "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+        ],
+        "reason": null
+      },
+      "materials_total_rate": {
+        "metric_id": "e09ddf32ea41878c8fce30f2afebe828144c708e5b9fdc2566d7a87b72e2df4d:示范工厂A:DEMO-01:2026-06:monthly:unit:materials_total_rate",
+        "value": "0",
+        "display": "0.00",
+        "unit": "%",
+        "formula": "(本期要素−基期要素)/基期要素×100",
+        "formula_version": "normalized-cost-3-comparison-evidence",
+        "numerator": "0",
+        "denominator": "1800",
+        "comparison_period": [
+          "2026-05"
+        ],
+        "period": [
+          "2026-06"
+        ],
+        "basis": "total",
+        "sources": {
+          "current": {
+            "cost_rows": [
+              "示范工厂A:2026-06:actual:materials",
+              "示范工厂A:2026-06:actual:labor",
+              "示范工厂A:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3600",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          },
+          "base": {
+            "cost_rows": [
+              "示范工厂A:2026-05:actual:materials",
+              "示范工厂A:2026-05:actual:labor",
+              "示范工厂A:2026-05:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-05:actual:q"
+            ],
+            "period": [
+              "2026-05"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3400",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          }
+        },
+        "row_keys": [
+          "示范工厂A:2026-06:actual:materials",
+          "示范工厂A:2026-06:actual:labor",
+          "示范工厂A:2026-06:actual:overhead",
+          "示范工厂A:2026-06:actual:q",
+          "示范工厂A:2026-05:actual:materials",
+          "示范工厂A:2026-05:actual:labor",
+          "示范工厂A:2026-05:actual:overhead",
+          "示范工厂A:2026-05:actual:q"
+        ],
+        "source_hash": [
+          "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+        ],
+        "reason": null
+      },
+      "labor": {
+        "metric_id": "e09ddf32ea41878c8fce30f2afebe828144c708e5b9fdc2566d7a87b72e2df4d:示范工厂A:DEMO-01:2026-06:monthly:unit:labor",
+        "value": "10",
+        "display": "10.00",
+        "unit": "元/件",
+        "formula": "Σ要素金额/Σ产量",
+        "formula_version": "normalized-cost-3-comparison-evidence",
+        "numerator": "1200",
+        "denominator": "120",
+        "comparison_period": null,
+        "period": [
+          "2026-06"
+        ],
+        "basis": "unit",
+        "sources": {
+          "current": {
+            "cost_rows": [
+              "示范工厂A:2026-06:actual:materials",
+              "示范工厂A:2026-06:actual:labor",
+              "示范工厂A:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3600",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          },
+          "base": null
+        },
+        "row_keys": [
+          "示范工厂A:2026-06:actual:materials",
+          "示范工厂A:2026-06:actual:labor",
+          "示范工厂A:2026-06:actual:overhead",
+          "示范工厂A:2026-06:actual:q"
+        ],
+        "source_hash": [
+          "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+        ],
+        "reason": null
+      },
+      "labor_unit_rate": {
+        "metric_id": "e09ddf32ea41878c8fce30f2afebe828144c708e5b9fdc2566d7a87b72e2df4d:示范工厂A:DEMO-01:2026-06:monthly:unit:labor_unit_rate",
+        "value": "20.00000000000000000000000000",
+        "display": "20.00",
+        "unit": "%",
+        "formula": "(本期要素−基期要素)/基期要素×100",
+        "formula_version": "normalized-cost-3-comparison-evidence",
+        "numerator": "1.666666666666666666666666667",
+        "denominator": "8.333333333333333333333333333",
+        "comparison_period": [
+          "2026-05"
+        ],
+        "period": [
+          "2026-06"
+        ],
+        "basis": "unit",
+        "sources": {
+          "current": {
+            "cost_rows": [
+              "示范工厂A:2026-06:actual:materials",
+              "示范工厂A:2026-06:actual:labor",
+              "示范工厂A:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3600",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          },
+          "base": {
+            "cost_rows": [
+              "示范工厂A:2026-05:actual:materials",
+              "示范工厂A:2026-05:actual:labor",
+              "示范工厂A:2026-05:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-05:actual:q"
+            ],
+            "period": [
+              "2026-05"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3400",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          }
+        },
+        "row_keys": [
+          "示范工厂A:2026-06:actual:materials",
+          "示范工厂A:2026-06:actual:labor",
+          "示范工厂A:2026-06:actual:overhead",
+          "示范工厂A:2026-06:actual:q",
+          "示范工厂A:2026-05:actual:materials",
+          "示范工厂A:2026-05:actual:labor",
+          "示范工厂A:2026-05:actual:overhead",
+          "示范工厂A:2026-05:actual:q"
+        ],
+        "source_hash": [
+          "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+        ],
+        "reason": null
+      },
+      "labor_total_rate": {
+        "metric_id": "e09ddf32ea41878c8fce30f2afebe828144c708e5b9fdc2566d7a87b72e2df4d:示范工厂A:DEMO-01:2026-06:monthly:unit:labor_total_rate",
+        "value": "20.0",
+        "display": "20.00",
+        "unit": "%",
+        "formula": "(本期要素−基期要素)/基期要素×100",
+        "formula_version": "normalized-cost-3-comparison-evidence",
+        "numerator": "200",
+        "denominator": "1000",
+        "comparison_period": [
+          "2026-05"
+        ],
+        "period": [
+          "2026-06"
+        ],
+        "basis": "total",
+        "sources": {
+          "current": {
+            "cost_rows": [
+              "示范工厂A:2026-06:actual:materials",
+              "示范工厂A:2026-06:actual:labor",
+              "示范工厂A:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3600",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          },
+          "base": {
+            "cost_rows": [
+              "示范工厂A:2026-05:actual:materials",
+              "示范工厂A:2026-05:actual:labor",
+              "示范工厂A:2026-05:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-05:actual:q"
+            ],
+            "period": [
+              "2026-05"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3400",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          }
+        },
+        "row_keys": [
+          "示范工厂A:2026-06:actual:materials",
+          "示范工厂A:2026-06:actual:labor",
+          "示范工厂A:2026-06:actual:overhead",
+          "示范工厂A:2026-06:actual:q",
+          "示范工厂A:2026-05:actual:materials",
+          "示范工厂A:2026-05:actual:labor",
+          "示范工厂A:2026-05:actual:overhead",
+          "示范工厂A:2026-05:actual:q"
+        ],
+        "source_hash": [
+          "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+        ],
+        "reason": null
+      },
+      "overhead": {
+        "metric_id": "e09ddf32ea41878c8fce30f2afebe828144c708e5b9fdc2566d7a87b72e2df4d:示范工厂A:DEMO-01:2026-06:monthly:unit:overhead",
+        "value": "5",
+        "display": "5.00",
+        "unit": "元/件",
+        "formula": "Σ要素金额/Σ产量",
+        "formula_version": "normalized-cost-3-comparison-evidence",
+        "numerator": "600",
+        "denominator": "120",
+        "comparison_period": null,
+        "period": [
+          "2026-06"
+        ],
+        "basis": "unit",
+        "sources": {
+          "current": {
+            "cost_rows": [
+              "示范工厂A:2026-06:actual:materials",
+              "示范工厂A:2026-06:actual:labor",
+              "示范工厂A:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3600",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          },
+          "base": null
+        },
+        "row_keys": [
+          "示范工厂A:2026-06:actual:materials",
+          "示范工厂A:2026-06:actual:labor",
+          "示范工厂A:2026-06:actual:overhead",
+          "示范工厂A:2026-06:actual:q"
+        ],
+        "source_hash": [
+          "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+        ],
+        "reason": null
+      },
+      "overhead_unit_rate": {
+        "metric_id": "e09ddf32ea41878c8fce30f2afebe828144c708e5b9fdc2566d7a87b72e2df4d:示范工厂A:DEMO-01:2026-06:monthly:unit:overhead_unit_rate",
+        "value": "0",
+        "display": "0.00",
+        "unit": "%",
+        "formula": "(本期要素−基期要素)/基期要素×100",
+        "formula_version": "normalized-cost-3-comparison-evidence",
+        "numerator": "0",
+        "denominator": "5",
+        "comparison_period": [
+          "2026-05"
+        ],
+        "period": [
+          "2026-06"
+        ],
+        "basis": "unit",
+        "sources": {
+          "current": {
+            "cost_rows": [
+              "示范工厂A:2026-06:actual:materials",
+              "示范工厂A:2026-06:actual:labor",
+              "示范工厂A:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3600",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          },
+          "base": {
+            "cost_rows": [
+              "示范工厂A:2026-05:actual:materials",
+              "示范工厂A:2026-05:actual:labor",
+              "示范工厂A:2026-05:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-05:actual:q"
+            ],
+            "period": [
+              "2026-05"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3400",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          }
+        },
+        "row_keys": [
+          "示范工厂A:2026-06:actual:materials",
+          "示范工厂A:2026-06:actual:labor",
+          "示范工厂A:2026-06:actual:overhead",
+          "示范工厂A:2026-06:actual:q",
+          "示范工厂A:2026-05:actual:materials",
+          "示范工厂A:2026-05:actual:labor",
+          "示范工厂A:2026-05:actual:overhead",
+          "示范工厂A:2026-05:actual:q"
+        ],
+        "source_hash": [
+          "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+        ],
+        "reason": null
+      },
+      "overhead_total_rate": {
+        "metric_id": "e09ddf32ea41878c8fce30f2afebe828144c708e5b9fdc2566d7a87b72e2df4d:示范工厂A:DEMO-01:2026-06:monthly:unit:overhead_total_rate",
+        "value": "0",
+        "display": "0.00",
+        "unit": "%",
+        "formula": "(本期要素−基期要素)/基期要素×100",
+        "formula_version": "normalized-cost-3-comparison-evidence",
+        "numerator": "0",
+        "denominator": "600",
+        "comparison_period": [
+          "2026-05"
+        ],
+        "period": [
+          "2026-06"
+        ],
+        "basis": "total",
+        "sources": {
+          "current": {
+            "cost_rows": [
+              "示范工厂A:2026-06:actual:materials",
+              "示范工厂A:2026-06:actual:labor",
+              "示范工厂A:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3600",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          },
+          "base": {
+            "cost_rows": [
+              "示范工厂A:2026-05:actual:materials",
+              "示范工厂A:2026-05:actual:labor",
+              "示范工厂A:2026-05:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-05:actual:q"
+            ],
+            "period": [
+              "2026-05"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3400",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          }
+        },
+        "row_keys": [
+          "示范工厂A:2026-06:actual:materials",
+          "示范工厂A:2026-06:actual:labor",
+          "示范工厂A:2026-06:actual:overhead",
+          "示范工厂A:2026-06:actual:q",
+          "示范工厂A:2026-05:actual:materials",
+          "示范工厂A:2026-05:actual:labor",
+          "示范工厂A:2026-05:actual:overhead",
+          "示范工厂A:2026-05:actual:q"
+        ],
+        "source_hash": [
+          "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+        ],
+        "reason": null
+      },
+      "machine_hours_per_piece": {
+        "metric_id": "e09ddf32ea41878c8fce30f2afebe828144c708e5b9fdc2566d7a87b72e2df4d:示范工厂A:DEMO-01:2026-06:monthly:unit:machine_hours_per_piece",
+        "value": "0.5",
+        "display": "0.50",
+        "unit": "小时/件",
+        "formula": "Σmachine_hours/Σ合格产出",
+        "formula_version": "normalized-cost-3-comparison-evidence",
+        "numerator": "60.0",
+        "denominator": "120",
+        "comparison_period": null,
+        "period": [
+          "2026-06"
+        ],
+        "basis": "unit",
+        "sources": {
+          "current": {
+            "cost_rows": [
+              "示范工厂A:2026-06:actual:materials",
+              "示范工厂A:2026-06:actual:labor",
+              "示范工厂A:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3600",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          },
+          "base": null
+        },
+        "row_keys": [
+          "示范工厂A:2026-06:actual:driver",
+          "示范工厂A:2026-06:actual:q"
+        ],
+        "source_hash": [
+          "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+        ],
+        "reason": null
+      },
+      "benchmark:示范工厂A:示范工厂B:unit_cost:delta": {
+        "metric_id": "benchmark:示范工厂A:示范工厂B:unit_cost:delta",
+        "value": "-30",
+        "display": "-30.00",
+        "unit": "元/件",
+        "formula": "左厂−右厂",
+        "formula_version": "normalized-cost-3-comparison-evidence",
+        "numerator": "-30",
+        "denominator": "1",
+        "comparison_period": {
+          "start": "2026-06",
+          "end": "2026-06"
+        },
+        "period": [
+          "2026-06"
+        ],
+        "basis": "unit",
+        "sources": {
+          "left": {
+            "cost_rows": [
+              "示范工厂A:2026-06:actual:materials",
+              "示范工厂A:2026-06:actual:labor",
+              "示范工厂A:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3600",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          },
+          "right": {
+            "cost_rows": [
+              "示范工厂B:2026-06:actual:materials",
+              "示范工厂B:2026-06:actual:labor",
+              "示范工厂B:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂B:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂B",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "7200",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          }
+        },
+        "row_keys": [
+          "示范工厂A:2026-06:actual:materials",
+          "示范工厂A:2026-06:actual:labor",
+          "示范工厂A:2026-06:actual:overhead",
+          "示范工厂A:2026-06:actual:q",
+          "示范工厂B:2026-06:actual:materials",
+          "示范工厂B:2026-06:actual:labor",
+          "示范工厂B:2026-06:actual:overhead",
+          "示范工厂B:2026-06:actual:q"
+        ],
+        "source_hash": [
+          "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+        ],
+        "reason": null,
+        "label": "单位成本跨厂delta"
+      },
+      "benchmark:示范工厂A:示范工厂B:unit_cost:rate": {
+        "metric_id": "benchmark:示范工厂A:示范工厂B:unit_cost:rate",
+        "value": "-50.0",
+        "display": "-50.00",
+        "unit": "%",
+        "formula": "(左厂−右厂)/右厂×100",
+        "formula_version": "normalized-cost-3-comparison-evidence",
+        "numerator": "-30",
+        "denominator": "60",
+        "comparison_period": {
+          "start": "2026-06",
+          "end": "2026-06"
+        },
+        "period": [
+          "2026-06"
+        ],
+        "basis": "unit",
+        "sources": {
+          "left": {
+            "cost_rows": [
+              "示范工厂A:2026-06:actual:materials",
+              "示范工厂A:2026-06:actual:labor",
+              "示范工厂A:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3600",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          },
+          "right": {
+            "cost_rows": [
+              "示范工厂B:2026-06:actual:materials",
+              "示范工厂B:2026-06:actual:labor",
+              "示范工厂B:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂B:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂B",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "7200",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          }
+        },
+        "row_keys": [
+          "示范工厂A:2026-06:actual:materials",
+          "示范工厂A:2026-06:actual:labor",
+          "示范工厂A:2026-06:actual:overhead",
+          "示范工厂A:2026-06:actual:q",
+          "示范工厂B:2026-06:actual:materials",
+          "示范工厂B:2026-06:actual:labor",
+          "示范工厂B:2026-06:actual:overhead",
+          "示范工厂B:2026-06:actual:q"
+        ],
+        "source_hash": [
+          "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+        ],
+        "reason": null,
+        "label": "单位成本跨厂rate"
+      },
+      "benchmark:示范工厂A:示范工厂B:total_cost:delta": {
+        "metric_id": "benchmark:示范工厂A:示范工厂B:total_cost:delta",
+        "value": "-3600",
+        "display": "-3600.00",
+        "unit": "元",
+        "formula": "左厂−右厂",
+        "formula_version": "normalized-cost-3-comparison-evidence",
+        "numerator": "-3600",
+        "denominator": "1",
+        "comparison_period": {
+          "start": "2026-06",
+          "end": "2026-06"
+        },
+        "period": [
+          "2026-06"
+        ],
+        "basis": "total",
+        "sources": {
+          "left": {
+            "cost_rows": [
+              "示范工厂A:2026-06:actual:materials",
+              "示范工厂A:2026-06:actual:labor",
+              "示范工厂A:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3600",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          },
+          "right": {
+            "cost_rows": [
+              "示范工厂B:2026-06:actual:materials",
+              "示范工厂B:2026-06:actual:labor",
+              "示范工厂B:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂B:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂B",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "7200",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          }
+        },
+        "row_keys": [
+          "示范工厂A:2026-06:actual:materials",
+          "示范工厂A:2026-06:actual:labor",
+          "示范工厂A:2026-06:actual:overhead",
+          "示范工厂A:2026-06:actual:q",
+          "示范工厂B:2026-06:actual:materials",
+          "示范工厂B:2026-06:actual:labor",
+          "示范工厂B:2026-06:actual:overhead",
+          "示范工厂B:2026-06:actual:q"
+        ],
+        "source_hash": [
+          "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+        ],
+        "reason": null,
+        "label": "总成本跨厂delta"
+      },
+      "benchmark:示范工厂A:示范工厂B:total_cost:rate": {
+        "metric_id": "benchmark:示范工厂A:示范工厂B:total_cost:rate",
+        "value": "-50.0",
+        "display": "-50.00",
+        "unit": "%",
+        "formula": "(左厂−右厂)/右厂×100",
+        "formula_version": "normalized-cost-3-comparison-evidence",
+        "numerator": "-3600",
+        "denominator": "7200",
+        "comparison_period": {
+          "start": "2026-06",
+          "end": "2026-06"
+        },
+        "period": [
+          "2026-06"
+        ],
+        "basis": "total",
+        "sources": {
+          "left": {
+            "cost_rows": [
+              "示范工厂A:2026-06:actual:materials",
+              "示范工厂A:2026-06:actual:labor",
+              "示范工厂A:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3600",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          },
+          "right": {
+            "cost_rows": [
+              "示范工厂B:2026-06:actual:materials",
+              "示范工厂B:2026-06:actual:labor",
+              "示范工厂B:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂B:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂B",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "7200",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          }
+        },
+        "row_keys": [
+          "示范工厂A:2026-06:actual:materials",
+          "示范工厂A:2026-06:actual:labor",
+          "示范工厂A:2026-06:actual:overhead",
+          "示范工厂A:2026-06:actual:q",
+          "示范工厂B:2026-06:actual:materials",
+          "示范工厂B:2026-06:actual:labor",
+          "示范工厂B:2026-06:actual:overhead",
+          "示范工厂B:2026-06:actual:q"
+        ],
+        "source_hash": [
+          "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+        ],
+        "reason": null,
+        "label": "总成本跨厂rate"
+      },
+      "benchmark:示范工厂A:示范工厂B:quantity:delta": {
+        "metric_id": "benchmark:示范工厂A:示范工厂B:quantity:delta",
+        "value": "0",
+        "display": "0.00",
+        "unit": "件",
+        "formula": "左厂−右厂",
+        "formula_version": "normalized-cost-3-comparison-evidence",
+        "numerator": "0",
+        "denominator": "1",
+        "comparison_period": {
+          "start": "2026-06",
+          "end": "2026-06"
+        },
+        "period": [
+          "2026-06"
+        ],
+        "basis": "quantity",
+        "sources": {
+          "left": {
+            "cost_rows": [
+              "示范工厂A:2026-06:actual:materials",
+              "示范工厂A:2026-06:actual:labor",
+              "示范工厂A:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3600",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          },
+          "right": {
+            "cost_rows": [
+              "示范工厂B:2026-06:actual:materials",
+              "示范工厂B:2026-06:actual:labor",
+              "示范工厂B:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂B:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂B",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "7200",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          }
+        },
+        "row_keys": [
+          "示范工厂A:2026-06:actual:materials",
+          "示范工厂A:2026-06:actual:labor",
+          "示范工厂A:2026-06:actual:overhead",
+          "示范工厂A:2026-06:actual:q",
+          "示范工厂B:2026-06:actual:materials",
+          "示范工厂B:2026-06:actual:labor",
+          "示范工厂B:2026-06:actual:overhead",
+          "示范工厂B:2026-06:actual:q"
+        ],
+        "source_hash": [
+          "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+        ],
+        "reason": null,
+        "label": "产量跨厂delta"
+      },
+      "benchmark:示范工厂A:示范工厂B:quantity:rate": {
+        "metric_id": "benchmark:示范工厂A:示范工厂B:quantity:rate",
+        "value": "0",
+        "display": "0.00",
+        "unit": "%",
+        "formula": "(左厂−右厂)/右厂×100",
+        "formula_version": "normalized-cost-3-comparison-evidence",
+        "numerator": "0",
+        "denominator": "120",
+        "comparison_period": {
+          "start": "2026-06",
+          "end": "2026-06"
+        },
+        "period": [
+          "2026-06"
+        ],
+        "basis": "quantity",
+        "sources": {
+          "left": {
+            "cost_rows": [
+              "示范工厂A:2026-06:actual:materials",
+              "示范工厂A:2026-06:actual:labor",
+              "示范工厂A:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3600",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          },
+          "right": {
+            "cost_rows": [
+              "示范工厂B:2026-06:actual:materials",
+              "示范工厂B:2026-06:actual:labor",
+              "示范工厂B:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂B:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂B",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "7200",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          }
+        },
+        "row_keys": [
+          "示范工厂A:2026-06:actual:materials",
+          "示范工厂A:2026-06:actual:labor",
+          "示范工厂A:2026-06:actual:overhead",
+          "示范工厂A:2026-06:actual:q",
+          "示范工厂B:2026-06:actual:materials",
+          "示范工厂B:2026-06:actual:labor",
+          "示范工厂B:2026-06:actual:overhead",
+          "示范工厂B:2026-06:actual:q"
+        ],
+        "source_hash": [
+          "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+        ],
+        "reason": null,
+        "label": "产量跨厂rate"
+      },
+      "benchmark:示范工厂A:示范工厂B:materials:delta": {
+        "metric_id": "benchmark:示范工厂A:示范工厂B:materials:delta",
+        "value": "-15",
+        "display": "-15.00",
+        "unit": "元/件",
+        "formula": "左厂−右厂",
+        "formula_version": "normalized-cost-3-comparison-evidence",
+        "numerator": "-15",
+        "denominator": "1",
+        "comparison_period": {
+          "start": "2026-06",
+          "end": "2026-06"
+        },
+        "period": [
+          "2026-06"
+        ],
+        "basis": "unit",
+        "sources": {
+          "left": {
+            "cost_rows": [
+              "示范工厂A:2026-06:actual:materials",
+              "示范工厂A:2026-06:actual:labor",
+              "示范工厂A:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3600",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          },
+          "right": {
+            "cost_rows": [
+              "示范工厂B:2026-06:actual:materials",
+              "示范工厂B:2026-06:actual:labor",
+              "示范工厂B:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂B:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂B",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "7200",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          }
+        },
+        "row_keys": [
+          "示范工厂A:2026-06:actual:materials",
+          "示范工厂A:2026-06:actual:labor",
+          "示范工厂A:2026-06:actual:overhead",
+          "示范工厂A:2026-06:actual:q",
+          "示范工厂B:2026-06:actual:materials",
+          "示范工厂B:2026-06:actual:labor",
+          "示范工厂B:2026-06:actual:overhead",
+          "示范工厂B:2026-06:actual:q"
+        ],
+        "source_hash": [
+          "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+        ],
+        "reason": null,
+        "label": "材料跨厂delta"
+      },
+      "benchmark:示范工厂A:示范工厂B:materials:rate": {
+        "metric_id": "benchmark:示范工厂A:示范工厂B:materials:rate",
+        "value": "-50.0",
+        "display": "-50.00",
+        "unit": "%",
+        "formula": "(左厂−右厂)/右厂×100",
+        "formula_version": "normalized-cost-3-comparison-evidence",
+        "numerator": "-15",
+        "denominator": "30",
+        "comparison_period": {
+          "start": "2026-06",
+          "end": "2026-06"
+        },
+        "period": [
+          "2026-06"
+        ],
+        "basis": "unit",
+        "sources": {
+          "left": {
+            "cost_rows": [
+              "示范工厂A:2026-06:actual:materials",
+              "示范工厂A:2026-06:actual:labor",
+              "示范工厂A:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3600",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          },
+          "right": {
+            "cost_rows": [
+              "示范工厂B:2026-06:actual:materials",
+              "示范工厂B:2026-06:actual:labor",
+              "示范工厂B:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂B:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂B",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "7200",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          }
+        },
+        "row_keys": [
+          "示范工厂A:2026-06:actual:materials",
+          "示范工厂A:2026-06:actual:labor",
+          "示范工厂A:2026-06:actual:overhead",
+          "示范工厂A:2026-06:actual:q",
+          "示范工厂B:2026-06:actual:materials",
+          "示范工厂B:2026-06:actual:labor",
+          "示范工厂B:2026-06:actual:overhead",
+          "示范工厂B:2026-06:actual:q"
+        ],
+        "source_hash": [
+          "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+        ],
+        "reason": null,
+        "label": "材料跨厂rate"
+      },
+      "benchmark:示范工厂A:示范工厂B:materials:contribution": {
+        "metric_id": "benchmark:示范工厂A:示范工厂B:materials:contribution",
+        "value": "50.0",
+        "display": "50.00",
+        "unit": "%",
+        "formula": "要素差额/所选口径总差额×100",
+        "formula_version": "normalized-cost-3-comparison-evidence",
+        "numerator": "-15",
+        "denominator": "-30",
+        "comparison_period": {
+          "start": "2026-06",
+          "end": "2026-06"
+        },
+        "period": [
+          "2026-06"
+        ],
+        "basis": "unit",
+        "sources": {
+          "left": {
+            "cost_rows": [
+              "示范工厂A:2026-06:actual:materials",
+              "示范工厂A:2026-06:actual:labor",
+              "示范工厂A:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3600",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          },
+          "right": {
+            "cost_rows": [
+              "示范工厂B:2026-06:actual:materials",
+              "示范工厂B:2026-06:actual:labor",
+              "示范工厂B:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂B:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂B",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "7200",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          }
+        },
+        "row_keys": [
+          "示范工厂A:2026-06:actual:materials",
+          "示范工厂A:2026-06:actual:labor",
+          "示范工厂A:2026-06:actual:overhead",
+          "示范工厂A:2026-06:actual:q",
+          "示范工厂B:2026-06:actual:materials",
+          "示范工厂B:2026-06:actual:labor",
+          "示范工厂B:2026-06:actual:overhead",
+          "示范工厂B:2026-06:actual:q"
+        ],
+        "source_hash": [
+          "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+        ],
+        "reason": null,
+        "label": "材料跨厂contribution"
+      },
+      "benchmark:示范工厂A:示范工厂B:labor:delta": {
+        "metric_id": "benchmark:示范工厂A:示范工厂B:labor:delta",
+        "value": "-10",
+        "display": "-10.00",
+        "unit": "元/件",
+        "formula": "左厂−右厂",
+        "formula_version": "normalized-cost-3-comparison-evidence",
+        "numerator": "-10",
+        "denominator": "1",
+        "comparison_period": {
+          "start": "2026-06",
+          "end": "2026-06"
+        },
+        "period": [
+          "2026-06"
+        ],
+        "basis": "unit",
+        "sources": {
+          "left": {
+            "cost_rows": [
+              "示范工厂A:2026-06:actual:materials",
+              "示范工厂A:2026-06:actual:labor",
+              "示范工厂A:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3600",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          },
+          "right": {
+            "cost_rows": [
+              "示范工厂B:2026-06:actual:materials",
+              "示范工厂B:2026-06:actual:labor",
+              "示范工厂B:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂B:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂B",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "7200",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          }
+        },
+        "row_keys": [
+          "示范工厂A:2026-06:actual:materials",
+          "示范工厂A:2026-06:actual:labor",
+          "示范工厂A:2026-06:actual:overhead",
+          "示范工厂A:2026-06:actual:q",
+          "示范工厂B:2026-06:actual:materials",
+          "示范工厂B:2026-06:actual:labor",
+          "示范工厂B:2026-06:actual:overhead",
+          "示范工厂B:2026-06:actual:q"
+        ],
+        "source_hash": [
+          "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+        ],
+        "reason": null,
+        "label": "人工跨厂delta"
+      },
+      "benchmark:示范工厂A:示范工厂B:labor:rate": {
+        "metric_id": "benchmark:示范工厂A:示范工厂B:labor:rate",
+        "value": "-50.0",
+        "display": "-50.00",
+        "unit": "%",
+        "formula": "(左厂−右厂)/右厂×100",
+        "formula_version": "normalized-cost-3-comparison-evidence",
+        "numerator": "-10",
+        "denominator": "20",
+        "comparison_period": {
+          "start": "2026-06",
+          "end": "2026-06"
+        },
+        "period": [
+          "2026-06"
+        ],
+        "basis": "unit",
+        "sources": {
+          "left": {
+            "cost_rows": [
+              "示范工厂A:2026-06:actual:materials",
+              "示范工厂A:2026-06:actual:labor",
+              "示范工厂A:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3600",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          },
+          "right": {
+            "cost_rows": [
+              "示范工厂B:2026-06:actual:materials",
+              "示范工厂B:2026-06:actual:labor",
+              "示范工厂B:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂B:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂B",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "7200",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          }
+        },
+        "row_keys": [
+          "示范工厂A:2026-06:actual:materials",
+          "示范工厂A:2026-06:actual:labor",
+          "示范工厂A:2026-06:actual:overhead",
+          "示范工厂A:2026-06:actual:q",
+          "示范工厂B:2026-06:actual:materials",
+          "示范工厂B:2026-06:actual:labor",
+          "示范工厂B:2026-06:actual:overhead",
+          "示范工厂B:2026-06:actual:q"
+        ],
+        "source_hash": [
+          "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+        ],
+        "reason": null,
+        "label": "人工跨厂rate"
+      },
+      "benchmark:示范工厂A:示范工厂B:labor:contribution": {
+        "metric_id": "benchmark:示范工厂A:示范工厂B:labor:contribution",
+        "value": "33.33333333333333333333333333",
+        "display": "33.33",
+        "unit": "%",
+        "formula": "要素差额/所选口径总差额×100",
+        "formula_version": "normalized-cost-3-comparison-evidence",
+        "numerator": "-10",
+        "denominator": "-30",
+        "comparison_period": {
+          "start": "2026-06",
+          "end": "2026-06"
+        },
+        "period": [
+          "2026-06"
+        ],
+        "basis": "unit",
+        "sources": {
+          "left": {
+            "cost_rows": [
+              "示范工厂A:2026-06:actual:materials",
+              "示范工厂A:2026-06:actual:labor",
+              "示范工厂A:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3600",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          },
+          "right": {
+            "cost_rows": [
+              "示范工厂B:2026-06:actual:materials",
+              "示范工厂B:2026-06:actual:labor",
+              "示范工厂B:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂B:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂B",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "7200",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          }
+        },
+        "row_keys": [
+          "示范工厂A:2026-06:actual:materials",
+          "示范工厂A:2026-06:actual:labor",
+          "示范工厂A:2026-06:actual:overhead",
+          "示范工厂A:2026-06:actual:q",
+          "示范工厂B:2026-06:actual:materials",
+          "示范工厂B:2026-06:actual:labor",
+          "示范工厂B:2026-06:actual:overhead",
+          "示范工厂B:2026-06:actual:q"
+        ],
+        "source_hash": [
+          "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+        ],
+        "reason": null,
+        "label": "人工跨厂contribution"
+      },
+      "benchmark:示范工厂A:示范工厂B:overhead:delta": {
+        "metric_id": "benchmark:示范工厂A:示范工厂B:overhead:delta",
+        "value": "-5",
+        "display": "-5.00",
+        "unit": "元/件",
+        "formula": "左厂−右厂",
+        "formula_version": "normalized-cost-3-comparison-evidence",
+        "numerator": "-5",
+        "denominator": "1",
+        "comparison_period": {
+          "start": "2026-06",
+          "end": "2026-06"
+        },
+        "period": [
+          "2026-06"
+        ],
+        "basis": "unit",
+        "sources": {
+          "left": {
+            "cost_rows": [
+              "示范工厂A:2026-06:actual:materials",
+              "示范工厂A:2026-06:actual:labor",
+              "示范工厂A:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3600",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          },
+          "right": {
+            "cost_rows": [
+              "示范工厂B:2026-06:actual:materials",
+              "示范工厂B:2026-06:actual:labor",
+              "示范工厂B:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂B:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂B",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "7200",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          }
+        },
+        "row_keys": [
+          "示范工厂A:2026-06:actual:materials",
+          "示范工厂A:2026-06:actual:labor",
+          "示范工厂A:2026-06:actual:overhead",
+          "示范工厂A:2026-06:actual:q",
+          "示范工厂B:2026-06:actual:materials",
+          "示范工厂B:2026-06:actual:labor",
+          "示范工厂B:2026-06:actual:overhead",
+          "示范工厂B:2026-06:actual:q"
+        ],
+        "source_hash": [
+          "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+        ],
+        "reason": null,
+        "label": "制造费用跨厂delta"
+      },
+      "benchmark:示范工厂A:示范工厂B:overhead:rate": {
+        "metric_id": "benchmark:示范工厂A:示范工厂B:overhead:rate",
+        "value": "-50.0",
+        "display": "-50.00",
+        "unit": "%",
+        "formula": "(左厂−右厂)/右厂×100",
+        "formula_version": "normalized-cost-3-comparison-evidence",
+        "numerator": "-5",
+        "denominator": "10",
+        "comparison_period": {
+          "start": "2026-06",
+          "end": "2026-06"
+        },
+        "period": [
+          "2026-06"
+        ],
+        "basis": "unit",
+        "sources": {
+          "left": {
+            "cost_rows": [
+              "示范工厂A:2026-06:actual:materials",
+              "示范工厂A:2026-06:actual:labor",
+              "示范工厂A:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3600",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          },
+          "right": {
+            "cost_rows": [
+              "示范工厂B:2026-06:actual:materials",
+              "示范工厂B:2026-06:actual:labor",
+              "示范工厂B:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂B:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂B",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "7200",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          }
+        },
+        "row_keys": [
+          "示范工厂A:2026-06:actual:materials",
+          "示范工厂A:2026-06:actual:labor",
+          "示范工厂A:2026-06:actual:overhead",
+          "示范工厂A:2026-06:actual:q",
+          "示范工厂B:2026-06:actual:materials",
+          "示范工厂B:2026-06:actual:labor",
+          "示范工厂B:2026-06:actual:overhead",
+          "示范工厂B:2026-06:actual:q"
+        ],
+        "source_hash": [
+          "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+        ],
+        "reason": null,
+        "label": "制造费用跨厂rate"
+      },
+      "benchmark:示范工厂A:示范工厂B:overhead:contribution": {
+        "metric_id": "benchmark:示范工厂A:示范工厂B:overhead:contribution",
+        "value": "16.66666666666666666666666667",
+        "display": "16.67",
+        "unit": "%",
+        "formula": "要素差额/所选口径总差额×100",
+        "formula_version": "normalized-cost-3-comparison-evidence",
+        "numerator": "-5",
+        "denominator": "-30",
+        "comparison_period": {
+          "start": "2026-06",
+          "end": "2026-06"
+        },
+        "period": [
+          "2026-06"
+        ],
+        "basis": "unit",
+        "sources": {
+          "left": {
+            "cost_rows": [
+              "示范工厂A:2026-06:actual:materials",
+              "示范工厂A:2026-06:actual:labor",
+              "示范工厂A:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3600",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          },
+          "right": {
+            "cost_rows": [
+              "示范工厂B:2026-06:actual:materials",
+              "示范工厂B:2026-06:actual:labor",
+              "示范工厂B:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂B:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂B",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "7200",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          }
+        },
+        "row_keys": [
+          "示范工厂A:2026-06:actual:materials",
+          "示范工厂A:2026-06:actual:labor",
+          "示范工厂A:2026-06:actual:overhead",
+          "示范工厂A:2026-06:actual:q",
+          "示范工厂B:2026-06:actual:materials",
+          "示范工厂B:2026-06:actual:labor",
+          "示范工厂B:2026-06:actual:overhead",
+          "示范工厂B:2026-06:actual:q"
+        ],
+        "source_hash": [
+          "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+        ],
+        "reason": null,
+        "label": "制造费用跨厂contribution"
+      }
+    },
+    "elements": [
+      {
+        "key": "materials",
+        "name": "材料",
+        "unit": "15",
+        "total": "1800",
+        "share": "50.0",
+        "alerts": {
+          "unit": false,
+          "total": false
+        },
+        "unit_mom": "0",
+        "total_mom": "0",
+        "unit_delta": "0",
+        "total_delta": "0",
+        "delta": "0",
+        "contribution": "0",
+        "comparisons": {
+          "mom": {
+            "unit": {
+              "current": "15",
+              "base": "15",
+              "delta": "0",
+              "rate": "0",
+              "reason": null,
+              "contribution": "0",
+              "numerator": "0",
+              "denominator": "15",
+              "contribution_numerator": "0",
+              "contribution_denominator": "1.66666666666666666666666667",
+              "comparison_period": [
+                "2026-05"
+              ],
+              "basis": "unit",
+              "value_unit": "元/件",
+              "sources": {
+                "current": {
+                  "cost_rows": [
+                    "示范工厂A:2026-06:actual:materials",
+                    "示范工厂A:2026-06:actual:labor",
+                    "示范工厂A:2026-06:actual:overhead"
+                  ],
+                  "quantity_rows": [
+                    "示范工厂A:2026-06:actual:q"
+                  ],
+                  "period": [
+                    "2026-06"
+                  ],
+                  "scenario": "actual",
+                  "factory": "示范工厂A",
+                  "product": "DEMO-01",
+                  "policy_version": "synthetic-completed-cost-1",
+                  "quantity": "120",
+                  "total_cost": "3600",
+                  "quantity_unit": "件",
+                  "currency": "CNY",
+                  "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+                },
+                "base": {
+                  "cost_rows": [
+                    "示范工厂A:2026-05:actual:materials",
+                    "示范工厂A:2026-05:actual:labor",
+                    "示范工厂A:2026-05:actual:overhead"
+                  ],
+                  "quantity_rows": [
+                    "示范工厂A:2026-05:actual:q"
+                  ],
+                  "period": [
+                    "2026-05"
+                  ],
+                  "scenario": "actual",
+                  "factory": "示范工厂A",
+                  "product": "DEMO-01",
+                  "policy_version": "synthetic-completed-cost-1",
+                  "quantity": "120",
+                  "total_cost": "3400",
+                  "quantity_unit": "件",
+                  "currency": "CNY",
+                  "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+                }
+              }
+            },
+            "total": {
+              "current": "1800",
+              "base": "1800",
+              "delta": "0",
+              "rate": "0",
+              "reason": null,
+              "contribution": "0",
+              "numerator": "0",
+              "denominator": "1800",
+              "contribution_numerator": "0",
+              "contribution_denominator": "200",
+              "comparison_period": [
+                "2026-05"
+              ],
+              "basis": "total",
+              "value_unit": "元",
+              "sources": {
+                "current": {
+                  "cost_rows": [
+                    "示范工厂A:2026-06:actual:materials",
+                    "示范工厂A:2026-06:actual:labor",
+                    "示范工厂A:2026-06:actual:overhead"
+                  ],
+                  "quantity_rows": [
+                    "示范工厂A:2026-06:actual:q"
+                  ],
+                  "period": [
+                    "2026-06"
+                  ],
+                  "scenario": "actual",
+                  "factory": "示范工厂A",
+                  "product": "DEMO-01",
+                  "policy_version": "synthetic-completed-cost-1",
+                  "quantity": "120",
+                  "total_cost": "3600",
+                  "quantity_unit": "件",
+                  "currency": "CNY",
+                  "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+                },
+                "base": {
+                  "cost_rows": [
+                    "示范工厂A:2026-05:actual:materials",
+                    "示范工厂A:2026-05:actual:labor",
+                    "示范工厂A:2026-05:actual:overhead"
+                  ],
+                  "quantity_rows": [
+                    "示范工厂A:2026-05:actual:q"
+                  ],
+                  "period": [
+                    "2026-05"
+                  ],
+                  "scenario": "actual",
+                  "factory": "示范工厂A",
+                  "product": "DEMO-01",
+                  "policy_version": "synthetic-completed-cost-1",
+                  "quantity": "120",
+                  "total_cost": "3400",
+                  "quantity_unit": "件",
+                  "currency": "CNY",
+                  "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+                }
+              }
+            }
+          },
+          "yoy": {
+            "unit": {
+              "current": "15",
+              "base": null,
+              "delta": null,
+              "rate": null,
+              "reason": "缺少完整比较期数据",
+              "contribution": null,
+              "numerator": null,
+              "denominator": null,
+              "contribution_numerator": null,
+              "contribution_denominator": null,
+              "comparison_period": [
+                "2025-06"
+              ],
+              "basis": "unit",
+              "value_unit": "元/件",
+              "sources": {
+                "current": {
+                  "cost_rows": [
+                    "示范工厂A:2026-06:actual:materials",
+                    "示范工厂A:2026-06:actual:labor",
+                    "示范工厂A:2026-06:actual:overhead"
+                  ],
+                  "quantity_rows": [
+                    "示范工厂A:2026-06:actual:q"
+                  ],
+                  "period": [
+                    "2026-06"
+                  ],
+                  "scenario": "actual",
+                  "factory": "示范工厂A",
+                  "product": "DEMO-01",
+                  "policy_version": "synthetic-completed-cost-1",
+                  "quantity": "120",
+                  "total_cost": "3600",
+                  "quantity_unit": "件",
+                  "currency": "CNY",
+                  "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+                },
+                "base": null
+              }
+            },
+            "total": {
+              "current": "1800",
+              "base": null,
+              "delta": null,
+              "rate": null,
+              "reason": "缺少完整比较期数据",
+              "contribution": null,
+              "numerator": null,
+              "denominator": null,
+              "contribution_numerator": null,
+              "contribution_denominator": null,
+              "comparison_period": [
+                "2025-06"
+              ],
+              "basis": "total",
+              "value_unit": "元",
+              "sources": {
+                "current": {
+                  "cost_rows": [
+                    "示范工厂A:2026-06:actual:materials",
+                    "示范工厂A:2026-06:actual:labor",
+                    "示范工厂A:2026-06:actual:overhead"
+                  ],
+                  "quantity_rows": [
+                    "示范工厂A:2026-06:actual:q"
+                  ],
+                  "period": [
+                    "2026-06"
+                  ],
+                  "scenario": "actual",
+                  "factory": "示范工厂A",
+                  "product": "DEMO-01",
+                  "policy_version": "synthetic-completed-cost-1",
+                  "quantity": "120",
+                  "total_cost": "3600",
+                  "quantity_unit": "件",
+                  "currency": "CNY",
+                  "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+                },
+                "base": null
+              }
+            }
+          },
+          "budget": {
+            "unit": {
+              "current": "15",
+              "base": "13.5",
+              "delta": "1.5",
+              "rate": "11.11111111111111111111111111",
+              "reason": null,
+              "contribution": "50.0",
+              "numerator": "1.5",
+              "denominator": "13.5",
+              "contribution_numerator": "1.5",
+              "contribution_denominator": "3",
+              "comparison_period": [
+                "2026-06"
+              ],
+              "basis": "unit",
+              "value_unit": "元/件",
+              "sources": {
+                "current": {
+                  "cost_rows": [
+                    "示范工厂A:2026-06:actual:materials",
+                    "示范工厂A:2026-06:actual:labor",
+                    "示范工厂A:2026-06:actual:overhead"
+                  ],
+                  "quantity_rows": [
+                    "示范工厂A:2026-06:actual:q"
+                  ],
+                  "period": [
+                    "2026-06"
+                  ],
+                  "scenario": "actual",
+                  "factory": "示范工厂A",
+                  "product": "DEMO-01",
+                  "policy_version": "synthetic-completed-cost-1",
+                  "quantity": "120",
+                  "total_cost": "3600",
+                  "quantity_unit": "件",
+                  "currency": "CNY",
+                  "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+                },
+                "base": {
+                  "cost_rows": [
+                    "示范工厂A:2026-06:budget:materials",
+                    "示范工厂A:2026-06:budget:labor",
+                    "示范工厂A:2026-06:budget:overhead"
+                  ],
+                  "quantity_rows": [
+                    "示范工厂A:2026-06:budget:q"
+                  ],
+                  "period": [
+                    "2026-06"
+                  ],
+                  "scenario": "budget",
+                  "factory": "示范工厂A",
+                  "product": "DEMO-01",
+                  "policy_version": "synthetic-completed-cost-1",
+                  "quantity": "120",
+                  "total_cost": "3240",
+                  "quantity_unit": "件",
+                  "currency": "CNY",
+                  "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+                }
+              }
+            },
+            "total": {
+              "current": "1800",
+              "base": "1620",
+              "delta": "180",
+              "rate": "11.11111111111111111111111111",
+              "reason": null,
+              "contribution": "50.0",
+              "numerator": "180",
+              "denominator": "1620",
+              "contribution_numerator": "180",
+              "contribution_denominator": "360",
+              "comparison_period": [
+                "2026-06"
+              ],
+              "basis": "total",
+              "value_unit": "元",
+              "sources": {
+                "current": {
+                  "cost_rows": [
+                    "示范工厂A:2026-06:actual:materials",
+                    "示范工厂A:2026-06:actual:labor",
+                    "示范工厂A:2026-06:actual:overhead"
+                  ],
+                  "quantity_rows": [
+                    "示范工厂A:2026-06:actual:q"
+                  ],
+                  "period": [
+                    "2026-06"
+                  ],
+                  "scenario": "actual",
+                  "factory": "示范工厂A",
+                  "product": "DEMO-01",
+                  "policy_version": "synthetic-completed-cost-1",
+                  "quantity": "120",
+                  "total_cost": "3600",
+                  "quantity_unit": "件",
+                  "currency": "CNY",
+                  "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+                },
+                "base": {
+                  "cost_rows": [
+                    "示范工厂A:2026-06:budget:materials",
+                    "示范工厂A:2026-06:budget:labor",
+                    "示范工厂A:2026-06:budget:overhead"
+                  ],
+                  "quantity_rows": [
+                    "示范工厂A:2026-06:budget:q"
+                  ],
+                  "period": [
+                    "2026-06"
+                  ],
+                  "scenario": "budget",
+                  "factory": "示范工厂A",
+                  "product": "DEMO-01",
+                  "policy_version": "synthetic-completed-cost-1",
+                  "quantity": "120",
+                  "total_cost": "3240",
+                  "quantity_unit": "件",
+                  "currency": "CNY",
+                  "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "key": "labor",
+        "name": "人工",
+        "unit": "10",
+        "total": "1200",
+        "share": "33.33333333333333333333333333",
+        "alerts": {
+          "unit": true,
+          "total": true
+        },
+        "unit_mom": "20.00000000000000000000000000",
+        "total_mom": "20.0",
+        "unit_delta": "1.666666666666666666666666667",
+        "total_delta": "200",
+        "delta": "1.666666666666666666666666667",
+        "contribution": "99.99999999999999999999999982",
+        "comparisons": {
+          "mom": {
+            "unit": {
+              "current": "10",
+              "base": "8.333333333333333333333333333",
+              "delta": "1.666666666666666666666666667",
+              "rate": "20.00000000000000000000000000",
+              "reason": null,
+              "contribution": "99.99999999999999999999999982",
+              "numerator": "1.666666666666666666666666667",
+              "denominator": "8.333333333333333333333333333",
+              "contribution_numerator": "1.666666666666666666666666667",
+              "contribution_denominator": "1.66666666666666666666666667",
+              "comparison_period": [
+                "2026-05"
+              ],
+              "basis": "unit",
+              "value_unit": "元/件",
+              "sources": {
+                "current": {
+                  "cost_rows": [
+                    "示范工厂A:2026-06:actual:materials",
+                    "示范工厂A:2026-06:actual:labor",
+                    "示范工厂A:2026-06:actual:overhead"
+                  ],
+                  "quantity_rows": [
+                    "示范工厂A:2026-06:actual:q"
+                  ],
+                  "period": [
+                    "2026-06"
+                  ],
+                  "scenario": "actual",
+                  "factory": "示范工厂A",
+                  "product": "DEMO-01",
+                  "policy_version": "synthetic-completed-cost-1",
+                  "quantity": "120",
+                  "total_cost": "3600",
+                  "quantity_unit": "件",
+                  "currency": "CNY",
+                  "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+                },
+                "base": {
+                  "cost_rows": [
+                    "示范工厂A:2026-05:actual:materials",
+                    "示范工厂A:2026-05:actual:labor",
+                    "示范工厂A:2026-05:actual:overhead"
+                  ],
+                  "quantity_rows": [
+                    "示范工厂A:2026-05:actual:q"
+                  ],
+                  "period": [
+                    "2026-05"
+                  ],
+                  "scenario": "actual",
+                  "factory": "示范工厂A",
+                  "product": "DEMO-01",
+                  "policy_version": "synthetic-completed-cost-1",
+                  "quantity": "120",
+                  "total_cost": "3400",
+                  "quantity_unit": "件",
+                  "currency": "CNY",
+                  "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+                }
+              }
+            },
+            "total": {
+              "current": "1200",
+              "base": "1000",
+              "delta": "200",
+              "rate": "20.0",
+              "reason": null,
+              "contribution": "100",
+              "numerator": "200",
+              "denominator": "1000",
+              "contribution_numerator": "200",
+              "contribution_denominator": "200",
+              "comparison_period": [
+                "2026-05"
+              ],
+              "basis": "total",
+              "value_unit": "元",
+              "sources": {
+                "current": {
+                  "cost_rows": [
+                    "示范工厂A:2026-06:actual:materials",
+                    "示范工厂A:2026-06:actual:labor",
+                    "示范工厂A:2026-06:actual:overhead"
+                  ],
+                  "quantity_rows": [
+                    "示范工厂A:2026-06:actual:q"
+                  ],
+                  "period": [
+                    "2026-06"
+                  ],
+                  "scenario": "actual",
+                  "factory": "示范工厂A",
+                  "product": "DEMO-01",
+                  "policy_version": "synthetic-completed-cost-1",
+                  "quantity": "120",
+                  "total_cost": "3600",
+                  "quantity_unit": "件",
+                  "currency": "CNY",
+                  "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+                },
+                "base": {
+                  "cost_rows": [
+                    "示范工厂A:2026-05:actual:materials",
+                    "示范工厂A:2026-05:actual:labor",
+                    "示范工厂A:2026-05:actual:overhead"
+                  ],
+                  "quantity_rows": [
+                    "示范工厂A:2026-05:actual:q"
+                  ],
+                  "period": [
+                    "2026-05"
+                  ],
+                  "scenario": "actual",
+                  "factory": "示范工厂A",
+                  "product": "DEMO-01",
+                  "policy_version": "synthetic-completed-cost-1",
+                  "quantity": "120",
+                  "total_cost": "3400",
+                  "quantity_unit": "件",
+                  "currency": "CNY",
+                  "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+                }
+              }
+            }
+          },
+          "yoy": {
+            "unit": {
+              "current": "10",
+              "base": null,
+              "delta": null,
+              "rate": null,
+              "reason": "缺少完整比较期数据",
+              "contribution": null,
+              "numerator": null,
+              "denominator": null,
+              "contribution_numerator": null,
+              "contribution_denominator": null,
+              "comparison_period": [
+                "2025-06"
+              ],
+              "basis": "unit",
+              "value_unit": "元/件",
+              "sources": {
+                "current": {
+                  "cost_rows": [
+                    "示范工厂A:2026-06:actual:materials",
+                    "示范工厂A:2026-06:actual:labor",
+                    "示范工厂A:2026-06:actual:overhead"
+                  ],
+                  "quantity_rows": [
+                    "示范工厂A:2026-06:actual:q"
+                  ],
+                  "period": [
+                    "2026-06"
+                  ],
+                  "scenario": "actual",
+                  "factory": "示范工厂A",
+                  "product": "DEMO-01",
+                  "policy_version": "synthetic-completed-cost-1",
+                  "quantity": "120",
+                  "total_cost": "3600",
+                  "quantity_unit": "件",
+                  "currency": "CNY",
+                  "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+                },
+                "base": null
+              }
+            },
+            "total": {
+              "current": "1200",
+              "base": null,
+              "delta": null,
+              "rate": null,
+              "reason": "缺少完整比较期数据",
+              "contribution": null,
+              "numerator": null,
+              "denominator": null,
+              "contribution_numerator": null,
+              "contribution_denominator": null,
+              "comparison_period": [
+                "2025-06"
+              ],
+              "basis": "total",
+              "value_unit": "元",
+              "sources": {
+                "current": {
+                  "cost_rows": [
+                    "示范工厂A:2026-06:actual:materials",
+                    "示范工厂A:2026-06:actual:labor",
+                    "示范工厂A:2026-06:actual:overhead"
+                  ],
+                  "quantity_rows": [
+                    "示范工厂A:2026-06:actual:q"
+                  ],
+                  "period": [
+                    "2026-06"
+                  ],
+                  "scenario": "actual",
+                  "factory": "示范工厂A",
+                  "product": "DEMO-01",
+                  "policy_version": "synthetic-completed-cost-1",
+                  "quantity": "120",
+                  "total_cost": "3600",
+                  "quantity_unit": "件",
+                  "currency": "CNY",
+                  "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+                },
+                "base": null
+              }
+            }
+          },
+          "budget": {
+            "unit": {
+              "current": "10",
+              "base": "9",
+              "delta": "1",
+              "rate": "11.11111111111111111111111111",
+              "reason": null,
+              "contribution": "33.33333333333333333333333333",
+              "numerator": "1",
+              "denominator": "9",
+              "contribution_numerator": "1",
+              "contribution_denominator": "3",
+              "comparison_period": [
+                "2026-06"
+              ],
+              "basis": "unit",
+              "value_unit": "元/件",
+              "sources": {
+                "current": {
+                  "cost_rows": [
+                    "示范工厂A:2026-06:actual:materials",
+                    "示范工厂A:2026-06:actual:labor",
+                    "示范工厂A:2026-06:actual:overhead"
+                  ],
+                  "quantity_rows": [
+                    "示范工厂A:2026-06:actual:q"
+                  ],
+                  "period": [
+                    "2026-06"
+                  ],
+                  "scenario": "actual",
+                  "factory": "示范工厂A",
+                  "product": "DEMO-01",
+                  "policy_version": "synthetic-completed-cost-1",
+                  "quantity": "120",
+                  "total_cost": "3600",
+                  "quantity_unit": "件",
+                  "currency": "CNY",
+                  "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+                },
+                "base": {
+                  "cost_rows": [
+                    "示范工厂A:2026-06:budget:materials",
+                    "示范工厂A:2026-06:budget:labor",
+                    "示范工厂A:2026-06:budget:overhead"
+                  ],
+                  "quantity_rows": [
+                    "示范工厂A:2026-06:budget:q"
+                  ],
+                  "period": [
+                    "2026-06"
+                  ],
+                  "scenario": "budget",
+                  "factory": "示范工厂A",
+                  "product": "DEMO-01",
+                  "policy_version": "synthetic-completed-cost-1",
+                  "quantity": "120",
+                  "total_cost": "3240",
+                  "quantity_unit": "件",
+                  "currency": "CNY",
+                  "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+                }
+              }
+            },
+            "total": {
+              "current": "1200",
+              "base": "1080",
+              "delta": "120",
+              "rate": "11.11111111111111111111111111",
+              "reason": null,
+              "contribution": "33.33333333333333333333333333",
+              "numerator": "120",
+              "denominator": "1080",
+              "contribution_numerator": "120",
+              "contribution_denominator": "360",
+              "comparison_period": [
+                "2026-06"
+              ],
+              "basis": "total",
+              "value_unit": "元",
+              "sources": {
+                "current": {
+                  "cost_rows": [
+                    "示范工厂A:2026-06:actual:materials",
+                    "示范工厂A:2026-06:actual:labor",
+                    "示范工厂A:2026-06:actual:overhead"
+                  ],
+                  "quantity_rows": [
+                    "示范工厂A:2026-06:actual:q"
+                  ],
+                  "period": [
+                    "2026-06"
+                  ],
+                  "scenario": "actual",
+                  "factory": "示范工厂A",
+                  "product": "DEMO-01",
+                  "policy_version": "synthetic-completed-cost-1",
+                  "quantity": "120",
+                  "total_cost": "3600",
+                  "quantity_unit": "件",
+                  "currency": "CNY",
+                  "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+                },
+                "base": {
+                  "cost_rows": [
+                    "示范工厂A:2026-06:budget:materials",
+                    "示范工厂A:2026-06:budget:labor",
+                    "示范工厂A:2026-06:budget:overhead"
+                  ],
+                  "quantity_rows": [
+                    "示范工厂A:2026-06:budget:q"
+                  ],
+                  "period": [
+                    "2026-06"
+                  ],
+                  "scenario": "budget",
+                  "factory": "示范工厂A",
+                  "product": "DEMO-01",
+                  "policy_version": "synthetic-completed-cost-1",
+                  "quantity": "120",
+                  "total_cost": "3240",
+                  "quantity_unit": "件",
+                  "currency": "CNY",
+                  "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "key": "overhead",
+        "name": "制造费用",
+        "unit": "5",
+        "total": "600",
+        "share": "16.66666666666666666666666667",
+        "alerts": {
+          "unit": false,
+          "total": false
+        },
+        "unit_mom": "0",
+        "total_mom": "0",
+        "unit_delta": "0",
+        "total_delta": "0",
+        "delta": "0",
+        "contribution": "0",
+        "comparisons": {
+          "mom": {
+            "unit": {
+              "current": "5",
+              "base": "5",
+              "delta": "0",
+              "rate": "0",
+              "reason": null,
+              "contribution": "0",
+              "numerator": "0",
+              "denominator": "5",
+              "contribution_numerator": "0",
+              "contribution_denominator": "1.66666666666666666666666667",
+              "comparison_period": [
+                "2026-05"
+              ],
+              "basis": "unit",
+              "value_unit": "元/件",
+              "sources": {
+                "current": {
+                  "cost_rows": [
+                    "示范工厂A:2026-06:actual:materials",
+                    "示范工厂A:2026-06:actual:labor",
+                    "示范工厂A:2026-06:actual:overhead"
+                  ],
+                  "quantity_rows": [
+                    "示范工厂A:2026-06:actual:q"
+                  ],
+                  "period": [
+                    "2026-06"
+                  ],
+                  "scenario": "actual",
+                  "factory": "示范工厂A",
+                  "product": "DEMO-01",
+                  "policy_version": "synthetic-completed-cost-1",
+                  "quantity": "120",
+                  "total_cost": "3600",
+                  "quantity_unit": "件",
+                  "currency": "CNY",
+                  "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+                },
+                "base": {
+                  "cost_rows": [
+                    "示范工厂A:2026-05:actual:materials",
+                    "示范工厂A:2026-05:actual:labor",
+                    "示范工厂A:2026-05:actual:overhead"
+                  ],
+                  "quantity_rows": [
+                    "示范工厂A:2026-05:actual:q"
+                  ],
+                  "period": [
+                    "2026-05"
+                  ],
+                  "scenario": "actual",
+                  "factory": "示范工厂A",
+                  "product": "DEMO-01",
+                  "policy_version": "synthetic-completed-cost-1",
+                  "quantity": "120",
+                  "total_cost": "3400",
+                  "quantity_unit": "件",
+                  "currency": "CNY",
+                  "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+                }
+              }
+            },
+            "total": {
+              "current": "600",
+              "base": "600",
+              "delta": "0",
+              "rate": "0",
+              "reason": null,
+              "contribution": "0",
+              "numerator": "0",
+              "denominator": "600",
+              "contribution_numerator": "0",
+              "contribution_denominator": "200",
+              "comparison_period": [
+                "2026-05"
+              ],
+              "basis": "total",
+              "value_unit": "元",
+              "sources": {
+                "current": {
+                  "cost_rows": [
+                    "示范工厂A:2026-06:actual:materials",
+                    "示范工厂A:2026-06:actual:labor",
+                    "示范工厂A:2026-06:actual:overhead"
+                  ],
+                  "quantity_rows": [
+                    "示范工厂A:2026-06:actual:q"
+                  ],
+                  "period": [
+                    "2026-06"
+                  ],
+                  "scenario": "actual",
+                  "factory": "示范工厂A",
+                  "product": "DEMO-01",
+                  "policy_version": "synthetic-completed-cost-1",
+                  "quantity": "120",
+                  "total_cost": "3600",
+                  "quantity_unit": "件",
+                  "currency": "CNY",
+                  "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+                },
+                "base": {
+                  "cost_rows": [
+                    "示范工厂A:2026-05:actual:materials",
+                    "示范工厂A:2026-05:actual:labor",
+                    "示范工厂A:2026-05:actual:overhead"
+                  ],
+                  "quantity_rows": [
+                    "示范工厂A:2026-05:actual:q"
+                  ],
+                  "period": [
+                    "2026-05"
+                  ],
+                  "scenario": "actual",
+                  "factory": "示范工厂A",
+                  "product": "DEMO-01",
+                  "policy_version": "synthetic-completed-cost-1",
+                  "quantity": "120",
+                  "total_cost": "3400",
+                  "quantity_unit": "件",
+                  "currency": "CNY",
+                  "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+                }
+              }
+            }
+          },
+          "yoy": {
+            "unit": {
+              "current": "5",
+              "base": null,
+              "delta": null,
+              "rate": null,
+              "reason": "缺少完整比较期数据",
+              "contribution": null,
+              "numerator": null,
+              "denominator": null,
+              "contribution_numerator": null,
+              "contribution_denominator": null,
+              "comparison_period": [
+                "2025-06"
+              ],
+              "basis": "unit",
+              "value_unit": "元/件",
+              "sources": {
+                "current": {
+                  "cost_rows": [
+                    "示范工厂A:2026-06:actual:materials",
+                    "示范工厂A:2026-06:actual:labor",
+                    "示范工厂A:2026-06:actual:overhead"
+                  ],
+                  "quantity_rows": [
+                    "示范工厂A:2026-06:actual:q"
+                  ],
+                  "period": [
+                    "2026-06"
+                  ],
+                  "scenario": "actual",
+                  "factory": "示范工厂A",
+                  "product": "DEMO-01",
+                  "policy_version": "synthetic-completed-cost-1",
+                  "quantity": "120",
+                  "total_cost": "3600",
+                  "quantity_unit": "件",
+                  "currency": "CNY",
+                  "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+                },
+                "base": null
+              }
+            },
+            "total": {
+              "current": "600",
+              "base": null,
+              "delta": null,
+              "rate": null,
+              "reason": "缺少完整比较期数据",
+              "contribution": null,
+              "numerator": null,
+              "denominator": null,
+              "contribution_numerator": null,
+              "contribution_denominator": null,
+              "comparison_period": [
+                "2025-06"
+              ],
+              "basis": "total",
+              "value_unit": "元",
+              "sources": {
+                "current": {
+                  "cost_rows": [
+                    "示范工厂A:2026-06:actual:materials",
+                    "示范工厂A:2026-06:actual:labor",
+                    "示范工厂A:2026-06:actual:overhead"
+                  ],
+                  "quantity_rows": [
+                    "示范工厂A:2026-06:actual:q"
+                  ],
+                  "period": [
+                    "2026-06"
+                  ],
+                  "scenario": "actual",
+                  "factory": "示范工厂A",
+                  "product": "DEMO-01",
+                  "policy_version": "synthetic-completed-cost-1",
+                  "quantity": "120",
+                  "total_cost": "3600",
+                  "quantity_unit": "件",
+                  "currency": "CNY",
+                  "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+                },
+                "base": null
+              }
+            }
+          },
+          "budget": {
+            "unit": {
+              "current": "5",
+              "base": "4.5",
+              "delta": "0.5",
+              "rate": "11.11111111111111111111111111",
+              "reason": null,
+              "contribution": "16.66666666666666666666666667",
+              "numerator": "0.5",
+              "denominator": "4.5",
+              "contribution_numerator": "0.5",
+              "contribution_denominator": "3",
+              "comparison_period": [
+                "2026-06"
+              ],
+              "basis": "unit",
+              "value_unit": "元/件",
+              "sources": {
+                "current": {
+                  "cost_rows": [
+                    "示范工厂A:2026-06:actual:materials",
+                    "示范工厂A:2026-06:actual:labor",
+                    "示范工厂A:2026-06:actual:overhead"
+                  ],
+                  "quantity_rows": [
+                    "示范工厂A:2026-06:actual:q"
+                  ],
+                  "period": [
+                    "2026-06"
+                  ],
+                  "scenario": "actual",
+                  "factory": "示范工厂A",
+                  "product": "DEMO-01",
+                  "policy_version": "synthetic-completed-cost-1",
+                  "quantity": "120",
+                  "total_cost": "3600",
+                  "quantity_unit": "件",
+                  "currency": "CNY",
+                  "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+                },
+                "base": {
+                  "cost_rows": [
+                    "示范工厂A:2026-06:budget:materials",
+                    "示范工厂A:2026-06:budget:labor",
+                    "示范工厂A:2026-06:budget:overhead"
+                  ],
+                  "quantity_rows": [
+                    "示范工厂A:2026-06:budget:q"
+                  ],
+                  "period": [
+                    "2026-06"
+                  ],
+                  "scenario": "budget",
+                  "factory": "示范工厂A",
+                  "product": "DEMO-01",
+                  "policy_version": "synthetic-completed-cost-1",
+                  "quantity": "120",
+                  "total_cost": "3240",
+                  "quantity_unit": "件",
+                  "currency": "CNY",
+                  "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+                }
+              }
+            },
+            "total": {
+              "current": "600",
+              "base": "540",
+              "delta": "60",
+              "rate": "11.11111111111111111111111111",
+              "reason": null,
+              "contribution": "16.66666666666666666666666667",
+              "numerator": "60",
+              "denominator": "540",
+              "contribution_numerator": "60",
+              "contribution_denominator": "360",
+              "comparison_period": [
+                "2026-06"
+              ],
+              "basis": "total",
+              "value_unit": "元",
+              "sources": {
+                "current": {
+                  "cost_rows": [
+                    "示范工厂A:2026-06:actual:materials",
+                    "示范工厂A:2026-06:actual:labor",
+                    "示范工厂A:2026-06:actual:overhead"
+                  ],
+                  "quantity_rows": [
+                    "示范工厂A:2026-06:actual:q"
+                  ],
+                  "period": [
+                    "2026-06"
+                  ],
+                  "scenario": "actual",
+                  "factory": "示范工厂A",
+                  "product": "DEMO-01",
+                  "policy_version": "synthetic-completed-cost-1",
+                  "quantity": "120",
+                  "total_cost": "3600",
+                  "quantity_unit": "件",
+                  "currency": "CNY",
+                  "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+                },
+                "base": {
+                  "cost_rows": [
+                    "示范工厂A:2026-06:budget:materials",
+                    "示范工厂A:2026-06:budget:labor",
+                    "示范工厂A:2026-06:budget:overhead"
+                  ],
+                  "quantity_rows": [
+                    "示范工厂A:2026-06:budget:q"
+                  ],
+                  "period": [
+                    "2026-06"
+                  ],
+                  "scenario": "budget",
+                  "factory": "示范工厂A",
+                  "product": "DEMO-01",
+                  "policy_version": "synthetic-completed-cost-1",
+                  "quantity": "120",
+                  "total_cost": "3240",
+                  "quantity_unit": "件",
+                  "currency": "CNY",
+                  "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+                }
+              }
+            }
+          }
+        }
+      }
+    ],
+    "trend": [
+      {
+        "month": "2026-01",
+        "unit_cost": "20",
+        "total_cost": "1000",
+        "quantity": "50",
+        "materials": "12",
+        "labor": "6",
+        "overhead": "2"
+      },
+      {
+        "month": "2026-02",
+        "unit_cost": "20",
+        "total_cost": "1200",
+        "quantity": "60",
+        "materials": "13.33333333333333333333333333",
+        "labor": "5",
+        "overhead": "1.666666666666666666666666667"
+      },
+      {
+        "month": "2026-03",
+        "unit_cost": "30",
+        "total_cost": "2100",
+        "quantity": "70",
+        "materials": "17.14285714285714285714285714",
+        "labor": "7.142857142857142857142857143",
+        "overhead": "5.714285714285714285714285714"
+      },
+      {
+        "month": "2026-04",
+        "unit_cost": "30",
+        "total_cost": "2400",
+        "quantity": "80",
+        "materials": "15",
+        "labor": "10",
+        "overhead": "5"
+      },
+      {
+        "month": "2026-05",
+        "unit_cost": "28.33333333333333333333333333",
+        "total_cost": "3400",
+        "quantity": "120",
+        "materials": "15",
+        "labor": "8.333333333333333333333333333",
+        "overhead": "5"
+      },
+      {
+        "month": "2026-06",
+        "unit_cost": "30",
+        "total_cost": "3600",
+        "quantity": "120",
+        "materials": "15",
+        "labor": "10",
+        "overhead": "5"
+      }
+    ],
+    "alerts": [
+      {
+        "alert_id": "alert-ff6aa56e062424c59a20",
+        "element_key": "labor",
+        "element": "人工",
+        "basis": "unit",
+        "current": "10",
+        "base": "8.333333333333333333333333333",
+        "value_unit": "元/件",
+        "rate": "20.00000000000000000000000000",
+        "metric_id": "e09ddf32ea41878c8fce30f2afebe828144c708e5b9fdc2566d7a87b72e2df4d:示范工厂A:DEMO-01:2026-06:monthly:unit:labor_unit_rate",
+        "fact_summary": "人工 unit 环比 20.00000000000000000000000000%，本期 10，基期 8.333333333333333333333333333",
+        "rule": "严格超过±10%",
+        "note": "合成演示阈值；非行业标准"
+      },
+      {
+        "alert_id": "alert-9872ae4f1878c302216a",
+        "element_key": "labor",
+        "element": "人工",
+        "basis": "total",
+        "current": "1200",
+        "base": "1000",
+        "value_unit": "元",
+        "rate": "20.0",
+        "metric_id": "e09ddf32ea41878c8fce30f2afebe828144c708e5b9fdc2566d7a87b72e2df4d:示范工厂A:DEMO-01:2026-06:monthly:unit:labor_total_rate",
+        "fact_summary": "人工 total 环比 20.0%，本期 1200，基期 1000",
+        "rule": "严格超过±10%",
+        "note": "合成演示阈值；非行业标准"
+      }
+    ],
+    "comparison": {
+      "mom": {
+        "current": "30",
+        "base": "28.33333333333333333333333333",
+        "delta": "1.66666666666666666666666667",
+        "rate": "5.882352941176470588235294130",
+        "reason": null
+      },
+      "yoy": {
+        "current": "30",
+        "base": null,
+        "delta": null,
+        "rate": null,
+        "reason": "缺少完整比较期数据"
+      },
+      "budget": {
+        "current": "30",
+        "base": "27",
+        "delta": "3",
+        "rate": "11.11111111111111111111111111",
+        "reason": null
+      }
+    },
+    "details": {
+      "available": false,
+      "reason": "仅合成已归集成本与专用驱动事实；不推算采购/BOM明细",
+      "materials": [],
+      "expenses": [],
+      "labor": [],
+      "market": []
+    },
+    "industry": {
+      "rows": [],
+      "converted_unit_cost": "30",
+      "unit": "元/件",
+      "notice": "合成演示：全部企业、工单/批次、数字和知识均独立编制；不是赛题原件或行业基准。"
+    },
+    "budget_bridge": null,
+    "period_values": {},
+    "period_changes": {},
+    "materials_summary": [],
+    "expenses_summary": [],
+    "labor_metrics": {},
+    "source_hashes": [
+      "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+    ],
+    "quantity_unit": "件",
+    "currency": "CNY",
+    "data_label": "合成演示：全部企业、工单/批次、数字和知识均独立编制；不是赛题原件或行业基准。",
+    "capabilities": [
+      {
+        "id": "cost_analysis",
+        "name": "成本分析",
+        "status": "available",
+        "missing": [],
+        "reason": null
+      },
+      {
+        "id": "word_export",
+        "name": "Word导出",
+        "status": "available",
+        "missing": [],
+        "reason": null
+      },
+      {
+        "id": "model_explanation",
+        "name": "大模型解释",
+        "status": "configured",
+        "missing": [],
+        "reason": "已配置应用凭据；本轮真实模型调用待验证"
+      },
+      {
+        "id": "simulated_delivery",
+        "name": "模拟送达",
+        "status": "degraded",
+        "missing": [
+          "rpa_service"
+        ],
+        "reason": "缺少：模拟RPA在线验证（连接配置不等于已送达）"
+      },
+      {
+        "id": "machine_hours_per_piece",
+        "name": "单位机时",
+        "status": "available",
+        "missing": [],
+        "reason": null
+      },
+      {
+        "id": "pdf_export",
+        "name": "PDF导出",
+        "status": "available",
+        "missing": [],
+        "reason": null
+      },
+      {
+        "id": "wip",
+        "name": "在制品计价",
+        "status": "unavailable",
+        "missing": [
+          "缺少在制品计价与完工分配策略"
+        ],
+        "reason": "缺少在制品计价与完工分配策略"
+      },
+      {
+        "id": "coproduct_allocation",
+        "name": "联副产品分配",
+        "status": "unavailable",
+        "missing": [
+          "缺少联副产品分配政策和产出事实"
+        ],
+        "reason": "缺少联副产品分配政策和产出事实"
+      },
+      {
+        "id": "price_quantity_decomposition",
+        "name": "严格价量分解",
+        "status": "unavailable",
+        "missing": [
+          "缺少实际采购价格及实物耗用量"
+        ],
+        "reason": "缺少实际采购价格及实物耗用量"
+      }
+    ],
+    "limits": [
+      "合成演示：全部企业、工单/批次、数字和知识均独立编制；不是赛题原件或行业基准。",
+      "未支持联副产品分配和在制品计价；缺少实际价格/实耗不能严格价量分解",
+      "维修记录仅支持待验证假设；不是已证实净原因"
+    ],
+    "comparison_scope": {
+      "enterprise_id": "synthetic-mechanical",
+      "factory_id": "示范工厂A",
+      "product_id": "DEMO-01",
+      "product_version": "1",
+      "currency": "CNY",
+      "quantity_unit": "件",
+      "policy_version": "synthetic-completed-cost-1",
+      "scope": "completed",
+      "source_mode": "imported_cost",
+      "grain": "work_order",
+      "period_granularity": "monthly",
+      "scenario": "actual",
+      "months": [
+        "2026-06"
+      ]
+    },
+    "specialized_metrics": [
+      {
+        "key": "machine_hours_per_piece",
+        "name": "单位机时",
+        "metric_id": "e09ddf32ea41878c8fce30f2afebe828144c708e5b9fdc2566d7a87b72e2df4d:示范工厂A:DEMO-01:2026-06:monthly:unit:machine_hours_per_piece",
+        "value": "0.5",
+        "display": "0.50",
+        "unit": "小时/件",
+        "formula": "Σmachine_hours/Σ合格产出",
+        "formula_version": "normalized-cost-3-comparison-evidence",
+        "numerator": "60.0",
+        "denominator": "120",
+        "comparison_period": null,
+        "period": [
+          "2026-06"
+        ],
+        "basis": "unit",
+        "sources": {
+          "current": {
+            "cost_rows": [
+              "示范工厂A:2026-06:actual:materials",
+              "示范工厂A:2026-06:actual:labor",
+              "示范工厂A:2026-06:actual:overhead"
+            ],
+            "quantity_rows": [
+              "示范工厂A:2026-06:actual:q"
+            ],
+            "period": [
+              "2026-06"
+            ],
+            "scenario": "actual",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "policy_version": "synthetic-completed-cost-1",
+            "quantity": "120",
+            "total_cost": "3600",
+            "quantity_unit": "件",
+            "currency": "CNY",
+            "source_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+          },
+          "base": null
+        },
+        "row_keys": [
+          "示范工厂A:2026-06:actual:driver",
+          "示范工厂A:2026-06:actual:q"
+        ],
+        "source_hash": [
+          "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+        ],
+        "reason": null
+      }
+    ],
+    "template_version": "74126424ac33b62b181e970bce6d2f92fb6fad7b7775df92913a03e5287323a8",
+    "benchmark_context": {
+      "left": "示范工厂A",
+      "right": "示范工厂B",
+      "direction": "示范工厂A−示范工厂B，以示范工厂B为分母",
+      "summary": [
+        {
+          "key": "unit_cost",
+          "name": "单位成本",
+          "unit": "元/件",
+          "left": "30",
+          "right": "60",
+          "delta": "-30",
+          "rate": "-50.0",
+          "reason": null,
+          "metric_refs": {
+            "delta": "benchmark:示范工厂A:示范工厂B:unit_cost:delta",
+            "rate": "benchmark:示范工厂A:示范工厂B:unit_cost:rate"
+          }
+        },
+        {
+          "key": "total_cost",
+          "name": "总成本",
+          "unit": "元",
+          "left": "3600",
+          "right": "7200",
+          "delta": "-3600",
+          "rate": "-50.0",
+          "reason": null,
+          "metric_refs": {
+            "delta": "benchmark:示范工厂A:示范工厂B:total_cost:delta",
+            "rate": "benchmark:示范工厂A:示范工厂B:total_cost:rate"
+          }
+        },
+        {
+          "key": "quantity",
+          "name": "产量",
+          "unit": "件",
+          "left": "120",
+          "right": "120",
+          "delta": "0",
+          "rate": "0",
+          "reason": null,
+          "metric_refs": {
+            "delta": "benchmark:示范工厂A:示范工厂B:quantity:delta",
+            "rate": "benchmark:示范工厂A:示范工厂B:quantity:rate"
+          }
+        }
+      ],
+      "elements": [
+        {
+          "key": "materials",
+          "name": "材料",
+          "unit": "元/件",
+          "left": "15",
+          "right": "30",
+          "delta": "-15",
+          "rate": "-50.0",
+          "reason": null,
+          "contribution": "50.0",
+          "numerator": "-15",
+          "denominator": "30",
+          "contribution_numerator": "-15",
+          "contribution_denominator": "-30",
+          "comparison_period": {
+            "start": "2026-06",
+            "end": "2026-06"
+          },
+          "comparison_object": "示范工厂A−示范工厂B",
+          "metric_refs": {
+            "delta": "benchmark:示范工厂A:示范工厂B:materials:delta",
+            "rate": "benchmark:示范工厂A:示范工厂B:materials:rate",
+            "contribution": "benchmark:示范工厂A:示范工厂B:materials:contribution"
+          }
+        },
+        {
+          "key": "labor",
+          "name": "人工",
+          "unit": "元/件",
+          "left": "10",
+          "right": "20",
+          "delta": "-10",
+          "rate": "-50.0",
+          "reason": null,
+          "contribution": "33.33333333333333333333333333",
+          "numerator": "-10",
+          "denominator": "20",
+          "contribution_numerator": "-10",
+          "contribution_denominator": "-30",
+          "comparison_period": {
+            "start": "2026-06",
+            "end": "2026-06"
+          },
+          "comparison_object": "示范工厂A−示范工厂B",
+          "metric_refs": {
+            "delta": "benchmark:示范工厂A:示范工厂B:labor:delta",
+            "rate": "benchmark:示范工厂A:示范工厂B:labor:rate",
+            "contribution": "benchmark:示范工厂A:示范工厂B:labor:contribution"
+          }
+        },
+        {
+          "key": "overhead",
+          "name": "制造费用",
+          "unit": "元/件",
+          "left": "5",
+          "right": "10",
+          "delta": "-5",
+          "rate": "-50.0",
+          "reason": null,
+          "contribution": "16.66666666666666666666666667",
+          "numerator": "-5",
+          "denominator": "10",
+          "contribution_numerator": "-5",
+          "contribution_denominator": "-30",
+          "comparison_period": {
+            "start": "2026-06",
+            "end": "2026-06"
+          },
+          "comparison_object": "示范工厂A−示范工厂B",
+          "metric_refs": {
+            "delta": "benchmark:示范工厂A:示范工厂B:overhead:delta",
+            "rate": "benchmark:示范工厂A:示范工厂B:overhead:rate",
+            "contribution": "benchmark:示范工厂A:示范工厂B:overhead:contribution"
+          }
+        }
+      ],
+      "limits": [
+        "合成演示工厂；只比较同产品、规格、期间与政策的归集结果",
+        "缺采购/BOM/批次实耗不推算成本净原因"
+      ],
+      "period": {
+        "start": "2026-06",
+        "end": "2026-06"
+      }
+    }
+  },
+  "evidence": {
+    "status": "PASS",
+    "knowledge_version": "318e2d3a4e0ce6494958",
+    "mode": "hybrid",
+    "evidence": [
+      {
+        "id": "industry-note",
+        "title": "术语与限制（合成演示）",
+        "enterprise_id": "synthetic-mechanical",
+        "industry_id": "mechanical_demo",
+        "products": [
+          "DEMO-01"
+        ],
+        "category": "industry",
+        "text": "合成演示：全部企业、工单/批次、数字和知识均独立编制；不是赛题原件或行业基准。 合成演示工单的机时由车削工序计时器汇总。单位机时为工序机时总和除以合格件数；不等于设备综合效率。成本变化需取得工单、设备停机记录及良品检验记录后验证。",
+        "source": "knowledge.json",
+        "page": null,
+        "location": "记录2",
+        "original_text": "合成演示：全部企业、工单/批次、数字和知识均独立编制；不是赛题原件或行业基准。 合成演示工单的机时由车削工序计时器汇总。单位机时为工序机时总和除以合格件数；不等于设备综合效率。成本变化需取得工单、设备停机记录及良品检验记录后验证。",
+        "scope": "product",
+        "evidence_id": "b4ba540d0659c59cc84f609e",
+        "hash": "ab2965fcf461d80dd93991026bbf8b801461e003c21f8c2f07cb4a369e0c6f0b",
+        "chunk": 0,
+        "knowledge_version": "318e2d3a4e0ce6494958",
+        "analysis_context": {
+          "enterprise_id": "synthetic-mechanical",
+          "dataset_id": "mechanical_demo-synthetic-v1",
+          "industry_id": "mechanical_demo",
+          "industry_version": "1.0.0",
+          "policy_version": "synthetic-completed-cost-1",
+          "data_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4",
+          "knowledge_snapshot": "ab2965fcf461d80dd93991026bbf8b801461e003c21f8c2f07cb4a369e0c6f0b",
+          "template_version": "74126424ac33b62b181e970bce6d2f92fb6fad7b7775df92913a03e5287323a8",
+          "formula_version": "normalized-cost-3-comparison-evidence",
+          "enterprise_config_version": "046e25c8600f81a500f262957037f9b53f6110e786b0e7d1f428c8f07508d1ab"
+        },
+        "score": 0.01639344262295082,
+        "applicability": {
+          "applicable": true,
+          "reasons": [],
+          "limits": [
+            "工厂未在文档中明确，引用仅作背景",
+            "规格未在文档中明确，引用仅作背景"
+          ],
+          "scope": "product"
+        }
+      },
+      {
+        "id": "shared-evidence-id",
+        "title": "成本核查规程（合成演示）",
+        "enterprise_id": "synthetic-mechanical",
+        "industry_id": "mechanical_demo",
+        "products": [
+          "DEMO-01"
+        ],
+        "category": "enterprise",
+        "text": "合成演示工单的机时由车削工序计时器汇总。单位机时为工序机时总和除以合格件数；不等于设备综合效率。成本变化需取得工单、设备停机记录及良品检验记录后验证。",
+        "source": "knowledge.json",
+        "page": null,
+        "location": "记录1",
+        "original_text": "合成演示工单的机时由车削工序计时器汇总。单位机时为工序机时总和除以合格件数；不等于设备综合效率。成本变化需取得工单、设备停机记录及良品检验记录后验证。",
+        "scope": "product",
+        "evidence_id": "786e99604fb99124bfbc78fe",
+        "hash": "ab2965fcf461d80dd93991026bbf8b801461e003c21f8c2f07cb4a369e0c6f0b",
+        "chunk": 0,
+        "knowledge_version": "318e2d3a4e0ce6494958",
+        "analysis_context": {
+          "enterprise_id": "synthetic-mechanical",
+          "dataset_id": "mechanical_demo-synthetic-v1",
+          "industry_id": "mechanical_demo",
+          "industry_version": "1.0.0",
+          "policy_version": "synthetic-completed-cost-1",
+          "data_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4",
+          "knowledge_snapshot": "ab2965fcf461d80dd93991026bbf8b801461e003c21f8c2f07cb4a369e0c6f0b",
+          "template_version": "74126424ac33b62b181e970bce6d2f92fb6fad7b7775df92913a03e5287323a8",
+          "formula_version": "normalized-cost-3-comparison-evidence",
+          "enterprise_config_version": "046e25c8600f81a500f262957037f9b53f6110e786b0e7d1f428c8f07508d1ab"
+        },
+        "score": 0.016129032258064516,
+        "applicability": {
+          "applicable": true,
+          "reasons": [],
+          "limits": [
+            "工厂未在文档中明确，引用仅作背景",
+            "规格未在文档中明确，引用仅作背景"
+          ],
+          "scope": "product"
+        }
+      }
+    ],
+    "reason": null,
+    "reranker_error": null,
+    "fusion_weights": [
+      0.75,
+      0.25
+    ],
+    "framework": "llama-index-core BaseRetriever/TextNode",
+    "retrieval_status": "EXECUTED",
+    "recall_status": "RECALLED",
+    "eligible_count": 2,
+    "retriever_version": "bm25-chroma-prefilter-rrf-v5-keyword-expansion",
+    "reranker_version": null,
+    "embedding_version": "75c43b069aac4d136ba6bc1122f995fedcfd2781",
+    "analysis_context": {
+      "enterprise_id": "synthetic-mechanical",
+      "dataset_id": "mechanical_demo-synthetic-v1",
+      "industry_id": "mechanical_demo",
+      "industry_version": "1.0.0",
+      "policy_version": "synthetic-completed-cost-1",
+      "data_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4",
+      "knowledge_snapshot": "ab2965fcf461d80dd93991026bbf8b801461e003c21f8c2f07cb4a369e0c6f0b",
+      "template_version": "74126424ac33b62b181e970bce6d2f92fb6fad7b7775df92913a03e5287323a8",
+      "formula_version": "normalized-cost-3-comparison-evidence",
+      "enterprise_config_version": "046e25c8600f81a500f262957037f9b53f6110e786b0e7d1f428c8f07508d1ab"
+    },
+    "graph_expansion": {
+      "status": "NOT_APPLICABLE",
+      "terms": [],
+      "experimental": true,
+      "scope": "bm25_only",
+      "gain_status": "NOT_ESTABLISHED"
+    },
+    "retrieval_policy_version": "c431621f74e1799a8afbe647842f7ae812569f2c4a282baff0c4bc19ba37a287",
+    "purpose_retrieval": {
+      "query_budget": 1,
+      "queries_executed": 1,
+      "total_evidence_limit": 8,
+      "status": "NOT_CONFIGURED"
+    }
+  },
+  "benchmark": {
+    "analysis_type": "monthly",
+    "basis": "unit",
+    "period": {
+      "start": "2026-06",
+      "end": "2026-06"
+    },
+    "direction": "示范工厂A−示范工厂B，以示范工厂B为分母",
+    "product": "DEMO-01",
+    "month": "2026-06",
+    "left": "示范工厂A",
+    "right": "示范工厂B",
+    "snapshot_ids": [
+      "6c67ce424b3484d6bcc43efca0163047ff021b587263ad9ff0604ee02cba7d99",
+      "2245d370642ceb0e7bb4f68ecea38dfebe835d6cc1532d13faa39aeeba0745b6"
+    ],
+    "summary": [
+      {
+        "key": "unit_cost",
+        "name": "单位成本",
+        "unit": "元/件",
+        "left": "30",
+        "right": "60",
+        "delta": "-30",
+        "rate": "-50.0",
+        "reason": null,
+        "metric_refs": {
+          "delta": "benchmark:示范工厂A:示范工厂B:unit_cost:delta",
+          "rate": "benchmark:示范工厂A:示范工厂B:unit_cost:rate"
+        }
+      },
+      {
+        "key": "total_cost",
+        "name": "总成本",
+        "unit": "元",
+        "left": "3600",
+        "right": "7200",
+        "delta": "-3600",
+        "rate": "-50.0",
+        "reason": null,
+        "metric_refs": {
+          "delta": "benchmark:示范工厂A:示范工厂B:total_cost:delta",
+          "rate": "benchmark:示范工厂A:示范工厂B:total_cost:rate"
+        }
+      },
+      {
+        "key": "quantity",
+        "name": "产量",
+        "unit": "件",
+        "left": "120",
+        "right": "120",
+        "delta": "0",
+        "rate": "0",
+        "reason": null,
+        "metric_refs": {
+          "delta": "benchmark:示范工厂A:示范工厂B:quantity:delta",
+          "rate": "benchmark:示范工厂A:示范工厂B:quantity:rate"
+        }
+      }
+    ],
+    "elements": [
+      {
+        "key": "materials",
+        "name": "材料",
+        "unit": "元/件",
+        "left": "15",
+        "right": "30",
+        "delta": "-15",
+        "rate": "-50.0",
+        "reason": null,
+        "contribution": "50.0",
+        "numerator": "-15",
+        "denominator": "30",
+        "contribution_numerator": "-15",
+        "contribution_denominator": "-30",
+        "comparison_period": {
+          "start": "2026-06",
+          "end": "2026-06"
+        },
+        "comparison_object": "示范工厂A−示范工厂B",
+        "metric_refs": {
+          "delta": "benchmark:示范工厂A:示范工厂B:materials:delta",
+          "rate": "benchmark:示范工厂A:示范工厂B:materials:rate",
+          "contribution": "benchmark:示范工厂A:示范工厂B:materials:contribution"
+        }
+      },
+      {
+        "key": "labor",
+        "name": "人工",
+        "unit": "元/件",
+        "left": "10",
+        "right": "20",
+        "delta": "-10",
+        "rate": "-50.0",
+        "reason": null,
+        "contribution": "33.33333333333333333333333333",
+        "numerator": "-10",
+        "denominator": "20",
+        "contribution_numerator": "-10",
+        "contribution_denominator": "-30",
+        "comparison_period": {
+          "start": "2026-06",
+          "end": "2026-06"
+        },
+        "comparison_object": "示范工厂A−示范工厂B",
+        "metric_refs": {
+          "delta": "benchmark:示范工厂A:示范工厂B:labor:delta",
+          "rate": "benchmark:示范工厂A:示范工厂B:labor:rate",
+          "contribution": "benchmark:示范工厂A:示范工厂B:labor:contribution"
+        }
+      },
+      {
+        "key": "overhead",
+        "name": "制造费用",
+        "unit": "元/件",
+        "left": "5",
+        "right": "10",
+        "delta": "-5",
+        "rate": "-50.0",
+        "reason": null,
+        "contribution": "16.66666666666666666666666667",
+        "numerator": "-5",
+        "denominator": "10",
+        "contribution_numerator": "-5",
+        "contribution_denominator": "-30",
+        "comparison_period": {
+          "start": "2026-06",
+          "end": "2026-06"
+        },
+        "comparison_object": "示范工厂A−示范工厂B",
+        "metric_refs": {
+          "delta": "benchmark:示范工厂A:示范工厂B:overhead:delta",
+          "rate": "benchmark:示范工厂A:示范工厂B:overhead:rate",
+          "contribution": "benchmark:示范工厂A:示范工厂B:overhead:contribution"
+        }
+      }
+    ],
+    "details": {
+      "left": {
+        "available": false,
+        "reason": "仅合成已归集成本与专用驱动事实；不推算采购/BOM明细",
+        "materials": [],
+        "expenses": [],
+        "labor": [],
+        "market": []
+      },
+      "right": {
+        "available": false,
+        "reason": "仅合成已归集成本与专用驱动事实；不推算采购/BOM明细",
+        "materials": [],
+        "expenses": [],
+        "labor": [],
+        "market": []
+      }
+    },
+    "hypotheses": [],
+    "limits": [
+      "合成演示工厂；只比较同产品、规格、期间与政策的归集结果",
+      "缺采购/BOM/批次实耗不推算成本净原因"
+    ],
+    "context_id": "mechanical_demo:synthetic-mechanical",
+    "analysis_context": {
+      "enterprise_id": "synthetic-mechanical",
+      "dataset_id": "mechanical_demo-synthetic-v1",
+      "industry_id": "mechanical_demo",
+      "industry_version": "1.0.0",
+      "policy_version": "synthetic-completed-cost-1",
+      "data_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4",
+      "knowledge_snapshot": "ab2965fcf461d80dd93991026bbf8b801461e003c21f8c2f07cb4a369e0c6f0b",
+      "template_version": "74126424ac33b62b181e970bce6d2f92fb6fad7b7775df92913a03e5287323a8",
+      "formula_version": "normalized-cost-3-comparison-evidence",
+      "enterprise_config_version": "046e25c8600f81a500f262957037f9b53f6110e786b0e7d1f428c8f07508d1ab"
+    }
+  },
+  "narrative": {
+    "status": "PASS",
+    "model": "deepseek-flash",
+    "model_live": true,
+    "model_responded": true,
+    "model_identity": {
+      "status": "VERIFIED",
+      "requested": "deepseek-flash",
+      "returned": [
+        "deepseek-flash"
+      ],
+      "reason": "全部调用响应model经核验一致"
+    },
+    "findings": [
+      {
+        "claim_type": "numeric_fact",
+        "text_template": "本期指标",
+        "metric_refs": [
+          "e09ddf32ea41878c8fce30f2afebe828144c708e5b9fdc2566d7a87b72e2df4d:示范工厂A:DEMO-01:2026-06:monthly:unit:unit_cost",
+          "e09ddf32ea41878c8fce30f2afebe828144c708e5b9fdc2566d7a87b72e2df4d:示范工厂A:DEMO-01:2026-06:monthly:unit:total_cost",
+          "e09ddf32ea41878c8fce30f2afebe828144c708e5b9fdc2566d7a87b72e2df4d:示范工厂A:DEMO-01:2026-06:monthly:unit:quantity"
+        ],
+        "evidence_refs": [],
+        "evidence_quotes": {},
+        "hypothesis": false,
+        "missing_evidence": [],
+        "suggestion": "",
+        "section": "summary",
+        "alert_refs": [],
+        "verification_target": "",
+        "expected_evidence": [],
+        "responsible_role": "待分配",
+        "department": "",
+        "priority": "medium",
+        "deadline_basis": "",
+        "text": "本期单位成本为30.00元/件，总成本为3600.00元，产量为120.00件。",
+        "rendered_text": "本期单位成本为30.00元/件，总成本为3600.00元，产量为120.00件。",
+        "origin": "rules",
+        "evidence_support": "metric_bound",
+        "source_labels": []
+      },
+      {
+        "claim_type": "recommendation",
+        "text_template": "人工存在期间差异；合成演示数据仅支持成本比较，尚不足以确认原因。",
+        "metric_refs": [],
+        "evidence_refs": [],
+        "evidence_quotes": {},
+        "hypothesis": false,
+        "missing_evidence": [
+          "对应成本归集明细",
+          "对应生产计量记录"
+        ],
+        "suggestion": "核对成本归集和生产计量记录，确认口径一致后分析差异；缺少明细时保留待核查状态。",
+        "section": "labor",
+        "alert_refs": [],
+        "verification_target": "人工成本归集与生产记录",
+        "expected_evidence": [
+          "对应成本归集明细",
+          "对应生产计量记录"
+        ],
+        "responsible_role": "待分配",
+        "department": "成本核算与生产部门",
+        "priority": "high",
+        "deadline_basis": "提交本期成本复核结论前完成资料核对；由责任部门确认具体日期",
+        "text": "人工存在期间差异；合成演示数据仅支持成本比较，尚不足以确认原因。",
+        "rendered_text": "人工存在期间差异；合成演示数据仅支持成本比较，尚不足以确认原因。",
+        "origin": "rules",
+        "evidence_support": "action_requires_verification"
+      },
+      {
+        "claim_type": "insufficient_evidence",
+        "text_template": "未提供示范工厂A对应月份直接人工工时台账与工资结算凭证，尚不能确认人工单位成本环比上升的机制，需核查对应车间期间工时记录与薪酬分配明细。",
+        "metric_refs": [
+          "e09ddf32ea41878c8fce30f2afebe828144c708e5b9fdc2566d7a87b72e2df4d:示范工厂A:DEMO-01:2026-06:monthly:unit:labor_unit_rate",
+          "e09ddf32ea41878c8fce30f2afebe828144c708e5b9fdc2566d7a87b72e2df4d:示范工厂A:DEMO-01:2026-06:monthly:unit:labor_total_rate",
+          "e09ddf32ea41878c8fce30f2afebe828144c708e5b9fdc2566d7a87b72e2df4d:示范工厂A:DEMO-01:2026-06:monthly:unit:labor"
+        ],
+        "evidence_refs": [],
+        "evidence_quotes": {},
+        "hypothesis": false,
+        "missing_evidence": [
+          "示范工厂A对应月份直接人工工时台账",
+          "示范工厂A对应月份工资结算凭证",
+          "示范工厂A对应月份人工费用分配明细"
+        ],
+        "suggestion": "",
+        "section": "labor",
+        "alert_refs": [
+          "alert-ff6aa56e062424c59a20",
+          "alert-9872ae4f1878c302216a"
+        ],
+        "verification_target": "",
+        "expected_evidence": [],
+        "responsible_role": "待分配",
+        "department": "",
+        "priority": "medium",
+        "deadline_basis": "",
+        "text": "人工单位成本口径：本期10.00元/件，基期8.33元/件，环比20.00%。人工总成本口径：本期1200.00元，基期1000.00元，环比20.00%。现有证据不足以确认原因；需补充并核查：示范工厂A对应月份直接人工工时台账、示范工厂A对应月份工资结算凭证、示范工厂A对应月份人工费用分配明细。",
+        "rendered_text": "人工单位成本口径：本期10.00元/件，基期8.33元/件，环比20.00%。人工总成本口径：本期1200.00元，基期1000.00元，环比20.00%。现有证据不足以确认原因；需补充并核查：示范工厂A对应月份直接人工工时台账、示范工厂A对应月份工资结算凭证、示范工厂A对应月份人工费用分配明细。",
+        "numeric_bindings": [
+          {
+            "type": "deterministic_alert",
+            "alert_id": "alert-ff6aa56e062424c59a20",
+            "basis": "unit",
+            "current": "10",
+            "base": "8.333333333333333333333333333",
+            "value_unit": "元/件",
+            "rate": "20.00000000000000000000000000"
+          },
+          {
+            "type": "deterministic_alert",
+            "alert_id": "alert-9872ae4f1878c302216a",
+            "basis": "total",
+            "current": "1200",
+            "base": "1000",
+            "value_unit": "元",
+            "rate": "20.0"
+          }
+        ],
+        "evidence_support": "not_a_factual_claim",
+        "origin": "model"
+      },
+      {
+        "claim_type": "recommendation",
+        "text_template": "调取示范工厂A对应月份直接人工工时台账与工资结算凭证，核对人工费用归集与分配口径，确认环比上升的驱动因素。",
+        "metric_refs": [
+          "e09ddf32ea41878c8fce30f2afebe828144c708e5b9fdc2566d7a87b72e2df4d:示范工厂A:DEMO-01:2026-06:monthly:unit:labor_unit_rate",
+          "e09ddf32ea41878c8fce30f2afebe828144c708e5b9fdc2566d7a87b72e2df4d:示范工厂A:DEMO-01:2026-06:monthly:unit:labor_total_rate",
+          "e09ddf32ea41878c8fce30f2afebe828144c708e5b9fdc2566d7a87b72e2df4d:示范工厂A:DEMO-01:2026-06:monthly:unit:labor"
+        ],
+        "evidence_refs": [],
+        "evidence_quotes": {},
+        "hypothesis": false,
+        "missing_evidence": [],
+        "suggestion": "调取示范工厂A对应月份直接人工工时台账与工资结算凭证，核对人工费用归集与分配口径，确认环比上升的驱动因素。",
+        "section": "labor",
+        "alert_refs": [],
+        "verification_target": "示范工厂A对应月份直接人工成本归集与分配",
+        "expected_evidence": [
+          "示范工厂A对应月份直接人工工时台账",
+          "示范工厂A对应月份工资结算凭证",
+          "示范工厂A对应月份人工费用分配明细"
+        ],
+        "responsible_role": "待分配",
+        "department": "成本核算部门",
+        "priority": "high",
+        "deadline_basis": "月度成本结账后5个工作日内",
+        "deadline_proposal": {
+          "anchor": "monthly_cost_close",
+          "working_days": 5,
+          "requires_confirmation": true
+        },
+        "text": "调取示范工厂A对应月份直接人工工时台账与工资结算凭证，核对人工费用归集与分配口径，确认环比上升的驱动因素。",
+        "rendered_text": "调取示范工厂A对应月份直接人工工时台账与工资结算凭证，核对人工费用归集与分配口径，确认环比上升的驱动因素。",
+        "numeric_bindings": [
+          {
+            "type": "proposed_deadline",
+            "anchor": "monthly_cost_close",
+            "working_days": 5,
+            "requires_confirmation": true
+          }
+        ],
+        "evidence_support": "not_a_factual_claim",
+        "origin": "model"
+      },
+      {
+        "claim_type": "insufficient_evidence",
+        "text_template": "未提供示范工厂B对应月份材料采购合同台账与批次投料记录，尚不能确认两厂材料单位成本差异的机制，需核查两厂同口径材料耗用与采购价明细。",
+        "metric_refs": [
+          "benchmark:示范工厂A:示范工厂B:unit_cost:delta",
+          "benchmark:示范工厂A:示范工厂B:unit_cost:rate",
+          "benchmark:示范工厂A:示范工厂B:total_cost:delta",
+          "benchmark:示范工厂A:示范工厂B:total_cost:rate",
+          "benchmark:示范工厂A:示范工厂B:quantity:delta",
+          "benchmark:示范工厂A:示范工厂B:quantity:rate",
+          "benchmark:示范工厂A:示范工厂B:materials:delta",
+          "benchmark:示范工厂A:示范工厂B:materials:rate",
+          "benchmark:示范工厂A:示范工厂B:materials:contribution",
+          "benchmark:示范工厂A:示范工厂B:labor:delta",
+          "benchmark:示范工厂A:示范工厂B:labor:rate",
+          "benchmark:示范工厂A:示范工厂B:labor:contribution",
+          "benchmark:示范工厂A:示范工厂B:overhead:delta",
+          "benchmark:示范工厂A:示范工厂B:overhead:rate",
+          "benchmark:示范工厂A:示范工厂B:overhead:contribution"
+        ],
+        "evidence_refs": [],
+        "evidence_quotes": {},
+        "hypothesis": false,
+        "missing_evidence": [
+          "示范工厂B对应月份材料采购合同台账",
+          "示范工厂B对应月份批次投料记录",
+          "示范工厂A对应月份材料耗用明细",
+          "示范工厂B对应月份材料耗用明细"
+        ],
+        "suggestion": "",
+        "section": "benchmark",
+        "alert_refs": [],
+        "verification_target": "",
+        "expected_evidence": [],
+        "responsible_role": "待分配",
+        "department": "",
+        "priority": "medium",
+        "deadline_basis": "",
+        "comparison_binding": {
+          "left": "示范工厂A",
+          "right": "示范工厂B",
+          "direction": "示范工厂A−示范工厂B，以示范工厂B为分母",
+          "period": {
+            "start": "2026-06",
+            "end": "2026-06"
+          },
+          "limits": [
+            "合成演示工厂；只比较同产品、规格、期间与政策的归集结果",
+            "缺采购/BOM/批次实耗不推算成本净原因"
+          ]
+        },
+        "text": "跨厂比较方向：示范工厂A−示范工厂B，以示范工厂B为分母。比较限制：合成演示工厂；只比较同产品、规格、期间与政策的归集结果；缺采购/BOM/批次实耗不推算成本净原因。现有证据不足以确认原因；需补充并核查：示范工厂B对应月份材料采购合同台账、示范工厂B对应月份批次投料记录、示范工厂A对应月份材料耗用明细、示范工厂B对应月份材料耗用明细。",
+        "rendered_text": "跨厂比较方向：示范工厂A−示范工厂B，以示范工厂B为分母。比较限制：合成演示工厂；只比较同产品、规格、期间与政策的归集结果；缺采购/BOM/批次实耗不推算成本净原因。现有证据不足以确认原因；需补充并核查：示范工厂B对应月份材料采购合同台账、示范工厂B对应月份批次投料记录、示范工厂A对应月份材料耗用明细、示范工厂B对应月份材料耗用明细。",
+        "numeric_bindings": [],
+        "evidence_support": "not_a_factual_claim",
+        "origin": "model"
+      },
+      {
+        "claim_type": "recommendation",
+        "text_template": "分别调取示范工厂A与示范工厂B对应月份材料采购合同台账、批次投料记录及材料耗用明细，按同产品同规格同期间口径核对材料单位成本差异来源。",
+        "metric_refs": [
+          "benchmark:示范工厂A:示范工厂B:unit_cost:delta",
+          "benchmark:示范工厂A:示范工厂B:unit_cost:rate",
+          "benchmark:示范工厂A:示范工厂B:total_cost:delta",
+          "benchmark:示范工厂A:示范工厂B:total_cost:rate",
+          "benchmark:示范工厂A:示范工厂B:quantity:delta",
+          "benchmark:示范工厂A:示范工厂B:quantity:rate",
+          "benchmark:示范工厂A:示范工厂B:materials:delta",
+          "benchmark:示范工厂A:示范工厂B:materials:rate",
+          "benchmark:示范工厂A:示范工厂B:materials:contribution",
+          "benchmark:示范工厂A:示范工厂B:labor:delta",
+          "benchmark:示范工厂A:示范工厂B:labor:rate",
+          "benchmark:示范工厂A:示范工厂B:labor:contribution",
+          "benchmark:示范工厂A:示范工厂B:overhead:delta",
+          "benchmark:示范工厂A:示范工厂B:overhead:rate",
+          "benchmark:示范工厂A:示范工厂B:overhead:contribution"
+        ],
+        "evidence_refs": [],
+        "evidence_quotes": {},
+        "hypothesis": false,
+        "missing_evidence": [],
+        "suggestion": "分别调取示范工厂A与示范工厂B对应月份材料采购合同台账、批次投料记录及材料耗用明细，按同产品同规格同期间口径核对材料单位成本差异来源。",
+        "section": "benchmark",
+        "alert_refs": [],
+        "verification_target": "示范工厂A与示范工厂B对应月份材料成本同口径对比",
+        "expected_evidence": [
+          "示范工厂A对应月份材料采购合同台账",
+          "示范工厂B对应月份材料采购合同台账",
+          "示范工厂A对应月份批次投料记录",
+          "示范工厂B对应月份批次投料记录"
+        ],
+        "responsible_role": "待分配",
+        "department": "采购与成本核算部门",
+        "priority": "high",
+        "deadline_basis": "月度成本分析完成后10个工作日内",
+        "deadline_proposal": {
+          "anchor": "monthly_analysis_complete",
+          "working_days": 10,
+          "requires_confirmation": true
+        },
+        "comparison_binding": {
+          "left": "示范工厂A",
+          "right": "示范工厂B",
+          "direction": "示范工厂A−示范工厂B，以示范工厂B为分母",
+          "period": {
+            "start": "2026-06",
+            "end": "2026-06"
+          },
+          "limits": [
+            "合成演示工厂；只比较同产品、规格、期间与政策的归集结果",
+            "缺采购/BOM/批次实耗不推算成本净原因"
+          ]
+        },
+        "text": "跨厂比较方向：示范工厂A−示范工厂B，以示范工厂B为分母。比较限制：合成演示工厂；只比较同产品、规格、期间与政策的归集结果；缺采购/BOM/批次实耗不推算成本净原因。分别调取示范工厂A与示范工厂B对应月份材料采购合同台账、批次投料记录及材料耗用明细，按同产品同规格同期间口径核对材料单位成本差异来源。",
+        "rendered_text": "跨厂比较方向：示范工厂A−示范工厂B，以示范工厂B为分母。比较限制：合成演示工厂；只比较同产品、规格、期间与政策的归集结果；缺采购/BOM/批次实耗不推算成本净原因。分别调取示范工厂A与示范工厂B对应月份材料采购合同台账、批次投料记录及材料耗用明细，按同产品同规格同期间口径核对材料单位成本差异来源。",
+        "numeric_bindings": [
+          {
+            "type": "proposed_deadline",
+            "anchor": "monthly_analysis_complete",
+            "working_days": 10,
+            "requires_confirmation": true
+          }
+        ],
+        "evidence_support": "not_a_factual_claim",
+        "origin": "model"
+      }
+    ],
+    "section_validation": {
+      "labor": {
+        "status": "PASS",
+        "model_participated": true
+      },
+      "benchmark": {
+        "status": "PASS",
+        "model_participated": true
+      },
+      "summary": {
+        "status": "DEGRADED",
+        "model_participated": false,
+        "reason": "本次采用基础分析，原因解释待复核"
+      }
+    },
+    "required_explanation_sections": [
+      "labor",
+      "benchmark"
+    ],
+    "unit_validation": {
+      "benchmark/explanation": {
+        "status": "PASS",
+        "frozen": true
+      },
+      "benchmark/recommendation": {
+        "status": "PASS",
+        "frozen": true
+      },
+      "labor/explanation": {
+        "status": "PASS",
+        "frozen": true
+      },
+      "labor/recommendation": {
+        "status": "PASS",
+        "frozen": true
+      }
+    },
+    "alert_coverage": {
+      "alert-ff6aa56e062424c59a20": {
+        "covered": true,
+        "element_key": "labor",
+        "basis": "unit"
+      },
+      "alert-9872ae4f1878c302216a": {
+        "covered": true,
+        "element_key": "labor",
+        "basis": "total"
+      }
+    },
+    "analysis_context": {
+      "enterprise_id": "synthetic-mechanical",
+      "dataset_id": "mechanical_demo-synthetic-v1",
+      "industry_id": "mechanical_demo",
+      "industry_version": "1.0.0",
+      "policy_version": "synthetic-completed-cost-1",
+      "data_snapshot": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4",
+      "knowledge_snapshot": "ab2965fcf461d80dd93991026bbf8b801461e003c21f8c2f07cb4a369e0c6f0b",
+      "template_version": "74126424ac33b62b181e970bce6d2f92fb6fad7b7775df92913a03e5287323a8",
+      "formula_version": "normalized-cost-3-comparison-evidence",
+      "enterprise_config_version": "046e25c8600f81a500f262957037f9b53f6110e786b0e7d1f428c8f07508d1ab"
+    },
+    "usage": {
+      "prompt_tokens": 11780,
+      "completion_tokens": 508,
+      "total_tokens": 12288,
+      "calls": 1
+    },
+    "cost": "UNKNOWN",
+    "failure_reasons": [],
+    "excluded_evidence": [],
+    "evidence_applicability_checked": true,
+    "prompt_version": "v18-insufficient-grammar-aligned",
+    "knowledge_version": "318e2d3a4e0ce6494958",
+    "cache_hit": true,
+    "generated_at": 1789812489.7548947,
+    "generation_mode": "llm",
+    "reader_status": "已生成模型解释，仍须人工复核",
+    "cache_source_time": 1789812489.7549546
+  },
+  "docx": {
+    "artifact_id": "47177aed125642a2893fdf8f29273f64-docx",
+    "status": "PASS",
+    "scope": "file_generation",
+    "sha256": "77365f2c945fb0045458e4fa16bf7a2ead7d5ee8ebbaa05c7797eaac2a1b2c08",
+    "verification": {
+      "status": "PASS",
+      "core_numbers": true,
+      "residual_placeholders": [],
+      "headings": [
+        "一、基本信息",
+        "二、总成本概览",
+        "三、成本要素结构",
+        "四、工序机时分析与核查",
+        "五、行业与工厂对标",
+        "六、改进建议"
+      ],
+      "headings_valid": true,
+      "numeric_bindings_checked": 27,
+      "numeric_binding_failures": [],
+      "contract": "generic-v2-role-bound",
+      "scope": "表格及段落的角色、位置、数值和显示单位绑定；图像数值及真人评分不在此检查内",
+      "explanation_bindings_checked": 2,
+      "explanation_binding_failures": []
+    }
+  },
+  "pdf": {
+    "artifact_id": "47177aed125642a2893fdf8f29273f64-pdf",
+    "status": "PASS",
+    "scope": "file_conversion",
+    "toc_updated": false,
+    "orphan_headings": [],
+    "toc_pages": {
+      "二、总成本概览": 1
+    },
+    "pages": 3,
+    "sha256": "a6bb4bd9746f1d7241292d347bf3eff552737252da28c3fcbbea51589859da80"
+  },
+  "acceptance": {
+    "file_openable": {
+      "status": "PASS",
+      "reason": "DOCX结构检查与PDF实际打开"
+    },
+    "calculation_consistency": {
+      "status": "FAIL",
+      "reason": "固定快照与模板位置逐项核对"
+    },
+    "section_completeness": {
+      "status": "PENDING",
+      "reason": "六个固定章节的业务实质待真人评审"
+    },
+    "evidence_applicability": {
+      "status": "PASS",
+      "reason": "逐条核对6项结论的证据引用与适用性；全部通过"
+    },
+    "readability": {
+      "status": "PENDING",
+      "reason": "真人可读性评审待完成"
+    },
+    "visual_quality": {
+      "status": "PENDING",
+      "reason": "逐页渲染检查与真人版式审核待完成"
+    },
+    "task_actionability": {
+      "status": "PASS",
+      "reason": "建议必须包含对象、预期证据、责任角色和期限依据"
+    },
+    "model_participation": {
+      "status": "PASS",
+      "reason": "模型实际参与、身份核验一致且解释覆盖校验通过；基础分析不视为模型通过"
+    },
+    "overall": "FAIL",
+    "policy": "强制环节逐项通过后才能认定报告合格；人工评审缺失保持待评，产物变化使既有审核失效"
+  },
+  "execution_status": "COMPLETED",
+  "generation_mode": "llm",
+  "human_review_status": "PENDING",
+  "capability_status": "DEGRADED",
+  "input_versions": {
+    "data": "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4",
+    "formula": "normalized-cost-3-comparison-evidence",
+    "knowledge": "318e2d3a4e0ce6494958",
+    "model": "deepseek-flash",
+    "prompt": "v18-insufficient-grammar-aligned"
+  }
+}

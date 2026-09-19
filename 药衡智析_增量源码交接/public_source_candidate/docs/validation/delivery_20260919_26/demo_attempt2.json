@@ -1,0 +1,172 @@
+{
+  "status": "FAIL",
+  "run_id": "delivery_20260919_26",
+  "attempt_id": "demo-20260919-26-attempt2",
+  "scenario": "S1",
+  "base_url": "http://127.0.0.1:8765",
+  "viewport": {
+    "width": 1366,
+    "height": 768
+  },
+  "simulation": true,
+  "human_review": "PENDING",
+  "browser": "Browser plugin not available; installed Playwright/Chromium",
+  "scenes": [
+    {
+      "text": "选择分析条件，观察真实数据随筛选更新",
+      "at": "2026-09-19T10:12:28.132Z"
+    },
+    {
+      "text": "程序计算成本与差异；缺失数据和解释能力分别说明",
+      "at": "2026-09-19T10:12:35.450Z"
+    },
+    {
+      "text": "趋势、结构与差异图联动当前筛选；预测仍是实验性原型",
+      "at": "2026-09-19T10:12:40.997Z"
+    },
+    {
+      "text": "复用本次运行已验证报告，实际下载 Word 与 PDF",
+      "at": "2026-09-19T10:12:46.598Z"
+    },
+    {
+      "text": "实际下载 Word，文件与本次报告绑定",
+      "at": "2026-09-19T10:12:52.288Z"
+    },
+    {
+      "text": "实际下载 PDF，文件与本次报告绑定",
+      "at": "2026-09-19T10:12:57.855Z"
+    },
+    {
+      "text": "报告文件已实际下载并核对；专业原因、可读性与版式仍待真人评审",
+      "at": "2026-09-19T10:13:03.388Z"
+    },
+    {
+      "text": "载入当前报告的可执行建议，展示核查对象、预期证据与责任角色",
+      "at": "2026-09-19T10:13:08.904Z"
+    },
+    {
+      "text": "从报告建议创建草稿，核对责任角色、核查对象与期限；下面执行模拟发送确认",
+      "at": "2026-09-19T10:13:14.575Z"
+    }
+  ],
+  "artifacts": {
+    "docx": {
+      "artifact_id": "ca15a27a2fc34d7f8b285682ec9f1e77-docx",
+      "sha256": "31d97e13ce443337893568da2137420b687b6725ad2b41bb03238fc72dba814a",
+      "path": "report.docx"
+    },
+    "pdf": {
+      "artifact_id": "ca15a27a2fc34d7f8b285682ec9f1e77-pdf",
+      "sha256": "8ceda7f16e2c043e05815ed33217fc12b5314e621530b149c4d78f4a1e494f34",
+      "path": "report.pdf"
+    }
+  },
+  "errors": [
+    "Error: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "recorder_source_sha256": "f43b7b8d8d0aacd132e8819e6ce84dfa53e6db7eaf86bbbe08d6c60b36305a05",
+  "health": {
+    "rpa_mode": "local_simulator",
+    "rpa_base_url": "http://127.0.0.1:8090",
+    "status": "ok",
+    "service": "药衡智析",
+    "worker": {
+      "alive": true,
+      "heartbeat_age_seconds": 0.4387044906616211
+    },
+    "simulation": true
+  },
+  "selection": {
+    "context_id": "pharmaceutical:competition",
+    "factory": "中药一厂",
+    "product": "银黄口服液",
+    "month": "2026-05",
+    "analysis_type": "monthly",
+    "basis": "unit"
+  },
+  "reused_job": "ca15a27a2fc34d7f8b285682ec9f1e77",
+  "source_manifest": {
+    "sha256": "98da6451166e8c7b101cc18a58725161ec757e8534ba590f84f3d4f7a6f50a6d",
+    "run_id": "delivery_20260919_26",
+    "scenario": "S1",
+    "attempt_id": "936ed175fc514902af2edf26c6d06f1e",
+    "job_id": "ca15a27a2fc34d7f8b285682ec9f1e77",
+    "revision": "7bef1ce8e915ebd6697915d55d8d47da7bfab2d0"
+  },
+  "job_id": "ca15a27a2fc34d7f8b285682ec9f1e77",
+  "tested_code": {
+    "revision": "7bef1ce8e915ebd6697915d55d8d47da7bfab2d0",
+    "commit": "7bef1ce8e915ebd6697915d55d8d47da7bfab2d0",
+    "revision_kind": "git"
+  },
+  "snapshot_id": "3a4f905e080e0eb729af4ffa31d9ee31475b5737760bffb68e7a9143a14de9ae",
+  "job_status": "DEGRADED",
+  "model_identity": {
+    "status": "VERIFIED",
+    "requested": "deepseek-flash",
+    "returned": [
+      "deepseek-flash"
+    ],
+    "reason": "全部调用响应model经核验一致"
+  },
+  "source_finding": {
+    "job_id": "ca15a27a2fc34d7f8b285682ec9f1e77",
+    "suggestion": "按同批次核对采购价、投料与合格产出，分别检查采购变化和生产损耗；工艺调整须经质量部门批准。",
+    "metric_refs": [],
+    "evidence_refs": []
+  },
+  "action": {
+    "task_id": "YH-83a08a0f27bfad3b56cc17fa",
+    "payload_hash": "77050bfdca924e45ce876e108fb01071f59e469a396af8fbe2e29c70f100d301",
+    "payload": {
+      "task_id": "YH-83a08a0f27bfad3b56cc17fa",
+      "task_title": "现有明细已定位主要原料驱动；价格与实物耗用的影响尚未分开。",
+      "assignee": {
+        "name": "模拟演示-260919-26-attempt2",
+        "department": "采购部、生产部、财务部",
+        "role": null
+      },
+      "source": {
+        "analysis_type": "monthly",
+        "analysis_month": "2026-05",
+        "product": "银黄口服液",
+        "finding": "现有明细已定位主要原料驱动；价格与实物耗用的影响尚未分开。；分析期间：2026-05 至 2026-05"
+      },
+      "priority": "high",
+      "deadline": "2026-09-26",
+      "created_at": "2026-09-19T18:13:14.462914+08:00",
+      "suggestion": "按同批次核对采购价、投料与合格产出，分别检查采购变化和生产损耗；工艺调整须经质量部门批准。",
+      "notify_method": "wechat"
+    },
+    "metadata": {
+      "context_id": "pharmaceutical:competition",
+      "analysis_context": {
+        "enterprise_id": "competition",
+        "dataset_id": "competition-private",
+        "industry_id": "pharmaceutical",
+        "industry_version": "1.0.0",
+        "policy_version": "pharmaceutical-original-1",
+        "data_snapshot": "1bdd47b28ef813507ced0e3877a25bda3f200a37e4dc05a5993f0c48a2d5d143",
+        "knowledge_snapshot": "16f2720e3cefd20666c8c060d2f349ce5246a6646b2eaed7d1f6bab2ae9c28a6",
+        "template_version": "58ebcdd6e159f5f2f331790606a83aed894c6a40bcf2a555abe5b2e65ff9a856",
+        "formula_version": "normalized-cost-3-comparison-evidence",
+        "enterprise_config_version": "2ec73c117b283831bf092f7a26467be2b99c5c1e66c6a638944851d82bf23903"
+      },
+      "snapshot_id": "3a4f905e080e0eb729af4ffa31d9ee31475b5737760bffb68e7a9143a14de9ae",
+      "period": {
+        "start": "2026-05",
+        "end": "2026-05"
+      },
+      "simulation": true,
+      "verification_target": "金银花本期与上期采购和批次耗用",
+      "expected_evidence": [
+        "实际采购合同及入库单价",
+        "批次投料、合格产出与收率记录"
+      ],
+      "responsible_role": "待分配",
+      "deadline_basis": "提交本期成本复核结论前完成资料核对；由责任部门确认具体日期",
+      "deadline_policy": "草稿默认建议七日内复核，用户确认前可修改；非既定业务期限"
+    }
+  },
+  "finished_at": "2026-09-19T10:13:19.848Z"
+}

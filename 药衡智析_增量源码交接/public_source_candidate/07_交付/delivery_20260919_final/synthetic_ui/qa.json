@@ -1,0 +1,14 @@
+{
+  "status": "PASS",
+  "scope": "mocked independent synthetic browser contracts; not model or contest acceptance",
+  "browser": "Browser plugin not available; local Playwright",
+  "url": "http://127.0.0.1:5179",
+  "checks": [
+    "precise deterministic focus and missing-baseline explanation render immediately",
+    "two-product grid preserves exact values, missing cells and element-click analysis linkage",
+    "cost basis selector changes grid units",
+    "page refresh does not initiate model explanation or reports without configuration",
+    "1366x768 and 390x844 no overflow, framework overlay or console errors"
+  ],
+  "errors": []
+}

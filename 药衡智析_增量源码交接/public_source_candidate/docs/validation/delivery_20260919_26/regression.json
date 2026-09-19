@@ -1,0 +1,19 @@
+{
+  "run_id": "delivery_20260919_26",
+  "attempt_id": "936ed175fc514902af2edf26c6d06f1e",
+  "commit": "7bef1ce8e915ebd6697915d55d8d47da7bfab2d0",
+  "status": "PASS",
+  "full_suite": {
+    "passed": 346,
+    "failed": 1,
+    "note": "Includes preserved local historical tests excluded from Git; failed old Coding-policy fixture corrected and rerun"
+  },
+  "targeted_final": {
+    "gateway_and_historical_retrieval": 70,
+    "dashboard_and_provenance": 8,
+    "deck_binding": 6,
+    "recording_script": 1
+  },
+  "scope": "Full existing local suite once, then targeted regressions only; no paid calls",
+  "human_review": "PENDING"
+}

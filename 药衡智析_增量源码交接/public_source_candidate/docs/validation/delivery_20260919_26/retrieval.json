@@ -1,0 +1,178 @@
+{
+  "run_id": "delivery_20260919_26",
+  "attempt_id": "936ed175fc514902af2edf26c6d06f1e",
+  "revision": "7bef1ce8e915ebd6697915d55d8d47da7bfab2d0",
+  "revision_kind": "git",
+  "commit": "7bef1ce8e915ebd6697915d55d8d47da7bfab2d0",
+  "status": "PASS",
+  "scenarios": [
+    {
+      "id": "mechanical",
+      "job_id": "d45e9aaaf3d044d894f4423de8fe4e19",
+      "attempt_id": "936ed175fc514902af2edf26c6d06f1e",
+      "snapshot_id": "6c67ce424b3484d6bcc43efca0163047ff021b587263ad9ff0604ee02cba7d99",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "d45e9aaaf3d044d894f4423de8fe4e19-docx",
+          "sha256": "9202b2871160e14c55bf423d538900f68c64c4960f9ae785f9f099d2c8fc37c9",
+          "bytes": 68773
+        },
+        "pdf": {
+          "artifact_id": "d45e9aaaf3d044d894f4423de8fe4e19-pdf",
+          "sha256": "e2ae11bcfa2d97572444a5e9ce7cdf1334bf441d5399fa7e57eb7e712245d280",
+          "bytes": 164158
+        }
+      },
+      "status": "PASS",
+      "mode": "hybrid",
+      "framework": "llama-index-core BaseRetriever/TextNode",
+      "recall_status": "RECALLED",
+      "knowledge_version": "318e2d3a4e0ce6494958",
+      "count": 2
+    },
+    {
+      "id": "chemical",
+      "job_id": "1dcb3690ed9f42d4822608a9b43749c5",
+      "attempt_id": "936ed175fc514902af2edf26c6d06f1e",
+      "snapshot_id": "f3128b3f989d66b0793ed63e7f5b30ff74b252dbe2f59f9739798db7d785a212",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "1dcb3690ed9f42d4822608a9b43749c5-docx",
+          "sha256": "11b9a48413c113de6b9bb75dcfcad7b3f9671c89d969622450b3c4f5acaca070",
+          "bytes": 66302
+        },
+        "pdf": {
+          "artifact_id": "1dcb3690ed9f42d4822608a9b43749c5-pdf",
+          "sha256": "3da0efcf947c0a99945cf2e91af07d8fd6631ec0a71447f34c634ef39ab0780b",
+          "bytes": 193859
+        }
+      },
+      "status": "PASS",
+      "mode": "hybrid",
+      "framework": "llama-index-core BaseRetriever/TextNode",
+      "recall_status": "RECALLED",
+      "knowledge_version": "fc52e68409f6a950d853",
+      "count": 2
+    },
+    {
+      "id": "pharma_synthetic",
+      "job_id": "13caf6dc08c140c9b36697471e12e9d8",
+      "attempt_id": "936ed175fc514902af2edf26c6d06f1e",
+      "snapshot_id": "85392549bfba20d61814c82dd26b77719d5b96db5bfc2d740cbd32201dcd67f8",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "13caf6dc08c140c9b36697471e12e9d8-docx",
+          "sha256": "8af2eb21714b6622eb2d7fe7a3061db727cbed1a3268a20eb07de2ef57bb582a",
+          "bytes": 69015
+        },
+        "pdf": {
+          "artifact_id": "13caf6dc08c140c9b36697471e12e9d8-pdf",
+          "sha256": "0c5064d4f92266d865f0931456810ed02b9fe2736fbbb06168f463b12691a120",
+          "bytes": 174606
+        }
+      },
+      "status": "PASS",
+      "mode": "hybrid",
+      "framework": "llama-index-core BaseRetriever/TextNode",
+      "recall_status": "RECALLED",
+      "knowledge_version": "85b894e4fc006d833ea5",
+      "count": 2
+    },
+    {
+      "id": "S1",
+      "job_id": "ca15a27a2fc34d7f8b285682ec9f1e77",
+      "attempt_id": "936ed175fc514902af2edf26c6d06f1e",
+      "snapshot_id": "3a4f905e080e0eb729af4ffa31d9ee31475b5737760bffb68e7a9143a14de9ae",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "ca15a27a2fc34d7f8b285682ec9f1e77-docx",
+          "sha256": "31d97e13ce443337893568da2137420b687b6725ad2b41bb03238fc72dba814a",
+          "bytes": 145684
+        },
+        "pdf": {
+          "artifact_id": "ca15a27a2fc34d7f8b285682ec9f1e77-pdf",
+          "sha256": "8ceda7f16e2c043e05815ed33217fc12b5314e621530b149c4d78f4a1e494f34",
+          "bytes": 495002
+        }
+      },
+      "status": "PASS",
+      "mode": "hybrid",
+      "framework": "llama-index-core BaseRetriever/TextNode",
+      "recall_status": "RECALLED",
+      "knowledge_version": "3839d4d0b83090f103f2",
+      "count": 8
+    },
+    {
+      "id": "S2",
+      "job_id": "dd524bb205fe4d8ca8e1cf8faaea69be",
+      "attempt_id": "936ed175fc514902af2edf26c6d06f1e",
+      "snapshot_id": "4eda1ee3a4878a9548f67f6e4bc25ca8f37084b162ffc21dac43c072186b6fa8",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "dd524bb205fe4d8ca8e1cf8faaea69be-docx",
+          "sha256": "2eccae865f23cf94d969884af76e7e04c1bf453a16383c2c626b02d00735bcb7",
+          "bytes": 148186
+        },
+        "pdf": {
+          "artifact_id": "dd524bb205fe4d8ca8e1cf8faaea69be-pdf",
+          "sha256": "e8f851e099c7d7fe77b0227cca8ab718ab68d3be5d4216f1e8430e8d03e06533",
+          "bytes": 489091
+        }
+      },
+      "status": "PASS",
+      "mode": "hybrid",
+      "framework": "llama-index-core BaseRetriever/TextNode",
+      "recall_status": "RECALLED",
+      "knowledge_version": "3839d4d0b83090f103f2",
+      "count": 8
+    },
+    {
+      "id": "S3",
+      "job_id": "6b44a3078d1648bdb5858d8bf1d0c173",
+      "attempt_id": "936ed175fc514902af2edf26c6d06f1e",
+      "snapshot_id": "ad3f7bf69b7b7268209ea6aff74c841f7fe083bbedcf0ba33f3f7fe423dce291",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "6b44a3078d1648bdb5858d8bf1d0c173-docx",
+          "sha256": "19e6ec09dfc95447a9351c8d483bc5a0f1961c67c411beb5784f7d1b3fe7ecd2",
+          "bytes": 148879
+        },
+        "pdf": {
+          "artifact_id": "6b44a3078d1648bdb5858d8bf1d0c173-pdf",
+          "sha256": "e568eeb0f3336f0c2386adcde5c864aedfe34b5243a9e9b43ae0bd562e7fd775",
+          "bytes": 535685
+        }
+      },
+      "status": "PASS",
+      "mode": "hybrid",
+      "framework": "llama-index-core BaseRetriever/TextNode",
+      "recall_status": "RECALLED",
+      "knowledge_version": "3839d4d0b83090f103f2",
+      "count": 8
+    },
+    {
+      "id": "Q2",
+      "job_id": "e4474a02324f4bcd99574980d1a817ac",
+      "attempt_id": "936ed175fc514902af2edf26c6d06f1e",
+      "snapshot_id": "3c0fb50030687b2e2e761e90f8ebc9dc7d28f89b9fcc289a6a5190e60502ef30",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "e4474a02324f4bcd99574980d1a817ac-docx",
+          "sha256": "33afbbb4124d2480627d1032255aac0475086a84d1f318f8d2100e6f9bfdb792",
+          "bytes": 152370
+        },
+        "pdf": {
+          "artifact_id": "e4474a02324f4bcd99574980d1a817ac-pdf",
+          "sha256": "a0001ee1ab69af6cc11b4874fec12774edf05bbf5e4a7beca7d339773c24489f",
+          "bytes": 558090
+        }
+      },
+      "status": "PASS",
+      "mode": "hybrid",
+      "framework": "llama-index-core BaseRetriever/TextNode",
+      "recall_status": "RECALLED",
+      "knowledge_version": "3839d4d0b83090f103f2",
+      "count": 8
+    }
+  ]
+}

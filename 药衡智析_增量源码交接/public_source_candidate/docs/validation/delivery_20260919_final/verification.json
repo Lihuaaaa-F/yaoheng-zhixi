@@ -1,0 +1,1397 @@
+{
+  "run_id": "delivery_20260919_final",
+  "commit": "04011c2a595a5d9f8efdd8de92bd5fd1dfcd8830",
+  "verification_commit": "04011c2a595a5d9f8efdd8de92bd5fd1dfcd8830",
+  "attempt_id": "2b260558de0d42e495a7cea235702b41",
+  "tested_code_commit": "04011c2a595a5d9f8efdd8de92bd5fd1dfcd8830",
+  "dimensions": {
+    "environment": {
+      "python": "3.12.3",
+      "python_executable": "/home/hujunjie/企业赛道_创灵境_基于RAG与大模型的制药企业产品成本智能分析报告系统/药衡智析_增量源码交接/public_source_candidate/05_原型/.venv/bin/python",
+      "system": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+      "dependency_report": {
+        "python": "3.12.3",
+        "executable": "/home/hujunjie/企业赛道_创灵境_基于RAG与大模型的制药企业产品成本智能分析报告系统/药衡智析_增量源码交接/public_source_candidate/05_原型/.venv/bin/python",
+        "missing": [],
+        "incompatible": [],
+        "capability_failures": [],
+        "ok": [
+          "fastapi",
+          "pydantic",
+          "uvicorn",
+          "duckdb",
+          "chromadb",
+          "llama_index.core",
+          "docx",
+          "pymupdf",
+          "httpx",
+          "pytest",
+          "jieba",
+          "onnxruntime",
+          "tokenizers",
+          "matplotlib",
+          "multipart"
+        ],
+        "fts5": "PASS",
+        "status": "PASS"
+      },
+      "commands": {
+        "node": "/mnt/d/AI_Tools/nodejs/current/bin/node",
+        "npm": "/mnt/d/AI_Tools/nodejs/current/bin/npm",
+        "libreoffice": "/usr/bin/libreoffice",
+        "soffice": "/usr/bin/soffice",
+        "pdftoppm": "/usr/bin/pdftoppm"
+      },
+      "runtime": "/home/hujunjie/企业赛道_创灵境_基于RAG与大模型的制药企业产品成本智能分析报告系统/药衡智析_增量源码交接/public_source_candidate/05_原型/.runtime/delivery_20260919",
+      "data_package_present": true,
+      "frontend": {
+        "dist_present": true,
+        "build_inputs_tracked": 20,
+        "dist_matches_sources": true,
+        "current_input_hash": "9d5444652d55",
+        "dist_input_hash": "9d5444652d55"
+      },
+      "font": "NotoSansCJK-Regular.ttc: \"Noto Sans CJK SC\" \"Regular\"",
+      "project_truetype_fonts": true,
+      "locks": {
+        "requirements.lock": true,
+        "frontend/package-lock.json": true
+      },
+      "base_mode": "synthetic-pack-ready",
+      "formal_model": "SEPARATE_PROBE_REQUIRED",
+      "note": "PDF导出在Linux用libreoffice；Windows验收须另行安装LibreOffice/soffice后再测",
+      "status": "PASS",
+      "run_id": "delivery_20260919_final",
+      "attempt_id": "2b260558de0d42e495a7cea235702b41",
+      "commit": "04011c2a595a5d9f8efdd8de92bd5fd1dfcd8830"
+    },
+    "regression": {
+      "run_id": "delivery_20260919_final",
+      "attempt_id": "2b260558de0d42e495a7cea235702b41",
+      "commit": "04011c2a595a5d9f8efdd8de92bd5fd1dfcd8830",
+      "status": "PASS",
+      "full_suite": {
+        "passed": 346,
+        "failed": 1,
+        "note": "Includes preserved local historical tests excluded from Git; failed old Coding-policy fixture corrected and rerun"
+      },
+      "targeted_final": {
+        "gateway_and_historical_retrieval": 70,
+        "dashboard_and_provenance": 8,
+        "deck_binding": 6,
+        "recording_script": 1
+      },
+      "scope": "Full existing local suite once, then targeted regressions only; no paid calls",
+      "human_review": "PENDING",
+      "source_test_commit": "7bef1ce8e915ebd6697915d55d8d47da7bfab2d0",
+      "current_change_scope": "display labels and recording timings; targeted real and synthetic browser reruns passed; backend calculation unchanged",
+      "github_ci": {
+        "commit": "04011c2a595a5d9f8efdd8de92bd5fd1dfcd8830",
+        "passed": 287,
+        "skipped": 1,
+        "url": "https://github.com/Lihuaaaa-F/yaoheng-zhixi/actions/runs/35436891332",
+        "note": "Final frozen commit CI success; locked clean checkout tests, frontend build, recording boundary test"
+      }
+    },
+    "scenarios": {
+      "status": "PASS"
+    },
+    "retrieval": {
+      "run_id": "delivery_20260919_final",
+      "attempt_id": "2b260558de0d42e495a7cea235702b41",
+      "revision": "04011c2a595a5d9f8efdd8de92bd5fd1dfcd8830",
+      "revision_kind": "git",
+      "commit": "04011c2a595a5d9f8efdd8de92bd5fd1dfcd8830",
+      "status": "PASS",
+      "scenarios": [
+        {
+          "id": "mechanical",
+          "job_id": "47177aed125642a2893fdf8f29273f64",
+          "attempt_id": "2b260558de0d42e495a7cea235702b41",
+          "snapshot_id": "6c67ce424b3484d6bcc43efca0163047ff021b587263ad9ff0604ee02cba7d99",
+          "artifacts": {
+            "docx": {
+              "artifact_id": "47177aed125642a2893fdf8f29273f64-docx",
+              "sha256": "77365f2c945fb0045458e4fa16bf7a2ead7d5ee8ebbaa05c7797eaac2a1b2c08",
+              "bytes": 68773
+            },
+            "pdf": {
+              "artifact_id": "47177aed125642a2893fdf8f29273f64-pdf",
+              "sha256": "a6bb4bd9746f1d7241292d347bf3eff552737252da28c3fcbbea51589859da80",
+              "bytes": 164158
+            }
+          },
+          "status": "PASS",
+          "mode": "hybrid",
+          "framework": "llama-index-core BaseRetriever/TextNode",
+          "recall_status": "RECALLED",
+          "knowledge_version": "318e2d3a4e0ce6494958",
+          "count": 2
+        },
+        {
+          "id": "chemical",
+          "job_id": "af76eaa5a12c41bb99dcb7dde8dd482a",
+          "attempt_id": "2b260558de0d42e495a7cea235702b41",
+          "snapshot_id": "f3128b3f989d66b0793ed63e7f5b30ff74b252dbe2f59f9739798db7d785a212",
+          "artifacts": {
+            "docx": {
+              "artifact_id": "af76eaa5a12c41bb99dcb7dde8dd482a-docx",
+              "sha256": "ce285ccfb09901591461baa81126e60d98c554e7e91c4a6ce65339a9ee8d2e66",
+              "bytes": 66302
+            },
+            "pdf": {
+              "artifact_id": "af76eaa5a12c41bb99dcb7dde8dd482a-pdf",
+              "sha256": "34f0dd253cbe747b4770a7911df2eb62e612160f136bf7e20d6871511d99e2c4",
+              "bytes": 193859
+            }
+          },
+          "status": "PASS",
+          "mode": "hybrid",
+          "framework": "llama-index-core BaseRetriever/TextNode",
+          "recall_status": "RECALLED",
+          "knowledge_version": "fc52e68409f6a950d853",
+          "count": 2
+        },
+        {
+          "id": "pharma_synthetic",
+          "job_id": "8536eb2ea8064ee895e33e58ee25382b",
+          "attempt_id": "2b260558de0d42e495a7cea235702b41",
+          "snapshot_id": "85392549bfba20d61814c82dd26b77719d5b96db5bfc2d740cbd32201dcd67f8",
+          "artifacts": {
+            "docx": {
+              "artifact_id": "8536eb2ea8064ee895e33e58ee25382b-docx",
+              "sha256": "65da25a2bad37813ef81cc5533102d6cde23c795eed0fa3737a6adaeb2432d28",
+              "bytes": 69015
+            },
+            "pdf": {
+              "artifact_id": "8536eb2ea8064ee895e33e58ee25382b-pdf",
+              "sha256": "49822faba87805893359642cf08e72376749db9487292c2c3cd22182b0eab074",
+              "bytes": 174606
+            }
+          },
+          "status": "PASS",
+          "mode": "hybrid",
+          "framework": "llama-index-core BaseRetriever/TextNode",
+          "recall_status": "RECALLED",
+          "knowledge_version": "85b894e4fc006d833ea5",
+          "count": 2
+        },
+        {
+          "id": "S1",
+          "job_id": "e6b7b2f514654b219ab9a164e9022e47",
+          "attempt_id": "2b260558de0d42e495a7cea235702b41",
+          "snapshot_id": "3a4f905e080e0eb729af4ffa31d9ee31475b5737760bffb68e7a9143a14de9ae",
+          "artifacts": {
+            "docx": {
+              "artifact_id": "e6b7b2f514654b219ab9a164e9022e47-docx",
+              "sha256": "d02c71b20b3879e34446aa51122ab70cabcdb72c14db5e72dd921faa2de8b70c",
+              "bytes": 145684
+            },
+            "pdf": {
+              "artifact_id": "e6b7b2f514654b219ab9a164e9022e47-pdf",
+              "sha256": "89198651a897b31362e8defbdeda221cd787cc11ff504217d95b58e214bfd0ef",
+              "bytes": 495002
+            }
+          },
+          "status": "PASS",
+          "mode": "hybrid",
+          "framework": "llama-index-core BaseRetriever/TextNode",
+          "recall_status": "RECALLED",
+          "knowledge_version": "3839d4d0b83090f103f2",
+          "count": 8
+        },
+        {
+          "id": "S2",
+          "job_id": "4093d2051205465a84e131b01034abf8",
+          "attempt_id": "2b260558de0d42e495a7cea235702b41",
+          "snapshot_id": "4eda1ee3a4878a9548f67f6e4bc25ca8f37084b162ffc21dac43c072186b6fa8",
+          "artifacts": {
+            "docx": {
+              "artifact_id": "4093d2051205465a84e131b01034abf8-docx",
+              "sha256": "051f0dc7bc4eac11d0d44eb83d1dcbbac63f121cd7aede2f8fb322316ba65115",
+              "bytes": 148186
+            },
+            "pdf": {
+              "artifact_id": "4093d2051205465a84e131b01034abf8-pdf",
+              "sha256": "d2a8f412c4af99b9c1ba53bf9e6d374a494e867ffc978b46c5f0f8ce2f74eba7",
+              "bytes": 489091
+            }
+          },
+          "status": "PASS",
+          "mode": "hybrid",
+          "framework": "llama-index-core BaseRetriever/TextNode",
+          "recall_status": "RECALLED",
+          "knowledge_version": "3839d4d0b83090f103f2",
+          "count": 8
+        },
+        {
+          "id": "S3",
+          "job_id": "8e668ea2d65f4cbaba44b75d013055ae",
+          "attempt_id": "2b260558de0d42e495a7cea235702b41",
+          "snapshot_id": "ad3f7bf69b7b7268209ea6aff74c841f7fe083bbedcf0ba33f3f7fe423dce291",
+          "artifacts": {
+            "docx": {
+              "artifact_id": "8e668ea2d65f4cbaba44b75d013055ae-docx",
+              "sha256": "95f6a94be59c771481700fe941e620f1eda34a47b6e106b40979ca701f4132f0",
+              "bytes": 148879
+            },
+            "pdf": {
+              "artifact_id": "8e668ea2d65f4cbaba44b75d013055ae-pdf",
+              "sha256": "71e2dd65268cd5466135a8a12905107a7772d62e39dba4a2cbeb6e0fa6610073",
+              "bytes": 535685
+            }
+          },
+          "status": "PASS",
+          "mode": "hybrid",
+          "framework": "llama-index-core BaseRetriever/TextNode",
+          "recall_status": "RECALLED",
+          "knowledge_version": "3839d4d0b83090f103f2",
+          "count": 8
+        },
+        {
+          "id": "Q2",
+          "job_id": "e3f3b76cb3374fac9ab3f0478664ef53",
+          "attempt_id": "2b260558de0d42e495a7cea235702b41",
+          "snapshot_id": "3c0fb50030687b2e2e761e90f8ebc9dc7d28f89b9fcc289a6a5190e60502ef30",
+          "artifacts": {
+            "docx": {
+              "artifact_id": "e3f3b76cb3374fac9ab3f0478664ef53-docx",
+              "sha256": "8231d8286f9236ef068b1dad5e07eb5159fdcd5e60e439651801eca931c4ec70",
+              "bytes": 152370
+            },
+            "pdf": {
+              "artifact_id": "e3f3b76cb3374fac9ab3f0478664ef53-pdf",
+              "sha256": "5da05f8fcfe74a9329ad2b2b8f2ae8cb8a487024f9b438542101bf71cc1d1cbb",
+              "bytes": 558090
+            }
+          },
+          "status": "PASS",
+          "mode": "hybrid",
+          "framework": "llama-index-core BaseRetriever/TextNode",
+          "recall_status": "RECALLED",
+          "knowledge_version": "3839d4d0b83090f103f2",
+          "count": 8
+        }
+      ]
+    },
+    "rpa": {
+      "run_id": "delivery_20260919_final",
+      "attempt_id": "2b260558de0d42e495a7cea235702b41",
+      "revision": "04011c2a595a5d9f8efdd8de92bd5fd1dfcd8830",
+      "revision_kind": "git",
+      "commit": "04011c2a595a5d9f8efdd8de92bd5fd1dfcd8830",
+      "status": "PASS",
+      "scenarios": [
+        {
+          "id": "mechanical",
+          "job_id": "47177aed125642a2893fdf8f29273f64",
+          "attempt_id": "2b260558de0d42e495a7cea235702b41",
+          "snapshot_id": "6c67ce424b3484d6bcc43efca0163047ff021b587263ad9ff0604ee02cba7d99",
+          "artifacts": {
+            "docx": {
+              "artifact_id": "47177aed125642a2893fdf8f29273f64-docx",
+              "sha256": "77365f2c945fb0045458e4fa16bf7a2ead7d5ee8ebbaa05c7797eaac2a1b2c08",
+              "bytes": 68773
+            },
+            "pdf": {
+              "artifact_id": "47177aed125642a2893fdf8f29273f64-pdf",
+              "sha256": "a6bb4bd9746f1d7241292d347bf3eff552737252da28c3fcbbea51589859da80",
+              "bytes": 164158
+            }
+          },
+          "status": "PASS",
+          "action_id": "YH-a8d297086ed2459980700104",
+          "confirmed_payload_hash": "b7ed5b21d1597d1bffd515e1208035ce5f5c1b1a966514e372588d8a95dccc4c",
+          "receipt_sha256": "c5cf20f32c885efa48bce4edde9eb3b5b0a23c761c0dade3a19a62bdb059aa04",
+          "notification": "SIMULATED_SENT",
+          "human_acknowledgement": "NOT_ENTERED"
+        },
+        {
+          "id": "chemical",
+          "job_id": "af76eaa5a12c41bb99dcb7dde8dd482a",
+          "attempt_id": "2b260558de0d42e495a7cea235702b41",
+          "snapshot_id": "f3128b3f989d66b0793ed63e7f5b30ff74b252dbe2f59f9739798db7d785a212",
+          "artifacts": {
+            "docx": {
+              "artifact_id": "af76eaa5a12c41bb99dcb7dde8dd482a-docx",
+              "sha256": "ce285ccfb09901591461baa81126e60d98c554e7e91c4a6ce65339a9ee8d2e66",
+              "bytes": 66302
+            },
+            "pdf": {
+              "artifact_id": "af76eaa5a12c41bb99dcb7dde8dd482a-pdf",
+              "sha256": "34f0dd253cbe747b4770a7911df2eb62e612160f136bf7e20d6871511d99e2c4",
+              "bytes": 193859
+            }
+          },
+          "status": "PASS",
+          "action_id": "YH-e5060a3fee42a8bd117a363c",
+          "confirmed_payload_hash": "7c03c2f6a89378628805d535ae8b3883431cccfae1c5a2c562ab049013e60d57",
+          "receipt_sha256": "835ab0b3bea240b8b2d92adeec467df11c4937939a3a00b48ec7d7ef471af132",
+          "notification": "SIMULATED_SENT",
+          "human_acknowledgement": "NOT_ENTERED"
+        },
+        {
+          "id": "pharma_synthetic",
+          "job_id": "8536eb2ea8064ee895e33e58ee25382b",
+          "attempt_id": "2b260558de0d42e495a7cea235702b41",
+          "snapshot_id": "85392549bfba20d61814c82dd26b77719d5b96db5bfc2d740cbd32201dcd67f8",
+          "artifacts": {
+            "docx": {
+              "artifact_id": "8536eb2ea8064ee895e33e58ee25382b-docx",
+              "sha256": "65da25a2bad37813ef81cc5533102d6cde23c795eed0fa3737a6adaeb2432d28",
+              "bytes": 69015
+            },
+            "pdf": {
+              "artifact_id": "8536eb2ea8064ee895e33e58ee25382b-pdf",
+              "sha256": "49822faba87805893359642cf08e72376749db9487292c2c3cd22182b0eab074",
+              "bytes": 174606
+            }
+          },
+          "status": "PASS",
+          "action_id": "YH-f5724c906a6f961975ef6646",
+          "confirmed_payload_hash": "591ee6346f36b8eed8339decec1ce23bf55c469dbdded4dabeafbc83439d4cd7",
+          "receipt_sha256": "716099b09574daa3c520a6f93f22776bf34b0fd6976ecddab4d3dd52f3a5d6a1",
+          "notification": "SIMULATED_SENT",
+          "human_acknowledgement": "NOT_ENTERED"
+        },
+        {
+          "id": "S1",
+          "job_id": "e6b7b2f514654b219ab9a164e9022e47",
+          "attempt_id": "2b260558de0d42e495a7cea235702b41",
+          "snapshot_id": "3a4f905e080e0eb729af4ffa31d9ee31475b5737760bffb68e7a9143a14de9ae",
+          "artifacts": {
+            "docx": {
+              "artifact_id": "e6b7b2f514654b219ab9a164e9022e47-docx",
+              "sha256": "d02c71b20b3879e34446aa51122ab70cabcdb72c14db5e72dd921faa2de8b70c",
+              "bytes": 145684
+            },
+            "pdf": {
+              "artifact_id": "e6b7b2f514654b219ab9a164e9022e47-pdf",
+              "sha256": "89198651a897b31362e8defbdeda221cd787cc11ff504217d95b58e214bfd0ef",
+              "bytes": 495002
+            }
+          },
+          "status": "PASS",
+          "action_id": "YH-0cf26ba9fda3c9d1229c636d",
+          "confirmed_payload_hash": "c36c900fa6c151743936124855a6c5ee7c2a2ada78ad5e7e19d1e389bc8a5fb3",
+          "receipt_sha256": "d0bb6fa294274cbc228f115bfe3542788889ad98d7bc09c51efddd35de298ad4",
+          "notification": "SIMULATED_SENT",
+          "human_acknowledgement": "NOT_ENTERED"
+        },
+        {
+          "id": "S2",
+          "job_id": "4093d2051205465a84e131b01034abf8",
+          "attempt_id": "2b260558de0d42e495a7cea235702b41",
+          "snapshot_id": "4eda1ee3a4878a9548f67f6e4bc25ca8f37084b162ffc21dac43c072186b6fa8",
+          "artifacts": {
+            "docx": {
+              "artifact_id": "4093d2051205465a84e131b01034abf8-docx",
+              "sha256": "051f0dc7bc4eac11d0d44eb83d1dcbbac63f121cd7aede2f8fb322316ba65115",
+              "bytes": 148186
+            },
+            "pdf": {
+              "artifact_id": "4093d2051205465a84e131b01034abf8-pdf",
+              "sha256": "d2a8f412c4af99b9c1ba53bf9e6d374a494e867ffc978b46c5f0f8ce2f74eba7",
+              "bytes": 489091
+            }
+          },
+          "status": "PASS",
+          "action_id": "YH-aa4dd092dd5d44dcdcc8efa8",
+          "confirmed_payload_hash": "e89a51ede508aaf516dd80dbee0054c4536684132eedf6138c7ecb039bc91722",
+          "receipt_sha256": "aceec86d2bd12af869a835aebd5dcced2c40c5800cbc46f3bb10f3690d3821d3",
+          "notification": "SIMULATED_SENT",
+          "human_acknowledgement": "NOT_ENTERED"
+        },
+        {
+          "id": "S3",
+          "job_id": "8e668ea2d65f4cbaba44b75d013055ae",
+          "attempt_id": "2b260558de0d42e495a7cea235702b41",
+          "snapshot_id": "ad3f7bf69b7b7268209ea6aff74c841f7fe083bbedcf0ba33f3f7fe423dce291",
+          "artifacts": {
+            "docx": {
+              "artifact_id": "8e668ea2d65f4cbaba44b75d013055ae-docx",
+              "sha256": "95f6a94be59c771481700fe941e620f1eda34a47b6e106b40979ca701f4132f0",
+              "bytes": 148879
+            },
+            "pdf": {
+              "artifact_id": "8e668ea2d65f4cbaba44b75d013055ae-pdf",
+              "sha256": "71e2dd65268cd5466135a8a12905107a7772d62e39dba4a2cbeb6e0fa6610073",
+              "bytes": 535685
+            }
+          },
+          "status": "PASS",
+          "action_id": "YH-6ea906b76bab142a97cf2a2a",
+          "confirmed_payload_hash": "ca1e4103b96d2bd8d7f7d6164d57fbdced44cbe759318ad50ca0a44dad6b2b88",
+          "receipt_sha256": "efddd0943185567f6145dde4729e2557b150a284c174fe02a4fb19937d2eaad8",
+          "notification": "SIMULATED_SENT",
+          "human_acknowledgement": "NOT_ENTERED"
+        },
+        {
+          "id": "Q2",
+          "job_id": "e3f3b76cb3374fac9ab3f0478664ef53",
+          "attempt_id": "2b260558de0d42e495a7cea235702b41",
+          "snapshot_id": "3c0fb50030687b2e2e761e90f8ebc9dc7d28f89b9fcc289a6a5190e60502ef30",
+          "artifacts": {
+            "docx": {
+              "artifact_id": "e3f3b76cb3374fac9ab3f0478664ef53-docx",
+              "sha256": "8231d8286f9236ef068b1dad5e07eb5159fdcd5e60e439651801eca931c4ec70",
+              "bytes": 152370
+            },
+            "pdf": {
+              "artifact_id": "e3f3b76cb3374fac9ab3f0478664ef53-pdf",
+              "sha256": "5da05f8fcfe74a9329ad2b2b8f2ae8cb8a487024f9b438542101bf71cc1d1cbb",
+              "bytes": 558090
+            }
+          },
+          "status": "PASS",
+          "action_id": "YH-bec837afc30ad6d4ea077890",
+          "confirmed_payload_hash": "429c6348e5eab565597f8341e918675411d79240e9a7874278246bb0ed270278",
+          "receipt_sha256": "2c11ee04f64a7cfe59a168bc980193bba8e0031170b00c822a5fafc4e65763f5",
+          "notification": "SIMULATED_SENT",
+          "human_acknowledgement": "NOT_ENTERED"
+        }
+      ]
+    },
+    "browser": {
+      "run_id": "delivery_20260919_final",
+      "attempt_id": "2b260558de0d42e495a7cea235702b41",
+      "commit": "04011c2a595a5d9f8efdd8de92bd5fd1dfcd8830",
+      "status": "PASS",
+      "scope": "Live DOM dashboard/filter/grid checks only; report generation/download/RPA not exercised by this browser run",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "browser": "Browser plugin not available; existing local Chromium via Playwright",
+      "scenarios": [
+        {
+          "id": "mechanical",
+          "job_id": "47177aed125642a2893fdf8f29273f64",
+          "snapshot_id": "6c67ce424b3484d6bcc43efca0163047ff021b587263ad9ff0604ee02cba7d99",
+          "artifacts": {
+            "docx": {
+              "artifact_id": "47177aed125642a2893fdf8f29273f64-docx",
+              "sha256": "77365f2c945fb0045458e4fa16bf7a2ead7d5ee8ebbaa05c7797eaac2a1b2c08",
+              "bytes": 68773
+            },
+            "pdf": {
+              "artifact_id": "47177aed125642a2893fdf8f29273f64-pdf",
+              "sha256": "a6bb4bd9746f1d7241292d347bf3eff552737252da28c3fcbbea51589859da80",
+              "bytes": 164158
+            }
+          },
+          "tested_selection": {
+            "context_id": "mechanical_demo:synthetic-mechanical",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "month": "2026-06",
+            "analysis_type": "monthly",
+            "basis": "unit"
+          },
+          "status": "PASS",
+          "dom_checks": [
+            "exact selected snapshot matches run job",
+            "deterministic focus and missing-data explanation visible",
+            "product-month heatmap rendered and element selector responds",
+            "precise value/missing-state table opens",
+            "no horizontal viewport overflow",
+            "real grid exact-value click changed month and regenerated deterministic analysis"
+          ],
+          "grid_products": [
+            "DEMO-01"
+          ],
+          "grid_months": [
+            "2026-01",
+            "2026-02",
+            "2026-03",
+            "2026-04",
+            "2026-05",
+            "2026-06"
+          ],
+          "screenshots": [
+            "mechanical-focus.png",
+            "mechanical-grid.png"
+          ],
+          "screenshot_hashes": {
+            "mechanical-focus.png": "fe4ee630997ff29c7d087cfbfc5471bc3f72cde3b91e4232d97ad326352b6d02",
+            "mechanical-grid.png": "45df83cb2f89a5ac7b051ab7047b458fa2463c5e612ed319fc5ce3143cc1865b"
+          }
+        },
+        {
+          "id": "chemical",
+          "job_id": "af76eaa5a12c41bb99dcb7dde8dd482a",
+          "snapshot_id": "f3128b3f989d66b0793ed63e7f5b30ff74b252dbe2f59f9739798db7d785a212",
+          "artifacts": {
+            "docx": {
+              "artifact_id": "af76eaa5a12c41bb99dcb7dde8dd482a-docx",
+              "sha256": "ce285ccfb09901591461baa81126e60d98c554e7e91c4a6ce65339a9ee8d2e66",
+              "bytes": 66302
+            },
+            "pdf": {
+              "artifact_id": "af76eaa5a12c41bb99dcb7dde8dd482a-pdf",
+              "sha256": "34f0dd253cbe747b4770a7911df2eb62e612160f136bf7e20d6871511d99e2c4",
+              "bytes": 193859
+            }
+          },
+          "tested_selection": {
+            "context_id": "chemical_demo:synthetic-chemical",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "month": "2026-06",
+            "analysis_type": "monthly",
+            "basis": "unit"
+          },
+          "status": "PASS",
+          "dom_checks": [
+            "exact selected snapshot matches run job",
+            "deterministic focus and missing-data explanation visible",
+            "product-month heatmap rendered and element selector responds",
+            "precise value/missing-state table opens",
+            "no horizontal viewport overflow"
+          ],
+          "grid_products": [
+            "DEMO-01"
+          ],
+          "grid_months": [
+            "2026-01",
+            "2026-02",
+            "2026-03",
+            "2026-04",
+            "2026-05",
+            "2026-06"
+          ],
+          "screenshots": [
+            "chemical-focus.png",
+            "chemical-grid.png"
+          ],
+          "screenshot_hashes": {
+            "chemical-focus.png": "fdb76498eda10c244a7a6bfa6ee2f583459dd048f645fc06f940893ed1f2c6df",
+            "chemical-grid.png": "bdb8309e52de23d6ba97e95c44283c0f116edfd873b644eab25d7018cf4c0911"
+          }
+        },
+        {
+          "id": "pharma_synthetic",
+          "job_id": "8536eb2ea8064ee895e33e58ee25382b",
+          "snapshot_id": "85392549bfba20d61814c82dd26b77719d5b96db5bfc2d740cbd32201dcd67f8",
+          "artifacts": {
+            "docx": {
+              "artifact_id": "8536eb2ea8064ee895e33e58ee25382b-docx",
+              "sha256": "65da25a2bad37813ef81cc5533102d6cde23c795eed0fa3737a6adaeb2432d28",
+              "bytes": 69015
+            },
+            "pdf": {
+              "artifact_id": "8536eb2ea8064ee895e33e58ee25382b-pdf",
+              "sha256": "49822faba87805893359642cf08e72376749db9487292c2c3cd22182b0eab074",
+              "bytes": 174606
+            }
+          },
+          "tested_selection": {
+            "context_id": "pharmaceutical:synthetic-pharma",
+            "factory": "示范工厂A",
+            "product": "DEMO-01",
+            "month": "2026-06",
+            "analysis_type": "monthly",
+            "basis": "unit"
+          },
+          "status": "PASS",
+          "dom_checks": [
+            "exact selected snapshot matches run job",
+            "deterministic focus and missing-data explanation visible",
+            "product-month heatmap rendered and element selector responds",
+            "precise value/missing-state table opens",
+            "no horizontal viewport overflow"
+          ],
+          "grid_products": [
+            "DEMO-01"
+          ],
+          "grid_months": [
+            "2026-01",
+            "2026-02",
+            "2026-03",
+            "2026-04",
+            "2026-05",
+            "2026-06"
+          ],
+          "screenshots": [
+            "pharma_synthetic-focus.png",
+            "pharma_synthetic-grid.png"
+          ],
+          "screenshot_hashes": {
+            "pharma_synthetic-focus.png": "737b2e2edfbde157137f55dbe341d2f748bf17188d3c0c32213f56873ed3c6aa",
+            "pharma_synthetic-grid.png": "067318087ba2cb62f3b9251c828a22b159f7e8f6dad39c3a26b7abc0ac6073fa"
+          }
+        },
+        {
+          "id": "S1",
+          "job_id": "e6b7b2f514654b219ab9a164e9022e47",
+          "snapshot_id": "3a4f905e080e0eb729af4ffa31d9ee31475b5737760bffb68e7a9143a14de9ae",
+          "artifacts": {
+            "docx": {
+              "artifact_id": "e6b7b2f514654b219ab9a164e9022e47-docx",
+              "sha256": "d02c71b20b3879e34446aa51122ab70cabcdb72c14db5e72dd921faa2de8b70c",
+              "bytes": 145684
+            },
+            "pdf": {
+              "artifact_id": "e6b7b2f514654b219ab9a164e9022e47-pdf",
+              "sha256": "89198651a897b31362e8defbdeda221cd787cc11ff504217d95b58e214bfd0ef",
+              "bytes": 495002
+            }
+          },
+          "tested_selection": {
+            "context_id": "pharmaceutical:competition",
+            "factory": "中药一厂",
+            "product": "银黄口服液",
+            "month": "2026-05",
+            "analysis_type": "monthly",
+            "basis": "unit"
+          },
+          "status": "PASS",
+          "dom_checks": [
+            "exact selected snapshot matches run job",
+            "deterministic focus and missing-data explanation visible",
+            "product-month heatmap rendered and element selector responds",
+            "precise value/missing-state table opens",
+            "no horizontal viewport overflow",
+            "live pharmaceutical knowledge graph visible"
+          ],
+          "grid_products": [
+            "六味地黄胶囊",
+            "板蓝根颗粒",
+            "银黄口服液"
+          ],
+          "grid_months": [
+            "2025-12",
+            "2026-01",
+            "2026-02",
+            "2026-03",
+            "2026-04",
+            "2026-05"
+          ],
+          "screenshots": [
+            "S1-focus.png",
+            "S1-grid.png",
+            "S1-graph.png"
+          ],
+          "screenshot_hashes": {
+            "S1-focus.png": "f2e153ebbee18a6023395bf20331ccf17582b348117e24c0b074c7f8875a03c1",
+            "S1-grid.png": "324fc6a454a14a3e313f4e7c3c60ba49eae0efa1c9d83bba0b62206de246a6a1",
+            "S1-graph.png": "a45abc687fb66216a793a638272051a51cc0390d917f5c66b7602cef781b8654"
+          }
+        },
+        {
+          "id": "S2",
+          "job_id": "4093d2051205465a84e131b01034abf8",
+          "snapshot_id": "4eda1ee3a4878a9548f67f6e4bc25ca8f37084b162ffc21dac43c072186b6fa8",
+          "artifacts": {
+            "docx": {
+              "artifact_id": "4093d2051205465a84e131b01034abf8-docx",
+              "sha256": "051f0dc7bc4eac11d0d44eb83d1dcbbac63f121cd7aede2f8fb322316ba65115",
+              "bytes": 148186
+            },
+            "pdf": {
+              "artifact_id": "4093d2051205465a84e131b01034abf8-pdf",
+              "sha256": "d2a8f412c4af99b9c1ba53bf9e6d374a494e867ffc978b46c5f0f8ce2f74eba7",
+              "bytes": 489091
+            }
+          },
+          "tested_selection": {
+            "context_id": "pharmaceutical:competition",
+            "factory": "中药一厂",
+            "product": "板蓝根颗粒",
+            "month": "2026-05",
+            "analysis_type": "special",
+            "basis": "unit"
+          },
+          "status": "PASS",
+          "dom_checks": [
+            "exact selected snapshot matches run job",
+            "deterministic focus and missing-data explanation visible",
+            "product-month heatmap rendered and element selector responds",
+            "precise value/missing-state table opens",
+            "no horizontal viewport overflow"
+          ],
+          "grid_products": [
+            "六味地黄胶囊",
+            "板蓝根颗粒",
+            "银黄口服液"
+          ],
+          "grid_months": [
+            "2025-12",
+            "2026-01",
+            "2026-02",
+            "2026-03",
+            "2026-04",
+            "2026-05"
+          ],
+          "screenshots": [
+            "S2-focus.png",
+            "S2-grid.png"
+          ],
+          "screenshot_hashes": {
+            "S2-focus.png": "6ecff64a2ec65defe2bef83e7140c57d8b61373b5f46fdb352293276e4e2b8dd",
+            "S2-grid.png": "84cbef5ed8ff002d54df446148411c6cf0195304f50a2cc4e46653702caab06a"
+          }
+        },
+        {
+          "id": "S3",
+          "job_id": "8e668ea2d65f4cbaba44b75d013055ae",
+          "snapshot_id": "ad3f7bf69b7b7268209ea6aff74c841f7fe083bbedcf0ba33f3f7fe423dce291",
+          "artifacts": {
+            "docx": {
+              "artifact_id": "8e668ea2d65f4cbaba44b75d013055ae-docx",
+              "sha256": "95f6a94be59c771481700fe941e620f1eda34a47b6e106b40979ca701f4132f0",
+              "bytes": 148879
+            },
+            "pdf": {
+              "artifact_id": "8e668ea2d65f4cbaba44b75d013055ae-pdf",
+              "sha256": "71e2dd65268cd5466135a8a12905107a7772d62e39dba4a2cbeb6e0fa6610073",
+              "bytes": 535685
+            }
+          },
+          "tested_selection": {
+            "context_id": "pharmaceutical:competition",
+            "factory": "中药一厂",
+            "product": "六味地黄胶囊",
+            "month": "2026-03",
+            "analysis_type": "monthly",
+            "basis": "unit"
+          },
+          "status": "PASS",
+          "dom_checks": [
+            "exact selected snapshot matches run job",
+            "deterministic focus and missing-data explanation visible",
+            "product-month heatmap rendered and element selector responds",
+            "precise value/missing-state table opens",
+            "no horizontal viewport overflow"
+          ],
+          "grid_products": [
+            "六味地黄胶囊",
+            "板蓝根颗粒",
+            "银黄口服液"
+          ],
+          "grid_months": [
+            "2025-10",
+            "2025-11",
+            "2025-12",
+            "2026-01",
+            "2026-02",
+            "2026-03"
+          ],
+          "screenshots": [
+            "S3-focus.png",
+            "S3-grid.png"
+          ],
+          "screenshot_hashes": {
+            "S3-focus.png": "85c9c5e29ccc3f04bcbe5f91bcfef42f0f4eda63f546bec56f445bd557ac618f",
+            "S3-grid.png": "2bacb5c057d381cbd30bead99be786020c6fe808773fc4e3ea84afcaf57052c8"
+          }
+        },
+        {
+          "id": "Q2",
+          "job_id": "e3f3b76cb3374fac9ab3f0478664ef53",
+          "snapshot_id": "3c0fb50030687b2e2e761e90f8ebc9dc7d28f89b9fcc289a6a5190e60502ef30",
+          "artifacts": {
+            "docx": {
+              "artifact_id": "e3f3b76cb3374fac9ab3f0478664ef53-docx",
+              "sha256": "8231d8286f9236ef068b1dad5e07eb5159fdcd5e60e439651801eca931c4ec70",
+              "bytes": 152370
+            },
+            "pdf": {
+              "artifact_id": "e3f3b76cb3374fac9ab3f0478664ef53-pdf",
+              "sha256": "5da05f8fcfe74a9329ad2b2b8f2ae8cb8a487024f9b438542101bf71cc1d1cbb",
+              "bytes": 558090
+            }
+          },
+          "tested_selection": {
+            "context_id": "pharmaceutical:competition",
+            "factory": "中药一厂",
+            "product": "银黄口服液",
+            "month": "2026-06",
+            "analysis_type": "quarterly",
+            "basis": "unit"
+          },
+          "status": "PASS",
+          "dom_checks": [
+            "exact selected snapshot matches run job",
+            "deterministic focus and missing-data explanation visible",
+            "product-month heatmap rendered and element selector responds",
+            "precise value/missing-state table opens",
+            "no horizontal viewport overflow"
+          ],
+          "grid_products": [
+            "六味地黄胶囊",
+            "板蓝根颗粒",
+            "银黄口服液"
+          ],
+          "grid_months": [
+            "2026-01",
+            "2026-02",
+            "2026-03",
+            "2026-04",
+            "2026-05",
+            "2026-06"
+          ],
+          "screenshots": [
+            "Q2-focus.png",
+            "Q2-grid.png"
+          ],
+          "screenshot_hashes": {
+            "Q2-focus.png": "882e1c222fcd17e19e1e15428f2f956616cb458e98bb7c44263c32ca0178ab9a",
+            "Q2-grid.png": "7dc3da157a2c2131b1dab75b6422e807837f36f4b8d31407adb27246efe6f35a"
+          }
+        }
+      ],
+      "checks": [
+        "seven actual dashboard selections across three industries",
+        "no model-generating endpoint visited",
+        "no page errors or console errors",
+        "manifest job/snapshot/artifact bindings verified; artifact bytes not inspected in this browser run",
+        "competition authorization wording updated in actual DOM",
+        "decision raw hashes and policy version absent from expanded business text; details remain collapsible"
+      ],
+      "errors": [],
+      "blocked_model_requests": [],
+      "synthetic_comparison": {
+        "path": "/tmp/yaoheng-dashboard-ui/qa.json",
+        "scope": "Independent two-product API-mocked browser contract; separate from this live evidence",
+        "status": "REUSED_SEPARATE_SYNTHETIC_CHECK",
+        "sha256": "edb2a273486c498e803dadec5f46ce2de7f760da853943f64c03d14582a4a1d8"
+      },
+      "dom_status": "PASS",
+      "visual_status": "PASS_FOR_INSPECTED_DASHBOARD_VIEWS",
+      "visual_inspected": [
+        "chemical-grid.png",
+        "mechanical-focus.png",
+        "S1-grid.png",
+        "S1-graph.png",
+        "Q2-focus.png"
+      ],
+      "visual_notes": [
+        "化工网格循环小数标签已缩短，相邻月份无文字重叠。",
+        "机械与季度重点段落显示精度清晰，原精确值留API与精确表。",
+        "S1知识图谱为本次重新打开及截图，仅证明图谱可渲染；力导图仍有局部标签拥挤，不作为逐节点可读性验收。"
+      ],
+      "frontend_build_files": {
+        ".build-inputs": "74e4977d0db17ecbf087bc92c441089be50240142a35cfbacdc42b77bde4a581",
+        "index.html": "77340202f64caabbb9b126373c1ff359f8666485490215ec4efe5610beb0a62e",
+        "favicon.svg": "6fe7f2a6f932c5268a1fdef50a8ab7351172520f90bcc952e83430de4fd40540",
+        "assets/index-DWxJrbP_.js": "dcab72a81e45a5d743ac8cb942ce4c0c18b70a0078e5895243b4035119da1735",
+        "assets/index-hvKVbCO9.css": "10ef7a24bc581985772dbf4e2a50351a222dfde18e09fdadc0b5aa34a6a51a19"
+      },
+      "limitations": [
+        "This run did not generate or download reports, send RPA actions, call model endpoints, or evaluate professional human scores.",
+        "All seven scenarios have live dashboard selections; only S1 graph and mechanical grid month-click were exercised.",
+        "Mobile layout and synthetic strict-threshold/two-product controls reuse separately identified synthetic browser results."
+      ]
+    },
+    "model_live": {
+      "run_id": "delivery_20260919_final",
+      "attempt_id": "2b260558de0d42e495a7cea235702b41",
+      "revision": "04011c2a595a5d9f8efdd8de92bd5fd1dfcd8830",
+      "revision_kind": "git",
+      "commit": "04011c2a595a5d9f8efdd8de92bd5fd1dfcd8830",
+      "status": "PASS",
+      "scenarios": [
+        {
+          "id": "mechanical",
+          "job_id": "47177aed125642a2893fdf8f29273f64",
+          "attempt_id": "2b260558de0d42e495a7cea235702b41",
+          "snapshot_id": "6c67ce424b3484d6bcc43efca0163047ff021b587263ad9ff0604ee02cba7d99",
+          "artifacts": {
+            "docx": {
+              "artifact_id": "47177aed125642a2893fdf8f29273f64-docx",
+              "sha256": "77365f2c945fb0045458e4fa16bf7a2ead7d5ee8ebbaa05c7797eaac2a1b2c08",
+              "bytes": 68773
+            },
+            "pdf": {
+              "artifact_id": "47177aed125642a2893fdf8f29273f64-pdf",
+              "sha256": "a6bb4bd9746f1d7241292d347bf3eff552737252da28c3fcbbea51589859da80",
+              "bytes": 164158
+            }
+          },
+          "status": "PASS",
+          "generation_mode": "llm",
+          "model_live": true,
+          "identity": {
+            "status": "VERIFIED",
+            "requested": "deepseek-flash",
+            "returned": [
+              "deepseek-flash"
+            ],
+            "reason": "全部调用响应model经核验一致"
+          },
+          "usage": {
+            "prompt_tokens": 11780,
+            "completion_tokens": 508,
+            "total_tokens": 12288,
+            "calls": 1
+          },
+          "alert_coverage": {
+            "alert-ff6aa56e062424c59a20": {
+              "covered": true,
+              "element_key": "labor",
+              "basis": "unit"
+            },
+            "alert-9872ae4f1878c302216a": {
+              "covered": true,
+              "element_key": "labor",
+              "basis": "total"
+            }
+          },
+          "failures": []
+        },
+        {
+          "id": "chemical",
+          "job_id": "af76eaa5a12c41bb99dcb7dde8dd482a",
+          "attempt_id": "2b260558de0d42e495a7cea235702b41",
+          "snapshot_id": "f3128b3f989d66b0793ed63e7f5b30ff74b252dbe2f59f9739798db7d785a212",
+          "artifacts": {
+            "docx": {
+              "artifact_id": "af76eaa5a12c41bb99dcb7dde8dd482a-docx",
+              "sha256": "ce285ccfb09901591461baa81126e60d98c554e7e91c4a6ce65339a9ee8d2e66",
+              "bytes": 66302
+            },
+            "pdf": {
+              "artifact_id": "af76eaa5a12c41bb99dcb7dde8dd482a-pdf",
+              "sha256": "34f0dd253cbe747b4770a7911df2eb62e612160f136bf7e20d6871511d99e2c4",
+              "bytes": 193859
+            }
+          },
+          "status": "PASS",
+          "generation_mode": "llm",
+          "model_live": true,
+          "identity": {
+            "status": "VERIFIED",
+            "requested": "deepseek-flash",
+            "returned": [
+              "deepseek-flash"
+            ],
+            "reason": "全部调用响应model经核验一致"
+          },
+          "usage": {
+            "prompt_tokens": 20769,
+            "completion_tokens": 1078,
+            "total_tokens": 21847,
+            "calls": 1
+          },
+          "alert_coverage": {
+            "alert-0d06145771f5bef50584": {
+              "covered": true,
+              "element_key": "materials",
+              "basis": "unit"
+            },
+            "alert-5146978a1ebc4b4184cf": {
+              "covered": true,
+              "element_key": "materials",
+              "basis": "total"
+            },
+            "alert-dbb6b0a98a43f0fffa47": {
+              "covered": true,
+              "element_key": "overhead",
+              "basis": "unit"
+            },
+            "alert-339273f60c5c8a74693e": {
+              "covered": true,
+              "element_key": "overhead",
+              "basis": "total"
+            },
+            "alert-e34d7b710b8565614952": {
+              "covered": true,
+              "element_key": "energy",
+              "basis": "unit"
+            },
+            "alert-355941e56b139c0b6b7d": {
+              "covered": true,
+              "element_key": "energy",
+              "basis": "total"
+            }
+          },
+          "failures": []
+        },
+        {
+          "id": "pharma_synthetic",
+          "job_id": "8536eb2ea8064ee895e33e58ee25382b",
+          "attempt_id": "2b260558de0d42e495a7cea235702b41",
+          "snapshot_id": "85392549bfba20d61814c82dd26b77719d5b96db5bfc2d740cbd32201dcd67f8",
+          "artifacts": {
+            "docx": {
+              "artifact_id": "8536eb2ea8064ee895e33e58ee25382b-docx",
+              "sha256": "65da25a2bad37813ef81cc5533102d6cde23c795eed0fa3737a6adaeb2432d28",
+              "bytes": 69015
+            },
+            "pdf": {
+              "artifact_id": "8536eb2ea8064ee895e33e58ee25382b-pdf",
+              "sha256": "49822faba87805893359642cf08e72376749db9487292c2c3cd22182b0eab074",
+              "bytes": 174606
+            }
+          },
+          "status": "PASS",
+          "generation_mode": "llm",
+          "model_live": true,
+          "identity": {
+            "status": "VERIFIED",
+            "requested": "deepseek-flash",
+            "returned": [
+              "deepseek-flash"
+            ],
+            "reason": "全部调用响应model经核验一致"
+          },
+          "usage": {
+            "prompt_tokens": 15741,
+            "completion_tokens": 970,
+            "total_tokens": 16711,
+            "calls": 1
+          },
+          "alert_coverage": {
+            "alert-7de59a4bd7a15ca903d8": {
+              "covered": true,
+              "element_key": "materials",
+              "basis": "unit"
+            },
+            "alert-d4ee897ef489c84a1d27": {
+              "covered": true,
+              "element_key": "materials",
+              "basis": "total"
+            },
+            "alert-279e9116ed7d4c5d5327": {
+              "covered": true,
+              "element_key": "overhead",
+              "basis": "unit"
+            },
+            "alert-90f24468dd56144ae579": {
+              "covered": true,
+              "element_key": "overhead",
+              "basis": "total"
+            }
+          },
+          "failures": []
+        },
+        {
+          "id": "S1",
+          "job_id": "e6b7b2f514654b219ab9a164e9022e47",
+          "attempt_id": "2b260558de0d42e495a7cea235702b41",
+          "snapshot_id": "3a4f905e080e0eb729af4ffa31d9ee31475b5737760bffb68e7a9143a14de9ae",
+          "artifacts": {
+            "docx": {
+              "artifact_id": "e6b7b2f514654b219ab9a164e9022e47-docx",
+              "sha256": "d02c71b20b3879e34446aa51122ab70cabcdb72c14db5e72dd921faa2de8b70c",
+              "bytes": 145684
+            },
+            "pdf": {
+              "artifact_id": "e6b7b2f514654b219ab9a164e9022e47-pdf",
+              "sha256": "89198651a897b31362e8defbdeda221cd787cc11ff504217d95b58e214bfd0ef",
+              "bytes": 495002
+            }
+          },
+          "status": "PASS",
+          "generation_mode": "llm",
+          "model_live": true,
+          "identity": {
+            "status": "VERIFIED",
+            "requested": "deepseek-flash",
+            "returned": [
+              "deepseek-flash"
+            ],
+            "reason": "全部调用响应model经核验一致"
+          },
+          "usage": {
+            "prompt_tokens": 21184,
+            "completion_tokens": 748,
+            "total_tokens": 21932,
+            "calls": 1
+          },
+          "alert_coverage": {},
+          "failures": []
+        },
+        {
+          "id": "S2",
+          "job_id": "4093d2051205465a84e131b01034abf8",
+          "attempt_id": "2b260558de0d42e495a7cea235702b41",
+          "snapshot_id": "4eda1ee3a4878a9548f67f6e4bc25ca8f37084b162ffc21dac43c072186b6fa8",
+          "artifacts": {
+            "docx": {
+              "artifact_id": "4093d2051205465a84e131b01034abf8-docx",
+              "sha256": "051f0dc7bc4eac11d0d44eb83d1dcbbac63f121cd7aede2f8fb322316ba65115",
+              "bytes": 148186
+            },
+            "pdf": {
+              "artifact_id": "4093d2051205465a84e131b01034abf8-pdf",
+              "sha256": "d2a8f412c4af99b9c1ba53bf9e6d374a494e867ffc978b46c5f0f8ce2f74eba7",
+              "bytes": 489091
+            }
+          },
+          "status": "PASS",
+          "generation_mode": "llm",
+          "model_live": true,
+          "identity": {
+            "status": "VERIFIED",
+            "requested": "deepseek-flash",
+            "returned": [
+              "deepseek-flash"
+            ],
+            "reason": "全部调用响应model经核验一致"
+          },
+          "usage": {
+            "prompt_tokens": 20136,
+            "completion_tokens": 842,
+            "total_tokens": 20978,
+            "calls": 1
+          },
+          "alert_coverage": {},
+          "failures": []
+        },
+        {
+          "id": "S3",
+          "job_id": "8e668ea2d65f4cbaba44b75d013055ae",
+          "attempt_id": "2b260558de0d42e495a7cea235702b41",
+          "snapshot_id": "ad3f7bf69b7b7268209ea6aff74c841f7fe083bbedcf0ba33f3f7fe423dce291",
+          "artifacts": {
+            "docx": {
+              "artifact_id": "8e668ea2d65f4cbaba44b75d013055ae-docx",
+              "sha256": "95f6a94be59c771481700fe941e620f1eda34a47b6e106b40979ca701f4132f0",
+              "bytes": 148879
+            },
+            "pdf": {
+              "artifact_id": "8e668ea2d65f4cbaba44b75d013055ae-pdf",
+              "sha256": "71e2dd65268cd5466135a8a12905107a7772d62e39dba4a2cbeb6e0fa6610073",
+              "bytes": 535685
+            }
+          },
+          "status": "PASS",
+          "generation_mode": "llm",
+          "model_live": true,
+          "identity": {
+            "status": "VERIFIED",
+            "requested": "deepseek-flash",
+            "returned": [
+              "deepseek-flash"
+            ],
+            "reason": "全部调用响应model经核验一致"
+          },
+          "usage": {
+            "prompt_tokens": 26605,
+            "completion_tokens": 1218,
+            "total_tokens": 27823,
+            "calls": 1
+          },
+          "alert_coverage": {
+            "alert-ae6cfac6295472537aa5": {
+              "covered": true,
+              "element_key": "materials",
+              "basis": "total"
+            },
+            "alert-a3392a1012a3bdbfd2a9": {
+              "covered": true,
+              "element_key": "labor",
+              "basis": "total"
+            },
+            "alert-918366df38ec19897ded": {
+              "covered": true,
+              "element_key": "overhead",
+              "basis": "total"
+            }
+          },
+          "failures": []
+        },
+        {
+          "id": "Q2",
+          "job_id": "e3f3b76cb3374fac9ab3f0478664ef53",
+          "attempt_id": "2b260558de0d42e495a7cea235702b41",
+          "snapshot_id": "3c0fb50030687b2e2e761e90f8ebc9dc7d28f89b9fcc289a6a5190e60502ef30",
+          "artifacts": {
+            "docx": {
+              "artifact_id": "e3f3b76cb3374fac9ab3f0478664ef53-docx",
+              "sha256": "8231d8286f9236ef068b1dad5e07eb5159fdcd5e60e439651801eca931c4ec70",
+              "bytes": 152370
+            },
+            "pdf": {
+              "artifact_id": "e3f3b76cb3374fac9ab3f0478664ef53-pdf",
+              "sha256": "5da05f8fcfe74a9329ad2b2b8f2ae8cb8a487024f9b438542101bf71cc1d1cbb",
+              "bytes": 558090
+            }
+          },
+          "status": "PASS",
+          "generation_mode": "llm",
+          "model_live": true,
+          "identity": {
+            "status": "VERIFIED",
+            "requested": "deepseek-flash",
+            "returned": [
+              "deepseek-flash"
+            ],
+            "reason": "全部调用响应model经核验一致"
+          },
+          "usage": {
+            "prompt_tokens": 28162,
+            "completion_tokens": 1586,
+            "total_tokens": 29748,
+            "calls": 1
+          },
+          "alert_coverage": {
+            "alert-f63295afdd8152cfe65f": {
+              "covered": true,
+              "element_key": "materials",
+              "basis": "total"
+            },
+            "alert-4dfbe0c1984e3bac496f": {
+              "covered": true,
+              "element_key": "labor",
+              "basis": "total"
+            },
+            "alert-0c80378a697b26dda64c": {
+              "covered": true,
+              "element_key": "overhead",
+              "basis": "total"
+            }
+          },
+          "failures": []
+        }
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "id": "mechanical",
+      "status": "PASS",
+      "job_id": "47177aed125642a2893fdf8f29273f64",
+      "snapshot_id": "6c67ce424b3484d6bcc43efca0163047ff021b587263ad9ff0604ee02cba7d99",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "47177aed125642a2893fdf8f29273f64-docx",
+          "sha256": "77365f2c945fb0045458e4fa16bf7a2ead7d5ee8ebbaa05c7797eaac2a1b2c08",
+          "bytes": 68773
+        },
+        "pdf": {
+          "artifact_id": "47177aed125642a2893fdf8f29273f64-pdf",
+          "sha256": "a6bb4bd9746f1d7241292d347bf3eff552737252da28c3fcbbea51589859da80",
+          "bytes": 164158
+        }
+      },
+      "generation_mode": "llm",
+      "human_review": "PENDING"
+    },
+    {
+      "id": "chemical",
+      "status": "PASS",
+      "job_id": "af76eaa5a12c41bb99dcb7dde8dd482a",
+      "snapshot_id": "f3128b3f989d66b0793ed63e7f5b30ff74b252dbe2f59f9739798db7d785a212",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "af76eaa5a12c41bb99dcb7dde8dd482a-docx",
+          "sha256": "ce285ccfb09901591461baa81126e60d98c554e7e91c4a6ce65339a9ee8d2e66",
+          "bytes": 66302
+        },
+        "pdf": {
+          "artifact_id": "af76eaa5a12c41bb99dcb7dde8dd482a-pdf",
+          "sha256": "34f0dd253cbe747b4770a7911df2eb62e612160f136bf7e20d6871511d99e2c4",
+          "bytes": 193859
+        }
+      },
+      "generation_mode": "llm",
+      "human_review": "PENDING"
+    },
+    {
+      "id": "pharma_synthetic",
+      "status": "PASS",
+      "job_id": "8536eb2ea8064ee895e33e58ee25382b",
+      "snapshot_id": "85392549bfba20d61814c82dd26b77719d5b96db5bfc2d740cbd32201dcd67f8",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "8536eb2ea8064ee895e33e58ee25382b-docx",
+          "sha256": "65da25a2bad37813ef81cc5533102d6cde23c795eed0fa3737a6adaeb2432d28",
+          "bytes": 69015
+        },
+        "pdf": {
+          "artifact_id": "8536eb2ea8064ee895e33e58ee25382b-pdf",
+          "sha256": "49822faba87805893359642cf08e72376749db9487292c2c3cd22182b0eab074",
+          "bytes": 174606
+        }
+      },
+      "generation_mode": "llm",
+      "human_review": "PENDING"
+    },
+    {
+      "id": "S1",
+      "status": "PASS",
+      "job_id": "e6b7b2f514654b219ab9a164e9022e47",
+      "snapshot_id": "3a4f905e080e0eb729af4ffa31d9ee31475b5737760bffb68e7a9143a14de9ae",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "e6b7b2f514654b219ab9a164e9022e47-docx",
+          "sha256": "d02c71b20b3879e34446aa51122ab70cabcdb72c14db5e72dd921faa2de8b70c",
+          "bytes": 145684
+        },
+        "pdf": {
+          "artifact_id": "e6b7b2f514654b219ab9a164e9022e47-pdf",
+          "sha256": "89198651a897b31362e8defbdeda221cd787cc11ff504217d95b58e214bfd0ef",
+          "bytes": 495002
+        }
+      },
+      "generation_mode": "llm",
+      "human_review": "PENDING"
+    },
+    {
+      "id": "S2",
+      "status": "PASS",
+      "job_id": "4093d2051205465a84e131b01034abf8",
+      "snapshot_id": "4eda1ee3a4878a9548f67f6e4bc25ca8f37084b162ffc21dac43c072186b6fa8",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "4093d2051205465a84e131b01034abf8-docx",
+          "sha256": "051f0dc7bc4eac11d0d44eb83d1dcbbac63f121cd7aede2f8fb322316ba65115",
+          "bytes": 148186
+        },
+        "pdf": {
+          "artifact_id": "4093d2051205465a84e131b01034abf8-pdf",
+          "sha256": "d2a8f412c4af99b9c1ba53bf9e6d374a494e867ffc978b46c5f0f8ce2f74eba7",
+          "bytes": 489091
+        }
+      },
+      "generation_mode": "llm",
+      "human_review": "PENDING"
+    },
+    {
+      "id": "S3",
+      "status": "PASS",
+      "job_id": "8e668ea2d65f4cbaba44b75d013055ae",
+      "snapshot_id": "ad3f7bf69b7b7268209ea6aff74c841f7fe083bbedcf0ba33f3f7fe423dce291",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "8e668ea2d65f4cbaba44b75d013055ae-docx",
+          "sha256": "95f6a94be59c771481700fe941e620f1eda34a47b6e106b40979ca701f4132f0",
+          "bytes": 148879
+        },
+        "pdf": {
+          "artifact_id": "8e668ea2d65f4cbaba44b75d013055ae-pdf",
+          "sha256": "71e2dd65268cd5466135a8a12905107a7772d62e39dba4a2cbeb6e0fa6610073",
+          "bytes": 535685
+        }
+      },
+      "generation_mode": "llm",
+      "human_review": "PENDING"
+    },
+    {
+      "id": "Q2",
+      "status": "PASS",
+      "job_id": "e3f3b76cb3374fac9ab3f0478664ef53",
+      "snapshot_id": "3c0fb50030687b2e2e761e90f8ebc9dc7d28f89b9fcc289a6a5190e60502ef30",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "e3f3b76cb3374fac9ab3f0478664ef53-docx",
+          "sha256": "8231d8286f9236ef068b1dad5e07eb5159fdcd5e60e439651801eca931c4ec70",
+          "bytes": 152370
+        },
+        "pdf": {
+          "artifact_id": "e3f3b76cb3374fac9ab3f0478664ef53-pdf",
+          "sha256": "5da05f8fcfe74a9329ad2b2b8f2ae8cb8a487024f9b438542101bf71cc1d1cbb",
+          "bytes": 558090
+        }
+      },
+      "generation_mode": "llm",
+      "human_review": "PENDING"
+    }
+  ],
+  "human_review": "PENDING",
+  "competition_ready": false,
+  "status": "PASS"
+}

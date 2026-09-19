@@ -1,0 +1,60 @@
+{
+  "status": "PASS",
+  "scope": "cached report rendering only; report-generation POST blocked; no new model calls by screenshot step",
+  "captures": [
+    {
+      "name": "desktop-stable",
+      "dimensions": {
+        "width": 1440,
+        "viewportHeight": 1000,
+        "documentHeight": 3824,
+        "horizontalOverflow": false,
+        "fonts": "loaded",
+        "charts": 4,
+        "findings": 6,
+        "footerText": "成本共变仅支持原因假设；生产变更与整改完成均须人工确认。合成样例仅验证框架，不代表行业基准。"
+      },
+      "actual": {
+        "width": 1440,
+        "height": 3824
+      }
+    },
+    {
+      "name": "mobile-stable",
+      "dimensions": {
+        "width": 390,
+        "viewportHeight": 844,
+        "documentHeight": 5260,
+        "horizontalOverflow": false,
+        "fonts": "loaded",
+        "charts": 4,
+        "findings": 6,
+        "footerText": "成本共变仅支持原因假设；生产变更与整改完成均须人工确认。合成样例仅验证框架，不代表行业基准。"
+      },
+      "actual": {
+        "width": 390,
+        "height": 5260
+      }
+    }
+  ],
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/api/industry/catalog"
+    },
+    {
+      "method": "GET",
+      "path": "/api/catalog"
+    },
+    {
+      "method": "POST",
+      "path": "/api/analyses"
+    },
+    {
+      "method": "GET",
+      "path": "/api/jobs"
+    }
+  ],
+  "blocked": [],
+  "errors": []
+}

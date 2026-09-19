@@ -1,8 +1,9 @@
 {
-  "run_id": "release_20260918_5974275",
-  "revision": "5974275ca90d8ba5dd524c5320845c3906348dfa",
+  "run_id": "delivery_20260919_final",
+  "attempt_id": "2b260558de0d42e495a7cea235702b41",
+  "revision": "04011c2a595a5d9f8efdd8de92bd5fd1dfcd8830",
   "revision_kind": "git",
-  "commit": "5974275ca90d8ba5dd524c5320845c3906348dfa",
+  "commit": "04011c2a595a5d9f8efdd8de92bd5fd1dfcd8830",
   "required_scenarios": [
     "mechanical",
     "chemical",
@@ -15,93 +16,214 @@
   "scenarios": [
     {
       "id": "mechanical",
-      "job_id": "bd269b405996469292ef8521e8507568",
+      "job_id": "47177aed125642a2893fdf8f29273f64",
+      "attempt_id": "2b260558de0d42e495a7cea235702b41",
       "status": "DEGRADED",
       "docx": "PASS",
       "pdf": "PASS",
-      "error": null
+      "error": null,
+      "snapshot_id": "6c67ce424b3484d6bcc43efca0163047ff021b587263ad9ff0604ee02cba7d99",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "47177aed125642a2893fdf8f29273f64-docx",
+          "sha256": "77365f2c945fb0045458e4fa16bf7a2ead7d5ee8ebbaa05c7797eaac2a1b2c08",
+          "bytes": 68773
+        },
+        "pdf": {
+          "artifact_id": "47177aed125642a2893fdf8f29273f64-pdf",
+          "sha256": "a6bb4bd9746f1d7241292d347bf3eff552737252da28c3fcbbea51589859da80",
+          "bytes": 164158
+        }
+      }
     },
     {
       "id": "chemical",
-      "job_id": "44aa6367278a4400838afb5a95ee3b68",
+      "job_id": "af76eaa5a12c41bb99dcb7dde8dd482a",
+      "attempt_id": "2b260558de0d42e495a7cea235702b41",
       "status": "DEGRADED",
       "docx": "PASS",
       "pdf": "PASS",
-      "error": null
+      "error": null,
+      "snapshot_id": "f3128b3f989d66b0793ed63e7f5b30ff74b252dbe2f59f9739798db7d785a212",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "af76eaa5a12c41bb99dcb7dde8dd482a-docx",
+          "sha256": "ce285ccfb09901591461baa81126e60d98c554e7e91c4a6ce65339a9ee8d2e66",
+          "bytes": 66302
+        },
+        "pdf": {
+          "artifact_id": "af76eaa5a12c41bb99dcb7dde8dd482a-pdf",
+          "sha256": "34f0dd253cbe747b4770a7911df2eb62e612160f136bf7e20d6871511d99e2c4",
+          "bytes": 193859
+        }
+      }
     },
     {
       "id": "pharma_synthetic",
-      "job_id": "d50793d5345e41b08bd985a6d6f350d9",
+      "job_id": "8536eb2ea8064ee895e33e58ee25382b",
+      "attempt_id": "2b260558de0d42e495a7cea235702b41",
       "status": "DEGRADED",
       "docx": "PASS",
       "pdf": "PASS",
-      "error": null
+      "error": null,
+      "snapshot_id": "85392549bfba20d61814c82dd26b77719d5b96db5bfc2d740cbd32201dcd67f8",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "8536eb2ea8064ee895e33e58ee25382b-docx",
+          "sha256": "65da25a2bad37813ef81cc5533102d6cde23c795eed0fa3737a6adaeb2432d28",
+          "bytes": 69015
+        },
+        "pdf": {
+          "artifact_id": "8536eb2ea8064ee895e33e58ee25382b-pdf",
+          "sha256": "49822faba87805893359642cf08e72376749db9487292c2c3cd22182b0eab074",
+          "bytes": 174606
+        }
+      }
     },
     {
       "id": "S1",
-      "job_id": "e2f1bdf2ed764c04b79fad254c7df948",
+      "job_id": "e6b7b2f514654b219ab9a164e9022e47",
+      "attempt_id": "2b260558de0d42e495a7cea235702b41",
       "status": "DEGRADED",
       "docx": "PASS",
       "pdf": "PASS",
-      "error": null
+      "error": null,
+      "snapshot_id": "3a4f905e080e0eb729af4ffa31d9ee31475b5737760bffb68e7a9143a14de9ae",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "e6b7b2f514654b219ab9a164e9022e47-docx",
+          "sha256": "d02c71b20b3879e34446aa51122ab70cabcdb72c14db5e72dd921faa2de8b70c",
+          "bytes": 145684
+        },
+        "pdf": {
+          "artifact_id": "e6b7b2f514654b219ab9a164e9022e47-pdf",
+          "sha256": "89198651a897b31362e8defbdeda221cd787cc11ff504217d95b58e214bfd0ef",
+          "bytes": 495002
+        }
+      }
     },
     {
       "id": "S2",
-      "job_id": "f33029bd3f63466a9f955f009fe75cf8",
+      "job_id": "4093d2051205465a84e131b01034abf8",
+      "attempt_id": "2b260558de0d42e495a7cea235702b41",
       "status": "DEGRADED",
       "docx": "PASS",
       "pdf": "PASS",
-      "error": null
+      "error": null,
+      "snapshot_id": "4eda1ee3a4878a9548f67f6e4bc25ca8f37084b162ffc21dac43c072186b6fa8",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "4093d2051205465a84e131b01034abf8-docx",
+          "sha256": "051f0dc7bc4eac11d0d44eb83d1dcbbac63f121cd7aede2f8fb322316ba65115",
+          "bytes": 148186
+        },
+        "pdf": {
+          "artifact_id": "4093d2051205465a84e131b01034abf8-pdf",
+          "sha256": "d2a8f412c4af99b9c1ba53bf9e6d374a494e867ffc978b46c5f0f8ce2f74eba7",
+          "bytes": 489091
+        }
+      }
     },
     {
       "id": "S3",
-      "job_id": "64a710ab34084876b49d3f346039b229",
+      "job_id": "8e668ea2d65f4cbaba44b75d013055ae",
+      "attempt_id": "2b260558de0d42e495a7cea235702b41",
       "status": "DEGRADED",
       "docx": "PASS",
       "pdf": "PASS",
-      "error": null
+      "error": null,
+      "snapshot_id": "ad3f7bf69b7b7268209ea6aff74c841f7fe083bbedcf0ba33f3f7fe423dce291",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "8e668ea2d65f4cbaba44b75d013055ae-docx",
+          "sha256": "95f6a94be59c771481700fe941e620f1eda34a47b6e106b40979ca701f4132f0",
+          "bytes": 148879
+        },
+        "pdf": {
+          "artifact_id": "8e668ea2d65f4cbaba44b75d013055ae-pdf",
+          "sha256": "71e2dd65268cd5466135a8a12905107a7772d62e39dba4a2cbeb6e0fa6610073",
+          "bytes": 535685
+        }
+      }
     },
     {
       "id": "Q2",
-      "job_id": "c79ee1a3d13d4410817445fcf90cd206",
+      "job_id": "e3f3b76cb3374fac9ab3f0478664ef53",
+      "attempt_id": "2b260558de0d42e495a7cea235702b41",
       "status": "DEGRADED",
       "docx": "PASS",
       "pdf": "PASS",
-      "error": null
+      "error": null,
+      "snapshot_id": "3c0fb50030687b2e2e761e90f8ebc9dc7d28f89b9fcc289a6a5190e60502ef30",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "e3f3b76cb3374fac9ab3f0478664ef53-docx",
+          "sha256": "8231d8286f9236ef068b1dad5e07eb5159fdcd5e60e439651801eca931c4ec70",
+          "bytes": 152370
+        },
+        "pdf": {
+          "artifact_id": "e3f3b76cb3374fac9ab3f0478664ef53-pdf",
+          "sha256": "5da05f8fcfe74a9329ad2b2b8f2ae8cb8a487024f9b438542101bf71cc1d1cbb",
+          "bytes": 558090
+        }
+      }
     }
   ],
   "receipts": {
-    "model_live": "validation/release_20260918_5974275/model_live.json",
-    "retrieval": "validation/release_20260918_5974275/retrieval.json",
-    "rpa": "validation/release_20260918_5974275/rpa.json",
-    "browser": "validation/release_20260918_5974275/browser.json"
+    "model_live": "model_live.json",
+    "retrieval": "retrieval.json",
+    "rpa": "rpa.json",
+    "browser": "browser.json"
   },
   "human_review": "PENDING",
-  "privacy": "Contest originals and static outputs included under latest explicit user authorization; credentials/env/runtime databases/queues/backups remain excluded.",
-  "starting_commit": "acc469312c8366e4b0438e702a5f435779e7a125",
-  "branch": "codex/core-industry-20260917",
-  "automatic_status": "PASS",
   "competition_ready": false,
-  "verified_at": "2026-09-18",
-  "local_manifest": "06_评测/release_20260918_5974275/manifest.json",
-  "public_boundary": "Original contest resources and static deliverables are included by latest explicit user authorization. No credentials, local environment, runtime databases, queues or recovery backups are published.",
-  "external_pending": [
-    "Named human attribution 0–5, readability and layout reviews",
-    "One nonblocking composite-unit line wrap and source-page whitespace; human layout approval remains pending",
-    "Real controlled industry data and unseen retrieval evaluation",
-    "GLM账户现金余额/资源包仍为空：当前依赖用户授权的Coding Plan端点回退（暂定政策）；充值后主端点自动恢复优先，无需改代码"
+  "model_provenance": "model_provenance.json",
+  "public_manifest": "validation/delivery_20260919_final/manifest.json",
+  "verification_receipt": "validation/delivery_20260919_final/verification.json",
+  "verification_exit_code": 0,
+  "automatic_status": "PASS",
+  "model": {
+    "provider": "DeepSeek official API",
+    "model": "deepseek-flash",
+    "authorization": "User clarified on 2026-09-19: local DeepSeek tests; teammate uses GLM",
+    "fresh_source_run": "delivery_20260919_26",
+    "fresh_source_commit": "7bef1ce8e915ebd6697915d55d8d47da7bfab2d0",
+    "fresh_http_calls": 7,
+    "fresh_http_calls_in_final_attempt": 0,
+    "final_narratives_reused": 7,
+    "provenance": "validation/delivery_20260919_final/model_provenance.json",
+    "teammate_glm": "Historical 20260918 GLM receipts retained without relabeling"
+  },
+  "static_delivery": {
+    "path": "07_交付/delivery_20260919_final",
+    "source_run": "delivery_20260919_final",
+    "source_code": "04011c2a595a5d9f8efdd8de92bd5fd1dfcd8830"
+  },
+  "previous_index": "current_run_before_20260919.json",
+  "prior_runs": [
+    {
+      "run_id": "release_20260918_5974275",
+      "status": "HISTORICAL",
+      "index": "current_run_before_20260919.json"
+    },
+    {
+      "run_id": "delivery_20260919_26",
+      "status": "SUPERSEDED_UI_FIX",
+      "reason": "Seven fresh model contracts and report/RPA passed; frontend decimal overlap repaired; final attempt reused verified narrative cache"
+    }
   ],
   "test_results": {
-    "local_regressions": {
-      "passed": 222,
-      "skipped": 1,
-      "commit": "5974275ca90d",
-      "note": "含5项端点回退测试"
+    "local_full_suite": {
+      "passed": 346,
+      "failed_before_targeted_fix": 1,
+      "scope": "Includes retained local historical tests; obsolete Coding fixture corrected; 70 targeted tests passed"
     },
-    "browser": {
-      "live_checks": 8,
-      "mocked_checks": 10,
-      "status": "PASS"
+    "clean_checkout_ci": {
+      "passed": 287,
+      "skipped": 1,
+      "status": "PASS",
+      "commit": "04011c2a595a5d9f8efdd8de92bd5fd1dfcd8830",
+      "url": "https://github.com/Lihuaaaa-F/yaoheng-zhixi/actions/runs/35436891332"
     },
     "automatic_dimensions": {
       "environment": "PASS",
@@ -110,244 +232,29 @@
       "retrieval": "PASS",
       "rpa": "PASS",
       "browser": "PASS",
-      "model_live": "PASS(7/7)"
-    },
-    "verify_exit_code": 0
-  },
-  "model": {
-    "provider": "Zhipu bigmodel official API",
-    "model": "glm-5.3-flash",
-    "endpoint_policy": "用户2026-09-18授权暂定：主端点先消耗余额/资源包，错误码1113（额度耗尽）自动切换Coding Plan端点；主端点充值后自动恢复优先（PHARMA_MODEL_CODING_BASE_URL，置空禁用）",
-    "fresh_generation": {
-      "run": "release_20260918_5974275",
-      "model_contracts": "7/7 PASS（含Q2季度场景）",
-      "identity": "VERIFIED",
-      "ledger_endpoints": "narrative→coding回退端点13次成功；decision(glm-4.5-air)→主端点4次成功（air免费额度仍有余，按政策先消耗）"
-    },
-    "decision_route": "glm-4.5-air（多模型路由加分项；走主端点余额）",
-    "historical": "v18b为glm-5.3-flash主端点余额期验证（7/7在档）；26efd3a_air2为air主模型期（6/7）；本运行为端点回退政策下的正式7/7"
+      "model_live": "PASS"
+    }
   },
   "artifacts": {
     "scenarios": 7,
     "pages": 38,
     "fonts_embedded": true,
-    "no_unresolved_slots": true,
-    "developer_visual": "validation/release_20260918_6ff894f/visual.json",
-    "all_layout_requirements_complete": false,
-    "docx": "PASS",
-    "pdf": "PASS"
+    "unresolved_placeholders": false,
+    "developer_visual": "validation/delivery_20260919_final/visual.json",
+    "human_visual": "PENDING"
   },
-  "prior_runs": [
-    {
-      "run_id": "integration_20260917_aa79b12",
-      "status": "FAIL",
-      "reason": "model contract violations and initial RPA polling failure; actual later delivery retained separately"
-    },
-    {
-      "run_id": "integration_20260917_2340f27",
-      "status": "FAIL",
-      "reason": "S1/S3 typed dates/deadlines and repair-unit defects, report layout findings"
-    },
-    {
-      "run_id": "integration_20260918_3890a6a",
-      "status": "FAIL",
-      "reason": "synthetic pharmaceutical ConnectError; all four competition scenarios plus other two packs passed model contracts"
-    },
-    {
-      "run_id": "integration_20260918_3890a6a_retry1",
-      "status": "AUTOMATIC_PASS_BEFORE_FINAL_RENDERER",
-      "reason": "bounded retry succeeded; renderer findings subsequently repaired; prior artifacts remain unchanged"
-    },
-    {
-      "run_id": "delivery_20260918_5d3652c",
-      "status": "FAIL",
-      "reason": "Five of seven model contracts passed; S1/S2 benchmark insufficient-evidence rejected. Concrete document synonyms fixed in validator v9; offline replay passes S1 but S2 remains invalid. Original run retained, never relabeled."
-    },
-    {
-      "run_id": "final_20260918_e53ec77",
-      "status": "PARTIAL",
-      "reason": "All seven model contracts passed; S3 DOCX body binding correctly rejected post-insertion template rewrite corruption."
-    },
-    {
-      "run_id": "release_20260918_01ac9f7",
-      "status": "PARTIAL",
-      "reason": "All seven model/file/RPA contracts passed using same-round cached explanations; clean archive uncovered report Git dependency and stale test fixture, PDF visual review found footer clearance and quarter display issues; S3 scoped evidence ranking needed event reservation."
-    },
-    {
-      "run_id": "release_20260918_b939c21",
-      "status": "SUPERSEDED",
-      "reason": "Earlier automatic PASS did not require independent cross-factory model explanation; scope defect repaired."
-    },
-    {
-      "run_id": "final_20260918_618f9b2",
-      "status": "FAIL",
-      "reason": "S1/S2 cross-factory concrete evidence document names falsely rejected; all files/retrieval/RPA succeeded. Recorded original responses retained locally, validator v8 repaired with negative tests; no cache migration."
-    },
-    {
-      "run_id": "delivery_20260918_47c5806",
-      "status": "AUTOMATIC_PASS",
-      "reason": "Seven fresh DeepSeek narrative contracts and file/RPA validation passed; current resource-release recompile reuses those verified narratives. Public static deliverables retain these exact original artifacts and reviewed pages."
-    },
-    {
-      "run_id": "bonus_20260918_glm_dual",
-      "status": "PARTIAL",
-      "reason": "Prompt v16 with GLM: 3/7 model contracts (mixed mode), identified clause-discipline gaps"
-    },
-    {
-      "run_id": "bonus_20260918_glm_v17",
-      "status": "PARTIAL",
-      "reason": "Prompt v17: 1/7; second iteration of clause grammar"
-    },
-    {
-      "run_id": "bonus_20260918_glm_v18",
-      "status": "FAIL",
-      "reason": "Budget cap hit mid-run (cumulative ledger); all scenarios fell to rules mode"
-    },
-    {
-      "run_id": "bonus_20260918_glm_v18b",
-      "status": "AUTOMATIC_PASS",
-      "reason": "Prompt v18 grammar-aligned with validator: 7/7 model contracts, RPA/retrieval/files PASS; fresh GLM glm-5.3-flash calls"
-    },
-    {
-      "run_id": "release_20260918_fa3c968",
-      "status": "SUPERSEDED",
-      "reason": "Cache-reuse run on pre-amend commit; superseded by bc854cc amend (video script fix only)"
-    },
-    {
-      "run_id": "release_20260918_c2e086f",
-      "status": "FAIL",
-      "reason": "glm-5.3-flash触发429限流（大提示词TPM），S1-S3/Q2回落规则模式；随后增加有界退避重试"
-    },
-    {
-      "run_id": "release_20260918_5c00919",
-      "status": "FAIL",
-      "reason": "退避后仍429；探测确认实为余额耗尽（错误码1113）"
-    },
-    {
-      "run_id": "release_20260918_final",
-      "status": "FAIL",
-      "reason": "同1113，glm-5.3系列当日无可用额度"
-    },
-    {
-      "run_id": "release_20260918_26efd3a_air",
-      "status": "PARTIAL",
-      "reason": "切换glm-4.5-air（PHARMA_MODEL运行时配置）：6/7合同PASS，Q2 mixed"
-    },
-    {
-      "run_id": "release_20260918_26efd3a_air2",
-      "status": "AUTOMATIC_DIMENSIONS_6_OF_7",
-      "reason": "当前绑定运行：环境/回归/场景/检索/RPA/浏览器全PASS；model_live 6/7（Q2 mixed on air）；verify退出1仅因model_live"
-    },
-    {
-      "run_id": "release_20260918_5974275",
-      "status": "PASS",
-      "reason": "端点回退政策实施后正式运行：glm-5.3-flash主端点1113→Coding Plan端点回退，七场景模型合同7/7（含Q2），全部维度PASS，verify退出0"
-    }
+  "media": {
+    "video_seconds": 59.16,
+    "video": "07_交付/delivery_20260919_final/demo/yaoheng_demo_narrated.webm",
+    "slides": 10,
+    "pptx": "07_交付/delivery_20260919_final/deck/药衡智析_演示与答辩稿.pptx",
+    "native_render": "07_交付/delivery_20260919_final/deck/pptx_render"
+  },
+  "external_pending": [
+    "Named human S1/S2/S3 0–5 attribution/readability/layout review",
+    "Professional causal review; dense tables and compound-unit wrapping remain human layout items",
+    "Real controlled industry data and unseen retrieval evaluation",
+    "Forecast held-out performance and graph/multi-model gain are not established"
   ],
-  "verification_exit_code": 0,
-  "verification_receipt": "validation/release_20260918_5974275/verification.json",
-  "publication_authorization": "User explicitly authorized retaining original contest data and publishing all project deliverables to this public repository on 2026-09-18; credentials, environments, runtime state and recovery backups remain excluded",
-  "static_delivery": {
-    "path": "07_交付/release_20260918",
-    "source_run": "delivery_20260918_47c5806",
-    "source_code": "47c58069f1bc449d6bda18815f5276d44e72acdb",
-    "note": "Exact reviewed original artifacts are retained; later compile validates the complete resource release, without relabeling old model calls or static file provenance."
-  },
-  "bonus_features": {
-    "knowledge_graph": "graph.py 从知识快照确定性抽取（题包实测3产品/11药材/7工序/27边）；制药上下文检索词增强；/api/kb/graph+前端可视化",
-    "multi_model_routing": "ModelGateway.for_route；narrative=glm-5.3-flash、decision=glm-4.5-air 实测；未配置时同源回退并标注",
-    "agent_decision": "decision.py 确定性策略+小模型说明+SQLite台账；REPORT_NEEDED/DASHBOARD_ONLY；可按决策入队",
-    "forecasting": "forecasting.py Holt α=0.6/β=0.3 + 80%区间；总体与分要素；前端叠加"
-  },
-  "static_delivery_note": "07_交付/demo_20260918：讲解字幕版端到端演示视频(2分52秒,webm)+10页答辩PPTX(已LibreOffice实渲染验证)+逐页PNG；来源与SHA见该目录README",
-  "reliability_note": "模型网关：1113自动端点回退（先余额后套餐）；非1113的429/5xx有界退避（20s/40s）；失败历史保留不追认",
-  "index_reconciliation": {
-    "date": "2026-09-19",
-    "kind": "DOCUMENT_INDEX_ONLY",
-    "source_manifest": "validation/release_20260918_5974275/manifest.json",
-    "source_verification": "validation/release_20260918_5974275/verification.json",
-    "scenario_job_id_agreement": true,
-    "rerun_performed": false
-  },
-  "superseded_index_entries": {
-    "entries": [
-      {
-        "id": "mechanical",
-        "job_id": "a882b52a2081481481b6db959639083c",
-        "status": "DEGRADED",
-        "docx": "PASS",
-        "pdf": "PASS",
-        "error": null
-      },
-      {
-        "id": "chemical",
-        "job_id": "6f83cdd441134e6ab0f78bcc4d332b97",
-        "status": "DEGRADED",
-        "docx": "PASS",
-        "pdf": "PASS",
-        "error": null
-      },
-      {
-        "id": "pharma_synthetic",
-        "job_id": "eea07536f5a54d1eb90c595b6e16ce27",
-        "status": "DEGRADED",
-        "docx": "PASS",
-        "pdf": "PASS",
-        "error": null
-      },
-      {
-        "id": "S1",
-        "job_id": "28c10accfe4c47f3bac5fe72de0e2120",
-        "status": "DEGRADED",
-        "docx": "PASS",
-        "pdf": "PASS",
-        "error": null
-      },
-      {
-        "id": "S2",
-        "job_id": "69f3e416e8fa4d78862eaf74a4d37a53",
-        "status": "DEGRADED",
-        "docx": "PASS",
-        "pdf": "PASS",
-        "error": null
-      },
-      {
-        "id": "S3",
-        "job_id": "0c270a2606f14cff8c3cbbc4b29163c0",
-        "status": "DEGRADED",
-        "docx": "PASS",
-        "pdf": "PASS",
-        "error": null
-      },
-      {
-        "id": "Q2",
-        "job_id": "b494f0d51f3f46a8bb9b9b4404afd61d",
-        "status": "DEGRADED",
-        "docx": "PASS",
-        "pdf": "PASS",
-        "error": null
-      }
-    ],
-    "reason": "Not matched to this run manifest/verification; preserved for audit, not active report IDs",
-    "origin": "UNVERIFIED"
-  },
-  "receipt_linkage": {
-    "status": "PARTIAL_RUN_LEVEL_ONLY",
-    "scope": "model_live/retrieval/rpa/browser receipts identify run and commit; per-job artifact byte bindings are not supplied by all these receipts",
-    "scenario_mapping": "manifest and verification agree on all seven scenario job IDs"
-  },
-  "public_manifest": "validation/release_20260918_5974275/manifest.json",
-  "management_audit": {
-    "date": "2026-09-19",
-    "source_commit": "cdd9cb90d1f2e38fac429e82d89e46765e2317d2",
-    "document": "../../../docs/repository/AUDIT_20260919.md",
-    "automatic_status_meaning": "Archived verifier result; not independently rerun here and not competition acceptance",
-    "current_material_gaps": [
-      "Human attribution/readability/layout review pending",
-      "Latest GLM run not identical to published historical report media",
-      "Demo recording lacks an executed RPA sending step",
-      "Heatmap lacks required product/month cross-analysis",
-      "Forecast and additional backend evidence-contract issues require fixes"
-    ]
-  }
+  "tested_code_policy": "Application code frozen at commit above; final documentation and generated artifacts refer to it and do not require repeated model calls"
 }

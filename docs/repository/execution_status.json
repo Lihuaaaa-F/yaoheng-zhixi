@@ -189,5 +189,10 @@
     "all Git history"
   ],
   "package_manifest": "11/11 PASS",
-  "bundle": "verified and imported once; main ancestor retained"
+  "bundle": "verified and imported once; main ancestor retained",
+  "remote_write": "SUCCEEDED",
+  "remote_governance_commit": "0d8f02ba3855a14a248fdaaa08d7e81e1fc1c9bf",
+  "main_governance_integrated": true,
+  "business_tested_commit": "04011c2a595a5d9f8efdd8de92bd5fd1dfcd8830",
+  "current_run": "delivery_20260919_final"
 }
