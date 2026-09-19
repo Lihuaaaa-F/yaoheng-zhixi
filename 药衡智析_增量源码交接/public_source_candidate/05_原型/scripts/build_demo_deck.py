@@ -20,7 +20,7 @@ def main():
  from pptx.util import Inches,Pt
  from pptx.dml.color import RGBColor
  import fitz
- p=argparse.ArgumentParser();p.add_argument('--output-dir',type=Path,required=True);a=p.parse_args();a.output_dir.mkdir(parents=True,exist_ok=True)
+ p=argparse.ArgumentParser();p.add_argument('--output-dir',type=Path,required=True);p.add_argument('--reading-preview',action='store_true');a=p.parse_args();a.output_dir.mkdir(parents=True,exist_ok=True)
  pres=Presentation();pres.slide_width=Inches(13.33);pres.slide_height=Inches(7.5)
  pdf=fitz.open();font=Path(__file__).resolve().parents[1]/'assets/fonts/NotoSansSC-Regular.ttf'
  for index,(title,body) in enumerate(SLIDES,1):
@@ -29,18 +29,21 @@ def main():
    box=slide.shapes.add_textbox(Inches(x),Inches(y),Inches(w),Inches(h));tf=box.text_frame;tf.word_wrap=True
    for i,line in enumerate(text.splitlines()):
     para=tf.paragraphs[0] if i==0 else tf.add_paragraph();para.text=line;para.font.name='Noto Sans SC';para.font.size=Pt(size);para.font.color.rgb=RGBColor.from_string(color);para.space_after=Pt(15 if size==21 else 0)
-  page=pdf.new_page(width=960,height=540);page.draw_rect(page.rect,color=None,fill=(.97,.98,.985));page.insert_font(fontname='Noto',fontfile=str(font))
-  page.insert_text((50,75),title,fontname='Noto',fontsize=31,color=(.09,.30,.37))
-  y=160
-  for line in body.splitlines():
-   rc=page.insert_textbox(fitz.Rect(50,y,910,y+65),line,fontname='Noto',fontsize=20,color=(.14,.24,.28))
-   if rc<0:raise ValueError('Slide text overflow')
-   y+=57
-  page.insert_text((50,515),f'合成演示 · 真人审核待完成 / {index}',fontname='Noto',fontsize=11)
+  if a.reading_preview:
+   page=pdf.new_page(width=960,height=540);page.draw_rect(page.rect,color=None,fill=(.97,.98,.985));page.insert_font(fontname='Noto',fontfile=str(font))
+   page.insert_text((50,75),title,fontname='Noto',fontsize=31,color=(.09,.30,.37))
+   y=160
+   for line in body.splitlines():
+    rc=page.insert_textbox(fitz.Rect(50,y,910,y+65),line,fontname='Noto',fontsize=20,color=(.14,.24,.28))
+    if rc<0:raise ValueError('Slide text overflow')
+    y+=57
+   page.insert_text((50,515),f'合成演示 · 真人审核待完成 / {index}',fontname='Noto',fontsize=11)
  path=a.output_dir/'药衡智析_演示与答辩稿.pptx';pres.save(path)
  reopened=Presentation(path)
  if len(reopened.slides)!=len(SLIDES):raise ValueError('Slide count mismatch')
- pdf.save(a.output_dir/'药衡智析_演示与答辩稿_阅读版.pdf')
- for i,page in enumerate(pdf):page.get_pixmap(matrix=fitz.Matrix(.8,.8)).save(a.output_dir/f'slide-{i+1}.png')
- print('Verified PPTX slides:',len(reopened.slides),'PDF companion generated; PowerPoint rendering remains a separate check')
+ if a.reading_preview:
+  preview=a.output_dir/'_reading_preview';preview.mkdir(exist_ok=True)
+  pdf.save(preview/'药衡智析_演示与答辩稿_阅读版.pdf')
+  for i,page in enumerate(pdf):page.get_pixmap(matrix=fitz.Matrix(.8,.8)).save(preview/f'slide-{i+1}.png')
+ print('Verified PPTX slides:',len(reopened.slides),'reading preview:',a.reading_preview,'; native rendering is separate')
 if __name__=='__main__':main()

@@ -94,3 +94,8 @@ frontend/dist/
 # 白名单目录内的运行产物仍不入库（mock RPA 被引用时生成的缓存等）
 药衡智析_增量源码交接/public_source_candidate/00_赛题原始资料/**/__pycache__/
 药衡智析_增量源码交接/public_source_candidate/**/__pycache__/
+
+# Optional reading previews; handoff and external recovery never published
+**/_reading_preview/
+governance_handoff_20260919/
+*:Zone.Identifier

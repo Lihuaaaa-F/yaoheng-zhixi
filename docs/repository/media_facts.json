@@ -15,14 +15,64 @@
       "sha256": "342de75c4a64a4912a232587f54a86bb284a81ee59f65aa7f87779e5303ac98c"
     },
     {
-      "name": "药衡智析_演示与答辩稿_阅读版.pdf",
-      "bytes": 10635731,
-      "sha256": "49ac4752fb6ea50ea66e6bdff66a0f2284b7ae9c8560d636b743ec36e20f6b9f"
-    },
-    {
       "name": "demo_receipt.json",
       "bytes": 1529,
       "sha256": "c5633f7b9f4e58d928ce4dd6589e8f971e4c9c05afa70e4f86989b4550d80be7"
+    },
+    {
+      "name": "pptx_render/slide-01.png",
+      "bytes": 40220,
+      "sha256": "7ad326b88efd3be75ba3033eb24c5f7a4088af5a1e5880250044fab44bbf2263"
+    },
+    {
+      "name": "pptx_render/slide-02.png",
+      "bytes": 39032,
+      "sha256": "318c834099f66d4a2af02807738749de89449aa9798971d074a7aab07740ca05"
+    },
+    {
+      "name": "pptx_render/slide-03.png",
+      "bytes": 36621,
+      "sha256": "321b1cc4c6b532610166363888f9ca6a081b7bf18721b1f571d4312c53c2e50b"
+    },
+    {
+      "name": "pptx_render/slide-04.png",
+      "bytes": 47648,
+      "sha256": "6e03e9a060ca84fc9da85380a217b47ea1c560bfd71c3ca7e843e37e8a9ab541"
+    },
+    {
+      "name": "pptx_render/slide-05.png",
+      "bytes": 41149,
+      "sha256": "db1fc067f6758e40ce2a621edf7f16cc83d98c515408c06f6e6e9a88e2198f86"
+    },
+    {
+      "name": "pptx_render/slide-06.png",
+      "bytes": 53378,
+      "sha256": "0df33021b4a8d0da8d6910bb1c7ffab80e367b4f2997047bb5d775154da07e53"
+    },
+    {
+      "name": "pptx_render/slide-07.png",
+      "bytes": 56432,
+      "sha256": "a19ec6bb752abd3c6d5885b1c26163d979aec589bd13a86052e5d766fafb2274"
+    },
+    {
+      "name": "pptx_render/slide-08.png",
+      "bytes": 57578,
+      "sha256": "2ecd6476712ac1c103d7fc30c6ceef7b8ba0a902d3207a82317b560b1c077262"
+    },
+    {
+      "name": "pptx_render/slide-09.png",
+      "bytes": 57497,
+      "sha256": "c54cf642625311f90fb77283391e9cff2ea4e0540246522823ea89ca2f6e153f"
+    },
+    {
+      "name": "pptx_render/slide-10.png",
+      "bytes": 58361,
+      "sha256": "2d3d4b0c47f88f20d75041652e46eae6dcef4388a81950a2bd0d26730ec95f79"
+    },
+    {
+      "name": "pptx_render/药衡智析_演示与答辩稿.pdf",
+      "bytes": 109073,
+      "sha256": "ff9c8c532c1b0c52d7624a92ce3442ca5ab3b9cc89dd16016c8c26a86332ace7"
     }
   ],
   "video": {
@@ -103,5 +153,13 @@
     "All four README SHA256 entries differ from current bytes",
     "README binds air2 and says verify=PASS, while current_run history says air2 model 6/7 and verify exit 1",
     "current_run latest model run and static report/visual source runs differ; preserve provenance"
-  ]
+  ],
+  "historical_removed_files": [
+    {
+      "name": "药衡智析_演示与答辩稿_阅读版.pdf",
+      "bytes": 10635731,
+      "sha256": "49ac4752fb6ea50ea66e6bdff66a0f2284b7ae9c8560d636b743ec36e20f6b9f"
+    }
+  ],
+  "current_scope": "Current retained media with archived reading-preview identity"
 }

@@ -4,7 +4,7 @@ an external source and only original resource prefixes, never old code/runtime.
 """
 from pathlib import Path
 import argparse,hashlib,json,shutil
-ALLOWED=('00_赛题原始资料/','01_数据/00_原始/','02_知识库/00_原始/')
+ALLOWED=('00_赛题原始资料/','01_数据/00_原始/')
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--mode',choices=['workspace','release','originals'],default='workspace')
@@ -13,6 +13,7 @@ def main():
     if a.mode=='workspace':print('Git开发工作区无需prepare；使用当前代码与独立原件清单。');return
     if not a.source or not a.manifest:p.error('source and manifest required')
     entries=json.loads(a.manifest.read_text());source=a.source.resolve()
+    if not isinstance(entries,dict) or any(not isinstance(k,str) or not isinstance(v,str) or len(v)!=64 for k,v in entries.items()):raise ValueError('FLAT_PATH_SHA256_MANIFEST_REQUIRED')
     for rel,expected in entries.items():
         path=(source/rel).resolve()
         if not path.is_relative_to(source):raise ValueError('MANIFEST_PATH_ESCAPE')

@@ -21,3 +21,6 @@
 目录整体改名不是本次已执行事项。若团队随后希望进一步压平，可将05_原型作为app/、技术docs提升根目录、资源与交付分别集中，但须先验证ROOT推导、报告索引、脚本/测试和文档引用，再列出源→目标清单；不能在当前批准清单之外顺带搬迁。
 
 参考：[GitHub README与相对链接](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes)。
+
+
+2026-09-19 治理更新：C02 的 7 份知识 PDF 使用 PACKAGE 原件，路径映射见 `docs/repository/deduplication_mapping.json`（Git 根相对路径）；CSV 与原 ZIP 保留。C05 另绘阅读 PDF/10 张 PNG 已归档移除，当前阅读使用 `pptx_render` 原生渲染；旧阅读版身份保留于媒体历史清单。默认生成仅 PPTX，`--reading-preview` 可选预览输出到忽略的 `_reading_preview/`。

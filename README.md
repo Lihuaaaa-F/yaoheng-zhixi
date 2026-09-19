@@ -13,7 +13,7 @@
 | 架构、接口和行业包 | [架构](药衡智析_增量源码交接/public_source_candidate/docs/architecture.md) · [API](药衡智析_增量源码交接/public_source_candidate/docs/api_and_operations.md) · [行业包指南](药衡智析_增量源码交接/public_source_candidate/docs/industry/development.md) |
 | 比赛交付文件 | [交付导航与成熟度](docs/repository/DELIVERY.md) |
 | 接续开发 | [贡献与协作](CONTRIBUTING.md) · [GLM 交接](药衡智析_增量源码交接/public_source_candidate/docs/ZCODE_HANDOFF.md) |
-| 目录整理 | [仓库管理方案](docs/repository/STRUCTURE.md) · [待批准清理清单](docs/repository/CLEANUP_PROPOSAL.md) |
+| 目录整理 | [仓库管理方案](docs/repository/STRUCTURE.md) · [已授权清理清单](docs/repository/CLEANUP_PROPOSAL.md) |
 | 许可证与资源边界 | [许可证状态](docs/repository/LICENSE_STATUS.md) · [资源发布记录](药衡智析_增量源码交接/public_source_candidate/docs/publication-authorization.md) |
 
 ## 本地运行
@@ -39,10 +39,13 @@ bootstrap 检测并复用兼容依赖，补装缺项；默认合成数据无需�
 
 ## 分支与交付纪律
 
-2026-09-19 审计的开发基线为 `codex/core-industry-20260917@cdd9cb9`，本治理分支为 `codex/repository-governance-20260919`。`main` 当时仍是 `acc4693`；默认分支未整合不能理解为队友没有新成果。治理提交只新增或修订文档、索引和仓库检查，不删除文件、分支、标签或提交。含文件删除的整合/清理等待用户按精确清单批准。
+2026-09-19 审计的开发基线为 `codex/core-industry-20260917@cdd9cb9`，本治理分支为 `codex/repository-governance-20260919`。`main` 当时仍是 `acc4693`；默认分支未整合不能理解为队友没有新成果。治理提交只新增或修订文档、索引和仓库检查，不删除文件、分支、标签或提交。M01/C02/C05/L01 已获用户明确批准，按清单校验归档后执行；详见 docs/repository/execution_status.json。
 
 不要在工作区未检查时无条件 `pull --rebase --autostash`，不要强推共享历史。项目源码许可尚未统一确定；第三方声明继续保留。仓库记录了 9 月 18 日赛题资源发布授权，本次未扩大资源发布范围或另行发布原件；后续真实企业数据仍需独立确定边界。
 
 仓库检查：`python3 tools/verify_repository.py`。它仅检查导航、索引一致性和媒体清单，不代表应用测试、模型实调或人工评审通过。
 
 English: A contest prototype for evidence-supported manufacturing cost analysis. Follow the application README for setup; see DELIVERY for artifact provenance. Automated records and human acceptance are separate. Industry examples are synthetic, and RPA delivery is simulated.
+
+
+2026-09-19 治理更新：C02 的 7 份知识 PDF 使用 PACKAGE 原件，路径映射见 `docs/repository/deduplication_mapping.json`（Git 根相对路径）；CSV 与原 ZIP 保留。C05 另绘阅读 PDF/10 张 PNG 已归档移除，当前阅读使用 `pptx_render` 原生渲染；旧阅读版身份保留于媒体历史清单。默认生成仅 PPTX，`--reading-preview` 可选预览输出到忽略的 `_reading_preview/`。

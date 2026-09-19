@@ -20,3 +20,6 @@ manifest与verification的七个job一致；本轮已把current_run同步到这�
 本次审计修复文档不会把历史FAIL或PENDING改成实际运行PASS。旧47c/6ff报告、v18b、air2、5974275分别保留来源；air2为6/7、verify退出1。仓库检查CI只验证入口/索引/媒体哈希，不替代222项应用测试、模型API、浏览器和真人评分。
 
 正式提交前：修复AUDIT列出的业务问题；用同一次运行绑定报告、模型/检索、RPA与媒体；真人完成三场景归因评分；补录发送动作并更新答辩证据。清理待批准文件和整合main按CLEANUP_PROPOSAL执行，不先删除原件。
+
+
+2026-09-19 治理更新：C02 的 7 份知识 PDF 使用 PACKAGE 原件，路径映射见 `docs/repository/deduplication_mapping.json`（Git 根相对路径）；CSV 与原 ZIP 保留。C05 另绘阅读 PDF/10 张 PNG 已归档移除，当前阅读使用 `pptx_render` 原生渲染；旧阅读版身份保留于媒体历史清单。默认生成仅 PPTX，`--reading-preview` 可选预览输出到忽略的 `_reading_preview/`。

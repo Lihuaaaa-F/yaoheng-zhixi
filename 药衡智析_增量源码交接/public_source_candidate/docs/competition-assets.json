@@ -4,10 +4,10 @@
   "authorization": "用户明确要求保留原有赛题数据并随协作仓库提交；不含密钥、环境文件、任务队列、恢复备份。",
   "source_policy": "仅按既有快照逐字节核对或复制；未改原件、未恢复旧应用源码、未覆盖.runtime。",
   "historical_data_notice": "01_数据的清洗/分析输出与02_知识库的解析/清洗/索引为上游历史整理结果，不代表本轮重新计算、建索引或验收通过。",
-  "file_count": 78,
-  "total_bytes": 9527064,
+  "file_count": 71,
+  "total_bytes": 6141894,
   "classification_counts": {
-    "original": 44,
+    "original": 37,
     "historical_derived": 31,
     "reproduction_configuration": 3
   },
@@ -21,8 +21,8 @@
       "bytes": 73346
     },
     "02_知识库": {
-      "files": 24,
-      "bytes": 3815704
+      "files": 17,
+      "bytes": 430534
     },
     "competition_configuration": {
       "files": 3,
@@ -490,69 +490,6 @@
       "verified_byte_identical": true
     },
     {
-      "path": "02_知识库/00_原始/GMP法规核心摘要_2010修订版.pdf",
-      "sha256": "2e599f526df282da063695de31a7007b97c7ff1ad16d7a97c91747f32534a048",
-      "bytes": 815792,
-      "classification": "original",
-      "source_snapshot": "upstream_private_snapshot",
-      "source_relative_path": "02_知识库/00_原始/GMP法规核心摘要_2010修订版.pdf",
-      "verified_byte_identical": true
-    },
-    {
-      "path": "02_知识库/00_原始/产品配方文档_六味地黄胶囊.pdf",
-      "sha256": "281a6829ed15ce1df55d9c13f16fd5052e26276a6d30020520967657431eb4e7",
-      "bytes": 436675,
-      "classification": "original",
-      "source_snapshot": "upstream_private_snapshot",
-      "source_relative_path": "02_知识库/00_原始/产品配方文档_六味地黄胶囊.pdf",
-      "verified_byte_identical": true
-    },
-    {
-      "path": "02_知识库/00_原始/产品配方文档_板蓝根颗粒.pdf",
-      "sha256": "5f1dd55e4a388b190fc74c601f0589574bccbfa716a2025ea3e79857dd2eec47",
-      "bytes": 386196,
-      "classification": "original",
-      "source_snapshot": "upstream_private_snapshot",
-      "source_relative_path": "02_知识库/00_原始/产品配方文档_板蓝根颗粒.pdf",
-      "verified_byte_identical": true
-    },
-    {
-      "path": "02_知识库/00_原始/产品配方文档_银黄口服液.pdf",
-      "sha256": "834aa8a81c2938dfb9e6ec28b8743ea0e667c237e06a6609415d97fe3b85b5ad",
-      "bytes": 345398,
-      "classification": "original",
-      "source_snapshot": "upstream_private_snapshot",
-      "source_relative_path": "02_知识库/00_原始/产品配方文档_银黄口服液.pdf",
-      "verified_byte_identical": true
-    },
-    {
-      "path": "02_知识库/00_原始/生产工艺文档_中药一厂.pdf",
-      "sha256": "aa7d48f697f2caa2bedf5b16e84a4d4765d3c92a52a619a7a93360764d7d8e00",
-      "bytes": 542078,
-      "classification": "original",
-      "source_snapshot": "upstream_private_snapshot",
-      "source_relative_path": "02_知识库/00_原始/生产工艺文档_中药一厂.pdf",
-      "verified_byte_identical": true
-    },
-    {
-      "path": "02_知识库/00_原始/药品生产质量管理规范GMP.pdf",
-      "sha256": "871f86bfaa610bb0db8b84b0f45606019fe889ec437695baf150cbe696cfa102",
-      "bytes": 483607,
-      "classification": "original",
-      "source_snapshot": "upstream_private_snapshot",
-      "source_relative_path": "02_知识库/00_原始/药品生产质量管理规范GMP.pdf",
-      "verified_byte_identical": true
-    },
-    {
-      "path": "02_知识库/00_原始/车间设备清单_中药一厂.pdf",
-      "sha256": "1e3808fc86fece94d3736690f087c218b8e082e6defe869e68bbdfdcdce7e503",
-      "bytes": 375424,
-      "classification": "original",
-      "source_snapshot": "upstream_private_snapshot",
-      "source_relative_path": "02_知识库/00_原始/车间设备清单_中药一厂.pdf",
-      "verified_byte_identical": true
-    },
-    {
       "path": "02_知识库/01_解析/GMP法规核心摘要_2010修订版.md",
       "sha256": "ad1d200f6e14433ae7cfe290ce81689f32148e968a89480b262160409ec6eb34",
       "bytes": 8717,
@@ -742,5 +679,108 @@
       "classification": "generated_bytecode_cache",
       "reason": "运行产生的Python字节码，不属于题包原件或历史整理成果；不恢复或发布。"
     }
-  ]
+  ],
+  "historical_removed_files": [
+    {
+      "path": "02_知识库/00_原始/GMP法规核心摘要_2010修订版.pdf",
+      "sha256": "2e599f526df282da063695de31a7007b97c7ff1ad16d7a97c91747f32534a048",
+      "bytes": 815792,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "02_知识库/00_原始/GMP法规核心摘要_2010修订版.pdf",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "02_知识库/00_原始/产品配方文档_六味地黄胶囊.pdf",
+      "sha256": "281a6829ed15ce1df55d9c13f16fd5052e26276a6d30020520967657431eb4e7",
+      "bytes": 436675,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "02_知识库/00_原始/产品配方文档_六味地黄胶囊.pdf",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "02_知识库/00_原始/产品配方文档_板蓝根颗粒.pdf",
+      "sha256": "5f1dd55e4a388b190fc74c601f0589574bccbfa716a2025ea3e79857dd2eec47",
+      "bytes": 386196,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "02_知识库/00_原始/产品配方文档_板蓝根颗粒.pdf",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "02_知识库/00_原始/产品配方文档_银黄口服液.pdf",
+      "sha256": "834aa8a81c2938dfb9e6ec28b8743ea0e667c237e06a6609415d97fe3b85b5ad",
+      "bytes": 345398,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "02_知识库/00_原始/产品配方文档_银黄口服液.pdf",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "02_知识库/00_原始/生产工艺文档_中药一厂.pdf",
+      "sha256": "aa7d48f697f2caa2bedf5b16e84a4d4765d3c92a52a619a7a93360764d7d8e00",
+      "bytes": 542078,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "02_知识库/00_原始/生产工艺文档_中药一厂.pdf",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "02_知识库/00_原始/药品生产质量管理规范GMP.pdf",
+      "sha256": "871f86bfaa610bb0db8b84b0f45606019fe889ec437695baf150cbe696cfa102",
+      "bytes": 483607,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "02_知识库/00_原始/药品生产质量管理规范GMP.pdf",
+      "verified_byte_identical": true
+    },
+    {
+      "path": "02_知识库/00_原始/车间设备清单_中药一厂.pdf",
+      "sha256": "1e3808fc86fece94d3736690f087c218b8e082e6defe869e68bbdfdcdce7e503",
+      "bytes": 375424,
+      "classification": "original",
+      "source_snapshot": "upstream_private_snapshot",
+      "source_relative_path": "02_知识库/00_原始/车间设备清单_中药一厂.pdf",
+      "verified_byte_identical": true
+    }
+  ],
+  "deduplication_mapping": [
+    {
+      "removed": "02_知识库/00_原始/GMP法规核心摘要_2010修订版.pdf",
+      "retained": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/03_制药知识文档/GMP法规核心摘要_2010修订版.pdf",
+      "sha256": "2e599f526df282da063695de31a7007b97c7ff1ad16d7a97c91747f32534a048"
+    },
+    {
+      "removed": "02_知识库/00_原始/产品配方文档_六味地黄胶囊.pdf",
+      "retained": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/03_制药知识文档/产品配方文档_六味地黄胶囊.pdf",
+      "sha256": "281a6829ed15ce1df55d9c13f16fd5052e26276a6d30020520967657431eb4e7"
+    },
+    {
+      "removed": "02_知识库/00_原始/产品配方文档_板蓝根颗粒.pdf",
+      "retained": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/03_制药知识文档/产品配方文档_板蓝根颗粒.pdf",
+      "sha256": "5f1dd55e4a388b190fc74c601f0589574bccbfa716a2025ea3e79857dd2eec47"
+    },
+    {
+      "removed": "02_知识库/00_原始/产品配方文档_银黄口服液.pdf",
+      "retained": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/03_制药知识文档/产品配方文档_银黄口服液.pdf",
+      "sha256": "834aa8a81c2938dfb9e6ec28b8743ea0e667c237e06a6609415d97fe3b85b5ad"
+    },
+    {
+      "removed": "02_知识库/00_原始/生产工艺文档_中药一厂.pdf",
+      "retained": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/03_制药知识文档/生产工艺文档_中药一厂.pdf",
+      "sha256": "aa7d48f697f2caa2bedf5b16e84a4d4765d3c92a52a619a7a93360764d7d8e00"
+    },
+    {
+      "removed": "02_知识库/00_原始/药品生产质量管理规范GMP.pdf",
+      "retained": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/03_制药知识文档/药品生产质量管理规范GMP.pdf",
+      "sha256": "871f86bfaa610bb0db8b84b0f45606019fe889ec437695baf150cbe696cfa102"
+    },
+    {
+      "removed": "02_知识库/00_原始/车间设备清单_中药一厂.pdf",
+      "retained": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/03_制药知识文档/车间设备清单_中药一厂.pdf",
+      "sha256": "1e3808fc86fece94d3736690f087c218b8e082e6defe869e68bbdfdcdce7e503"
+    }
+  ],
+  "current_verified_at": "2026-09-19"
 }

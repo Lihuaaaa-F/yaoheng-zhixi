@@ -26,3 +26,6 @@ PPT本体及原生10页渲染可读，但以文字提纲为主，缺三场景结
 - `demo_receipt.json`：`c5633f7b9f4e58d928ce4dd6589e8f971e4c9c05afa70e4f86989b4550d80be7`
 
 详见[交付导航](../../../../docs/repository/DELIVERY.md)及[实测记录](../../../../docs/repository/media_facts.json)。字幕演示、模拟送达与真人评分分别记录；真人评分仍待完成。
+
+
+2026-09-19 治理更新：C02 的 7 份知识 PDF 使用 PACKAGE 原件，路径映射见 `docs/repository/deduplication_mapping.json`（Git 根相对路径）；CSV 与原 ZIP 保留。C05 另绘阅读 PDF/10 张 PNG 已归档移除，当前阅读使用 `pptx_render` 原生渲染；旧阅读版身份保留于媒体历史清单。默认生成仅 PPTX，`--reading-preview` 可选预览输出到忽略的 `_reading_preview/`。

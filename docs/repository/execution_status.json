@@ -1,0 +1,193 @@
+{
+  "date": "2026-09-19",
+  "status": "EXECUTED",
+  "archive": "/home/hujunjie/yaoheng_recovery_20260919/approved_C02_C05.tar.gz",
+  "archive_sha256": "816a9d8386acc3c0ad190e5c02e469b5a0b0a5763cf66ac33fa4cd0b3fdf5b26",
+  "removed": [
+    {
+      "path": "药衡智析_增量源码交接/public_source_candidate/02_知识库/00_原始/GMP法规核心摘要_2010修订版.pdf",
+      "bytes": 815792,
+      "sha256": "2e599f526df282da063695de31a7007b97c7ff1ad16d7a97c91747f32534a048",
+      "group": "C02"
+    },
+    {
+      "path": "药衡智析_增量源码交接/public_source_candidate/02_知识库/00_原始/产品配方文档_六味地黄胶囊.pdf",
+      "bytes": 436675,
+      "sha256": "281a6829ed15ce1df55d9c13f16fd5052e26276a6d30020520967657431eb4e7",
+      "group": "C02"
+    },
+    {
+      "path": "药衡智析_增量源码交接/public_source_candidate/02_知识库/00_原始/产品配方文档_板蓝根颗粒.pdf",
+      "bytes": 386196,
+      "sha256": "5f1dd55e4a388b190fc74c601f0589574bccbfa716a2025ea3e79857dd2eec47",
+      "group": "C02"
+    },
+    {
+      "path": "药衡智析_增量源码交接/public_source_candidate/02_知识库/00_原始/产品配方文档_银黄口服液.pdf",
+      "bytes": 345398,
+      "sha256": "834aa8a81c2938dfb9e6ec28b8743ea0e667c237e06a6609415d97fe3b85b5ad",
+      "group": "C02"
+    },
+    {
+      "path": "药衡智析_增量源码交接/public_source_candidate/02_知识库/00_原始/生产工艺文档_中药一厂.pdf",
+      "bytes": 542078,
+      "sha256": "aa7d48f697f2caa2bedf5b16e84a4d4765d3c92a52a619a7a93360764d7d8e00",
+      "group": "C02"
+    },
+    {
+      "path": "药衡智析_增量源码交接/public_source_candidate/02_知识库/00_原始/药品生产质量管理规范GMP.pdf",
+      "bytes": 483607,
+      "sha256": "871f86bfaa610bb0db8b84b0f45606019fe889ec437695baf150cbe696cfa102",
+      "group": "C02"
+    },
+    {
+      "path": "药衡智析_增量源码交接/public_source_candidate/02_知识库/00_原始/车间设备清单_中药一厂.pdf",
+      "bytes": 375424,
+      "sha256": "1e3808fc86fece94d3736690f087c218b8e082e6defe869e68bbdfdcdce7e503",
+      "group": "C02"
+    },
+    {
+      "path": "药衡智析_增量源码交接/public_source_candidate/07_交付/demo_20260918/slide-1.png",
+      "bytes": 24958,
+      "sha256": "c78bdf7d759fd4b11d333125e4284f8d099f0acf6fdb2ea70e750dbc77a46085",
+      "group": "C05"
+    },
+    {
+      "path": "药衡智析_增量源码交接/public_source_candidate/07_交付/demo_20260918/slide-10.png",
+      "bytes": 36402,
+      "sha256": "4f1592f25e74c74b293b351650d44623ca612825879fde86b6099da6d7569cbe",
+      "group": "C05"
+    },
+    {
+      "path": "药衡智析_增量源码交接/public_source_candidate/07_交付/demo_20260918/slide-2.png",
+      "bytes": 24176,
+      "sha256": "0461c7e83ccca1b0c50abed32a62415d56df3b7c82c0450526e8ca9fabd6a134",
+      "group": "C05"
+    },
+    {
+      "path": "药衡智析_增量源码交接/public_source_candidate/07_交付/demo_20260918/slide-3.png",
+      "bytes": 22932,
+      "sha256": "6afd98fad0561575434d0f77267433c5394d8d015615d056bd191940e687f6f8",
+      "group": "C05"
+    },
+    {
+      "path": "药衡智析_增量源码交接/public_source_candidate/07_交付/demo_20260918/slide-4.png",
+      "bytes": 29730,
+      "sha256": "a986c526c415728cc5773b4078e3e539a251282e861856bb3fea18768fa5974b",
+      "group": "C05"
+    },
+    {
+      "path": "药衡智析_增量源码交接/public_source_candidate/07_交付/demo_20260918/slide-5.png",
+      "bytes": 25946,
+      "sha256": "30cf4f4eab9d9569db380f88fe8f15f69359e40f3869cc2a09d6aa0e0229735f",
+      "group": "C05"
+    },
+    {
+      "path": "药衡智析_增量源码交接/public_source_candidate/07_交付/demo_20260918/slide-6.png",
+      "bytes": 32130,
+      "sha256": "8c68b84e42f6068a7fbc900e8f4c292f9f2323e77c3f766cd15c9be021f93805",
+      "group": "C05"
+    },
+    {
+      "path": "药衡智析_增量源码交接/public_source_candidate/07_交付/demo_20260918/slide-7.png",
+      "bytes": 34707,
+      "sha256": "a30faed98fe04b840ab39ffa58ac646be15619751f781080c4cd9c6e7d56fa2e",
+      "group": "C05"
+    },
+    {
+      "path": "药衡智析_增量源码交接/public_source_candidate/07_交付/demo_20260918/slide-8.png",
+      "bytes": 36562,
+      "sha256": "abeeb90f3701ff4f200ec013be949cd01e53a76e9f65169a17415b7ec7c0382e",
+      "group": "C05"
+    },
+    {
+      "path": "药衡智析_增量源码交接/public_source_candidate/07_交付/demo_20260918/slide-9.png",
+      "bytes": 35956,
+      "sha256": "e97a23831530e567aeb3f42d74d845e73d0b97c4db72cf3b4f6e39e09a34b7b9",
+      "group": "C05"
+    },
+    {
+      "path": "药衡智析_增量源码交接/public_source_candidate/07_交付/demo_20260918/药衡智析_演示与答辩稿_阅读版.pdf",
+      "bytes": 10635731,
+      "sha256": "49ac4752fb6ea50ea66e6bdff66a0f2284b7ae9c8560d636b743ec36e20f6b9f",
+      "group": "C05"
+    }
+  ],
+  "skipped": [],
+  "local_cache": [
+    {
+      "path": "药衡智析_增量源码交接/public_source_candidate/05_原型/backend/pharma/__pycache__/decision.cpython-312.pyc",
+      "status": "NOT_APPLICABLE"
+    },
+    {
+      "path": "药衡智析_增量源码交接/public_source_candidate/05_原型/backend/pharma/__pycache__/forecasting.cpython-312.pyc",
+      "status": "NOT_APPLICABLE"
+    },
+    {
+      "path": "药衡智析_增量源码交接/public_source_candidate/05_原型/backend/pharma/__pycache__/industry.cpython-312.pyc",
+      "status": "SKIPPED_CHANGED_OR_TRACKED"
+    },
+    {
+      "path": "药衡智析_增量源码交接/public_source_candidate/05_原型/backend/pharma/__pycache__/ingestion.cpython-312.pyc",
+      "status": "SKIPPED_CHANGED_OR_TRACKED"
+    },
+    {
+      "path": "药衡智析_增量源码交接/public_source_candidate/05_原型/backend/pharma/__pycache__/knowledge.cpython-312.pyc",
+      "status": "SKIPPED_CHANGED_OR_TRACKED"
+    },
+    {
+      "path": "药衡智析_增量源码交接/public_source_candidate/05_原型/backend/pharma/__pycache__/metrics.cpython-312.pyc",
+      "status": "SKIPPED_CHANGED_OR_TRACKED"
+    },
+    {
+      "path": "药衡智析_增量源码交接/public_source_candidate/05_原型/backend/pharma/__pycache__/narrative.cpython-312.pyc",
+      "status": "SKIPPED_CHANGED_OR_TRACKED"
+    }
+  ],
+  "deduplication_mapping": [
+    {
+      "removed": "02_知识库/00_原始/GMP法规核心摘要_2010修订版.pdf",
+      "retained": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/03_制药知识文档/GMP法规核心摘要_2010修订版.pdf",
+      "sha256": "2e599f526df282da063695de31a7007b97c7ff1ad16d7a97c91747f32534a048"
+    },
+    {
+      "removed": "02_知识库/00_原始/产品配方文档_六味地黄胶囊.pdf",
+      "retained": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/03_制药知识文档/产品配方文档_六味地黄胶囊.pdf",
+      "sha256": "281a6829ed15ce1df55d9c13f16fd5052e26276a6d30020520967657431eb4e7"
+    },
+    {
+      "removed": "02_知识库/00_原始/产品配方文档_板蓝根颗粒.pdf",
+      "retained": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/03_制药知识文档/产品配方文档_板蓝根颗粒.pdf",
+      "sha256": "5f1dd55e4a388b190fc74c601f0589574bccbfa716a2025ea3e79857dd2eec47"
+    },
+    {
+      "removed": "02_知识库/00_原始/产品配方文档_银黄口服液.pdf",
+      "retained": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/03_制药知识文档/产品配方文档_银黄口服液.pdf",
+      "sha256": "834aa8a81c2938dfb9e6ec28b8743ea0e667c237e06a6609415d97fe3b85b5ad"
+    },
+    {
+      "removed": "02_知识库/00_原始/生产工艺文档_中药一厂.pdf",
+      "retained": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/03_制药知识文档/生产工艺文档_中药一厂.pdf",
+      "sha256": "aa7d48f697f2caa2bedf5b16e84a4d4765d3c92a52a619a7a93360764d7d8e00"
+    },
+    {
+      "removed": "02_知识库/00_原始/药品生产质量管理规范GMP.pdf",
+      "retained": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/03_制药知识文档/药品生产质量管理规范GMP.pdf",
+      "sha256": "871f86bfaa610bb0db8b84b0f45606019fe889ec437695baf150cbe696cfa102"
+    },
+    {
+      "removed": "02_知识库/00_原始/车间设备清单_中药一厂.pdf",
+      "retained": "00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据/03_制药知识文档/车间设备清单_中药一厂.pdf",
+      "sha256": "1e3808fc86fece94d3736690f087c218b8e082e6defe869e68bbdfdcdce7e503"
+    }
+  ],
+  "preserved": [
+    "C01 CSV",
+    "C03 historical resources",
+    "C04 historical demos",
+    "package originals and ZIP",
+    "all Git history"
+  ],
+  "package_manifest": "11/11 PASS",
+  "bundle": "verified and imported once; main ancestor retained"
+}
