@@ -1,4 +1,13 @@
 import { fmt } from './api';
+// Presentation only: original Decimal strings remain in API evidence and exact tables.
+export const displayNumber=(value:unknown)=>value==null?'N/A':Number(value).toLocaleString('zh-CN',{maximumFractionDigits:4});
+export function displayFocusRate(value:unknown){
+ const raw=String(value), number=Number(value);
+ // Do not round a just-over-threshold rate back onto the strict ±10% boundary.
+ if (/^-?10\.0*[1-9]/.test(raw)&&Math.abs(Number(number.toFixed(4)))===10)return raw;
+ return displayNumber(value);
+}
+
 export const cleanText = (value: unknown) => String(value ?? '').replace(/\\r\\n|\\n|\\r/g, '\n').replace(/\\t/g, ' ').trim();
 export function sourceLabel(e: any) {
  const source = e.source_file ?? e.source ?? e.table ?? '来源待核对';

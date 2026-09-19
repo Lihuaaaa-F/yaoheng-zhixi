@@ -575,7 +575,7 @@ def context_catalog():
                  'capabilities':capabilities(pack,dataset),'data_label':pack.data_label})
     default='pharmaceutical:synthetic-pharma'
     if os.environ.get('PHARMA_DATA_PACKAGE'):
-        contexts.append({'id':'pharmaceutical:competition','context_id':'pharmaceutical:competition','industry_id':'pharmaceutical','industry_name':'制药行业包','company_id':'competition','company_name':'赛题私有环境','capabilities':[],'data_label':'私有原题数据，仅本机使用'})
+        contexts.append({'id':'pharmaceutical:competition','context_id':'pharmaceutical:competition','industry_id':'pharmaceutical','industry_name':'制药行业包','company_id':'competition','company_name':'赛题原始数据','capabilities':[],'data_label':'赛题原始数据，按团队授权使用'})
         default='pharmaceutical:competition'
     return {'contexts':contexts,'default_context_id':default}
 

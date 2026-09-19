@@ -51,6 +51,7 @@ export async function recordDemo() {
   const receipt = {status: 'RUNNING', run_id: runId, attempt_id: attempt, scenario, base_url: base,
     viewport: {width: 1366, height: 768}, simulation: true, human_review: 'PENDING',
     browser: 'Browser plugin not available; installed Playwright/Chromium', scenes: [], artifacts: {}, errors: []};
+  receipt.recorder_source_sha256 = sha(await readFile(fileURLToPath(import.meta.url)));
   let browser, context, page, video, timer;
   const request = async (url, options = {}) => {
     const target = new URL(url, base);
@@ -74,6 +75,14 @@ export async function recordDemo() {
     if (job) validateJob(job, runId, selection);
     receipt.selection = selection;
     receipt.reused_job = job?.id ?? null;
+    if (process.env.PHARMA_DEMO_MANIFEST) {
+      const bytes = await readFile(process.env.PHARMA_DEMO_MANIFEST), manifest = JSON.parse(bytes);
+      const sourceScenario = manifest.scenarios?.find(row => row.id === scenario);
+      if (manifest.run_id !== runId || !sourceScenario || (job && sourceScenario.job_id !== job.id))
+        throw Error('SOURCE_MANIFEST_BINDING_MISMATCH');
+      receipt.source_manifest = {sha256: sha(bytes), run_id: runId, scenario,
+        attempt_id: sourceScenario.attempt_id, job_id: sourceScenario.job_id, revision: manifest.revision};
+    }
     const temp = await mkdtemp(path.join(tmpdir(), 'yaoheng-video-'));
     browser = await chromium.launch({executablePath: process.env.PHARMA_CHROME_PATH, headless: true, args: ['--no-sandbox']});
     context = await browser.newContext({viewport: receipt.viewport, locale: 'zh-CN', acceptDownloads: true,
@@ -108,7 +117,7 @@ export async function recordDemo() {
         node.style.cssText = 'position:fixed;bottom:12px;left:230px;right:18px;padding:10px 16px;background:#143d43ed;color:white;border-radius:8px;z-index:99999;font:17px "Noto Sans CJK SC",sans-serif;pointer-events:none';
       }, text);
       receipt.scenes.push({text, at: new Date().toISOString()});
-      await page.waitForTimeout(2200);
+      await page.waitForTimeout(5500);
     };
     const clickResponse = async (locator, endpoint, method = 'POST') => {
       const [response] = await Promise.all([
@@ -127,10 +136,15 @@ export async function recordDemo() {
       await page.locator('.metric').first().waitFor();
       await page.getByRole('group', {name: '成本口径'}).getByRole('button', {name: selection.basis === 'unit' ? '单位' : '总额', exact: true}).click();
       await page.locator('.metric').first().waitFor();
-      await page.screenshot({path: path.join(out, 'analysis_1366x768.png')});
+      await page.locator('.metric').first().evaluate(node => node.scrollIntoView({block: 'start'}));
       await caption('程序计算成本与差异；缺失数据和解释能力分别说明');
+      await page.screenshot({path: path.join(out, 'analysis_1366x768.png')});
+      await page.locator('.chart-grid').first().evaluate(node => node.scrollIntoView({block: 'start'}));
+      await caption('趋势、结构与差异图联动当前筛选；预测仍是实验性原型');
+      await page.screenshot({path: path.join(out, 'charts_1366x768.png')});
       await page.getByRole('button', {name: /报告与任务/}).click();
       await page.getByRole('heading', {name: '报告生成与下载'}).waitFor();
+      await page.getByRole('heading', {name: '报告生成与下载'}).evaluate(node => node.scrollIntoView({block: 'start'}));
       await caption(job ? '复用本次运行已验证报告，实际下载 Word 与 PDF' : '提交本次运行报告并等待实际文件生成');
       const submitted = await clickResponse(page.getByRole('button', {name: '生成报告', exact: true}), '/api/reports');
       if (job && submitted.job_id !== job.id) throw Error('EXPECTED_CACHE_REUSE_MISSED');
@@ -149,6 +163,8 @@ export async function recordDemo() {
         const artifact = job.result[kind];
         const link = page.locator(`a[href="/api/artifacts/${artifact.artifact_id}"]`).first();
         await link.waitFor();
+        await link.scrollIntoViewIfNeeded();
+        await caption(`实际下载 ${kind === 'docx' ? 'Word' : 'PDF'}，文件与本次报告绑定`);
         const [download] = await Promise.all([page.waitForEvent('download'), link.click()]);
         if (await download.failure()) throw Error(`DOWNLOAD_FAILED:${kind}`);
         const filename = `report.${kind}`, target = path.join(out, filename);
@@ -159,6 +175,8 @@ export async function recordDemo() {
       }
       await caption('报告文件已实际下载并核对；专业原因、可读性与版式仍待真人评审');
       await page.getByLabel('载入当前报告建议').selectOption('0');
+      await page.getByLabel('载入当前报告建议').evaluate(node => node.scrollIntoView({block: 'start'}));
+      await caption('载入当前报告的可执行建议，展示核查对象、预期证据与责任角色');
       const selectedSuggestion = await page.getByLabel('建议内容', {exact: true}).inputValue();
       const clean = value => String(value ?? '').replace(/\\r\\n|\\n|\\r/g, '\n').replace(/\\t/g, ' ').trim();
       const sourceFinding = (job.result.narrative?.findings ?? []).find(f =>
@@ -172,7 +190,7 @@ export async function recordDemo() {
       if (draft.status !== 'DRAFT' || draft.metadata?.snapshot_id !== receipt.snapshot_id) throw Error('NEW_BOUND_DRAFT_REQUIRED');
       receipt.action = {task_id: draft.id, payload_hash: draft.payload_hash, payload: draft.payload, metadata: draft.metadata};
       const task = page.locator(`[data-task-id="${draft.id}"]`);
-      await task.scrollIntoViewIfNeeded();
+      await task.evaluate(node => node.scrollIntoView({block: 'start'}));
       await caption('从报告建议创建草稿，核对责任角色、核查对象与期限；下面执行模拟发送确认');
       validateHealth(await request('/health')); // Preflight immediately before confirmation.
       await clickResponse(task.getByRole('button', {name: '确认并发送模拟通知', exact: true}), `/api/actions/${draft.id}/confirm`);
@@ -188,6 +206,7 @@ export async function recordDemo() {
       if (queried.delivery?.notification !== 'SIMULATED_SENT' || queried.payload_hash !== draft.payload_hash || queried.responsibility_confirmation)
         throw Error('BOUND_SIMULATION_RECEIPT_REQUIRED');
       receipt.delivery = queried;
+      await task.evaluate(node => node.scrollIntoView({block: 'start'}));
       await caption('本地模拟 RPA 已记录通知送达；责任人确认和真实整改由真人另行完成');
       await page.screenshot({path: path.join(out, 'simulated_delivery_1366x768.png')});
       if (receipt.errors.length) throw Error('BROWSER_REQUEST_OR_RUNTIME_FAILED');
