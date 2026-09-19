@@ -29,7 +29,7 @@ class JobStore:
         with self.db() as c:r=c.execute('SELECT body FROM snapshots WHERE id=?',(id,)).fetchone()
         if not r:raise KeyError('SNAPSHOT_NOT_FOUND')
         return json.loads(r['body'])
-    def enqueue(self,kind,payload,cache_key=None):
+    def enqueue(self,kind,payload,cache_key=None,retry=False):
         id=uuid.uuid4().hex;initial={}
         with self.db() as c:
             c.execute('BEGIN IMMEDIATE')
@@ -37,13 +37,21 @@ class JobStore:
                 old=c.execute('SELECT * FROM jobs WHERE cache_key=?',(cache_key,)).fetchone()
                 if old and old['status'] != 'FAILED':
                     previous=self._decode(old)
-                    if previous['status'] not in TERMINAL or previous['kind']!='report' or self.artifacts_healthy(previous):return previous
-                    payload={**payload,'repair_of':old['id'],'repair_reason':'ARTIFACT_MISSING_OR_HASH_MISMATCH'}
+                    retryable=retry and previous['kind']=='report' and previous['status']=='DEGRADED'
+                    if not retryable and (previous['status'] not in TERMINAL or previous['kind']!='report' or self.artifacts_healthy(previous)):
+                        return previous
+                    # 重试（fix5）：服务恢复后允许对 DEGRADED 报告重新尝试；旧任务
+                    # 保留在历史中，新任务复用已验证的确定性计算结果。
+                    if retryable:
+                        payload={**payload,'retry_of':old['id'],'retry_reason':'DEGRADED_RETRY_REQUESTED'}
+                        c.execute('INSERT INTO job_events(job_id,stage,at) VALUES(?,?,?)',(old['id'],'CACHE_INVALIDATED_RETRY',stamp()))
+                    else:
+                        payload={**payload,'repair_of':old['id'],'repair_reason':'ARTIFACT_MISSING_OR_HASH_MISMATCH'}
+                        c.execute('INSERT INTO job_events(job_id,stage,at) VALUES(?,?,?)',(old['id'],'CACHE_INVALIDATED_ARTIFACT',stamp()))
                     # Re-render only; validated calculations and explanations retain provenance.
                     initial={k:v for k,v in previous['result'].items() if k in ('snapshot','evidence','benchmark')}
                     if previous['result'].get('narrative',{}).get('status')=='PASS':initial['narrative']=previous['result']['narrative']
-                    initial['repair_provenance']={'source_job_id':old['id'],'reason':payload['repair_reason']}
-                    c.execute('INSERT INTO job_events(job_id,stage,at) VALUES(?,?,?)',(old['id'],'CACHE_INVALIDATED_ARTIFACT',stamp()))
+                    initial['repair_provenance']={'source_job_id':old['id'],'reason':payload.get('repair_reason') or payload['retry_reason']}
                 if old:c.execute('UPDATE jobs SET cache_key=NULL WHERE id=?',(old['id'],))
             c.execute('INSERT INTO jobs VALUES(?,?,?,?,?,?,?,?,?,?)',(id,cache_key,kind,'QUEUED','VALIDATING',json.dumps(payload,ensure_ascii=False),json.dumps(initial,ensure_ascii=False),stamp(),stamp(),None))
         return self.get(id)
@@ -56,6 +64,15 @@ class JobStore:
         with self.db() as c:return self._decode(c.execute('SELECT * FROM jobs WHERE id=?',(id,)).fetchone())
     def list(self):
         with self.db() as c:return [self._decode(r) for r in c.execute('SELECT * FROM jobs ORDER BY created DESC LIMIT 100')]
+    def list_jobs(self,context_id=None,limit=100,offset=0):
+        """先按业务范围查询、再分页：指定企业的历史任务不受全局截断影响（fix7）。"""
+        limit=max(1,min(int(limit),500));offset=max(0,int(offset))
+        with self.db() as c:
+            if context_id is None:
+                rows=c.execute('SELECT * FROM jobs ORDER BY created DESC LIMIT ? OFFSET ?',(limit,offset)).fetchall()
+            else:
+                rows=c.execute("SELECT * FROM jobs WHERE json_extract(input,'$.context_id')=? ORDER BY created DESC LIMIT ? OFFSET ?",(context_id,limit,offset)).fetchall()
+            return [self._decode(r) for r in rows]
     def list_reports(self,limit=300):
         """报告任务专用查询：决策引擎据此判断口径匹配报告，不受通用列表截断影响。"""
         with self.db() as c:return [self._decode(r) for r in c.execute('SELECT * FROM jobs WHERE kind=? ORDER BY created DESC LIMIT ?',('report',limit))]

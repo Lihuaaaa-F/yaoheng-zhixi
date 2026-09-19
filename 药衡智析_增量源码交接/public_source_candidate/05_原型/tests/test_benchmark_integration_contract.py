@@ -27,7 +27,13 @@ def test_reference_report_worker_passes_cross_metrics_to_generation(tmp_path, mo
     store=JobStore(tmp_path/'db');store.snapshot(snapshot);job=store.enqueue('report',{'snapshot_id':snapshot['snapshot_id'],'versions':versions})
     captured=[]
     monkeypatch.setattr(context_services,'retrieve',lambda *a,**k:{'status':'PASS','evidence':[]})
-    monkeypatch.setattr(narrative,'ModelGateway',lambda:SimpleNamespace(model='synthetic',provider='openai',base_url='https://example.invalid'))
+    class GatewayStub:
+        # worker/generate 现在统一经 for_route('narrative') 取网关（fix4）。
+        model='synthetic';provider='openai';base_url='https://example.invalid'
+        def __init__(self,*args,**kwargs):pass
+        @classmethod
+        def for_route(cls,route,**kwargs):return cls()
+    monkeypatch.setattr(narrative,'ModelGateway',GatewayStub)
     def capture(value,evidence):
         captured.append(value)
         raise RuntimeError('stop after inspected model boundary; no network')

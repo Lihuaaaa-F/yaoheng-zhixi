@@ -12,7 +12,7 @@ PATTERN = re.compile(r'\{\{([^{}]+)\}\}')
 RESIDUAL = re.compile(r'\{\{[^{}]*\}\}|\[\[[^\[\]]*\]\]')
 TEMPLATE = ROOT / '04_方案与文档/月度成本分析报告工作模板.docx'
 MAP_PATH = ROOT / '04_方案与文档/placeholder_map.json'
-RENDERER_VERSION='reader-20260918-footer-unit-period-v2'
+RENDERER_VERSION='reader-20260920-benchmark-basis-unit-v3'
 NA = 'N/A（无可用基期或明细）'
 
 def replace_text_nodes(nodes, mapping):
@@ -765,6 +765,17 @@ def assess_report(result,review=None):
 
     Human dimensions come only from a stored review bound to the current
     artifact bytes; without it they stay PENDING, never auto-signed."""
+    # 数值绑定下限按“版本明确的合同”解析：生成方验收器自带 expected_bindings
+    # 的合同按其声明下限执行；制药模板占位符数量由模板合同固定；未注册
+    # 合同一律 fail-closed，不再硬编码旧绑定数量（generic-v1 已废弃）。
+    PHARMA_TEMPLATE_BINDING_FLOOR=70
+    def _binding_floor(checks):
+        contract=checks.get('contract')
+        if contract=='generic-v2-role-bound' and checks.get('contract_floor')=='expected_bindings':
+            return int(checks.get('expected_bindings') or 10**9)
+        if contract is None:  # 赛题制药模板：无 contract 字段即制药路径
+            return PHARMA_TEMPLATE_BINDING_FLOOR
+        return 10**9
     def verdict(ok,reason):return {'status':'PASS' if ok else 'FAIL','reason':reason}
     n=result.get('narrative',{});ev=result.get('evidence',{});dx=result.get('docx',{});pdf=result.get('pdf',{})
     checks=dx.get('verification',{})
@@ -793,7 +804,7 @@ def assess_report(result,review=None):
         return {'status':dim['status'],'reason':dim.get('comment') or '','reviewer':review.get('reviewer'),'reviewed_at':review.get('reviewed_at'),'review_id':review.get('id')}
     r={
       'file_openable':verdict(dx.get('status')=='PASS' and pdf.get('status')=='PASS','DOCX结构检查与PDF实际打开'),
-      'calculation_consistency':verdict(checks.get('core_numbers') and (checks.get('numeric_bindings_checked',0)>=70 or checks.get('contract')=='generic-v1') and not checks.get('numeric_binding_failures'),'固定快照与模板位置逐项核对'),
+      'calculation_consistency':verdict(checks.get('core_numbers') and _binding_floor(checks)<=checks.get('numeric_bindings_checked',0) and not checks.get('numeric_binding_failures'),'固定快照与模板位置逐项核对'),
       'section_completeness':human('section_completeness','六个固定章节的业务实质待真人评审'),
       'evidence_applicability':verdict(evidence_ok and bool(n.get('evidence_applicability_checked')) and not claim_failures,f'逐条核对{claims_checked}项结论的证据引用与适用性；'+('全部通过' if not claim_failures else '；'.join(claim_failures[:5]))),
       'readability':human('readability','真人可读性评审待完成'),

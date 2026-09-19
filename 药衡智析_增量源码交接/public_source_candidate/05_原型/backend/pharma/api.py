@@ -20,6 +20,7 @@ class AnalysisRequest(BaseModel):
     analysis_type:Literal['monthly','quarterly','special']='monthly';basis:Literal['unit','total']='unit'
 class ReportRequest(AnalysisRequest):
     run_id:str|None=Field(default=None,pattern=r'^[A-Za-z0-9_-]{1,80}$')
+    retry:bool=False  # 对 DEGRADED 报告明确重试：旧任务保留，新任务复用可用计算结果
 
 class SearchRequest(BaseModel):
     context_id:str|None=None
@@ -67,7 +68,7 @@ def scoped_analysis(req):
     from .industry import analyze_reference, catalog as scoped_catalog
     cid=selected_context(req.context_id)
     options=scoped_catalog(cid)
-    params=req.model_dump(exclude={'context_id','run_id'})
+    params=req.model_dump(exclude={'context_id','run_id','retry'})
     params['factory']=params['factory'] or options['factories'][0]
     params['product']=params['product'] or options['products'][0]
     return analyze_reference(cid,**params)
@@ -154,7 +155,7 @@ def _generation_versions(snapshot,req):
         if not TEMPLATE.exists():normalize_template()
         template_version=hashlib.sha256(TEMPLATE.read_bytes()).hexdigest()
     else:template_version=snapshot['analysis_context']['template_version']
-    gateway=ModelGateway()
+    gateway=ModelGateway.for_route('narrative')  # 与 generate() 实际网关同源（fix4）
     return {'retrieval_policy':retrieval_policy_version(snapshot['analysis_context']),'renderer':RENDERER_VERSION,
         'snapshot':snapshot['snapshot_id'],'knowledge':snapshot['analysis_context']['knowledge_snapshot'],
         'template':template_version,'prompt':PROMPT_VERSION,'validator':VALIDATOR_VERSION,
@@ -176,7 +177,7 @@ def _enqueue_report(req:ReportRequest):
     j=store.enqueue('report',{'snapshot_id':snapshot['snapshot_id'],'context_id':snapshot['context_id'],
         'factory':snapshot.get('factory'),'product':snapshot.get('product'),'month':snapshot.get('month'),
         'analysis_type':snapshot.get('analysis_type'),'basis':snapshot.get('basis'),
-        'versions':versions,'run_id':req.run_id,**revision},key)
+        'versions':versions,'run_id':req.run_id,**revision},key,retry=bool(getattr(req,'retry',False)))
     return j,snapshot
 
 @app.post('/api/reports',status_code=202)
@@ -184,7 +185,9 @@ def report(req:ReportRequest):
     j,_=_enqueue_report(req)
     return {'job_id':j['id'],'status':j['status'],'cache_source_time':j['created']}
 @app.get('/api/jobs')
-def jobs(context_id:str|None=None):return [j for j in store.list() if context_id is None or j['input'].get('context_id')==context_id]
+def jobs(context_id:str|None=None,limit:int=Query(default=100,ge=1,le=500),offset:int=Query(default=0,ge=0)):
+    # 范围过滤在 SQL 内先于分页执行，避免企业历史任务被全局截断后过滤丢失（fix7）。
+    return store.list_jobs(context_id=context_id,limit=limit,offset=offset)
 @app.get('/api/jobs/{id}')
 def job(id:str):return {**store.get(id),'history':store.history(id)}
 @app.get('/api/artifacts/{id}')
@@ -283,7 +286,12 @@ def kb_search(req:SearchRequest):
     if cid!='pharmaceutical:competition':
         from .context_services import retrieve
         from .industry import analyze_reference
-        return retrieve(analyze_reference(cid,product=req.product,month=req.month),req.query)
+        # 用户选择的工厂与检索模式必须贯穿请求、检索与结果（fix2）：
+        # 工厂进入分析快照（适用性过滤据此生效），mode 传入检索执行。
+        snapshot=analyze_reference(cid,factory=req.factory,product=req.product,month=req.month)
+        result=retrieve(snapshot,req.query,mode=req.mode)
+        result['requested_scope']={'factory':snapshot.get('factory'),'product':snapshot.get('product'),'mode':req.mode}
+        return result
     month=params.pop('month');params['period']={'start':month,'end':month} if month else None
     return Knowledge().search(**params)
 @app.post('/api/actions')
@@ -332,7 +340,7 @@ def agent_decision(context_id:str|None=None,factory:str|None=None,product:str|No
     """
     from .decision import evaluate,advise,DecisionStore
     snapshot=store.snapshot(resolved_analysis(context_id,factory,product,month,analysis_type,basis))
-    evaluation=evaluate(snapshot,store.list_reports())
+    evaluation=evaluate(snapshot,store.list_reports(),artifact_health=store.artifacts_healthy)
     if with_advisory:evaluation=advise(evaluation,snapshot)
     decision_id=DecisionStore().append(evaluation)
     return {'decision_id':decision_id,**evaluation}

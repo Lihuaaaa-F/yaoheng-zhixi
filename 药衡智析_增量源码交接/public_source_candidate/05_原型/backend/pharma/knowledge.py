@@ -27,7 +27,12 @@ def _string_list(value, label):
 def pharmaceutical_terminology():
     """Only the explicit local JSON file may override public synthetic terms."""
     from .config import APP
-    configured=os.getenv('PHARMA_PRIVATE_TERMINOLOGY_FILE')
+    # 与主数据同源：默认解析仓库内赛题术语文件，部署不依赖外部绝对路径。
+    configured=os.getenv('PHARMA_PRIVATE_TERMINOLOGY_FILE') or ''
+    if not configured:
+        competition=Path(os.environ.get('PHARMA_COMPETITION_CONFIG_DIR',str(APP.parent/'competition_configuration')))
+        default=competition/'pharmaceutical_terminology_original.json'
+        configured=str(default) if default.is_file() else ''
     path=Path(configured) if configured else APP/'industry_packs/pharmaceutical/terminology.json'
     if path.suffix.lower()!='.json' or path.stat().st_size>1_000_000:raise ValueError('INVALID_TERMINOLOGY_FILE')
     value=json.loads(path.read_text(encoding='utf-8'))

@@ -18,10 +18,19 @@ VERSION = 'data-contract-2-finite'
 ORIGINAL = PACKAGE if os.environ.get('PHARMA_DATA_PACKAGE') else ROOT / '01_数据/00_原始'
 SNAPSHOTS = RUNTIME / 'data'
 D = Decimal
+def _competition_configuration():
+    """赛题正式配置目录在仓库内的位置（可被环境变量整体重定向）。"""
+    return Path(os.environ.get('PHARMA_COMPETITION_CONFIG_DIR', str(ROOT / 'competition_configuration')))
+
 def source_contract():
     """Public schema stays fixed; only trusted local enterprise masterdata varies."""
     value=json.loads((ROOT / '05_原型/industry_packs/pharmaceutical/source_contract.json').read_text())
-    configured=os.getenv('PHARMA_PRIVATE_MASTERDATA_FILE')
+    # 默认解析仓库内赛题主数据（中药一厂/二厂口径）：没有环境变量时正式
+    # 制药管线同样可用，部署不再依赖外部绝对路径（配置生效修复）。
+    configured=os.getenv('PHARMA_PRIVATE_MASTERDATA_FILE') or ''
+    if not configured:
+        default=_competition_configuration()/'pharmaceutical_masterdata.json'
+        configured=str(default) if default.is_file() else ''
     if configured:
         path=Path(configured)
         if path.suffix.lower()!='.json' or path.stat().st_size>1_000_000:raise ValueError('INVALID_MASTERDATA_FILE')

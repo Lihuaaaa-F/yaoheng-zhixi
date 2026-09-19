@@ -13,9 +13,15 @@ def service(tmp_path, monkeypatch):
     monkeypatch.setattr(reports,'render_docx',forbidden)
     monkeypatch.setattr(context_services,'retrieve',forbidden)
     monkeypatch.setattr(api,'store',store)
-    monkeypatch.setattr(narrative,'ModelGateway',lambda:SimpleNamespace(
-        model='synthetic-model',provider='openai-compatible',base_url='https://synthetic.invalid',
-        key='',max_repairs=0))
+    class GatewayStub:
+        # generate()/版本指纹现在统一经 for_route('narrative') 取网关（fix4），
+        # 桩必须同时支持直接构造与路由构造两种入口。
+        model='synthetic-model';provider='openai-compatible';base_url='https://synthetic.invalid'
+        key='';max_repairs=0
+        def __init__(self,*args,**kwargs):pass
+        @classmethod
+        def for_route(cls,route,**kwargs):return cls()
+    monkeypatch.setattr(narrative,'ModelGateway',GatewayStub)
     return TestClient(api.app),store
 
 

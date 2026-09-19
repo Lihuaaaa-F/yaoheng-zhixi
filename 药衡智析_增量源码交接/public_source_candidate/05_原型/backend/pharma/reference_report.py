@@ -8,6 +8,16 @@ from .reports import style_reader,number,RESIDUAL,layout_text,benchmark_labels,b
 
 HEADINGS=['一、封面与基本信息','二、总成本概览','三、成本要素明细分析','四、重点产品专项分析','五、对标分析','六、总结与建议']
 
+def comparison_basis(comparison, snapshot):
+    """对标口径以比较对象自带声明为准，缺失时回退报告口径。"""
+    basis = (comparison or {}).get('basis') or snapshot.get('basis') or 'unit'
+    return basis if basis in ('unit', 'total') else 'unit'
+
+def benchmark_unit_of(snapshot, comparison=None):
+    """对标表数值、单位、标题共用同一口径：总额口径标'元'，单位口径标'元/<产量单位>'。"""
+    key = 'unit_cost' if comparison_basis(comparison, snapshot) == 'unit' else 'total_cost'
+    return snapshot['metrics'][key]['unit']
+
 def verify(path, snapshot, benchmark=None):
     """Check visible values at their semantic role and section, not anywhere in XML.
 
@@ -82,8 +92,7 @@ def verify(path, snapshot, benchmark=None):
              label + '：' + number(m[key]) + ' ' + m[key]['unit'])
     comparison = benchmark if benchmark is not None else snapshot.get('benchmark_context', {})
     left, right, direction = benchmark_labels(comparison)
-    benchmark_unit = snapshot['metrics']['unit_cost']['unit']
-    benchmark_headers = ['要素', left+'（'+benchmark_unit+'）', right+'（'+benchmark_unit+'）', '差异（'+benchmark_unit+'）']
+    benchmark_headers = ['要素', left+'（'+benchmark_unit_of(snapshot, comparison)+'）', right+'（'+benchmark_unit_of(snapshot, comparison)+'）', '差异（'+benchmark_unit_of(snapshot, comparison)+'）']
     for element in (comparison or {}).get('elements', []):
         for column, key in enumerate(('left', 'right', 'delta'), 1):
             bind('benchmark:' + element['key'] + ':' + key,
@@ -92,11 +101,16 @@ def verify(path, snapshot, benchmark=None):
     residual = RESIDUAL.findall('\n'.join(all_text))
     headings_valid = len(headings) == 6 and observed == headings
     core = not any(item['binding'].startswith('core:') for item in failures)
+    # 合同自带绑定下限：验收不再硬编码数量，由生成方按快照结构声明（fix3）。
+    expected = 3 + 3 + 3*len(snapshot.get('elements', [])) + len(snapshot.get('alerts', [])) \
+        + len(pack.strategies) + 3*len((comparison or {}).get('elements', []))
     return {'status': 'PASS' if not failures and not residual and headings_valid else 'FAIL',
             'core_numbers': core, 'residual_placeholders': residual,
             'headings': observed, 'headings_valid': headings_valid,
-            'numeric_bindings_checked': len(checked), 'numeric_binding_failures': failures,
-            'contract': 'generic-v2-role-bound', 'scope': '表格及段落的角色、位置、数值和显示单位绑定；图像数值及真人评分不在此检查内'}
+            'numeric_bindings_checked': len(checked), 'expected_bindings': expected,
+            'numeric_binding_failures': failures,
+            'contract': 'generic-v2-role-bound', 'contract_floor': 'expected_bindings',
+            'scope': '表格及段落的角色、位置、数值和显示单位绑定；图像数值及真人评分不在此检查内'}
 
 def render(snapshot,narrative,evidence,output,benchmark=None):
     from .narrative import render_visible_text
@@ -149,7 +163,8 @@ def render(snapshot,narrative,evidence,output,benchmark=None):
             if benchmark and benchmark.get('elements'):
                 left,right,direction=benchmark_labels(benchmark)
                 paragraph(direction)
-                table(['要素',left+'（'+unit+'）',right+'（'+unit+'）','差异（'+unit+'）'],[[e.get('name',e.get('key','')),number(e.get('left'),benchmark_precision(snapshot)),number(e.get('right'),benchmark_precision(snapshot)),number(e.get('delta'),benchmark_precision(snapshot))] for e in benchmark['elements']])
+                bm_unit=benchmark_unit_of(snapshot,benchmark)
+                table(['要素',left+'（'+bm_unit+'）',right+'（'+bm_unit+'）','差异（'+bm_unit+'）'],[[e.get('name',e.get('key','')),number(e.get('left'),benchmark_precision(snapshot)),number(e.get('right'),benchmark_precision(snapshot)),number(e.get('delta'),benchmark_precision(snapshot))] for e in benchmark['elements']])
             else:paragraph('未选择跨厂比较；不构造明细或归因。')
             paragraph(snapshot['details']['reason'])
         else:

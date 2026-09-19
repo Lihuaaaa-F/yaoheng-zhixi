@@ -24,7 +24,7 @@ def process_job(store,job):
         from .knowledge import PARSER_VERSION,RETRIEVER_VERSION,EMBEDDING_SHA,terminology_hash
         from .ingestion import ingest
         from .context_services import retrieval_policy_version
-        gateway=ModelGateway()
+        gateway=ModelGateway.for_route('narrative')  # 版本核对与 generate() 实际网关同源（fix4）
         snapshot=store.get_snapshot(payload['snapshot_id'])
         synthetic=bool(snapshot.get('context_id') and snapshot['context_id']!='pharmaceutical:competition')
         from .industry import resolve_context

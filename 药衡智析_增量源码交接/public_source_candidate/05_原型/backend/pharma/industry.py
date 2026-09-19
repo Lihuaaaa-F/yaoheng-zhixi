@@ -757,6 +757,6 @@ def benchmark_reference(context_id, product, month, left, right, analysis_type='
                 'comparison_period':comparison['period'],'sources':sources,'row_keys':rows,
                 'source_hash':sorted(set(original['source_hash']+(right_metric['source_hash'] if right_metric else []))),
                 'reason':(row.get('reason') or '比较分母为零或缺失，比例无定义') if row[field] is None else None}
-    a['benchmark_context']={k:comparison[k] for k in ('left','right','direction','summary','elements','limits','period')}
+    a['benchmark_context']={k:comparison[k] for k in ('left','right','direction','summary','elements','limits','period','basis')}
     a['snapshot_id']=digest({k:v for k,v in a.items() if k!='snapshot_id'})
     return a,comparison

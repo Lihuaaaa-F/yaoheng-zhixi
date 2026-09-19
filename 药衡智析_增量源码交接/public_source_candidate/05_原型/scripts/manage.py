@@ -39,6 +39,13 @@ def ready(port):
         with urllib.request.urlopen(f'http://127.0.0.1:{port}/health',timeout=1) as r:return r.status==200
     except Exception:return False
 
+def worker_ready(api_port):
+    """Web 端口可开不等于后台能力可用：以 /health 的 worker 心跳为准（fix8）。"""
+    try:
+        with urllib.request.urlopen(f'http://127.0.0.1:{api_port}/health',timeout=2) as r:
+            return json.loads(r.read()).get('worker',{}).get('alive') is True
+    except Exception:return False
+
 def occupied(port):
     with socket.socket() as s:
         try:s.bind(('127.0.0.1',port));return False
@@ -81,5 +88,12 @@ def main():
                 if p.poll() is not None:raise SystemExit(f'{name}退出，见{RUN/name}.log')
                 time.sleep(.5)
             else:raise SystemExit(f'{name}健康检查超时')
+        elif name=='worker':
+            # 后台任务进程退出或心跳不刷新时不得宣称启动成功（fix8）。
+            for _ in range(90):
+                if p.poll() is not None:raise SystemExit(f'后台任务进程启动后即退出（退出码 {p.poll()}）；详见 {RUN/(name+".log")}')
+                if ready(api_port) and worker_ready(api_port):break
+                time.sleep(1)
+            else:raise SystemExit(f'后台任务处理未就绪（Web 已响应但 worker 心跳超时）；详见 {RUN/(name+".log")}，常见原因：依赖缺失、数据库被占用、已有本项目 worker 在运行')
     print(f'药衡智析：http://127.0.0.1:{api_port}  原mock：http://127.0.0.1:{rpa_port}')
 if __name__=='__main__':main()

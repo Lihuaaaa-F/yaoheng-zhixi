@@ -16,7 +16,7 @@ from pathlib import Path
 from .config import RUNTIME
 
 # 策略版本：判定规则变化时递增，回执据此区分新旧口径。
-DECISION_POLICY_VERSION = 'report-vs-dashboard-v1'
+DECISION_POLICY_VERSION = 'report-vs-dashboard-v2-artifact-health'
 ADVISORY_PROMPT_VERSION = 'decision-advisory-v2-signal-selection'
 
 
@@ -38,15 +38,17 @@ def _matching_report_jobs(jobs, selection):
     return matched
 
 
-def evaluate(snapshot, jobs):
+def evaluate(snapshot, jobs, artifact_health=None):
     """对当前快照执行确定性决策：REPORT_NEEDED 或 DASHBOARD_ONLY。
 
     策略（按优先级）：
     1. 本口径本期间尚无终态报告 → REPORT_NEEDED（新周期的正式交付物缺失）；
     2. 最新报告绑定的快照与当前快照不同 → REPORT_NEEDED（底层数据已变化，
        报告必须基于当前版本重出，旧报告自动进入待复核状态）；
-    3. 报告存在且绑定同一快照 → DASHBOARD_ONLY（正式报告仍是当前版本，
-       看板随实时分析更新即可，不重复消耗渲染与审核资源）。
+    3. 报告存在且绑定同一快照，但产物缺失/哈希不符（artifact_health 判定
+       不可用）→ REPORT_NEEDED（产物损坏不是可用报告，必须重新生成）；
+    4. 报告存在、绑定同一快照且产物可用 → DASHBOARD_ONLY（正式报告仍是
+       当前版本，看板随实时分析更新即可，不重复消耗渲染与审核资源）。
     """
     from .narrative import required_alerts
     selection = {k: snapshot.get(k) for k in ('context_id', 'factory', 'product', 'month', 'analysis_type', 'basis')}
@@ -55,6 +57,15 @@ def evaluate(snapshot, jobs):
     signals = []
     signals.append({'id': 'active_alerts', 'label': '超阈值告警数', 'value': len(alerts),
                     'detail': '；'.join(a['fact_summary'] for a in alerts[:3]) or '无告警'})
+    def _usable(job):
+        # 存在性与可用性同时检查（fix6）：未提供健康检查函数时仅按任务状态，
+        # 提供 JobStore.artifacts_healthy 后损坏产物不再被当作可用报告。
+        if artifact_health is None:
+            return True
+        try:
+            return bool(artifact_health(job))
+        except Exception:
+            return False
     if not reports:
         decision = 'REPORT_NEEDED'
         reason = '当前口径与期间还没有正式报告'
@@ -68,6 +79,11 @@ def evaluate(snapshot, jobs):
             reason = '底层数据版本已变化，正式报告需要基于当前快照重新生成'
             signals.append({'id': 'snapshot_binding', 'label': '报告绑定快照', 'value': '过期',
                             'detail': f'报告绑定 {str(bound)[:12]}，当前快照 {str(current)[:12]}'})
+        elif not _usable(latest):
+            decision = 'REPORT_NEEDED'
+            reason = '已有报告产物缺失或损坏（哈希不符），需要重新生成'
+            signals.append({'id': 'artifact_health', 'label': '报告产物健康', 'value': '不可用',
+                            'detail': f'报告 {latest["id"][:8]} 的 DOCX/PDF 未通过存在性与哈希校验'})
         else:
             decision = 'DASHBOARD_ONLY'
             reason = '正式报告已覆盖当前数据版本，看板更新即可'

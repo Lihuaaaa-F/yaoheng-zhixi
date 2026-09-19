@@ -839,7 +839,9 @@ def generate(snapshot,evidence,gateway=None,use_cache=True):
             check['reasons'].append('同一文档编号存在多个版本，尚未提供替代关系证明')
         if check['applicable']: sources.append(ev)
         else: excluded.append({'evidence_id':ev['evidence_id'],'reasons':check['reasons']})
-    gateway = gateway or ModelGateway()
+    # 叙事生成必须走 narrative 路由：页面路由配置（PHARMA_MODEL_ROUTES 等）
+    # 与实际调用保持一致，否则 routes_status 宣称与真实模型不符（fix4）。
+    gateway = gateway or ModelGateway.for_route('narrative')
     version_inputs = {'snapshot':snapshot,'evidence':sources,'knowledge_version':knowledge_version,'model':gateway.model,'protocol':gateway.provider,'base_url':gateway.base_url,'prompt':PROMPT_VERSION,'template':snapshot.get('template_version','template-unset'),'validator':VALIDATOR_VERSION,'retrieval':{k:evidence.get(k) for k in ('retriever_version','retrieval_policy_version','reranker_version','embedding_version','fusion_weights','mode','analysis_context','status','recall_status','graph_expansion')} if isinstance(evidence,dict) else None,'generation_parameters':{'max_tokens':os.getenv('PHARMA_MODEL_MAX_TOKENS','8192'),'reasoning_effort':os.getenv('PHARMA_MODEL_REASONING_EFFORT','low'),'max_repairs':gateway.max_repairs,'temperature':0}}
     key = hashlib.sha256(json.dumps(version_inputs,ensure_ascii=False,sort_keys=True,default=str).encode()).hexdigest()
     if use_cache:
