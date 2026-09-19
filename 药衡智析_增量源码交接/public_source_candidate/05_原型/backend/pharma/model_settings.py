@@ -99,7 +99,7 @@ def status() -> dict[str, Any]:
         prefix = 'PHARMA_MODEL_' + route.upper() + '_'
         env_names = [prefix + field.upper()] + (['PHARMA_MODEL'] if field == 'model' else []) \
             + (['PHARMA_MODEL_BASE_URL'] if field == 'base_url' else []) \
-            + (['PHARMA_MODEL_PROTOCOL'] if field == 'protocol' else '') \
+            + (['PHARMA_MODEL_PROTOCOL'] if field == 'protocol' else []) \
             + (['PHARMA_MODEL_KEY_FILE'] if field == 'key_file' else [])
         if any(os.getenv(name) for name in env_names if name):
             return 'env'

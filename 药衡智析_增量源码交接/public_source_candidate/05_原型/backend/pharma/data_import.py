@@ -429,9 +429,10 @@ def publish_business(record: dict[str, Any], mapping: dict[str, str], options: d
     enterprise_dir.mkdir(parents=True, exist_ok=True)
     (enterprise_dir / 'facts.json').write_text(json.dumps(dataset, ensure_ascii=False), encoding='utf-8')
     (enterprise_dir / 'knowledge.json').write_text('[]', encoding='utf-8')
+    specification = options.get('specification') or '导入数据未声明规格'
     config = {'id': enterprise_id, 'name': enterprise_name, 'dataset_id': record['sha256'][:16],
               'policy_version': 'imported-v1', 'quantity_unit': quantity_unit, 'currency': 'CNY',
-              'products': {product: {'name': product, 'specification': options.get('specification', ''),
+              'products': {product: {'name': product, 'specification': specification,
                                      'version': '1'} for product in sorted(products)},
               'responsibilities': {}, 'source_mode': 'imported_cost'}
     config_path = enterprise_dir / 'enterprise.json'

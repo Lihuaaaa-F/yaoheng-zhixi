@@ -563,10 +563,24 @@ def capabilities(pack, dataset=None, services=None):
     return result
 
 
+def _competition_available():
+    """赛题正式上下文就绪判定：原始数据在位且主数据解析为赛题工厂口径。"""
+    from .ingestion import ORIGINAL, source_contract
+    try:
+        if not ORIGINAL.is_dir() or not any(ORIGINAL.rglob('*.csv')): return False
+        return '中药一厂' in source_contract()['factories']
+    except Exception:
+        return False
+
+
 def context_catalog():
+    # 正式演示收敛到赛题制药：机械/化工合成上下文默认不进目录（数据与
+    # 测试保留在行业包内，置 PHARMA_SHOW_TEST_CONTEXTS=1 可列出）。
+    show_test=os.environ.get('PHARMA_SHOW_TEST_CONTEXTS')=='1'
     contexts=[]
     for raw in list_packs():
         pack=load_pack(raw)
+        if pack.id in ('mechanical_demo','chemical_demo') and not show_test: continue
         for enterprise in _enterprises(pack):
             dataset=_read_dataset(pack,enterprise)
             cid=pack.id+':'+enterprise['id']
@@ -574,7 +588,7 @@ def context_catalog():
                  'company_id':enterprise['id'],'company_name':enterprise['name'],
                  'capabilities':capabilities(pack,dataset),'data_label':pack.data_label})
     default='pharmaceutical:synthetic-pharma'
-    if os.environ.get('PHARMA_DATA_PACKAGE'):
+    if os.environ.get('PHARMA_DATA_PACKAGE') or _competition_available():
         contexts.append({'id':'pharmaceutical:competition','context_id':'pharmaceutical:competition','industry_id':'pharmaceutical','industry_name':'制药行业包','company_id':'competition','company_name':'赛题原始数据','capabilities':[],'data_label':'赛题原始数据，按团队授权使用'})
         default='pharmaceutical:competition'
     return {'contexts':contexts,'default_context_id':default}

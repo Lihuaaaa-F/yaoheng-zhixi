@@ -177,6 +177,8 @@ def test_blank_policy_and_mislabeled_parent_children_are_rejected():
 def test_multiple_enterprises_same_pack_same_product_and_evidence_id(tmp_path,monkeypatch):
     import pharma.industry as module
     monkeypatch.setattr(module,'ENTERPRISE_REGISTRY',tmp_path/'registry.json')
+    # 机械/化工合成上下文默认不进正式目录；多企业注册测试显式开启测试目录
+    monkeypatch.setenv('PHARMA_SHOW_TEST_CONTEXTS','1')
     pack=load_pack('mechanical_demo'); original=module.PACKS/pack.id
     profile=json.loads((original/'enterprise.json').read_text())
     profile.update(id='another-mechanical',name='另一个合成企业',dataset_id='another-dataset')
