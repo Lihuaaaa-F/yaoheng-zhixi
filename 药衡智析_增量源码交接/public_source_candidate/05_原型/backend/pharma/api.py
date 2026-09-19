@@ -1,8 +1,8 @@
 from contextlib import asynccontextmanager
-from typing import Literal
+from typing import Any, Literal
 from pathlib import Path
 import hashlib,json,time,os
-from fastapi import FastAPI,HTTPException,Request,Query
+from fastapi import FastAPI,File,Form,HTTPException,Request,Query,UploadFile
 from fastapi.responses import FileResponse,JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel,Field,ConfigDict
@@ -269,6 +269,67 @@ def import_reviews(payload:ReviewImport):
 def imports():return {'job_id':store.enqueue('import',{})['id']}
 @app.post('/api/kb/build',status_code=202)
 def kb_build():return {'job_id':store.enqueue('kb',{})['id']}
+
+# ---- 数据中心：用户自助接入（上传→预览→映射→质检→能力预览→发布） ----
+class ImportMappingRequest(BaseModel):
+    model_config=ConfigDict(extra='forbid')
+    mapping:dict[str,str]={};save_as:str=Field(default='',max_length=60)
+class ImportValidateRequest(ImportMappingRequest):
+    options:dict[str,Any]={}
+class ImportPublishRequest(ImportValidateRequest):
+    enterprise_name:str=Field(default='',max_length=80);pack_id:str=Field(default='',max_length=40)
+    quantity_unit:str=Field(default='件',max_length=12)
+class KnowledgePublishRequest(BaseModel):
+    model_config=ConfigDict(extra='forbid')
+    options:dict[str,Any]={}
+
+@app.post('/api/imports/uploads',status_code=201)
+async def import_upload(kind:str=Form(...),file:UploadFile=File(...)):
+    from . import data_import
+    payload=await file.read()
+    return data_import.create_upload(kind,file.filename or 'upload.bin',payload)
+@app.get('/api/imports')
+def import_list(kind:str|None=None):
+    from . import data_import
+    return data_import.list_imports(kind)
+@app.get('/api/imports/{import_id}')
+def import_detail(import_id:str):
+    from . import data_import
+    return data_import.get_import(import_id)
+@app.post('/api/imports/{import_id}/mapping')
+def import_mapping(import_id:str,req:ImportMappingRequest):
+    from . import data_import
+    record=data_import.get_import(import_id)
+    if req.save_as:
+        headers=record['meta'].get('preview',{}).get('headers') or []
+        if not headers:raise ValueError('MAPPING_REQUIRES_TABLE_PREVIEW')
+        data_import.save_mapping(headers,req.mapping,req.save_as)
+    return {'saved':bool(req.save_as),'suggested':data_import.suggest_mapping(headers) if req.save_as else None}
+@app.post('/api/imports/{import_id}/validate')
+def import_validate(import_id:str,req:ImportValidateRequest):
+    from . import data_import
+    record=data_import.get_import(import_id)
+    if record['kind']!='business':raise ValueError('VALIDATE_REQUIRES_BUSINESS_IMPORT')
+    result=data_import.validate_business(record,req.mapping,req.options)
+    from . import data_import as di
+    return di._save(record,{**record['meta'],'last_validation':result})
+@app.post('/api/imports/{import_id}/publish',status_code=201)
+def import_publish(import_id:str,req:ImportPublishRequest):
+    from . import data_import
+    record=data_import.get_import(import_id)
+    if record['kind']=='business':
+        result=data_import.publish_business(record,req.mapping,req.options,req.enterprise_name,req.pack_id,req.quantity_unit)
+    elif record['kind']=='knowledge':
+        result=data_import.publish_knowledge(record,req.options)
+    else:
+        raise ValueError('TEMPLATE_USES_CHECK_ENDPOINT')
+    return data_import._save(record,{**record['meta'],'published':result})
+@app.post('/api/imports/{import_id}/template-check')
+def import_template_check(import_id:str):
+    from . import data_import
+    record=data_import.get_import(import_id)
+    if record['kind']!='template':raise ValueError('TEMPLATE_CHECK_REQUIRES_TEMPLATE_IMPORT')
+    return data_import.check_template(record)
 @app.get('/api/kb')
 def kb(context_id:str|None=None):
     cid=selected_context(context_id)
@@ -374,5 +435,28 @@ def model_routes():
     """多模型协作路由状态：各任务路由的实际模型与回退情况。"""
     from .narrative import ModelGateway
     return ModelGateway.routes_status()
+
+# ---- 系统设置：模型连接（API 与后台任务读同一份配置；密钥不回显） ----
+class ModelSettingsPayload(BaseModel):
+    model_config=ConfigDict(extra='forbid')
+    connections:dict[str,dict[str,Any]]
+
+@app.get('/api/settings/models')
+def get_model_settings():
+    from . import model_settings
+    return model_settings.status()
+@app.put('/api/settings/models')
+def put_model_settings(req:ModelSettingsPayload):
+    from . import model_settings
+    return model_settings.save_settings(req.model_dump())
+@app.post('/api/settings/models/test')
+def test_model_settings(route:str='narrative',overrides:dict[str,Any]|None=None):
+    from . import model_settings
+    return model_settings.test_connection(route,overrides)
+@app.get('/api/settings/models/list')
+def list_model_settings(route:str='narrative',base_url:str|None=None,key_file:str|None=None):
+    from . import model_settings
+    overrides={'base_url':base_url,'key_file':key_file} if (base_url or key_file) else None
+    return model_settings.list_remote_models(route,overrides)
 
 if (APP/'frontend/dist').is_dir():app.mount('/',StaticFiles(directory=APP/'frontend/dist',html=True),name='ui')

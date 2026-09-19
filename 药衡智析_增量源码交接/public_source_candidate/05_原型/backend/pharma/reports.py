@@ -2,7 +2,7 @@
 from pathlib import Path
 from zipfile import ZipFile, ZIP_DEFLATED
 from xml.etree import ElementTree as ET
-import hashlib, json, re, shutil, subprocess, tempfile
+import hashlib, json, os, re, shutil, subprocess, tempfile
 from datetime import datetime
 from decimal import Decimal
 from .config import ROOT, PACKAGE, ARTIFACTS
@@ -10,8 +10,11 @@ W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
 NS = {'w': W}
 PATTERN = re.compile(r'\{\{([^{}]+)\}\}')
 RESIDUAL = re.compile(r'\{\{[^{}]*\}\}|\[\[[^\[\]]*\]\]')
-TEMPLATE = ROOT / '04_方案与文档/月度成本分析报告工作模板.docx'
-MAP_PATH = ROOT / '04_方案与文档/placeholder_map.json'
+# 工作模板（由赛题原件规范化生成）默认落在仓库 04_方案与文档/；
+# 容器与只读部署用 PHARMA_TEMPLATE_DIR 指向可写持久目录。
+_TEMPLATE_DIR = Path(os.environ.get('PHARMA_TEMPLATE_DIR', str(ROOT / '04_方案与文档')))
+TEMPLATE = _TEMPLATE_DIR / '月度成本分析报告工作模板.docx'
+MAP_PATH = _TEMPLATE_DIR / 'placeholder_map.json'
 RENDERER_VERSION='reader-20260920-benchmark-basis-unit-v3'
 NA = 'N/A（无可用基期或明细）'
 

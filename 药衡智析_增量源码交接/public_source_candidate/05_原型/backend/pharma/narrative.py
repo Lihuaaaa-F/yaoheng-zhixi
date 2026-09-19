@@ -593,16 +593,20 @@ class ModelGateway:
     ROUTES = ('narrative', 'decision')
 
     def __init__(self, client=None, runtime=None, provider=None, base_url=None, model=None, key_file=None, max_calls=None, max_repairs=None):
+        from . import model_settings as _settings
+        # 统一配置解析（fix：页面设置与实际调用一致）：显式参数 → 环境变量 →
+        # 设置文件（RUNTIME/model_settings.json，API 与 worker 共读同一份）→ 默认。
+        configured = _settings.resolve('narrative')
         self.runtime = Path(runtime) if runtime else RUNTIME
         self.runtime.mkdir(parents=True,exist_ok=True)
-        self.provider = provider or os.getenv('PHARMA_MODEL_PROTOCOL','openai')
-        self.base_url = (base_url or os.getenv('PHARMA_MODEL_BASE_URL','https://open.bigmodel.cn/api/paas/v4')).rstrip('/')
+        self.provider = provider or os.getenv('PHARMA_MODEL_PROTOCOL','') or configured.get('protocol') or 'openai'
+        self.base_url = (base_url or os.getenv('PHARMA_MODEL_BASE_URL','') or configured.get('base_url') or 'https://open.bigmodel.cn/api/paas/v4').rstrip('/')
         # Coding Plan 端点（用户 2026-09-18 授权的暂定政策）：主端点余额/资源包
         # 耗尽（错误码 1113）后自动切换至此继续运行；主端点恢复后自动优先，
         # 无需改代码。置 PHARMA_MODEL_CODING_BASE_URL='' 可禁用。
         self.coding_base_url = os.getenv('PHARMA_MODEL_CODING_BASE_URL','https://open.bigmodel.cn/api/coding/paas/v4').rstrip('/')
-        self.model = model or os.getenv('PHARMA_MODEL','glm-5.3-flash')
-        keypath_value = key_file or os.getenv('PHARMA_MODEL_KEY_FILE') or os.getenv('PHARMA_API_KEY_FILE')
+        self.model = model or os.getenv('PHARMA_MODEL','') or configured.get('model') or 'glm-5.3-flash'
+        keypath_value = key_file or os.getenv('PHARMA_MODEL_KEY_FILE') or os.getenv('PHARMA_API_KEY_FILE') or configured.get('key_file')
         keypath = Path(keypath_value) if keypath_value else None
         # Explicit key files never silently borrow the main environment credential.
         generic_key = (keypath.read_text().strip() if keypath.is_file() else '') if keypath else os.getenv('PHARMA_API_KEY', '')

@@ -1,0 +1,88 @@
+# 药衡智析 · 正式运行环境（Docker Compose）
+# 三个运行职责：Web/API（静态前端+业务接口+文件下载）、后台任务处理（worker）、模拟RPA。
+# 核心数据全部落在命名卷：停止服务、更新镜像都不丢业务数据。
+# 默认仅本机访问（127.0.0.1 端口映射）。模型密钥经 PHARMA_MODEL_KEY_FILE 注入，
+# 不写入镜像、仓库或 compose 文件。
+
+name: yaoheng
+
+x-app-base: &app-base
+  image: yaoheng-app:latest
+  build:
+    context: ../..
+    dockerfile: 05_原型/deploy/Dockerfile
+    # 预定义代理 build-args（仅构建期生效，不进入镜像）。apt 已用国内源，
+    # 代理用于加速 pip/npm；可用 PHARMA_BUILD_PROXY 覆盖或置空禁用。
+    args:
+      HTTP_PROXY: ${PHARMA_BUILD_PROXY:-http://host.docker.internal:7897}
+      HTTPS_PROXY: ${PHARMA_BUILD_PROXY:-http://host.docker.internal:7897}
+  init: true
+  environment: &app-env
+    PHARMA_RUNTIME_DIR: /data/runtime
+    PHARMA_ARTIFACTS_DIR: /data/artifacts
+    PHARMA_DATA_PACKAGE: /app/package
+    PHARMA_COMPETITION_CONFIG_DIR: /app/competition_configuration
+    PHARMA_RPA_SIMULATION: "1"
+    PHARMA_RPA_INTERNAL_SIMULATOR: rpa
+    PHARMA_TEMPLATE_DIR: /data/runtime/template
+    RPA_BASE_URL: http://rpa:8090
+    # 密钥只从宿主机文件读入；留空则系统按"确定性分析可用、模型降级"运行
+    PHARMA_MODEL_KEY_FILE: ${PHARMA_MODEL_KEY_FILE:-}
+    PHARMA_MODEL: ${PHARMA_MODEL:-glm-5.3-flash}
+    PHARMA_MODEL_MAX_CALLS: ${PHARMA_MODEL_MAX_CALLS:-40}
+    # 首次拉取向量模型优先国内镜像（内容仍按固定哈希校验）
+    PHARMA_EMBEDDING_MIRROR: "1"
+  volumes:
+    - appdata:/data/runtime
+    - artifacts:/data/artifacts
+    # 赛题原件只读挂载：导入与生成内容一律写入独立持久卷
+    # （路径相对本 compose 文件：deploy → 05_原型 → public_source_candidate）
+    - ../../00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据:/app/package:ro
+
+services:
+  rpa:
+    <<: *app-base
+    command: rpa
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8090/health',timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
+
+  worker:
+    <<: *app-base
+    command: worker
+    restart: unless-stopped
+    # 就绪判据是心跳新鲜度，而不是进程存在：容器活着但任务循环停摆会被识别
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys,time,pathlib;p=pathlib.Path('/data/runtime/worker.heartbeat');sys.exit(0 if p.exists() and time.time()-float(p.read_text())<180 else 1)"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 30s
+
+  web:
+    <<: *app-base
+    command: web
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8765:8765"
+    depends_on:
+      rpa:
+        condition: service_healthy
+      worker:
+        condition: service_healthy
+    # 核心服务就绪 = Web 可响应 且 共享心跳显示 worker 存活；
+    # “比赛完整能力”另含模型密钥可用性，由 /health 与设置页单独披露。
+    healthcheck:
+      test: ["CMD", "python", "-c", "import json,sys,urllib.request;h=json.load(urllib.request.urlopen('http://127.0.0.1:8765/health',timeout=3));sys.exit(0 if h.get('worker',{}).get('alive') else 1)"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  appdata:
+  artifacts:

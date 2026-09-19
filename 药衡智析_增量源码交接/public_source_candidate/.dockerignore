@@ -1,0 +1,29 @@
+# 构建上下文只保留镜像需要的内容；赛题原件、评测、交付产物与虚拟环境
+# 一律不进入镜像（数据经只读卷挂载，产物经命名卷持久化）。
+# 注意：dockerignore 中父目录必须先被重新包含，其子路径才能生效。
+*
+!05_原型
+!05_原型/backend
+!05_原型/industry_packs
+!05_原型/assets
+!05_原型/scripts
+!05_原型/frontend
+!05_原型/requirements.txt
+!05_原型/deploy
+!competition_configuration
+!docs
+docs/*
+!docs/embedding_manifest.json
+
+**/__pycache__
+**/*.pyc
+**/node_modules
+05_原型/.venv
+05_原型/.runtime
+05_原型/frontend/dist
+05_原型/frontend/node_modules
+05_原型/frontend/e2e-*.mjs
+05_原型/frontend/record-*.mjs
+05_原型/frontend/record_*.mjs
+05_原型/frontend/*.test.mjs
+05_原型/frontend/tsconfig.tsbuildinfo

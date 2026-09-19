@@ -14,7 +14,9 @@ for name,meta in manifest['files'].items():
  if external or '--check-only' in sys.argv:
   raise SystemExit('EMBEDDING_BLOCKED: missing or incompatible asset; external files are never overwritten: '+name)
  remote='onnx/'+name if name.endswith('.onnx') else name
- url='https://huggingface.co/'+manifest['repo']+'/resolve/'+manifest['revision']+'/'+remote
+ # 镜像源（PHARMA_EMBEDDING_MIRROR=1）：内容与官方同一哈希校验，仅换分发主机。
+ host='https://hf-mirror.com' if os.getenv('PHARMA_EMBEDDING_MIRROR')=='1' else 'https://huggingface.co'
+ url=host+'/'+manifest['repo']+'/resolve/'+manifest['revision']+'/'+remote
  temp=p.with_suffix(p.suffix+'.download')
  with urllib.request.urlopen(url,timeout=90) as response,temp.open('wb') as f:
   while block:=response.read(1024*1024):f.write(block)
