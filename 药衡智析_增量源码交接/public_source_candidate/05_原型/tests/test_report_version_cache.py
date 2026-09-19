@@ -36,7 +36,7 @@ def mutate(monkeypatch,kind):
 @pytest.mark.parametrize('kind',['validator','parser','terminology','retrieval_policy'])
 def test_completed_report_reused_only_when_all_generation_versions_match(service,monkeypatch,kind):
     client,store=service
-    first=submit(client);store.update(first,'DEGRADED',{'execution_status':'COMPLETED'})
+    first=submit(client);complete_with_artifacts(store,first)
     assert submit(client)==first
     mutate(monkeypatch,kind)
     second=submit(client)
@@ -75,3 +75,14 @@ def test_api_can_enqueue_from_archive_without_parent_git_discovery(service,tmp_p
     assert record['commit'] is None
     assert record['revision_kind']=='source'
     assert record['revision'].startswith('source:')
+
+
+def complete_with_artifacts(store,job_id):
+    import hashlib
+    from pharma.jobs import ARTIFACTS
+    folder=ARTIFACTS/job_id;folder.mkdir(parents=True,exist_ok=True)
+    result={'execution_status':'COMPLETED'}
+    for fmt in ('docx','pdf'):
+        path=folder/('synthetic.'+fmt);path.write_bytes(b'synthetic fixture '+fmt.encode())
+        result[fmt]=store.artifact(job_id,{'path':str(path),'sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'status':'PASS'},fmt)
+    store.update(job_id,'DEGRADED',result)

@@ -1,11 +1,12 @@
 """Scope-bound service adapters shared by HTTP handlers and queued jobs."""
 from hashlib import sha256
 import json
+import os
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 from .knowledge import Knowledge, source_snapshot
 
-PURPOSE_STRATEGY_VERSION='current-period-event-reservation-graph-v2'
+PURPOSE_STRATEGY_VERSION='current-period-event-reservation-graph-v3-keyword-only'
 
 
 class EventPurpose(BaseModel):
@@ -37,8 +38,13 @@ def retrieval_policy(context):
     return policy
 
 
-def _policy_version(policy):
-    value={'strategy':PURPOSE_STRATEGY_VERSION,'policy':policy.model_dump() if policy else None}
+def _graph_enabled():
+    return os.getenv('PHARMA_GRAPH_ENABLED','true').strip().lower() not in ('0','false','no','off')
+
+
+def _policy_version(policy, graph_enabled=None):
+    value={'strategy':PURPOSE_STRATEGY_VERSION,'policy':policy.model_dump() if policy else None,
+           'graph_enabled':_graph_enabled() if graph_enabled is None else graph_enabled}
     return sha256(json.dumps(value,sort_keys=True,ensure_ascii=False,separators=(',',':')).encode()).hexdigest()
 
 
@@ -54,7 +60,7 @@ def _matching_event(row,snapshot,purpose):
         period=period,specification=snapshot.get('specification'),context=snapshot.get('analysis_context'))['applicable']
 
 
-def retrieve(snapshot, query, *, mode='hybrid', limit=8):
+def retrieve(snapshot, query, *, mode='hybrid', limit=8, graph_enabled=None):
     if not isinstance(limit,int) or isinstance(limit,bool) or not 1<=limit<=100:raise ValueError('INVALID_RETRIEVAL_LIMIT')
     context = snapshot.get('analysis_context') or {}
     policy=retrieval_policy(context)
@@ -74,17 +80,19 @@ def retrieve(snapshot, query, *, mode='hybrid', limit=8):
            'period':snapshot.get('period'),'specification':snapshot.get('specification'),'mode':mode,'limit':limit}
     # 知识图谱增强（赛题加分项）：制药上下文且图谱存在时，把该产品的
     # 配方药材/工序名补充进 BM25 查询词；向量检索与适用性合同保持不变。
-    expansion={'status':'NOT_APPLICABLE','terms':[]}
-    if context.get('industry_id')=='pharmaceutical':
+    graph_enabled=_graph_enabled() if graph_enabled is None else graph_enabled
+    expansion={'status':'NOT_APPLICABLE' if graph_enabled else 'DISABLED','terms':[]}
+    if graph_enabled and context.get('industry_id')=='pharmaceutical':
         try:
-            from .graph import graph_for_context
-            expansion=graph_for_context(context).expansion_terms(snapshot.get('product'),query)
+            from .graph import KnowledgeGraph
+            expansion=KnowledgeGraph(knowledge).expansion_terms(snapshot.get('product'),query)
         except Exception as exc:
             expansion={'status':'DEGRADED','terms':[],'reason':type(exc).__name__}
     effective=query if not expansion.get('terms') else query+' '+' '.join(expansion['terms'])
-    result=knowledge.search(effective,**scope)
+    result=knowledge.search(query,**scope,keyword_query=effective)
+    expansion.update(experimental=True,scope='bm25_only',gain_status='NOT_ESTABLISHED')
     result['graph_expansion']=expansion
-    result['retrieval_policy_version']=_policy_version(policy)
+    result['retrieval_policy_version']=_policy_version(policy,graph_enabled)
     diagnostic={'query_budget':1+(policy.max_supplemental_queries if policy else 0),'queries_executed':1,
                 'total_evidence_limit':limit,'status':'NOT_CONFIGURED'}
     result['purpose_retrieval']=diagnostic

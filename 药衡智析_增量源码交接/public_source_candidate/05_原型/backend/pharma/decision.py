@@ -8,7 +8,6 @@
 - 判定输入只来自已固化的分析快照与任务队列状态，不猜测外部事实。
 """
 import json
-import re
 import sqlite3
 import time
 from contextlib import contextmanager
@@ -18,9 +17,7 @@ from .config import RUNTIME
 
 # 策略版本：判定规则变化时递增，回执据此区分新旧口径。
 DECISION_POLICY_VERSION = 'report-vs-dashboard-v1'
-ADVISORY_PROMPT_VERSION = 'decision-advisory-v1'
-# 决策说明同样禁止自由数字：与 narrative 校验器同口径（数字/中文数词）。
-_FREE_NUMBER = re.compile(r'\d|百分之[零一二三四五六七八九十百千万亿两]+|[零一二三四五六七八九十百千万亿两]+(?:元|盒|粒|袋|支|小时|个月|份|条)')
+ADVISORY_PROMPT_VERSION = 'decision-advisory-v2-signal-selection'
 
 
 def _matching_report_jobs(jobs, selection):
@@ -81,37 +78,57 @@ def evaluate(snapshot, jobs):
             'alert_count': len(alerts), 'evaluated_at': time.time()}
 
 
-def advise(evaluation, snapshot, gateway_factory=None):
-    """用决策路由（默认小模型）把决策依据转写为一段说明文字。
+def _rationale(evaluation, signal_ids):
+    # All wording is derived from verified rule signals; no free model prose is accepted.
+    parts = [evaluation['reason'].rstrip('。')]
+    if 'active_alerts' in signal_ids:
+        parts.append('存在成本要素超阈值变化，需要结合证据核查' if evaluation['alert_count']
+                     else '当前没有成本要素超阈值变化')
+    parts.append('建议生成报告' if evaluation['decision'] == 'REPORT_NEEDED' else '仅更新看板即可')
+    return '；'.join(parts) + '。'
 
-    约束：模型只允许返回 {"rationale": str}；超长、夹带数字或请求失败时
-    返回降级说明，确定性决策保持不变。
-    """
+
+def advise(evaluation, snapshot, gateway_factory=None):
+    """模型只选择已验证信号；程序生成与确定性动作一致的说明。"""
     route = (gateway_factory or _default_gateway_factory)('decision')
+    result = {**evaluation, 'advisory_model': route.model,
+              'advisory_prompt_version': ADVISORY_PROMPT_VERSION,
+              'advisory_identity': {'requested_model': route.model, 'returned_model': None,
+                                    'identity_status': 'NOT_CHECKED'},
+              'rationale': _rationale(evaluation, [])}
     if not getattr(route, 'key', ''):
-        return {**evaluation, 'advisory_status': 'NO_KEY', 'advisory_model': route.model,
-                'rationale': '未配置决策路由模型密钥，以上为确定性策略结论。'}
-    system = ('你是成本分析系统的决策说明员。只返回JSON对象 {"rationale": "..."}。'
-              'rationale 用不超过120字中文说明为什么建议该决策，只可复述输入中的信号，'
-              '不得引入新数字、新结论或改变决策。')
+        return {**result, 'advisory_status': 'NO_KEY'}
+    system = ('你是成本分析系统的决策依据选择员。只返回JSON对象 '
+              '{"decision": "输入的决策", "signal_ids": ["输入信号ID"]}。'
+              '不能改变决策，只从输入选择相关信号，必须包含报告缺失或快照绑定信号。'
+              '不输出自由说明文字，程序将依据所选信号生成说明。')
     user = json.dumps({'decision': evaluation['decision'], 'reason': evaluation['reason'],
-                       'signals': [{'id': s['id'], 'value': s['value'], 'detail': s['detail']} for s in evaluation['signals']],
-                       'product': snapshot.get('product'), 'month': snapshot.get('month'),
-                       'factory': snapshot.get('factory')}, ensure_ascii=False)
+                       'signals': evaluation['signals']}, ensure_ascii=False)
     try:
-        raw, _usage, _identity = route.complete(system, user, operation='decision', prompt_version=ADVISORY_PROMPT_VERSION)
+        raw, _usage, identity = route.complete(system, user, operation='decision', prompt_version=ADVISORY_PROMPT_VERSION)
+        result['advisory_identity'] = identity or result['advisory_identity']
+        from .narrative import classify_identity
+        verified = classify_identity(route.model, result['advisory_identity'].get('returned_model'))[0]
+        if (result['advisory_identity'].get('identity_status') not in ('VERIFIED_EXACT', 'VERIFIED_ALIAS')
+                or verified not in ('VERIFIED_EXACT', 'VERIFIED_ALIAS')
+                or result['advisory_identity'].get('requested_model') != route.model):
+            raise ValueError('ADVISORY_IDENTITY_UNVERIFIED')
         parsed = json.loads(raw)
-        rationale = parsed.get('rationale') if isinstance(parsed, dict) else None
-        if not isinstance(rationale, str) or not rationale.strip() or len(rationale) > 120:
-            raise ValueError('INVALID_ADVISORY_SHAPE')
-        if _FREE_NUMBER.search(rationale):
-            # 模型说明不得引入任何数字，与“模型不拥有数字”合同一致
-            raise ValueError('ADVISORY_CONTAINS_NUMBERS')
-        return {**evaluation, 'advisory_status': 'PASS', 'advisory_model': route.model,
-                'advisory_prompt_version': ADVISORY_PROMPT_VERSION, 'rationale': rationale.strip()}
+        if (not isinstance(parsed, dict) or set(parsed) != {'decision', 'signal_ids'}
+                or parsed['decision'] != evaluation['decision']):
+            raise ValueError('INVALID_ADVISORY_SHAPE_OR_DECISION')
+        selected = parsed['signal_ids']
+        allowed = {s['id'] for s in evaluation['signals']}
+        if (not isinstance(selected, list) or not selected
+                or any(not isinstance(item, str) or item not in allowed for item in selected)
+                or len(selected) != len(set(selected))
+                or not (set(selected) & {'report_for_period', 'snapshot_binding'})):
+            raise ValueError('INVALID_ADVISORY_SIGNALS')
+        return {**result, 'advisory_status': 'PASS', 'advisory_signal_ids': selected,
+                'rationale': _rationale(evaluation, selected)}
     except Exception as exc:
-        return {**evaluation, 'advisory_status': 'DEGRADED', 'advisory_model': route.model,
-                'rationale': '模型说明不可用（%s），以上为确定性策略结论。' % type(exc).__name__}
+        return {**result, 'advisory_status': 'DEGRADED',
+                'advisory_error': str(exc) if isinstance(exc, ValueError) and str(exc).startswith(('ADVISORY_', 'INVALID_ADVISORY')) else type(exc).__name__}
 
 
 def _default_gateway_factory(route):
@@ -129,6 +146,8 @@ class DecisionStore:
             c.execute('CREATE TABLE IF NOT EXISTS decisions(id INTEGER PRIMARY KEY, created_at REAL,'
                       'context_id TEXT, selection TEXT, decision TEXT, signals TEXT, rationale TEXT,'
                       'advisory_status TEXT, advisory_model TEXT, applied_job_id TEXT)')
+            if 'advisory_evidence' not in {r[1] for r in c.execute('PRAGMA table_info(decisions)')}:
+                c.execute('ALTER TABLE decisions ADD COLUMN advisory_evidence TEXT')
 
     @contextmanager
     def _db(self):
@@ -154,6 +173,8 @@ class DecisionStore:
                                 json.dumps(evaluation['selection'], ensure_ascii=False), evaluation['decision'],
                                 json.dumps(evaluation['signals'], ensure_ascii=False), evaluation.get('rationale'),
                                 evaluation.get('advisory_status'), evaluation.get('advisory_model')))
+            c.execute('UPDATE decisions SET advisory_evidence=? WHERE id=?',
+                      (json.dumps({k: v for k, v in evaluation.items() if k.startswith('advisory_')}, ensure_ascii=False), cursor.lastrowid))
             return cursor.lastrowid
 
     def bind_job(self, decision_id, job_id):

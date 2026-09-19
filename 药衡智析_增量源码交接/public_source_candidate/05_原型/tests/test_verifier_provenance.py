@@ -21,3 +21,16 @@ def test_receipts_remain_bound_to_executed_commit(tmp_path):
     assert module.check_receipt(path,'new','executed')['status']=='PASS'
     assert module.check_receipt(path,'old','executed')['status']=='STALE'
     assert module.check_receipt(path,'new','documentation-descendant')['status']=='STALE'
+
+def test_scenario_receipt_cannot_mix_jobs_or_artifact_bytes(tmp_path):
+    import json
+    manifest={'run_id':'run','attempt_id':'attempt','commit':'code','scenarios':[{'id':'S1','job_id':'job','snapshot_id':'snap','artifacts':{'pdf':{'sha256':'hash'}}}]}
+    row={**manifest['scenarios'][0],'status':'PASS'}
+    path=tmp_path/'receipt.json'
+    data={**manifest,'status':'PASS','scenarios':[row]};path.write_text(json.dumps(data))
+    assert module.check_receipt(path,'run','code',manifest)['status']=='PASS'
+    for key,value in [('job_id','other'),('snapshot_id','other'),('artifacts',{'pdf':{'sha256':'changed'}})]:
+        path.write_text(json.dumps({**data,'scenarios':[{**row,key:value}]}))
+        assert module.check_receipt(path,'run','code',manifest)['status']=='FAIL'
+    path.write_text(json.dumps({**data,'attempt_id':'different'}))
+    assert module.check_receipt(path,'run','code',manifest)['status']=='FAIL'

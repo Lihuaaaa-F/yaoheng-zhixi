@@ -1,0 +1,36 @@
+name: Application regression
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic-regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: 药衡智析_增量源码交接/public_source_candidate/05_原型
+    env:
+      PYTEST_DISABLE_PLUGIN_AUTOLOAD: '1'
+      TMPDIR: /tmp
+      OTEL_SDK_DISABLED: 'true'
+      ANONYMIZED_TELEMETRY: 'False'
+      PHARMA_API_KEY: ''
+      GLM_API_KEY: ''
+      ZHIPU_API_KEY: ''
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Install locked application dependencies
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install -r requirements.lock
+          npm ci --ignore-scripts --prefix frontend
+      - name: Synthetic regression and frontend build
+        run: |
+          PYTHONPATH=backend .venv/bin/python -m pytest -q tests
+          npm run build --prefix frontend
+          node --test frontend/record_demo_20260918.test.mjs

@@ -8,12 +8,12 @@ def test_linear_series_forecast_is_deterministic():
     first=forecasting.forecast_series(series,horizon=2)
     second=forecasting.forecast_series(series,horizon=2)
     assert first==second and first['status']=='PASS'
-    # 手工按 α=0.6/β=0.3 推得的水平/斜率外推值
+    # 精确线性序列应保持斜率，每月增加 1
     assert first['points'][0]['month']=='2026-05'
-    assert first['points'][0]['point']==pytest.approx(14.1316,abs=1e-3)
+    assert first['points'][0]['point']==pytest.approx(14.0,abs=1e-3)
     assert first['points'][1]['month']=='2026-06'
-    assert first['points'][0]['low']<first['points'][0]['point']<first['points'][0]['high']
-    assert first['interval'].startswith('80%')
+    assert first['points'][0]['low']==first['points'][0]['point']==first['points'][0]['high']
+    assert '实验性' in first['interval'] and '80%' not in first['interval']
 
 
 def test_flat_series_has_zero_interval_and_exact_point():
@@ -49,9 +49,9 @@ def test_unordered_months_are_rejected():
         forecasting.forecast_series([('2026-03',3.0),('2026-01',1.0),('2026-02',2.0)],horizon=1)
 
 
-def test_non_finite_values_are_dropped_like_missing():
+def test_non_finite_values_block_contiguous_forecast():
     result=forecasting.forecast_series([('2026-01',1.0),('2026-02',float('nan')),('2026-03',2.0),('2026-04',3.0)],horizon=1)
-    assert result['status']=='PASS' and result['points'][0]['month']=='2026-05'
+    assert result['status']=='INSUFFICIENT_HISTORY' and result['points']==[]
 
 
 def test_negative_projection_is_flagged():
@@ -75,3 +75,22 @@ def test_snapshot_forecast_covers_overall_and_elements():
     assert result['caveat'] and '不构成' in result['caveat']
     empty=forecasting.forecast_snapshot({'trend':[],'elements':[],'basis':'unit'})
     assert empty['status']=='INSUFFICIENT_HISTORY'
+
+
+def test_linear_tens_next_is_forty_and_baseline_is_explicit():
+    result=forecasting.forecast_series([('2026-01',10),('2026-02',20),('2026-03',30)],horizon=1)
+    assert result['points'][0]['point']==40
+    assert result['baseline']['method']=='last_observation'
+    assert result['baseline']['points'][0]['point']==30
+    assert result['baseline']['one_step_mae']==10
+    assert result['one_step_mae']==0
+
+
+@pytest.mark.parametrize('series',[
+    [('2026-01',10),('2026-03',20),('2026-04',30)],
+    [('2026-01',10),('2026-02',20),('2026-03',30),('2026-04',None)],
+])
+def test_missing_month_blocks_forecast(series):
+    result=forecasting.forecast_series(series,horizon=1)
+    assert result['status']=='INSUFFICIENT_HISTORY' and result['points']==[]
+    assert result['reason_code']=='NON_CONTIGUOUS_HISTORY'

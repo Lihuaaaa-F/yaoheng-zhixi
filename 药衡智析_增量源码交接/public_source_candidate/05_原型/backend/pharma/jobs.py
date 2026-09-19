@@ -30,14 +30,22 @@ class JobStore:
         if not r:raise KeyError('SNAPSHOT_NOT_FOUND')
         return json.loads(r['body'])
     def enqueue(self,kind,payload,cache_key=None):
-        id=uuid.uuid4().hex
+        id=uuid.uuid4().hex;initial={}
         with self.db() as c:
             c.execute('BEGIN IMMEDIATE')
             if cache_key:
-                old=c.execute('SELECT id,status FROM jobs WHERE cache_key=?',(cache_key,)).fetchone()
-                if old and old['status'] != 'FAILED':return self.get(old['id'])
+                old=c.execute('SELECT * FROM jobs WHERE cache_key=?',(cache_key,)).fetchone()
+                if old and old['status'] != 'FAILED':
+                    previous=self._decode(old)
+                    if previous['status'] not in TERMINAL or previous['kind']!='report' or self.artifacts_healthy(previous):return previous
+                    payload={**payload,'repair_of':old['id'],'repair_reason':'ARTIFACT_MISSING_OR_HASH_MISMATCH'}
+                    # Re-render only; validated calculations and explanations retain provenance.
+                    initial={k:v for k,v in previous['result'].items() if k in ('snapshot','evidence','benchmark')}
+                    if previous['result'].get('narrative',{}).get('status')=='PASS':initial['narrative']=previous['result']['narrative']
+                    initial['repair_provenance']={'source_job_id':old['id'],'reason':payload['repair_reason']}
+                    c.execute('INSERT INTO job_events(job_id,stage,at) VALUES(?,?,?)',(old['id'],'CACHE_INVALIDATED_ARTIFACT',stamp()))
                 if old:c.execute('UPDATE jobs SET cache_key=NULL WHERE id=?',(old['id'],))
-            c.execute('INSERT INTO jobs VALUES(?,?,?,?,?,?,?,?,?,?)',(id,cache_key,kind,'QUEUED','VALIDATING',json.dumps(payload,ensure_ascii=False),'{}',stamp(),stamp(),None))
+            c.execute('INSERT INTO jobs VALUES(?,?,?,?,?,?,?,?,?,?)',(id,cache_key,kind,'QUEUED','VALIDATING',json.dumps(payload,ensure_ascii=False),json.dumps(initial,ensure_ascii=False),stamp(),stamp(),None))
         return self.get(id)
     def _decode(self,row):
         if row is None:raise KeyError('JOB_NOT_FOUND')
@@ -51,6 +59,19 @@ class JobStore:
     def list_reports(self,limit=300):
         """报告任务专用查询：决策引擎据此判断口径匹配报告，不受通用列表截断影响。"""
         with self.db() as c:return [self._decode(r) for r in c.execute('SELECT * FROM jobs WHERE kind=? ORDER BY created DESC LIMIT ?',('report',limit))]
+    def latest_report_for_snapshot(self,snapshot_id):
+        with self.db() as c:
+            row=c.execute("SELECT * FROM jobs WHERE kind='report' AND json_extract(input,'$.snapshot_id')=? ORDER BY created DESC LIMIT 1",(snapshot_id,)).fetchone()
+        return self._decode(row) if row else None
+    def artifacts_healthy(self,job):
+        for fmt in ('docx','pdf'):
+            item=job.get('result',{}).get(fmt,{})
+            if item.get('status')!='PASS' or not item.get('artifact_id'):return False
+            try:
+                path=self.artifact_path(item['artifact_id'])
+                if hashlib.sha256(path.read_bytes()).hexdigest()!=item.get('sha256'):return False
+            except (OSError,ValueError,KeyError):return False
+        return True
     def next(self):
         with self.db() as c:
             r=c.execute("SELECT * FROM jobs WHERE status NOT IN ('SUCCEEDED','DEGRADED','FAILED') ORDER BY created LIMIT 1").fetchone()

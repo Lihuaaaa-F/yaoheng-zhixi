@@ -53,7 +53,12 @@ async def key_error(request,exc):return JSONResponse(status_code=404,content={'e
 @app.get('/health')
 def health():
     h=RUNTIME/'worker.heartbeat';age=time.time()-float(h.read_text()) if h.exists() else None
-    return {'status':'ok','service':'药衡智析','worker':{'alive':age is not None and age<180,'heartbeat_age_seconds':age},'simulation':True}
+    from .config import RPA_BASE_URL
+    from .local_validation import require_loopback
+    simulation=os.getenv('PHARMA_RPA_SIMULATION')=='1'
+    try:require_loopback(RPA_BASE_URL)
+    except ValueError:simulation=False
+    return {'rpa_mode':'local_simulator' if simulation else 'unverified','rpa_base_url':RPA_BASE_URL,'status':'ok','service':'药衡智析','worker':{'alive':age is not None and age<180,'heartbeat_age_seconds':age},'simulation':simulation}
 def selected_context(context_id=None):
     from .industry import context_catalog
     return context_id or context_catalog()['default_context_id']
@@ -85,7 +90,27 @@ def get_catalog(context_id:str|None=None):
     from .industry import catalog as scoped_catalog
     return {**scoped_catalog(selected_context(context_id)),'demo_assignee':{'name':'待分配','department':'成本管理部'}}
 @app.post('/api/analyses')
-def analysis(req:AnalysisRequest):return store.snapshot(scoped_analysis(req))
+def analysis(req:AnalysisRequest):
+    from .dashboard import focus_analysis
+    snapshot=store.snapshot(scoped_analysis(req))
+    enabled=os.getenv('PHARMA_AUTO_EXPLAIN','false').lower() in ('1','true','yes')
+    available=False
+    if enabled:
+        from .narrative import ModelGateway
+        available=bool(ModelGateway().key)
+    focus=focus_analysis(snapshot,enabled=enabled,model_available=available,
+        latest_job=store.latest_report_for_snapshot(snapshot['snapshot_id']) if enabled else None,
+        enqueue=lambda:_enqueue_report(ReportRequest(**req.model_dump()))[0])
+    return {**snapshot,'focus':focus}
+
+@app.get('/api/dashboard/heatmap')
+def dashboard_heatmap(context_id:str|None=None,factory:str|None=None,
+    month:str=Query(pattern=r'^20\d{2}-(0[1-9]|1[0-2])$'),basis:Literal['unit','total']='unit'):
+    from .dashboard import product_month_grid
+    from .industry import catalog as scoped_catalog
+    cid=selected_context(context_id)
+    options=scoped_catalog(cid)
+    return product_month_grid(cid,factory or options['factories'][0],month,basis,options=options)
 @app.get('/api/analyses/{id}')
 def get_analysis(id:str):return store.get_snapshot(id)
 @app.get('/api/benchmarks')
@@ -210,8 +235,12 @@ def _recalc_acceptance(job_id):
         acceptance['file_openable']={'status':'FAIL','reason':'产物内容变化，旧审核已过期'}
         acceptance['overall']='FAIL'
     result=job['result'];result['acceptance']=acceptance
+    result['human_review_status']='PENDING' if not review else ('PASS' if all(acceptance[k]['status']=='PASS' for k in ('section_completeness','readability','visual_quality')) else 'FAIL')
+    result['execution_status']='COMPLETED'
+    result['capability_status']='PASS' if all(v.get('status')=='PASS' for k,v in acceptance.items() if isinstance(v,dict) and k not in ('section_completeness','readability','visual_quality')) else 'DEGRADED'
+    status='SUCCEEDED' if acceptance['overall']=='PASS' else 'DEGRADED'
     result['acceptance_review_binding']={'review_id':review['id'] if review else None,'artifact_hashes':hashes}
-    with store.db() as c:c.execute('UPDATE jobs SET result=? WHERE id=?',(json.dumps(result,ensure_ascii=False),job_id))
+    with store.db() as c:c.execute('UPDATE jobs SET status=?,stage=?,result=? WHERE id=?',(status,status,json.dumps(result,ensure_ascii=False),job_id))
     expired=[{'review_id':r['id'],'reviewed_at':r['reviewed_at'],'reason':'产物哈希已变化，审核过期'} for r in reviews.list_for_job(job_id) if (r['docx_sha256'],r['pdf_sha256'])!=(hashes['docx'],hashes['pdf'])]
     return {'status':acceptance['overall'],'acceptance':acceptance,'active_review':(review or {}).get('id'),'expired_reviews':expired}
 
@@ -288,7 +317,7 @@ def _month_query():
 def forecast(context_id:str|None=None,factory:str|None=None,product:str|None=None,month:str|None=_month_query(),
              analysis_type:Literal['monthly','quarterly','special']='monthly',basis:Literal['unit','total']='unit',
              horizon:int=3):
-    """成本预测：对当前口径快照的趋势序列做 Holt 外推，附 80% 区间。"""
+    """成本预测：对当前口径快照的趋势序列做 Holt 外推，附实验性波动范围。"""
     from .forecasting import forecast_snapshot
     snapshot=store.snapshot(resolved_analysis(context_id,factory,product,month,analysis_type,basis))
     return forecast_snapshot(snapshot,horizon=horizon)

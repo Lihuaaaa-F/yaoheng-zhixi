@@ -88,6 +88,7 @@ def process_job(store,job):
         result['execution_status']='COMPLETED'
         result['generation_mode']=result['narrative'].get('generation_mode','rules')
         result['human_review_status']='PENDING'
+        result['capability_status']='PASS' if all(v.get('status')=='PASS' for k,v in result['acceptance'].items() if isinstance(v,dict) and k not in ('section_completeness','readability','visual_quality')) else 'DEGRADED'
         complete=result['acceptance']['overall']=='PASS'
         result['input_versions']={'data':snapshot.get('data_version'),'formula':snapshot['formula_version'],'knowledge':result['evidence'].get('knowledge_version'),'model':result['narrative'].get('model'),'prompt':result['narrative'].get('prompt_version')}
         tmp=folder/'record.tmp.json';tmp.write_text(json.dumps(result,ensure_ascii=False,indent=2));tmp.replace(folder/'record.json')

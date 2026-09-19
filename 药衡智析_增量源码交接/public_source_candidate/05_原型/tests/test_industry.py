@@ -366,3 +366,84 @@ def test_template_drift_between_context_binding_and_snapshot_copy_is_rejected(tm
     monkeypatch.setattr(module,'resolve_context',drift)
     with pytest.raises(ValueError,match='TEMPLATE_SNAPSHOT_CHANGED'):
         analyze_reference('mechanical_demo:synthetic-mechanical',month='2026-06')
+
+
+@pytest.mark.parametrize('analysis_type', ['monthly','quarterly'])
+@pytest.mark.parametrize('basis', ['unit','total'])
+def test_benchmark_metric_evidence_recomputes_display_and_both_sources(analysis_type,basis):
+    from pharma.industry import benchmark_reference
+    snapshot, result=benchmark_reference('mechanical_demo:synthetic-mechanical','DEMO-01','2026-06','示范工厂A','示范工厂B',analysis_type,basis)
+    for row in result['summary']+result['elements']:
+        for field,ref in row['metric_refs'].items():
+            metric=snapshot['metrics'][ref]
+            value=Decimal(metric['numerator'])/Decimal(metric['denominator'])
+            if field!='delta':value*=100
+            assert value==Decimal(row[field])
+            assert metric['basis']==('unit' if row['key']=='unit_cost' else 'total' if row['key']=='total_cost' else 'quantity' if row['key']=='quantity' else basis)
+            assert metric['sources']['left']['cost_rows'] and metric['sources']['right']['cost_rows']
+            assert metric['sources']['left']['quantity_rows'] and metric['sources']['right']['quantity_rows']
+            assert metric['comparison_period']==result['period']
+    if basis=='unit' and analysis_type=='monthly':
+        material=next(x for x in result['elements'] if x['key']=='materials')
+        rate=snapshot['metrics'][material['metric_refs']['rate']]
+        assert (rate['numerator'],rate['denominator'],rate['value'])==('-15','30','-50.0')
+
+
+@pytest.mark.parametrize('analysis_type', ['monthly','quarterly'])
+def test_period_evidence_distinguishes_rate_and_contribution(analysis_type):
+    snapshot=analyze_reference('mechanical_demo:synthetic-mechanical',month='2026-06',analysis_type=analysis_type)
+    for comparison in ('mom','yoy','budget'):
+        metric=snapshot['metrics'][comparison]
+        assert metric['sources']['current']['quantity_rows']
+        for element in snapshot['elements']:
+            for basis,c in element['comparisons'][comparison].items():
+                if c['rate'] is not None:
+                    assert Decimal(c['numerator'])/Decimal(c['denominator'])*100==Decimal(c['rate'])
+                if c['contribution'] is not None:
+                    assert Decimal(c['contribution_numerator'])/Decimal(c['contribution_denominator'])*100==Decimal(c['contribution'])
+        if metric['value'] is not None:
+            assert metric['sources']['base']['cost_rows'] and metric['sources']['base']['quantity_rows']
+            assert Decimal(metric['numerator'])/Decimal(metric['denominator'])*100==Decimal(metric['value'])
+
+
+@pytest.mark.parametrize('missing', [False,True])
+def test_comparison_zero_or_missing_element_preserves_undefined_evidence(monkeypatch,missing):
+    import pharma.industry as module
+    def mutate(raw):
+        raw['costs']=[row for row in raw['costs'] if not (missing and row['factory_id']=='示范工厂B' and row['period']=='2026-06' and row['element_id']=='materials')]
+        if not missing:
+            for row in raw['costs']:
+                if row['factory_id']=='示范工厂B' and row['period']=='2026-06' and row['element_id']=='materials':row['amount']='0'
+    _mutated_reference(monkeypatch,'mechanical_demo',mutate)
+    snapshot,result=module.benchmark_reference('mechanical_demo:synthetic-mechanical','DEMO-01','2026-06','示范工厂A','示范工厂B')
+    material=next(row for row in result['elements'] if row['key']=='materials')
+    metric=snapshot['metrics'][material['metric_refs']['rate']]
+    assert metric['value'] is None and metric['reason']
+    assert metric['denominator'] is None if missing else Decimal(metric['denominator'])==0
+    assert metric['numerator'] is None if missing else Decimal(metric['numerator'])==15
+
+
+@pytest.mark.parametrize('pack_id,company', [('mechanical_demo','synthetic-mechanical'),('chemical_demo','synthetic-chemical'),('pharmaceutical','synthetic-pharma')])
+def test_multiple_products_preserve_isolated_costs_units_and_sources(monkeypatch,pack_id,company):
+    import pharma.industry as module
+    pack=load_pack(pack_id);ds=module._read_dataset(pack);profile=module._enterprise(pack,company)
+    original_product=next(iter(profile['products']))
+    raw=ds.model_dump(mode='json')
+    for rows in raw.values():
+        copies=[]
+        for row in rows:
+            if row['product_id']!=original_product:continue
+            copy=dict(row);copy['product_id']='SECOND-SYNTHETIC';copy['fact_id']+='-second';copy['source_row']+='-second'
+            if 'amount' in copy:copy['amount']=str(Decimal(copy['amount'])*2)
+            copies.append(copy)
+        rows.extend(copies)
+    modified=NormalizedDataset.model_validate(raw)
+    original_reader=module._read_dataset;original_enterprise=module._enterprise
+    monkeypatch.setattr(module,'_read_dataset',lambda p,enterprise=None:modified if p.id==pack_id else original_reader(p,enterprise))
+    monkeypatch.setattr(module,'_enterprise',lambda p,company=None:{**profile,'products':{**profile['products'],'SECOND-SYNTHETIC':profile['products'][original_product]}} if p.id==pack_id else original_enterprise(p,company))
+    first=analyze_reference(pack_id+':'+company,product=original_product,month='2026-06')
+    second=analyze_reference(pack_id+':'+company,product='SECOND-SYNTHETIC',month='2026-06')
+    assert Decimal(second['metrics']['unit_cost']['value'])==2*Decimal(first['metrics']['unit_cost']['value'])
+    assert first['metrics']['unit_cost']['unit']==second['metrics']['unit_cost']['unit']
+    assert all(row.endswith('-second') for row in second['metrics']['unit_cost']['row_keys'])
+    assert not any(row.endswith('-second') for row in first['metrics']['unit_cost']['row_keys'])

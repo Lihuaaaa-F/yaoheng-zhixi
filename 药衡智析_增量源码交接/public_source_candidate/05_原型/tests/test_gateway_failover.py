@@ -91,3 +91,79 @@ def test_primary_success_never_touches_coding(tmp_path):
     gateway = ModelGateway(client=client, runtime=tmp_path, base_url=PRIMARY)
     gateway.complete('s', 'u')
     assert client.urls == [PRIMARY + '/chat/completions']
+
+@pytest.mark.parametrize('provider,base_url', [('openai', 'https://other.invalid/v1'),
+                                              ('anthropic', PRIMARY)])
+def test_other_provider_or_protocol_never_uses_zhipu_fallback(tmp_path, provider, base_url):
+    client = FakeClient([_quota(), _ok()])
+    gateway = ModelGateway(client=client, runtime=tmp_path, provider=provider, base_url=base_url)
+    with pytest.raises(httpx.HTTPStatusError):
+        gateway.complete('s', 'u')
+    assert len(client.urls) == 1
+
+
+def test_coding_override_cannot_receive_primary_credential(tmp_path, monkeypatch):
+    monkeypatch.setenv('PHARMA_MODEL_CODING_BASE_URL', 'https://other.invalid/v1')
+    client = FakeClient([_quota(), _ok()])
+    gateway = ModelGateway(client=client, runtime=tmp_path, base_url=PRIMARY)
+    with pytest.raises(httpx.HTTPStatusError):
+        gateway.complete('s', 'u')
+    assert len(client.urls) == 1
+
+
+def test_failed_attempt_is_retained_after_success_without_secrets(tmp_path):
+    client = FakeClient([_quota(), _ok()])
+    gateway = ModelGateway(client=client, runtime=tmp_path, base_url=PRIMARY)
+    gateway.complete('s', 'u')
+    with sqlite3.connect(gateway.dbpath) as db:
+        attempts = db.execute('SELECT endpoint,status,http_status,error FROM call_attempts ORDER BY id').fetchall()
+    assert attempts[0][1:] == ('FAILED', 429, 'HTTPStatusError:429:1113')
+    assert attempts[1][1] == 'PASS'
+    assert 'unit-test-key' not in repr(attempts)
+
+
+def test_route_cannot_borrow_other_supplier_credential(tmp_path, monkeypatch):
+    monkeypatch.setenv('PHARMA_MODEL_ROUTES', json.dumps({'decision': {'base_url': 'https://other.invalid/v1'}}))
+    gateway = ModelGateway.for_route('decision', runtime=tmp_path)
+    assert gateway.key == ''
+    assert gateway.credential_scope['source'] == 'ROUTE_KEY_REQUIRED'
+    own_key = tmp_path / 'fake-key'
+    own_key.write_text('route-fixture-key')
+    monkeypatch.setenv('PHARMA_MODEL_ROUTES', json.dumps({'decision': {
+        'base_url': 'https://other.invalid/v1', 'key_file': str(own_key)}}))
+    assert ModelGateway.for_route('decision', runtime=tmp_path).key == 'route-fixture-key'
+    own_key.unlink()
+    assert ModelGateway.for_route('decision', runtime=tmp_path).key == ''
+
+
+def test_glm_environment_key_is_supplier_scoped(tmp_path, monkeypatch):
+    monkeypatch.delenv('PHARMA_API_KEY')
+    monkeypatch.setenv('GLM_API_KEY', 'fake-glm-key')
+    assert ModelGateway(runtime=tmp_path, base_url=PRIMARY).key == 'fake-glm-key'
+    assert ModelGateway(runtime=tmp_path, base_url='https://other.invalid/v1').key == ''
+    assert ModelGateway(runtime=tmp_path, base_url=PRIMARY, provider='anthropic').key == ''
+
+
+def test_gateway_does_not_follow_redirect_or_log_query_secret(tmp_path):
+    seen = []
+    def transport(request):
+        seen.append(str(request.url))
+        return httpx.Response(307, headers={'location': 'https://other.invalid/v1'})
+    gateway = ModelGateway(runtime=tmp_path, base_url=PRIMARY + '?token=fixture-secret',
+        client=httpx.Client(transport=httpx.MockTransport(transport), follow_redirects=True))
+    with pytest.raises(httpx.HTTPStatusError):
+        gateway.complete('s', 'u')
+    assert len(seen) == 1
+    with sqlite3.connect(gateway.dbpath) as db:
+        attempts = db.execute('SELECT endpoint,status,http_status,error FROM call_attempts').fetchall()
+        calls = db.execute('SELECT endpoint,error FROM calls').fetchall()
+    assert attempts[0][1:] == ('FAILED', 307, 'HTTPStatusError:307')
+    assert 'fixture-secret' not in repr(attempts + calls)
+
+
+def test_network_failure_has_attempt_record(tmp_path):
+    gateway = ModelGateway(runtime=tmp_path, client=FakeClient([httpx.ConnectError('unit-test-key')]))
+    with pytest.raises(httpx.ConnectError):
+        gateway.complete('s', 'u')
+    with sqlite3.connect(gateway.dbpath) as db:
+        assert db.execute('SELECT status,error FROM call_attempts').fetchall() == [('FAILED', 'ConnectError')]

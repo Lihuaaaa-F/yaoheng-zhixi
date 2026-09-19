@@ -60,6 +60,7 @@ def main():
     rpa_dir=str(mock) if (mock/'mock_rpa_server.py').is_file() else str(APP/'backend')
     api_port=int(os.getenv('PHARMA_API_PORT','8765'));rpa_port=int(os.getenv('PHARMA_RPA_PORT','8090'))
     env['RPA_BASE_URL']=f'http://127.0.0.1:{rpa_port}'
+    env['PHARMA_RPA_SIMULATION']='1'
     commands={'rpa':([str(PYTHON),'-m','uvicorn',rpa_module,'--app-dir',rpa_dir,'--host','127.0.0.1','--port',str(rpa_port)],rpa_port),'worker':([str(PYTHON),'-m','pharma.worker'],None),'api':([str(PYTHON),'-m','uvicorn','pharma.api:app','--host','127.0.0.1','--port',str(api_port)],api_port)}
     for name,(cmd,port) in commands.items():
         if name in state and alive(state[name]):continue

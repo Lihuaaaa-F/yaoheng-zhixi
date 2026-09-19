@@ -27,7 +27,7 @@ def test_malformed_remote_does_not_erase_verified_delivery(tmp_path):
     with s.db() as c:assert 'PROTOCOL' in c.execute('select last_error from outbox').fetchone()[0]
 
 def test_degraded_job_reuses_completed_result(tmp_path):
-    s=JobStore(tmp_path/'db');j=s.enqueue('report',{},'same-version');s.update(j['id'],'DEGRADED',{'generation_mode':'llm'})
+    s=JobStore(tmp_path/'db');j=s.enqueue('report',{},'same-version');__import__('test_report_version_cache').complete_with_artifacts(s,j['id'])
     assert s.enqueue('report',{},'same-version')['id']==j['id']
 
 def test_review_hashes_read_artifact_bytes(tmp_path,monkeypatch):

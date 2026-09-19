@@ -62,10 +62,10 @@ class FakeGateway:
 
 
 def test_advisory_pass_shape_and_operation_route():
-    fake=FakeGateway(response={'rationale':'材料环比超阈值且本月尚无正式报告，建议生成月度报告。'})
+    fake=FakeGateway(response={'decision':'REPORT_NEEDED','signal_ids':['active_alerts','report_for_period']})
     result=decision.advise(decision.evaluate(snapshot_factory(),[]),snapshot_factory(),gateway_factory=lambda r:fake)
     assert result['advisory_status']=='PASS' and result['advisory_model']=='fake-small-model'
-    assert '材料' in result['rationale']
+    assert '成本要素' in result['rationale']
     assert fake.calls and fake.calls[0][2]=='decision' and fake.calls[0][3]==decision.ADVISORY_PROMPT_VERSION
 
 
@@ -125,3 +125,50 @@ def test_routes_status_reports_dedicated_flags(tmp_path,monkeypatch):
     assert status['routes']['decision']['dedicated'] is True
     assert status['routes']['narrative']['dedicated'] is False
     assert status['routes']['decision']['model']=='glm-4-flash'
+
+@pytest.mark.parametrize('identity_status', ['MISMATCH', 'UNVERIFIED_MISSING'])
+def test_advisory_rejects_unverified_identity(tmp_path, identity_status):
+    fake = FakeGateway(response={'rationale': '当前期间缺少报告，建议生成报告。',
+                                 'decision': 'REPORT_NEEDED', 'signal_ids': ['report_for_period']})
+    complete = fake.complete
+    def unverified(*args, **kwargs):
+        raw, usage, identity = complete(*args, **kwargs)
+        return raw, usage, {**identity, 'identity_status': identity_status, 'returned_model': None}
+    fake.complete = unverified
+    result = decision.advise(decision.evaluate(snapshot_factory(), []), snapshot_factory(), lambda _: fake)
+    assert result['advisory_status'] == 'DEGRADED'
+    assert result['advisory_identity']['identity_status'] == identity_status
+
+
+def test_advisory_cannot_accept_opposite_free_text():
+    fake = FakeGateway(response={'rationale': '无需生成报告，仅更新看板即可。'})
+    result = decision.advise(decision.evaluate(snapshot_factory(), []), snapshot_factory(), lambda _: fake)
+    assert result['advisory_status'] == 'DEGRADED'
+    assert '无需生成报告' not in result['rationale']
+
+@pytest.mark.parametrize('payload', [
+    {'decision': 'DASHBOARD_ONLY', 'signal_ids': ['report_for_period']},
+    {'decision': 'REPORT_NEEDED', 'signal_ids': ['invented']},
+    {'decision': 'REPORT_NEEDED', 'signal_ids': ['active_alerts']},
+    {'decision': 'REPORT_NEEDED', 'signal_ids': [None]},
+    {'decision': 'REPORT_NEEDED', 'signal_ids': ['report_for_period'], 'rationale': '无需报告'},
+])
+def test_advisory_rejects_unbound_or_opposite_signals(payload):
+    result = decision.advise(decision.evaluate(snapshot_factory(), []), snapshot_factory(),
+                             lambda _: FakeGateway(response=payload))
+    assert result['advisory_status'] == 'DEGRADED'
+    assert result['decision'] == 'REPORT_NEEDED'
+    assert '建议生成报告' in result['rationale']
+
+
+def test_dashboard_advisory_is_bound_and_persisted(tmp_path):
+    evaluation = decision.evaluate(snapshot_factory(), [job_factory()])
+    result = decision.advise(evaluation, snapshot_factory(), lambda _: FakeGateway(
+        response={'decision': 'DASHBOARD_ONLY', 'signal_ids': ['snapshot_binding']}))
+    assert result['advisory_status'] == 'PASS'
+    assert '仅更新看板即可' in result['rationale']
+    ledger = decision.DecisionStore(tmp_path / 'decisions.sqlite3')
+    row = ledger.get(ledger.append(result))
+    evidence = json.loads(row['advisory_evidence'])
+    assert evidence['advisory_identity']['returned_model'] == 'fake-small-model'
+    assert evidence['advisory_signal_ids'] == ['snapshot_binding']

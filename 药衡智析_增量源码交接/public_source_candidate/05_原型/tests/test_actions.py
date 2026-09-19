@@ -57,11 +57,11 @@ def test_disconnect_unknown_and_remote_restart_never_resends(tmp_path):
         assert s.deliver_one(a['id'],c)['status']=='DELIVERY_UNKNOWN'
     assert posts==['POST','GET']
     other=tmp_path/'other';other.mkdir();s,a=prepared(other)
-    def accepted(request):return httpx.Response(200,json={'code':200,'data':{'task_id':a['id'],'status':'sent','notify_status':{'wechat':'已发送至 演示责任人(演示部)','sent_at':'now'}}})
+    def accepted(request):return httpx.Response(200,json={'code':200,'data':{**a['payload'],'status':'sent','notify_status':{'wechat':'已发送至 演示责任人(演示部)','sent_at':'now'}}})
     with httpx.Client(transport=httpx.MockTransport(accepted)) as c:assert s.deliver_one(a['id'],c)['status']=='SENT'
     with httpx.Client(transport=httpx.MockTransport(lambda r:httpx.Response(404,json={'detail':'restart'}))) as c:
-        assert s.refresh(a['id'],c)['status']=='REMOTE_UNKNOWN'
-        assert s.deliver_one(a['id'],c)['status']=='REMOTE_UNKNOWN'
+        assert s.refresh(a['id'],c)['status']=='SENT'
+        assert s.deliver_one(a['id'],c)['status']=='SENT'
 
 def test_edit_requires_matching_confirmation_hash(tmp_path):
     import pytest

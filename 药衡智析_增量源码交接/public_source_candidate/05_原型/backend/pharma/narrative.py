@@ -19,6 +19,7 @@ import re
 import sqlite3
 import threading
 import time
+from urllib.parse import urlsplit, urlunsplit
 from pydantic import BaseModel, Field, ConfigDict
 import httpx
 from .config import RUNTIME
@@ -50,6 +51,19 @@ def _quota_exhausted(response):
     except Exception:
         return False
     return code == '1113'
+
+
+def _official_zhipu_endpoint(url, path):
+    parsed = urlsplit(url)
+    return (parsed.scheme == 'https' and parsed.hostname == 'open.bigmodel.cn'
+            and parsed.port in (None, 443) and parsed.path.rstrip('/') == path
+            and not (parsed.username or parsed.password or parsed.query or parsed.fragment))
+
+
+def _safe_endpoint(url, key=''):
+    parsed = urlsplit(url)
+    endpoint = urlunsplit((parsed.scheme, parsed.hostname or '', parsed.path, '', ''))
+    return endpoint.replace(key, '[REDACTED]') if key else endpoint
 
 
 def normalize_finding(value):
@@ -590,13 +604,23 @@ class ModelGateway:
         self.model = model or os.getenv('PHARMA_MODEL','glm-5.3-flash')
         keypath_value = key_file or os.getenv('PHARMA_MODEL_KEY_FILE') or os.getenv('PHARMA_API_KEY_FILE')
         keypath = Path(keypath_value) if keypath_value else None
-        self.key = (keypath.read_text().strip() if keypath and keypath.is_file() else '') or os.getenv('PHARMA_API_KEY') or os.getenv('GLM_API_KEY') or os.getenv('ZHIPU_API_KEY') or ''
-        self.client = client or httpx.Client(timeout=httpx.Timeout(55,connect=15))
+        # Explicit key files never silently borrow the main environment credential.
+        generic_key = (keypath.read_text().strip() if keypath.is_file() else '') if keypath else os.getenv('PHARMA_API_KEY', '')
+        official = self.provider == 'openai' and any(
+            _official_zhipu_endpoint(self.base_url, path)
+            for path in ('/api/paas/v4', '/api/coding/paas/v4'))
+        self.key = generic_key or (os.getenv('GLM_API_KEY') or os.getenv('ZHIPU_API_KEY') or ''
+                                   if official and not keypath else '')
+        self.credential_scope = {'host': urlsplit(self.base_url).hostname, 'protocol': self.provider,
+                                 'source': 'key_file' if keypath and generic_key else
+                                           'PHARMA_API_KEY' if generic_key else 'GLM/ZHIPU_ENV' if self.key else 'NONE'}
+        self.client = client or httpx.Client(timeout=httpx.Timeout(55,connect=15), follow_redirects=False)
         self.max_calls = max_calls if max_calls is not None else int(os.getenv('PHARMA_MODEL_MAX_CALLS','40'))
         self.max_repairs = max(0,min(2,max_repairs if max_repairs is not None else int(os.getenv('PHARMA_MODEL_MAX_REPAIRS','2'))))
         self.dbpath = self.runtime/'model_gateway.sqlite3'
         with sqlite3.connect(self.dbpath) as db:
             db.execute('CREATE TABLE IF NOT EXISTS calls (id INTEGER PRIMARY KEY, created_at REAL, model TEXT, protocol TEXT, operation TEXT, status TEXT, elapsed REAL, usage TEXT, cost TEXT, error TEXT, prompt_version TEXT)')
+            db.execute('CREATE TABLE IF NOT EXISTS call_attempts (id INTEGER PRIMARY KEY, call_id INTEGER, created_at REAL, endpoint TEXT, protocol TEXT, credential_source TEXT, status TEXT, http_status INTEGER, error TEXT, elapsed REAL)')
             db.execute('CREATE TABLE IF NOT EXISTS cache (key TEXT PRIMARY KEY, created_at REAL, result TEXT)')
             # Old runtimes recorded only the requested model; migrate in place.
             for column in ('requested_model', 'returned_model', 'identity_status', 'endpoint'):
@@ -630,8 +654,15 @@ class ModelGateway:
                 continue  # JSON 路由表已显式指定的字段优先
             value = os.getenv(prefix + field.upper())
             if value: config[field] = value
-        return cls(model=config.get('model'), base_url=config.get('base_url'),
-                   provider=config.get('protocol'), key_file=config.get('key_file'), **overrides)
+        gateway = cls(model=config.get('model'), base_url=config.get('base_url'),
+                      provider=config.get('protocol'), key_file=config.get('key_file'), **overrides)
+        main_host = urlsplit(os.getenv('PHARMA_MODEL_BASE_URL', 'https://open.bigmodel.cn/api/paas/v4')).hostname
+        main_protocol = os.getenv('PHARMA_MODEL_PROTOCOL', 'openai')
+        if ((urlsplit(gateway.base_url).hostname, gateway.provider) != (main_host, main_protocol)
+                and not config.get('key_file') and not overrides.get('key_file')):
+            gateway.key = ''
+            gateway.credential_scope['source'] = 'ROUTE_KEY_REQUIRED'
+        return gateway
 
     @classmethod
     def routes_status(cls):
@@ -643,7 +674,7 @@ class ModelGateway:
             routes[route] = {'model': gateway.model, 'protocol': gateway.provider,
                              'base_url': gateway.base_url, 'key_set': bool(gateway.key),
                              'dedicated': (gateway.model, gateway.base_url) != (main.model, main.base_url),
-                             'max_calls': gateway.max_calls}
+                             'max_calls': gateway.max_calls, 'credential_scope': gateway.credential_scope}
         return {'routes': routes, 'main_model': main.model, 'routing_mechanism': 'PHARMA_MODEL_ROUTES/env-fallback'}
 
     def complete(self,system,user,operation='generate',prompt_version=None):
@@ -659,10 +690,10 @@ class ModelGateway:
             db.execute('BEGIN IMMEDIATE')
             count = db.execute("SELECT count(*) FROM calls WHERE operation=?",(operation,)).fetchone()[0]
             if count >= self.max_calls: raise RuntimeError('MODEL_CALL_BUDGET_REACHED')
-            rowid = db.execute('INSERT INTO calls(created_at,model,protocol,operation,status,cost,prompt_version,requested_model,endpoint) VALUES(?,?,?,?,?,?,?,?,?)',(time.time(),self.model,self.provider,operation,'STARTED','UNKNOWN',prompt_version or PROMPT_VERSION,self.model,self.base_url)).lastrowid
+            rowid = db.execute('INSERT INTO calls(created_at,model,protocol,operation,status,cost,prompt_version,requested_model,endpoint) VALUES(?,?,?,?,?,?,?,?,?)',(time.time(),self.model,self.provider,operation,'STARTED','UNKNOWN',prompt_version or PROMPT_VERSION,self.model,_safe_endpoint(self.base_url,self.key))).lastrowid
         start, usage, error, status = time.monotonic(), {}, None, 'FAILED'
         returned_model, identity_status, identity_reason = None, 'UNVERIFIED_MISSING', '响应未到达'
-        used_endpoint = self.base_url
+        used_endpoint = _safe_endpoint(self.base_url, self.key)
         try:
             if self.provider == 'anthropic':
                 body = {'model':self.model,'max_tokens':2500,'system':system,'messages':[{'role':'user','content':user}]}
@@ -686,25 +717,40 @@ class ModelGateway:
             # 错误码 1113（额度耗尽）时自动切换 Coding Plan 端点完成本次调用，
             # 主端点恢复（充值）后自动回到主端点。非 1113 的 429/5xx 走退避重试。
             candidates = [_chat_url(self.base_url)]
-            if self.coding_base_url and self.coding_base_url != self.base_url:
+            if (self.provider == 'openai'
+                    and _official_zhipu_endpoint(self.base_url, '/api/paas/v4')
+                    and _official_zhipu_endpoint(self.coding_base_url, '/api/coding/paas/v4')):
                 candidates.append(_chat_url(self.coding_base_url))
             data = None
             for index, endpoint in enumerate(candidates):
                 last = index == len(candidates) - 1
                 for attempt in range(3):
+                    attempt_start = time.monotonic()
+                    attempt_status, attempt_error, http_status = 'FAILED', None, None
+                    used_endpoint = _safe_endpoint(endpoint, self.key)
                     try:
-                        response = self.client.post(endpoint,headers=self._headers(),json=body)
+                        response = self.client.post(endpoint,headers=self._headers(),json=body,follow_redirects=False)
+                        http_status = response.status_code
                         response.raise_for_status()
                         data = response.json()
-                        used_endpoint = endpoint
+                        attempt_status = 'PASS'
                         break
                     except httpx.HTTPStatusError as exc:
                         quota = _quota_exhausted(exc.response)
-                        if quota and not last: break        # 余额耗尽：切备用端点
-                        if quota: raise                     # 无备用端点，退避无法恢复
+                        attempt_error = 'HTTPStatusError:' + str(exc.response.status_code) + (':1113' if quota else '')
+                        if quota and not last: break
+                        if quota: raise
                         retryable = exc.response.status_code == 429 or exc.response.status_code >= 500
                         if not retryable or attempt == 2: raise
                         time.sleep(20 * (attempt + 1))
+                    except Exception as exc:
+                        attempt_error = type(exc).__name__
+                        raise
+                    finally:
+                        with sqlite3.connect(self.dbpath) as db:
+                            db.execute('INSERT INTO call_attempts(call_id,created_at,endpoint,protocol,credential_source,status,http_status,error,elapsed) VALUES(?,?,?,?,?,?,?,?,?)',
+                                       (rowid,time.time(),used_endpoint,self.provider,self.credential_scope['source'],
+                                        attempt_status,http_status,attempt_error,time.monotonic()-attempt_start))
                 if data is not None: break
             usage = data.get('usage',{})
             returned_model = data.get('model')

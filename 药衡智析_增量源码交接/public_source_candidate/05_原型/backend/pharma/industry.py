@@ -22,7 +22,7 @@ from .config import APP, PACKAGE, RUNTIME
 D = Decimal
 CORE_VERSION = '1.0'
 PACKS = APP / 'industry_packs'
-FORMULA_VERSION = 'normalized-cost-2-typed-drivers'
+FORMULA_VERSION = 'normalized-cost-3-comparison-evidence'
 SNAPSHOT_CONTRACT_VERSION = 'analysis-snapshot-2-frozen-template'
 ENTERPRISE_REGISTRY = RUNTIME / 'enterprise_registry.json'
 
@@ -633,12 +633,30 @@ def analyze_reference(context_id, factory=None, product=None, month=None, analys
         if bases[label] is not None:compare(current,bases[label],label)
     scope=context.context_hash+f':{factory}:{product}:{month}:{analysis_type}:{basis}'
     currency=enterprise['currency'];unit=enterprise['quantity_unit'];money='元' if currency=='CNY' else currency
-    def metric(key,value,units,formula,den=None,period=None,numerator=None):
-        return {'metric_id':scope+':'+key,'value':None if value is None else str(value),'display':'N/A' if value is None else str(D(value).quantize(D('0.01'))),'unit':units,'formula':formula,'formula_version':FORMULA_VERSION,'numerator':None if numerator is None and value is None else str(value if numerator is None else numerator),'denominator':None if den is None else str(den),'comparison_period':period,'row_keys':[x.source_row for x in current['rows']],'source_hash':[context.data_snapshot],'reason':'缺少完整基期或分母为零' if value is None else None}
-    metrics={k:metric(k,current[k],u,f,current['quantity'] if k=='unit_cost' else 1,numerator=current['total_cost'] if k=='unit_cost' else current[k]) for k,u,f in [('unit_cost',money+'/'+unit,'Σ金额/Σ独立产量'),('total_cost',money,'Σ成本明细金额'),('quantity',unit,'Σ独立生产对象产量')]}
+    def source_evidence(value):
+        if value is None:return None
+        return {'cost_rows':[x.source_row for x in value['rows']],
+                'quantity_rows':[x.source_row for x in value['quantity_rows']],
+                'period':value['months'],'scenario':value['scenario'],
+                'factory':value['factory_id'],'product':value['product_id'],
+                'policy_version':value['policy_version'],'quantity':str(value['quantity']),
+                'total_cost':str(value['total_cost']),'quantity_unit':value['quantity_unit'],
+                'currency':value['currency'],'source_snapshot':context.data_snapshot}
+    current_source=source_evidence(current)
+    def metric(key,value,units,formula,den=None,period=None,numerator=None,base=None,metric_basis=None):
+        sources={'current':current_source,'base':source_evidence(base)}
+        row_keys=list(dict.fromkeys(row for source in sources.values() if source for kind in ('cost_rows','quantity_rows') for row in source[kind]))
+        return {'metric_id':scope+':'+key,'value':None if value is None else str(value),
+                'display':'N/A' if value is None else str(D(value).quantize(D('0.01'))),'unit':units,
+                'formula':formula,'formula_version':FORMULA_VERSION,
+                'numerator':None if numerator is None and value is None else str(value if numerator is None else numerator),
+                'denominator':None if den is None else str(den),'comparison_period':period,
+                'period':months,'basis':metric_basis or basis,'sources':sources,'row_keys':row_keys,
+                'source_hash':[context.data_snapshot],'reason':'缺少完整基期或分母为零' if value is None else None}
+    metrics={k:metric(k,current[k],u,f,current['quantity'] if k=='unit_cost' else 1,numerator=current['total_cost'] if k=='unit_cost' else current[k],metric_basis={'unit_cost':'unit','total_cost':'total','quantity':'quantity'}[k]) for k,u,f in [('unit_cost',money+'/'+unit,'Σ金额/Σ独立产量'),('total_cost',money,'Σ成本明细金额'),('quantity',unit,'Σ独立生产对象产量')]}
     selected='unit_cost' if basis=='unit' else 'total_cost'
     comparisons={label:change(current[selected],base[selected] if base else None) for label,base in bases.items()}
-    for k,v in comparisons.items(): metrics[k]=metric(k,v['rate'],'%','(本期−基期)/基期×100',v['base'],periods[k],numerator=v['delta'])
+    for k,v in comparisons.items(): metrics[k]=metric(k,v['rate'],'%','(本期−基期)/基期×100',v['base'],periods[k],numerator=v['delta'],base=bases[k])
     elements=[];alerts=[]
     for key,amount in current['elements_total'].items():
         cu=current['elements_unit'][key]; prior=bases['mom'];changes={b:change(current['elements_'+b][key],prior['elements_'+b].get(key) if prior else None) for b in ('unit','total')}
@@ -652,10 +670,10 @@ def analyze_reference(context_id, factory=None, product=None, month=None, analys
             for b in ('unit','total'):
                 c=change(current['elements_'+b][key],base['elements_'+b].get(key) if base else None)
                 denom=change(current['unit_cost' if b=='unit' else 'total_cost'],base['unit_cost' if b=='unit' else 'total_cost'] if base else None)['delta']
-                item['comparisons'][label][b]={**c,'contribution':contribution(c['delta'],denom),'numerator':c['delta'],'denominator':denom,'comparison_period':periods[label]}
+                item['comparisons'][label][b]={**c,'contribution':contribution(c['delta'],denom),'numerator':c['delta'],'denominator':c['base'],'contribution_numerator':c['delta'],'contribution_denominator':denom,'comparison_period':periods[label],'basis':b,'value_unit':money+'/'+unit if b=='unit' else money,'sources':{'current':current_source,'base':source_evidence(base)}}
         metrics[key]=metric(key,cu if basis=='unit' else amount,money+'/'+unit if basis=='unit' else money,'Σ要素金额/Σ产量' if basis=='unit' else 'Σ要素金额',current['quantity'] if basis=='unit' else 1,numerator=amount)
         for b,c in changes.items():
-            mk=key+'_'+b+'_rate';metrics[mk]=metric(mk,c['rate'],'%','(本期要素−基期要素)/基期要素×100',c['base'],periods['mom'],numerator=c['delta'])
+            mk=key+'_'+b+'_rate';metrics[mk]=metric(mk,c['rate'],'%','(本期要素−基期要素)/基期要素×100',c['base'],periods['mom'],numerator=c['delta'],base=bases['mom'],metric_basis=b)
             if flags[b]: alerts.append({'alert_id':'alert-'+digest([scope,key,b])[:20],'element_key':key,'element':name,'basis':b,'current':c['current'],'base':c['base'],'value_unit':money+'/'+unit if b=='unit' else money,'rate':c['rate'],'metric_id':metrics[mk]['metric_id'],'fact_summary':f'{name} {b} 环比 {c["rate"]}%，本期 {c["current"]}，基期 {c["base"]}','rule':'严格超过±10%','note':'合成演示阈值；非行业标准'})
         elements.append(item)
     optional=[x for x in ds.optional if x.period in months and x.scenario=='actual' and x.scope=='completed']
@@ -705,15 +723,16 @@ def benchmark_reference(context_id, product, month, left, right, analysis_type='
         x,y=a['metrics'][key],b['metrics'][key]
         summary.append({'key':key,'name':name,'unit':x['unit'],'left':x['value'],'right':y['value'],
                         **{k:v for k,v in change(x['value'],y['value']).items() if k in ('delta','rate','reason')}})
+    total_delta=summary[0 if basis=='unit' else 1]['delta']
     elements=[];bm={x['key']:x for x in b['elements']}
     for row in a['elements']:
         other=bm.get(row['key'])
-        c=change(row['unit'],other['unit'] if other else None)
-        elements.append({'key':row['key'],'name':row['name'],'unit':a['metrics']['unit_cost']['unit'],'left':row['unit'],
-            'right':other['unit'] if other else None,**{k:v for k,v in c.items() if k in ('delta','rate','reason')},
-            'contribution':contribution(c['delta'],summary[0]['delta']),'numerator':c['delta'],'denominator':summary[0]['delta'],
+        c=change(row[basis],other[basis] if other else None)
+        elements.append({'key':row['key'],'name':row['name'],'unit':a['metrics']['unit_cost' if basis=='unit' else 'total_cost']['unit'],'left':row[basis],
+            'right':other[basis] if other else None,**{k:v for k,v in c.items() if k in ('delta','rate','reason')},
+            'contribution':contribution(c['delta'],total_delta),'numerator':c['delta'],'denominator':c['base'],'contribution_numerator':c['delta'],'contribution_denominator':total_delta,
             'comparison_period':a['period'],'comparison_object':left+'−'+right})
-    comparison={'analysis_type':analysis_type,'period':a['period'],'direction':left+'−'+right+'，以'+right+'为分母',
+    comparison={'analysis_type':analysis_type,'basis':basis,'period':a['period'],'direction':left+'−'+right+'，以'+right+'为分母',
         'product':product,'month':month,'left':left,'right':right,'snapshot_ids':[a['snapshot_id'],b['snapshot_id']],
         'summary':summary,'elements':elements,'details':{'left':a['details'],'right':b['details']},
         'hypotheses':[],'limits':['合成演示工厂；只比较同产品、规格、期间与政策的归集结果','缺采购/BOM/批次实耗不推算成本净原因'],
@@ -725,9 +744,19 @@ def benchmark_reference(context_id, product, month, left, right, analysis_type='
             key='benchmark:'+left+':'+right+':'+row['key']+':'+field
             unit='%' if field in ('rate','contribution') else row['unit']
             row['metric_refs'][field]=key
-            a['metrics'][key]={**a['metrics'][row['key']],'metric_id':key,'label':row['name']+'跨厂'+field,'value':row[field],
+            original=a['metrics'][row['key']];right_metric=b['metrics'].get(row['key'])
+            metric_basis=original['basis']
+            numerator=row['delta']
+            denominator=row['right'] if field=='rate' else row['contribution_denominator'] if field=='contribution' else '1'
+            sources={'left':original['sources']['current'],'right':right_metric['sources']['current'] if right_metric else b['metrics']['unit_cost']['sources']['current']}
+            rows=list(dict.fromkeys(source_row for source in sources.values() if source for kind in ('cost_rows','quantity_rows') for source_row in source[kind]))
+            a['metrics'][key]={**original,'metric_id':key,'label':row['name']+'跨厂'+field,'value':row[field],
                 'display':'N/A' if row[field] is None else str(D(row[field]).quantize(D('0.01'))),'unit':unit,
-                'formula':'左厂−右厂' if field=='delta' else '(左厂−右厂)/右厂×100' if field=='rate' else '要素差额/单位成本总差额×100'}
+                'formula':'左厂−右厂' if field=='delta' else '(左厂−右厂)/右厂×100' if field=='rate' else '要素差额/所选口径总差额×100',
+                'numerator':numerator,'denominator':denominator,'basis':metric_basis,
+                'comparison_period':comparison['period'],'sources':sources,'row_keys':rows,
+                'source_hash':sorted(set(original['source_hash']+(right_metric['source_hash'] if right_metric else []))),
+                'reason':(row.get('reason') or '比较分母为零或缺失，比例无定义') if row[field] is None else None}
     a['benchmark_context']={k:comparison[k] for k in ('left','right','direction','summary','elements','limits','period')}
     a['snapshot_id']=digest({k:v for k,v in a.items() if k!='snapshot_id'})
     return a,comparison

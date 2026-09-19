@@ -7,11 +7,19 @@ ROOT=Path(__file__).resolve().parents[2];APP=ROOT/'05_原型'
 sys.path.insert(0,str(APP/'backend'))
 AUTOMATIC=('environment','regression','scenarios','retrieval','rpa','browser','model_live')
 
-def check_receipt(path,run_id,commit):
+def check_receipt(path,run_id,commit,manifest=None):
     if not path or not Path(path).is_file():return {'status':'NOT_RUN','reason':'No current receipt'}
     try:r=json.loads(Path(path).read_text())
     except (ValueError,OSError):return {'status':'FAIL','reason':'Invalid receipt'}
     if r.get('run_id')!=run_id or r.get('commit')!=commit:return {'status':'STALE','reason':'Receipt is not bound to this run/commit'}
+    if manifest is not None:
+        if not manifest.get('attempt_id') or r.get('attempt_id')!=manifest['attempt_id']:return {'status':'FAIL','reason':'Attempt binding mismatch'}
+        expected={x['id']:x for x in manifest.get('scenarios',[])}
+        rows=r.get('scenarios',[])
+        if len(rows)!=len(expected) or {x.get('id') for x in rows}!=set(expected):return {'status':'FAIL','reason':'Scenario coverage mismatch'}
+        for row in rows:
+            for key in ('job_id','snapshot_id','artifacts'):
+                if row.get(key)!=expected[row['id']].get(key):return {'status':'FAIL','reason':'Scenario '+key+' mismatch'}
     return r
 
 def documentation_path(path):
@@ -35,6 +43,7 @@ def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--manifest',required=True,help='Current run manifest with run_id, commit, receipts and scenario job IDs')
     p.add_argument('--output-dir')
+    p.add_argument('--checks-dir',type=Path,help='Reuse environment/regression receipts bound to this run, attempt and tested code')
     args=p.parse_args();manifest_path=Path(args.manifest).resolve();m=json.loads(manifest_path.read_text())
     commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()
     dirty=subprocess.check_output(['git','diff','HEAD','--name-only','-z'],cwd=ROOT,text=True).split('\0')
@@ -47,6 +56,11 @@ def main():
     dimensions={k:{'status':'NOT_RUN'} for k in AUTOMATIC}
     checks=[('environment',[sys.executable,str(APP/'scripts/check_environment.py'),'--strict']),('regression',[sys.executable,'-m','pytest','-q',str(APP/'tests')])]
     for key,cmd in checks:
+        if args.checks_dir:
+            record=check_receipt(args.checks_dir/(key+'.json'),m['run_id'],tested_commit)
+            if record.get('attempt_id')!=m.get('attempt_id'):record={'status':'STALE','reason':'Check attempt differs'}
+            dimensions[key]=record
+            continue
         try:
             r=subprocess.run(cmd,cwd=ROOT,env=env,capture_output=True,text=True,timeout=600)
             (out/(key+'.log')).write_text(r.stdout+r.stderr)
@@ -60,9 +74,11 @@ def main():
         try:
             job=store.get(scenario['job_id']);result=job['result']
             if job['input'].get('run_id')!=m['run_id'] or job['input'].get('commit')!=tested_commit:raise ValueError('SCENARIO_RUN_BINDING_MISMATCH')
-            for fmt in ('docx','pdf'):store.artifact_path(result[fmt]['artifact_id'])
+            for fmt in ('docx','pdf'):
+                artifact=store.artifact_path(result[fmt]['artifact_id'])
+                if hashlib.sha256(artifact.read_bytes()).hexdigest()!=scenario.get('artifacts',{}).get(fmt,{}).get('sha256'):raise ValueError('SCENARIO_ARTIFACT_BINDING_MISMATCH')
             check=verify_docx(store.artifact_path(result['docx']['artifact_id']),result['snapshot'],narrative=result.get('narrative'))
-            item={'id':scenario['id'],'status':check['status'],'job_id':job['id'],'generation_mode':result.get('narrative',{}).get('generation_mode'),'human_review':'PENDING'}
+            item={'id':scenario['id'],'status':check['status'],'job_id':job['id'],'snapshot_id':result['snapshot']['snapshot_id'],'artifacts':scenario.get('artifacts'),'generation_mode':result.get('narrative',{}).get('generation_mode'),'human_review':'PENDING'}
         except (ValueError,KeyError,OSError) as exc:item={'id':scenario['id'],'status':'FAIL','reason':str(exc)}
         scenario_checks.append(item)
     expected=set(m.get('required_scenarios',[]));actual={x['id'] for x in scenario_checks}
@@ -70,10 +86,10 @@ def main():
         dimensions['scenarios']={'status':'PASS' if all(x['status']=='PASS' for x in scenario_checks) else 'FAIL'}
     for key in ('retrieval','rpa','browser','model_live'):
         ref=m.get('receipts',{}).get(key)
-        dimensions[key]=check_receipt(manifest_path.parent/ref if ref else None,m['run_id'],tested_commit)
+        dimensions[key]=check_receipt(manifest_path.parent/ref if ref else None,m['run_id'],tested_commit,m)
     failed=any(x.get('status')=='FAIL' for x in dimensions.values())
     complete=all(x.get('status')=='PASS' for x in dimensions.values())
-    result={'run_id':m['run_id'],'commit':commit,'tested_code_commit':tested_commit,'dimensions':dimensions,'scenarios':scenario_checks,'human_review':'PENDING','competition_ready':False,'status':'FAIL' if failed else 'PASS' if complete else 'INCOMPLETE'}
+    result={'run_id':m['run_id'],'commit':tested_commit,'verification_commit':commit,'attempt_id':m.get('attempt_id'),'tested_code_commit':tested_commit,'dimensions':dimensions,'scenarios':scenario_checks,'human_review':'PENDING','competition_ready':False,'status':'FAIL' if failed else 'PASS' if complete else 'INCOMPLETE'}
     (out/'verification.json').write_text(json.dumps(result,ensure_ascii=False,indent=2));print(json.dumps(result,ensure_ascii=False,indent=2))
     return 1 if failed else 0 if complete else 2
 if __name__=='__main__':raise SystemExit(main())
