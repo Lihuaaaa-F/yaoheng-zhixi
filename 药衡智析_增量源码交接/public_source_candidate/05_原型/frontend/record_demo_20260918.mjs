@@ -1,77 +1,221 @@
-/** 讲解版端到端演示录制：选择条件→看板(含预测/决策)→对标→生成报告→任务/RPA→证据与图谱。
- * 输出 webm 视频 + 逐步回执 JSON；仅本地运行，不替代真人验收。 */
+/** Real local simulation: filters → report → verified downloads → draft → UI confirmation → receipt.
+ * Reuse an existing job with PHARMA_DEMO_JOB_ID; its run_id and selection must match.
+ * Browser plugin not available; reuse the project's installed Playwright/Chromium. */
 import {chromium} from 'playwright';
-import {mkdir,writeFile} from 'node:fs/promises';
+import {mkdir, mkdtemp, readFile, writeFile} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {createHash} from 'node:crypto';
+import {execFile} from 'node:child_process';
+import {promisify} from 'node:util';
 
-const base = process.env.PHARMA_E2E_URL ?? 'http://127.0.0.1:8765';
-const out = process.env.PHARMA_E2E_OUT ?? 'D:/yh_audit_wt/药衡智析_增量源码交接/public_source_candidate/07_交付/demo_20260918';
-const chrome = process.env.PHARMA_CHROME_PATH ?? 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-// Windows 下 recordVideo 目录含中文路径会失败，先录到 ASCII 临时目录再另存
-const videoDir = process.env.PHARMA_DEMO_VIDEO_DIR ?? 'D:/yh_demo_video_tmp';
-await mkdir(out, { recursive: true });
-await mkdir(videoDir, { recursive: true });
-
-const browser = await chromium.launch({ executablePath: chrome, headless: true, args: ['--no-sandbox'] });
-const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: 'zh-CN',
-  recordVideo: { dir: videoDir, size: { width: 1440, height: 900 } } });
-const page = await context.newPage();
-const steps = [];
-async function caption(text, dwell = 4000) {
-  await page.evaluate(t => {
-    document.querySelectorAll('#narration').forEach(e => e.remove());
-    const d = document.createElement('div');
-    d.id = 'narration'; d.textContent = t;
-    d.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:26px;z-index:99999;' +
-      "background:rgba(23,52,63,.93);color:#fff;padding:12px 24px;border-radius:10px;" +
-      'font-size:21px;font-family:"Noto Sans CJK SC","Microsoft YaHei",sans-serif;max-width:86%;text-align:center;';
-    document.body.appendChild(d);
-  }, text);
-  await page.waitForTimeout(dwell);
-  steps.push(text);
+export function requireLoopback(value) {
+  const url = new URL(value), host = url.hostname.replace(/^\[|\]$/g, '');
+  const ipv4 = host.split('.');
+  const local = host === 'localhost' || host === '::1' ||
+    (ipv4.length === 4 && ipv4[0] === '127' && ipv4.every(p => /^\d+$/.test(p) && Number(p) <= 255));
+  if (!['http:', 'https:'].includes(url.protocol) || !local || url.username || url.password)
+    throw Error('LOCAL_LOOPBACK_REQUIRED');
+  return url;
 }
-try {
-  await page.goto(`${base}/?context_id=pharmaceutical:competition`, { waitUntil: 'networkidle' });
-  await caption('① 选择分析条件：赛题环境 · 中药一厂 · 六味地黄胶囊 · 2026年6月 · 月度分析', 5000);
-  await page.locator('.metric').first().waitFor({ timeout: 60000 });
-  await caption('② 成本看板：单位成本/环比/同比/预算偏差——全部由程序 Decimal 确定性计算，可点开查看口径与来源', 6000);
-  await page.locator('.chart-grid').scrollIntoViewIfNeeded();
-  await caption('③ 近6个月趋势 + 成本预测（赛题加分项）：Holt 指数平滑外推，虚线为点预测、阴影为80%区间', 6000);
-  await page.locator('.decision-card, main').first().evaluate(e => e.scrollIntoView({ block: 'center' }));
-  await page.waitForTimeout(1500);
-  const decision = await page.locator('.decision-card').count() ? await page.locator('.decision-card').innerText() : '';
-  await caption('④ Agent 自主决策（赛题加分项）：系统判断本期是否需要正式报告' + (decision.includes('建议生成') ? '——当前建议生成报告' : ''), 6000);
-  await page.getByRole('button', { name: /跨厂对标/ }).click();
-  await page.getByRole('heading', { name: /差异总览/ }).waitFor({ timeout: 120000 });
-  await caption('⑤ 对标三步法：与中药二厂“找差异→拆结构→拆原因”，差异表/结构树/归因解释逐层下钻', 7000);
-  await page.getByRole('button', { name: /报告与任务/ }).click();
-  await page.getByRole('heading', { name: '当前企业任务看板' }).waitFor();
-  await caption('⑥ 生成正式报告：模板结构 + 数据填充 + RAG 证据 + 大模型解释，产物为 Word/PDF 双格式', 6000);
-  const reportPromise = page.waitForResponse(r => r.url().endsWith('/api/reports') && r.request().method() === 'POST', { timeout: 60000 }).catch(() => null);
-  await page.getByRole('button', { name: '生成报告', exact: true }).click().catch(() => {});
-  const resp = await reportPromise;
-  const job = resp ? await resp.json() : null;
-  if (job?.job_id) {
-    for (let i = 0; i < 240; i++) {
-      const j = await (await fetch(`${base}/api/jobs/${job.job_id}`)).json();
-      if (['SUCCEEDED', 'DEGRADED', 'FAILED'].includes(j.status)) break;
-      await page.waitForTimeout(1000);
-    }
+export function validateHealth(health) {
+  if (health.simulation !== true || health.rpa_mode !== 'local_simulator') throw Error('LOCAL_SIMULATION_REQUIRED');
+  requireLoopback(health.rpa_base_url);
+  return health;
+}
+export function validateJob(job, runId, selection) {
+  if (!['SUCCEEDED', 'DEGRADED'].includes(job.status)) throw Error('REPORT_NOT_COMPLETE');
+  if (job.input?.run_id !== runId) throw Error('REPORT_RUN_MISMATCH');
+  for (const [key, value] of Object.entries(selection)) if (job.input?.[key] !== value) throw Error(`REPORT_SELECTION_MISMATCH:${key}`);
+  for (const kind of ['docx', 'pdf']) {
+    const artifact = job.result?.[kind];
+    if (artifact?.status !== 'PASS' || !artifact.artifact_id || !/^[a-f0-9]{64}$/.test(artifact.sha256 ?? ''))
+      throw Error(`REPORT_ARTIFACT_MISSING:${kind}`);
   }
-  await caption('⑦ 报告任务完成：Word/PDF 已生成，含全部固定章节与证据引用；版式遗留与真人版式评审状态见实施状态表', 6000);
-  await caption('⑧ 整改闭环：分析结论转为结构化任务，经模拟 RPA 送达责任人，看板跟踪生成/送达/确认状态', 7000);
-  await page.getByRole('button', { name: /数据与证据/ }).click();
-  await page.getByRole('heading', { name: '数据与知识来源' }).waitFor();
-  await caption('⑨ 证据溯源：文档名/章节/页码可核查；检索为 BM25+向量混合并标注来源', 6000);
-  await page.locator('.panel').filter({ hasText: '知识图谱' }).first().scrollIntoViewIfNeeded().catch(() => {});
-  await page.waitForTimeout(2500);
-  await caption('⑩ 知识图谱（赛题加分项）：产品-药材-工序关系可视化，检索时自动扩展关键词', 7000);
-  await caption('药衡智析：数值可信 · 证据适用 · 缺证可解释 · 任务可核查', 5000);
-  const video = page.video();
-  await context.close();
-  if (video) await video.saveAs(`${out}/yaoheng_demo_narrated.webm`);
-  await writeFile(`${out}/demo_receipt.json`, JSON.stringify({ status: 'PASS', url: base, submitted_job: job?.job_id ?? null, scenes: steps, chrome }, null, 2));
-  console.log(JSON.stringify({ status: 'PASS', steps: steps.length, job: job?.job_id ?? null, out }));
-} catch (e) {
-  await writeFile(`${out}/demo_failure.json`, JSON.stringify({ error: String(e), steps }, null, 2));
-  console.error(String(e)); process.exitCode = 1;
-} finally { await browser.close(); }
+  return job;
+}
+const sha = bytes => createHash('sha256').update(bytes).digest('hex');
+
+export async function recordDemo() {
+  const base = requireLoopback(process.env.PHARMA_E2E_URL ?? 'http://127.0.0.1:8765').origin;
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const runId = process.env.PHARMA_DEMO_RUN_ID;
+  if (!runId) throw Error('PHARMA_DEMO_RUN_ID_REQUIRED');
+  const scenario = process.env.PHARMA_DEMO_SCENARIO ?? 'S1';
+  const attempt = process.env.PHARMA_DEMO_ATTEMPT_ID ?? `demo-${stamp}`;
+  const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+  const out = process.env.PHARMA_E2E_OUT ?? path.join(root, '07_交付', `demo_${stamp}`);
+  await mkdir(path.dirname(out), {recursive: true});
+  await mkdir(out); // Existing runs are immutable, including failed runs.
+  const receipt = {status: 'RUNNING', run_id: runId, attempt_id: attempt, scenario, base_url: base,
+    viewport: {width: 1366, height: 768}, simulation: true, human_review: 'PENDING',
+    browser: 'Browser plugin not available; installed Playwright/Chromium', scenes: [], artifacts: {}, errors: []};
+  let browser, context, page, video, timer;
+  const request = async (url, options = {}) => {
+    const target = new URL(url, base);
+    if (requireLoopback(target.href).origin !== base) throw Error('CROSS_ORIGIN_REQUEST_BLOCKED');
+    const response = await fetch(target, {...options, redirect: 'error', signal: AbortSignal.timeout(30000)});
+    if (!response.ok) throw Error(`HTTP_${response.status}:${target.pathname}`);
+    return response.json();
+  };
+  try {
+    receipt.health = validateHealth(await request('/health'));
+    let job = process.env.PHARMA_DEMO_JOB_ID ? await request(`/api/jobs/${encodeURIComponent(process.env.PHARMA_DEMO_JOB_ID)}`) : null;
+    const source = job?.input ?? {};
+    const selection = {
+      context_id: process.env.PHARMA_DEMO_CONTEXT_ID ?? source.context_id ?? 'pharmaceutical:competition',
+      factory: process.env.PHARMA_DEMO_FACTORY ?? source.factory ?? '中药一厂',
+      product: process.env.PHARMA_DEMO_PRODUCT ?? source.product ?? '六味地黄胶囊',
+      month: process.env.PHARMA_DEMO_MONTH ?? source.month ?? '2026-06',
+      analysis_type: process.env.PHARMA_DEMO_ANALYSIS_TYPE ?? source.analysis_type ?? 'monthly',
+      basis: process.env.PHARMA_DEMO_BASIS ?? source.basis ?? 'unit',
+    };
+    if (job) validateJob(job, runId, selection);
+    receipt.selection = selection;
+    receipt.reused_job = job?.id ?? null;
+    const temp = await mkdtemp(path.join(tmpdir(), 'yaoheng-video-'));
+    browser = await chromium.launch({executablePath: process.env.PHARMA_CHROME_PATH, headless: true, args: ['--no-sandbox']});
+    context = await browser.newContext({viewport: receipt.viewport, locale: 'zh-CN', acceptDownloads: true,
+      recordVideo: {dir: temp, size: receipt.viewport}, serviceWorkers: 'block'});
+    // Browser requests cannot redirect externally, including POSTs initiated by the UI.
+    await context.route('**/*', async route => {
+      try {
+        const req = route.request(), url = requireLoopback(req.url());
+        if (url.origin !== base) throw Error('EXTERNAL_BROWSER_REQUEST_BLOCKED');
+        if (url.pathname.endsWith('/acknowledge')) throw Error('HUMAN_ACKNOWLEDGEMENT_PROHIBITED');
+        const options = {maxRedirects: 0, timeout: 60000};
+        if (url.pathname === '/api/reports' && req.method() === 'POST')
+          options.postData = JSON.stringify({...req.postDataJSON(), run_id: runId});
+        const response = await route.fetch(options);
+        if (response.status() >= 300 && response.status() < 400) throw Error('BROWSER_REDIRECT_BLOCKED');
+        await route.fulfill({response});
+      } catch (error) {
+        // Abort and retain the error; never turn a failed click/request into a PASS.
+        receipt.errors.push(String(error));
+        await route.abort();
+      }
+    });
+    page = await context.newPage(); video = page.video();
+    page.setDefaultTimeout(20000);
+    page.on('pageerror', error => receipt.errors.push(String(error)));
+    page.on('console', message => { if (message.type() === 'error') receipt.errors.push(message.text()); });
+    const caption = async text => {
+      await page.evaluate(text => {
+        let node = document.querySelector('#demo-caption');
+        if (!node) { node = document.createElement('div'); node.id = 'demo-caption'; document.body.appendChild(node); }
+        node.textContent = `本地模拟演示 · 非真人确认｜${text}`;
+        node.style.cssText = 'position:fixed;bottom:12px;left:230px;right:18px;padding:10px 16px;background:#143d43ed;color:white;border-radius:8px;z-index:99999;font:17px "Noto Sans CJK SC",sans-serif;pointer-events:none';
+      }, text);
+      receipt.scenes.push({text, at: new Date().toISOString()});
+      await page.waitForTimeout(2200);
+    };
+    const clickResponse = async (locator, endpoint, method = 'POST') => {
+      const [response] = await Promise.all([
+        page.waitForResponse(r => new URL(r.url()).pathname === endpoint && r.request().method() === method), locator.click()]);
+      if (!response.ok()) throw Error(`UI_HTTP_${response.status()}:${endpoint}`);
+      return response.json();
+    };
+    const workflow = async () => {
+      await page.goto(`${base}/?context_id=${encodeURIComponent(selection.context_id)}`, {waitUntil: 'domcontentloaded'});
+      await page.locator('.metric').first().waitFor();
+      await caption('选择分析条件，观察真实数据随筛选更新');
+      for (const [label, key] of [['产品', 'product'], ['工厂', 'factory'], ['报告范围', 'analysis_type'], ['月份', 'month']])
+        await page.getByLabel(label, {exact: true}).selectOption(selection[key]);
+      // Exercise a real change and then return to the recorded cost basis.
+      await page.getByRole('group', {name: '成本口径'}).getByRole('button', {name: selection.basis === 'unit' ? '总额' : '单位', exact: true}).click();
+      await page.locator('.metric').first().waitFor();
+      await page.getByRole('group', {name: '成本口径'}).getByRole('button', {name: selection.basis === 'unit' ? '单位' : '总额', exact: true}).click();
+      await page.locator('.metric').first().waitFor();
+      await page.screenshot({path: path.join(out, 'analysis_1366x768.png')});
+      await caption('程序计算成本与差异；缺失数据和解释能力分别说明');
+      await page.getByRole('button', {name: /报告与任务/}).click();
+      await page.getByRole('heading', {name: '报告生成与下载'}).waitFor();
+      await caption(job ? '复用本次运行已验证报告，实际下载 Word 与 PDF' : '提交本次运行报告并等待实际文件生成');
+      const submitted = await clickResponse(page.getByRole('button', {name: '生成报告', exact: true}), '/api/reports');
+      if (job && submitted.job_id !== job.id) throw Error('EXPECTED_CACHE_REUSE_MISSED');
+      receipt.job_id = submitted.job_id;
+      for (;;) {
+        job = await request(`/api/jobs/${encodeURIComponent(submitted.job_id)}`);
+        if (['SUCCEEDED', 'DEGRADED', 'FAILED'].includes(job.status)) break;
+        await page.waitForTimeout(1000);
+      }
+      validateJob(job, runId, selection);
+      receipt.tested_code = {revision: job.input.revision, commit: job.input.commit, revision_kind: job.input.revision_kind};
+      receipt.snapshot_id = job.input.snapshot_id;
+      receipt.job_status = job.status;
+      receipt.model_identity = job.result.narrative?.model_identity;
+      for (const kind of ['docx', 'pdf']) {
+        const artifact = job.result[kind];
+        const link = page.locator(`a[href="/api/artifacts/${artifact.artifact_id}"]`).first();
+        await link.waitFor();
+        const [download] = await Promise.all([page.waitForEvent('download'), link.click()]);
+        if (await download.failure()) throw Error(`DOWNLOAD_FAILED:${kind}`);
+        const filename = `report.${kind}`, target = path.join(out, filename);
+        await download.saveAs(target);
+        const actual = sha(await readFile(target));
+        if (actual !== artifact.sha256) throw Error(`ARTIFACT_HASH_MISMATCH:${kind}`);
+        receipt.artifacts[kind] = {artifact_id: artifact.artifact_id, sha256: actual, path: filename};
+      }
+      await caption('报告文件已实际下载并核对；专业原因、可读性与版式仍待真人评审');
+      await page.getByLabel('载入当前报告建议').selectOption('0');
+      const selectedSuggestion = await page.getByLabel('建议内容', {exact: true}).inputValue();
+      const clean = value => String(value ?? '').replace(/\\r\\n|\\n|\\r/g, '\n').replace(/\\t/g, ' ').trim();
+      const sourceFinding = (job.result.narrative?.findings ?? []).find(f =>
+        clean(f.suggestion) === selectedSuggestion && clean(f.rendered_text ?? f.text_template));
+      if (!sourceFinding) throw Error('DRAFT_SUGGESTION_REPORT_MISMATCH');
+      receipt.source_finding = {job_id: job.id, suggestion: sourceFinding.suggestion,
+        metric_refs: sourceFinding.metric_refs, evidence_refs: sourceFinding.evidence_refs};
+      // A unique, visibly synthetic recipient gives this recording its own draft.
+      await page.getByLabel('责任人', {exact: true}).fill(`模拟演示-${attempt.slice(-18)}`);
+      const draft = await clickResponse(page.getByRole('button', {name: '生成任务草稿', exact: true}), '/api/actions');
+      if (draft.status !== 'DRAFT' || draft.metadata?.snapshot_id !== receipt.snapshot_id) throw Error('NEW_BOUND_DRAFT_REQUIRED');
+      receipt.action = {task_id: draft.id, payload_hash: draft.payload_hash, payload: draft.payload, metadata: draft.metadata};
+      const task = page.locator(`[data-task-id="${draft.id}"]`);
+      await task.scrollIntoViewIfNeeded();
+      await caption('从报告建议创建草稿，核对责任角色、核查对象与期限；下面执行模拟发送确认');
+      validateHealth(await request('/health')); // Preflight immediately before confirmation.
+      await clickResponse(task.getByRole('button', {name: '确认并发送模拟通知', exact: true}), `/api/actions/${draft.id}/confirm`);
+      receipt.confirmation = {actor: 'automated_local_simulation', payload_hash: draft.payload_hash, at: new Date().toISOString(), human_acknowledgement: false};
+      let action;
+      for (;;) {
+        action = await request(`/api/actions/${draft.id}`);
+        if (action.delivery?.notification === 'SIMULATED_SENT') break;
+        if (['FAILED', 'CONFLICT', 'DELIVERY_UNKNOWN'].includes(action.status)) throw Error(`SIMULATED_DELIVERY_${action.status}`);
+        await page.waitForTimeout(1000);
+      }
+      const queried = await clickResponse(task.getByRole('button', {name: '查询模拟通知状态', exact: true}), `/api/actions/${draft.id}/refresh`);
+      if (queried.delivery?.notification !== 'SIMULATED_SENT' || queried.payload_hash !== draft.payload_hash || queried.responsibility_confirmation)
+        throw Error('BOUND_SIMULATION_RECEIPT_REQUIRED');
+      receipt.delivery = queried;
+      await caption('本地模拟 RPA 已记录通知送达；责任人确认和真实整改由真人另行完成');
+      await page.screenshot({path: path.join(out, 'simulated_delivery_1366x768.png')});
+      if (receipt.errors.length) throw Error('BROWSER_REQUEST_OR_RUNTIME_FAILED');
+    };
+    await Promise.race([workflow(), new Promise((_, reject) => {timer = setTimeout(() => reject(Error('DEMO_240_SECONDS_TIMEOUT')), 240000);})]);
+    clearTimeout(timer);
+    await context.close(); context = null;
+    const videoPath = path.join(out, 'yaoheng_demo_narrated.webm');
+    await video.saveAs(videoPath);
+    const {stdout} = await promisify(execFile)('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', videoPath]);
+    const duration = Number(stdout.trim());
+    if (!(duration > 0 && duration <= 300)) throw Error('VIDEO_DURATION_OUT_OF_RANGE');
+    receipt.video = {path: path.basename(videoPath), duration_seconds: duration, sha256: sha(await readFile(videoPath))};
+    receipt.status = 'PASS';
+  } catch (error) {
+    receipt.status = 'FAIL'; receipt.errors.push(String(error)); process.exitCode = 1;
+  } finally {
+    clearTimeout(timer);
+    for (const resource of [context, browser]) if (resource) {
+      try { await resource.close(); }
+      catch (error) { receipt.status = 'FAIL'; receipt.errors.push(`CLEANUP:${String(error)}`); process.exitCode = 1; }
+    }
+    receipt.finished_at = new Date().toISOString();
+    await writeFile(path.join(out, 'demo_receipt.json'), JSON.stringify(receipt, null, 2));
+  }
+  console.log(JSON.stringify({status: receipt.status, run_id: runId, job_id: receipt.job_id, out}));
+  return receipt;
+}
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  recordDemo().catch(error => {console.error(String(error)); process.exitCode = 1;});
+}
