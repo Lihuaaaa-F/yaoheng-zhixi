@@ -4,12 +4,14 @@
 
 > **English summary** — Yaoheng Zhixi is a RAG + LLM powered product-cost analysis and reporting system for a pharmaceutical contest scenario. A deterministic Decimal cost engine feeds an evidence-bound report pipeline (Word/PDF), an ECharts dashboard with attribution/waterfall/heatmap, a cross-factory three-step benchmark, and an RPA task loop against a local simulator. Bonus features implemented: knowledge-graph enhanced retrieval, multi-model routing, agent report-or-dashboard decision, and Holt-based cost forecasting. All numbers are program-owned; the model only picks references and wording under a strict validator contract.
 
+> 2026-09-19审计：功能存在不等于赛题全部通过。当前热力图缺产品×月份交叉；告警解释在生成报告后覆盖，页面阈值自动触发仍需补齐；预测与证据合同另有缺陷。当前记录和历史展示材料来自不同批次，见[本次审计](../../docs/repository/AUDIT_20260919.md)。
+
 ## 功能总览 / Feature Map
 
 | 赛题模块 | 实现 | 入口 |
 |---|---|---|
 | 模块一 智能报告生成 | Word 模板解析（占位符+书签锚点）、RAG 增强、PDF/Word 双导出 | `05_原型/backend/pharma/reports.py` |
-| 模块二 看板与归因 | 趋势/瀑布/结构/热力图、贡献度、±10% 告警重点分析 | `metrics.py`、`frontend/src/Analysis.tsx` |
+| 模块二 看板与归因 | 趋势/瀑布/结构/要素热力图、贡献度、告警事实及报告解释 | `metrics.py`、`frontend/src/Analysis.tsx` |
 | 模块三 对标三步法 | 找差异→拆结构→拆原因，差异表/结构树/归因文本 | `metrics.benchmark_analysis`、`industry.benchmark_reference` |
 | 模块四 RPA 闭环 | 结构化任务 JSON、模拟 RPA/微信送达、任务追踪看板 | `actions.py`、`synthetic_rpa.py` |
 | 加分 知识图谱 | 产品-药材-工序图，检索词增强+前端可视化 | `graph.py`、`/api/kb/graph` |
@@ -51,7 +53,7 @@ PHARMA_MODEL_DECISION_MODEL=glm-4.5-air
 # 或 JSON 路由表：PHARMA_MODEL_ROUTES={"decision":{"model":"..."}}
 ```
 
-支持任意 OpenAI 兼容端点（DeepSeek、通义等）；协议可为 `openai`/`anthropic`。每次调用核验响应 model 身份并记账（预算、usage、缓存）；Coding Plan 凭据禁止用于应用运行时。
+支持任意 OpenAI 兼容端点（DeepSeek、通义等）；协议可为 `openai`/`anthropic`。每次调用记录响应 model 身份、预算、usage、缓存与实际端点。仓库记录的2026-09-18暂定授权策略为：主端点错误1113后允许切换PHARMA_MODEL_CODING_BASE_URL，置空可禁用。该记录不证明任意账号套餐都可用；本次管理未调用模型、未改变端点策略。详见docs/ZCODE_HANDOFF.md最新政策段。
 
 ## 测试与验收 / Tests & Acceptance
 

@@ -1,26 +1,28 @@
-# 演示与答辩材料 / Demo & Defense Materials（2026-09-18）
+# 演示与答辩材料
 
-> 运行绑定：`release_20260918_26efd3a_air2`（代码提交 26efd3a，验收 verify=PASS）。
-> **English** — Narrated end-to-end demo video and refreshed defense deck, bound to verified run release_20260918_26efd3a_air2.
+本目录文件已存在，但尚不能作为比赛完整端到端演示验收通过。2026-09-19仅核查和更正索引，未修改或重新录制媒体。
 
-## 内容 / Contents
-
-| 文件 | 说明 |
+| 文件 | 当前文件事实 |
 |---|---|
-| yaoheng_demo_narrated.webm | 讲解字幕版端到端演示，2分52秒（赛题要求≤5分钟）：选择条件→看板（含预测/Agent决策卡）→对标三步法→生成报告→任务与模拟RPA送达→证据与知识图谱 |
-| 药衡智析_演示与答辩稿.pptx | 10页答辩稿（python-pptx 1.0.2 生成，含加分项两页：图谱与多模型/自主决策与预测） |
-| 药衡智析_演示与答辩稿_阅读版.pdf | 同内容阅读版 PDF 伴读 |
-| pptx_render/ | PPTX 经 LibreOffice 实渲染的 PDF 与逐页 PNG（实渲染验证证据） |
-| demo_receipt.json | 录制回执（11幕字幕清单、提交的报告任务号） |
+| yaoheng_demo_narrated.webm | 实测100.56秒（1分40.56秒），1440×900，VP8视频，无音轨；采用画面字幕 |
+| 药衡智析_演示与答辩稿.pptx | 10页答辩提纲 |
+| 药衡智析_演示与答辩稿_阅读版.pdf | 10页伴读版，使用不同页脚和排版，不等同于PPTX原生渲染 |
+| pptx_render/ | PPTX的原生渲染PDF与PNG，10页文字与PPTX一致 |
+| demo_receipt.json | 原录制回执；本轮保留原件，其PASS不代表全部比赛动作已核验 |
 
-生成方式：`05_原型/frontend/record_demo_20260918.mjs`（Playwright 真实浏览器录制，字幕为页内注入）；
-`05_原型/scripts/build_demo_deck.py --output-dir 07_交付/demo_20260918`。
+## 待补交付
 
-## 文件 SHA256
+录制脚本显示RPA说明字幕，但没有执行新建任务→确认→发送的操作；已有任务列表4/4/0不能代替本次发送过程。报告轮询也未排除FAILED结果，需在生成/下载及RPA回执断言通过后补录。视频时长已低于5分钟，仍需补齐题目动作。
 
-- `yaoheng_demo_narrated.webm`：`4bf171dc16270627e721904629ab58a2fed001c98fd09ae278b2848d96d3e10e`
-- `药衡智析_演示与答辩稿.pptx`：`0d0c39ff83a417cb7dd41d964909b492e4e3bdbd560d0ddb61c39108b0f20ce7`
-- `药衡智析_演示与答辩稿_阅读版.pdf`：`e6407306b813b52a973184846b00995cc4361646f92d49509059ddbb27e55bf5`
-- `demo_receipt.json`：`7d565f0a0985b7b070a10985b2f8d917bf7683e8e04bc099b421c80028fa0bc5`
+PPT本体及原生10页渲染可读，但以文字提纲为主，缺三场景结果、基线对照和实际报告证据页；正式答辩应补充验证证据并由真人审阅。
 
-边界：视频为合成/赛题数据下的本地演示录制；任务送达为模拟 RPA；真人评审（0–5 归因、可读性、版式）仍须本人填写，本目录不替代。
+原说明将材料绑定到`release_20260918_26efd3a_air2`并称全绿，该运行实际模型6/7、verify退出1。最新自动运行为5974275，但本目录材料不能追认为该次新生成成果。旧README的2分52秒与四个SHA均不符合现存文件，本说明已按实际字节更正。
+
+## 文件校验（工程索引）
+
+- `yaoheng_demo_narrated.webm`：`fb7556f7110dd2bba082e7379033a8384dbe704224b1c84dc5227464fbfa1f7a`
+- `药衡智析_演示与答辩稿.pptx`：`342de75c4a64a4912a232587f54a86bb284a81ee59f65aa7f87779e5303ac98c`
+- `药衡智析_演示与答辩稿_阅读版.pdf`：`49ac4752fb6ea50ea66e6bdff66a0f2284b7ae9c8560d636b743ec36e20f6b9f`
+- `demo_receipt.json`：`c5633f7b9f4e58d928ce4dd6589e8f971e4c9c05afa70e4f86989b4550d80be7`
+
+详见[交付导航](../../../../docs/repository/DELIVERY.md)及[实测记录](../../../../docs/repository/media_facts.json)。字幕演示、模拟送达与真人评分分别记录；真人评分仍待完成。

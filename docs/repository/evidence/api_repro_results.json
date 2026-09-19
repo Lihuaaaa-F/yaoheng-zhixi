@@ -1,0 +1,85 @@
+{
+  "review": {
+    "acceptance": "PASS",
+    "job_status": "DEGRADED",
+    "human_review_status": "PENDING",
+    "cached_same_job": true
+  },
+  "stale_artifact": {
+    "acceptance": "FAIL",
+    "active_review": null,
+    "expired_count": 1,
+    "cached_same_broken_job": true
+  },
+  "invalid_edits": {
+    "assignee": {
+      "type": "AttributeError",
+      "ValueError": false,
+      "state_after": "DRAFT"
+    },
+    "finding": {
+      "type": "AttributeError",
+      "ValueError": false,
+      "state_after": "DRAFT"
+    },
+    "suggestion": {
+      "type": "AttributeError",
+      "ValueError": false,
+      "state_after": "DRAFT"
+    },
+    "verification_target": {
+      "type": "ValidationError",
+      "ValueError": true,
+      "state_after": "DRAFT"
+    },
+    "expected_evidence": {
+      "type": "ValidationError",
+      "ValueError": true,
+      "state_after": "DRAFT"
+    },
+    "deadline": {
+      "type": "ValidationError",
+      "ValueError": true,
+      "state_after": "DRAFT"
+    }
+  },
+  "failed_notification": {
+    "status": "ACCEPTED",
+    "notification": "UNKNOWN",
+    "get_count": 1
+  },
+  "malformed_json": {
+    "status": "ACCEPTED",
+    "error": false
+  },
+  "post_conflict": {
+    "status": "SENT",
+    "remote_assignee": {
+      "name": "WRONG RECIPIENT",
+      "department": "OTHER"
+    },
+    "get_count": 0,
+    "notification": "SIMULATED_SENT"
+  },
+  "timeout_after_sent": {
+    "before": {
+      "http_accepted": true,
+      "notification": "SIMULATED_SENT",
+      "remediation": "NOT_CONFIRMED"
+    },
+    "after": {
+      "http_accepted": false,
+      "notification": "UNKNOWN",
+      "remediation": "NOT_CONFIRMED"
+    },
+    "state_after": "REMOTE_UNKNOWN",
+    "remote_after": null
+  },
+  "recovery": {
+    "status": "ACCEPTED",
+    "outbox_count": 1,
+    "posts": 0,
+    "gets": 1
+  },
+  "run_directory": "/workspace/scratch/7c989356e43a/repo_management_20260919/api_isolated/run-abbae887"
+}

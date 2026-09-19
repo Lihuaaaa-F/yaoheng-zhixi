@@ -1,5 +1,7 @@
 # 实施与赛题验收矩阵
 
+2026-09-19补充审计见[当前问题与证据](../../../docs/repository/AUDIT_20260919.md)。下表含历史验证，须与当前缺口一起阅读。
+
 唯一当前记录：`current_run.json`。原固定审计acc4693作为起点；历史GLM四场景v3模型参与PASS/整体PENDING、五个视觉NEEDS_FIX保留工程外，不能替代本轮。以下状态不以测试数量或文件生成推定整体验收。
 
 | 类别/条款 | 实现入口 | 测试/产物 | 当前状态及缺口 |
@@ -12,7 +14,7 @@
 | PDF/DOCX/TXT、混合检索、来源定位 | Knowledge/FTS5/Chroma/LlamaIndex BaseRetriever | 101位反例、真实三包混合召回 | 已实现已验证；新行业检索质量仅合成回归，非未见真实质量证明 |
 | 环比/同比/预算/贡献率 | metrics/industry | independent golden与勾稽 | 已实现已验证；缺月/零分母不补零，贡献率可负或>100% |
 | 近六月趋势/瀑布/结构 | Analysis/Benchmark/ECharts | 真实DOM与稳定截图 | 已实现已验证；数字单位随上下文 |
-| 要素严格±10%自动重点 | 稳定alert_id/typed facts/narrative | 阈值边界、全部口径解释覆盖 | 已实现，严格阈值/全告警合同与正文绑定已验证；实调覆盖逐场景记录，失败不转绿 |
+| 要素严格±10%自动重点 | 稳定alert_id/typed facts/narrative | 阈值边界、全部口径解释覆盖 | 部分满足：报告生成后覆盖告警的合同存在；看板仅显示阈值标签，自动重点段落触发仍需补齐 |
 | 跨厂找差异→拆结构→拆原因 | benchmark_reference/benchmark_analysis/UI | 双向和季度测试、三步法字段 | 结构已验证；原因专业质量待真人，无二厂原料明细不造下钻 |
 | 标准答案≤1% | 原golden本地回归/合成evaluation | 确定性回归通过 | 已验证覆盖范围；不是全部潜在业务情形 |
 | 结构化任务标题/负责人/来源/优先级/期限 | ExecutableAction/ActionStore | 编辑负例、真实HTTP合成任务 | 已实现已验证合同；模型建议逐场景审查 |
@@ -22,16 +24,16 @@
 | Python/Web/OpenAI兼容/一键启动 | FastAPI/React/requirements.lock/bootstrap | 本机探针、干净公开导出测试 | 已实现已验证；无密钥基础降级 |
 | 架构/RAG/Prompt/模板/API文档 | docs与包模板 | 本轮原位文档 | 已实现；细分行业深研继续 |
 | 公开源码交付 | 同仓工作分支 | staged/tracked清理与远端核验 | 按用户最新明确授权恢复原赛题资产并纳入静态交付；密钥/运行态仍排除 |
-| ≤5分钟视频/决赛PPT | record_demo_20260918.mjs/build_demo_deck | 讲解字幕视频2分52秒(11幕)/10页PPTX+LibreOffice实渲染PDF/PNG | 已完成并绑定 release_20260918_26efd3a_air2；SHA256 见 07_交付/demo_20260918/README.md |
-| 加分：热力图 | Analysis/ECharts | 真实浏览器 | 已实现已验证 |
+| ≤5分钟视频/决赛PPT | record_demo_20260918.mjs/build_demo_deck | 字幕视频实测100.56秒/10页PPTX及原生渲染 | 文件已存在，视频缺新RPA发送操作、PPT证据页不足；air2不能称全绿，见DELIVERY导航 |
+| 加分：热力图 | Analysis/ECharts | 源码与浏览器存档 | 部分满足：仅当期要素×口径，缺产品×月份交叉 |
 | 加分：生成/送达/责任人确认看板 | Tasks/acknowledge | UI合同、状态计算 | 已实现；真人责任确认需实际本人填写，演示不冒签 |
 | 加分：行业扩展 | industry/三包/多企业配置 | 机械工单机时、化工批次能耗、四要素 | 框架参考包全链路已验证；尚非完整行业适配 |
 | 加分：知识图谱 | graph.py 从知识快照抽取产品-药材-工序图 | test_graph 8项；真实题包抽取3产品/11药材/7工序/27边 | 已实现：检索词增强（仅制药上下文，适用性合同不变）+ /api/kb/graph + 前端力导图 |
 | 加分：运行多模型协作 | ModelGateway.for_route 任务路由 | test_decision 路由回退/环境变量/JSON路由表；GLM双模型实调 | 已实现：narrative=glm-5.3-flash，decision=glm-4.5-air 轻量路由实测PASS；未配置时同源回退并如实标注 |
 | 加分：自主Agent任务决策 | decision.py 确定性策略+小模型说明+SQLite台账 | test_decision 9项；实调决策说明glm-4.5-air PASS | 已实现：无报告/数据变化→REPORT_NEEDED，同快照→DASHBOARD_ONLY；可按决策入队报告 |
-| 加分：预测 | forecasting.py Holt双参数指数平滑 | test_forecasting 8项；七场景快照预测PASS（80%区间） | 已实现：总体+分要素外推，趋势图叠加虚线与区间带，负外推告警；不构成预算承诺 |
+| 加分：预测 | forecasting.py Holt双参数指数平滑 | test_forecasting 8项；七场景快照预测PASS（80%区间） | 已有原型：初始化与缺月处理存在当前反例，区间未完成覆盖检验，不作为可靠预测通过 |
 
-## 本轮发现与修复索引
+## 历史开发轮的发现与修复索引（47c/6ff，不是最新5974275实调）
 
 A/B：共享构建指纹、锁指纹、解释器/FTS探针、manifest退出码、发行/原件/开发模式分开、外置模型只读。C/D/E：缺证语义、全告警覆盖、有限数、先过滤后检索。F/G：季度与双厂上下文、已完成结果复用、实际产物审核STALE。H：行动插槽统一渲染、两类残留、正文锚点目录、左对齐与数字断行。I：完整行动合同、严格通知协议、畸形响应保持既有证明状态。J：唯一当前manifest、历史回执和本轮区分。
 

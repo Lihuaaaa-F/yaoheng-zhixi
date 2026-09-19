@@ -1,0 +1,164 @@
+{
+  "commit": "cdd9cb90d1f2e38fac429e82d89e46765e2317d2",
+  "linear_forecast": {
+    "input": [
+      [
+        "2026-01",
+        10
+      ],
+      [
+        "2026-02",
+        20
+      ],
+      [
+        "2026-03",
+        30
+      ]
+    ],
+    "linear_oracle": 40,
+    "actual": {
+      "status": "PASS",
+      "forecast_version": "holt-alpha0.6-beta0.3-v1",
+      "method": "Holt双参数指数平滑(α=0.6,β=0.3)",
+      "observations": 3,
+      "history_months": [
+        "2026-01",
+        "2026-03"
+      ],
+      "residual_std": 10.0,
+      "interval": "80%（样本内一步残差估计）",
+      "points": [
+        {
+          "month": "2026-04",
+          "point": 37.8,
+          "low": 24.9845,
+          "high": 50.6155,
+          "negative_warning": false
+        }
+      ],
+      "caveat": "预测基于历史成本趋势的统计外推，仅供管理参考，不构成预算承诺；实际成本受采购、工艺与产量影响。"
+    }
+  },
+  "gap_forecast": {
+    "input": [
+      [
+        "2026-01",
+        10
+      ],
+      [
+        "2026-02",
+        null
+      ],
+      [
+        "2026-03",
+        30
+      ],
+      [
+        "2026-04",
+        40
+      ]
+    ],
+    "actual": {
+      "status": "PASS",
+      "forecast_version": "holt-alpha0.6-beta0.3-v1",
+      "method": "Holt双参数指数平滑(α=0.6,β=0.3)",
+      "observations": 3,
+      "history_months": [
+        "2026-01",
+        "2026-04"
+      ],
+      "residual_std": 10.0,
+      "interval": "80%（样本内一步残差估计）",
+      "points": [
+        {
+          "month": "2026-05",
+          "point": 57.8,
+          "low": 44.9845,
+          "high": 70.6155,
+          "negative_warning": false
+        }
+      ],
+      "caveat": "预测基于历史成本趋势的统计外推，仅供管理参考，不构成预算承诺；实际成本受采购、工艺与产量影响。"
+    }
+  },
+  "benchmark_binding": {
+    "factories": [
+      "示范工厂A",
+      "示范工厂B"
+    ],
+    "metric_key": "benchmark:示范工厂A:示范工厂B:materials:rate",
+    "summary_row": {
+      "key": "materials",
+      "name": "材料",
+      "unit": "元/件",
+      "left": "15",
+      "right": "30",
+      "delta": "-15",
+      "rate": "-50.0",
+      "reason": null,
+      "contribution": "50.0",
+      "numerator": "-15",
+      "denominator": "-30",
+      "comparison_period": {
+        "start": "2026-06",
+        "end": "2026-06"
+      },
+      "comparison_object": "示范工厂A−示范工厂B",
+      "metric_refs": {
+        "delta": "benchmark:示范工厂A:示范工厂B:materials:delta",
+        "rate": "benchmark:示范工厂A:示范工厂B:materials:rate",
+        "contribution": "benchmark:示范工厂A:示范工厂B:materials:contribution"
+      }
+    },
+    "metric": {
+      "metric_id": "benchmark:示范工厂A:示范工厂B:materials:rate",
+      "value": "-50.0",
+      "display": "-50.00",
+      "unit": "%",
+      "formula": "(左厂−右厂)/右厂×100",
+      "formula_version": "normalized-cost-2-typed-drivers",
+      "numerator": "1800",
+      "denominator": "120",
+      "comparison_period": null,
+      "row_keys": [
+        "示范工厂A:2026-06:actual:materials",
+        "示范工厂A:2026-06:actual:labor",
+        "示范工厂A:2026-06:actual:overhead"
+      ],
+      "source_hash": [
+        "62858ba3eb807ff60413719c3ab79b0db1e363f75699f8ee55546f653f7915c4"
+      ],
+      "reason": null,
+      "label": "材料跨厂rate"
+    },
+    "ratio_recomputed_from_stored_binding": "1500",
+    "expected_rate": "-50.0"
+  },
+  "old_C01": {
+    "empty": "ValidationError: 1 validation error for Finding",
+    "unsupported_causality": "ValueError: missing evidence must name specific records or measurements"
+  },
+  "old_C02": {
+    "status": "INVALID",
+    "errors": [
+      {
+        "row_key": "labor:2",
+        "field": "总工时(小时)",
+        "error": "NON_FINITE_NUMBER"
+      }
+    ],
+    "arithmetic_groups": {},
+    "arithmetic_observations": 0,
+    "continuity_groups": 0,
+    "continuity_failures": []
+  },
+  "decision_advice_opposite_with_wrong_identity": {
+    "decision": "REPORT_NEEDED",
+    "reason": "本期间无报告",
+    "signals": [],
+    "advisory_status": "PASS",
+    "advisory_model": "expected",
+    "advisory_prompt_version": "decision-advisory-v1",
+    "rationale": "无需生成报告，仅更新看板即可。"
+  }
+}

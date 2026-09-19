@@ -1,0 +1,107 @@
+{
+  "audited_commit": "cdd9cb90d1f2e38fac429e82d89e46765e2317d2",
+  "date": "2026-09-19",
+  "scope": "Read-only local fixed-commit media inspection; originals untouched",
+  "directory": "07_交付/demo_20260918",
+  "files": [
+    {
+      "name": "yaoheng_demo_narrated.webm",
+      "bytes": 7860363,
+      "sha256": "fb7556f7110dd2bba082e7379033a8384dbe704224b1c84dc5227464fbfa1f7a"
+    },
+    {
+      "name": "药衡智析_演示与答辩稿.pptx",
+      "bytes": 41585,
+      "sha256": "342de75c4a64a4912a232587f54a86bb284a81ee59f65aa7f87779e5303ac98c"
+    },
+    {
+      "name": "药衡智析_演示与答辩稿_阅读版.pdf",
+      "bytes": 10635731,
+      "sha256": "49ac4752fb6ea50ea66e6bdff66a0f2284b7ae9c8560d636b743ec36e20f6b9f"
+    },
+    {
+      "name": "demo_receipt.json",
+      "bytes": 1529,
+      "sha256": "c5633f7b9f4e58d928ce4dd6589e8f971e4c9c05afa70e4f86989b4550d80be7"
+    }
+  ],
+  "video": {
+    "ffprobe": {
+      "programs": [],
+      "streams": [
+        {
+          "index": 0,
+          "codec_name": "vp8",
+          "codec_type": "video",
+          "width": 1440,
+          "height": 900
+        }
+      ],
+      "format": {
+        "duration": "100.560000"
+      }
+    },
+    "duration_seconds": 100.56,
+    "duration_human": "1分40.56秒",
+    "audio_streams": 0,
+    "actually_viewed_sample_images": [
+      "video-01.png",
+      "video-05.png",
+      "video-06.png",
+      "video-07.png",
+      "video-08.png",
+      "video-09.png",
+      "video-10.png"
+    ],
+    "frame_sampling": "ffmpeg fps=1/10, representative sampled frames; not full continuous playback",
+    "sample_observations": [
+      "Report task page shows existing generated/delivered/confirmed counts 4/4/0",
+      "RPA narration is an overlaid caption; sampled task scene does not show creating, confirming or sending a new action",
+      "Report download/open and completed artifact contents are not shown in sampled task frames"
+    ],
+    "script_facts": [
+      "Script does not create or send RPA tasks",
+      "Polling breaks on SUCCEEDED/DEGRADED/FAILED without asserting report success",
+      "Script writes receipt PASS even when report POST returns no job"
+    ],
+    "does_not_prove": "Full required end-to-end RPA sending demonstration or human attribution review"
+  },
+  "presentation": {
+    "pptx_slides": 10,
+    "native_render_pdf_pages": 10,
+    "native_render_text_matches_pptx_ignoring_whitespace": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "native_render_slides_actually_viewed": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "reading_pdf_pages": 10,
+    "reading_pdf_same_native_render": false,
+    "reading_pdf_note": "Companion PDF uses different footer/Unicode typography; do not call it identical native PPTX render",
+    "layout_observations": "10 native slides readable, no visible overflow; predominantly text-only outline, not a source-backed competition evidence deck"
+  },
+  "documentation_discrepancies": [
+    "README duration 2分52秒 differs from actual 100.56 seconds",
+    "All four README SHA256 entries differ from current bytes",
+    "README binds air2 and says verify=PASS, while current_run history says air2 model 6/7 and verify exit 1",
+    "current_run latest model run and static report/visual source runs differ; preserve provenance"
+  ]
+}

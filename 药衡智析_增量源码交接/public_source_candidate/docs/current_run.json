@@ -15,7 +15,7 @@
   "scenarios": [
     {
       "id": "mechanical",
-      "job_id": "a882b52a2081481481b6db959639083c",
+      "job_id": "bd269b405996469292ef8521e8507568",
       "status": "DEGRADED",
       "docx": "PASS",
       "pdf": "PASS",
@@ -23,7 +23,7 @@
     },
     {
       "id": "chemical",
-      "job_id": "6f83cdd441134e6ab0f78bcc4d332b97",
+      "job_id": "44aa6367278a4400838afb5a95ee3b68",
       "status": "DEGRADED",
       "docx": "PASS",
       "pdf": "PASS",
@@ -31,7 +31,7 @@
     },
     {
       "id": "pharma_synthetic",
-      "job_id": "eea07536f5a54d1eb90c595b6e16ce27",
+      "job_id": "d50793d5345e41b08bd985a6d6f350d9",
       "status": "DEGRADED",
       "docx": "PASS",
       "pdf": "PASS",
@@ -39,7 +39,7 @@
     },
     {
       "id": "S1",
-      "job_id": "28c10accfe4c47f3bac5fe72de0e2120",
+      "job_id": "e2f1bdf2ed764c04b79fad254c7df948",
       "status": "DEGRADED",
       "docx": "PASS",
       "pdf": "PASS",
@@ -47,7 +47,7 @@
     },
     {
       "id": "S2",
-      "job_id": "69f3e416e8fa4d78862eaf74a4d37a53",
+      "job_id": "f33029bd3f63466a9f955f009fe75cf8",
       "status": "DEGRADED",
       "docx": "PASS",
       "pdf": "PASS",
@@ -55,7 +55,7 @@
     },
     {
       "id": "S3",
-      "job_id": "0c270a2606f14cff8c3cbbc4b29163c0",
+      "job_id": "64a710ab34084876b49d3f346039b229",
       "status": "DEGRADED",
       "docx": "PASS",
       "pdf": "PASS",
@@ -63,7 +63,7 @@
     },
     {
       "id": "Q2",
-      "job_id": "b494f0d51f3f46a8bb9b9b4404afd61d",
+      "job_id": "c79ee1a3d13d4410817445fcf90cd206",
       "status": "DEGRADED",
       "docx": "PASS",
       "pdf": "PASS",
@@ -260,5 +260,94 @@
     "forecasting": "forecasting.py Holt α=0.6/β=0.3 + 80%区间；总体与分要素；前端叠加"
   },
   "static_delivery_note": "07_交付/demo_20260918：讲解字幕版端到端演示视频(2分52秒,webm)+10页答辩PPTX(已LibreOffice实渲染验证)+逐页PNG；来源与SHA见该目录README",
-  "reliability_note": "模型网关：1113自动端点回退（先余额后套餐）；非1113的429/5xx有界退避（20s/40s）；失败历史保留不追认"
+  "reliability_note": "模型网关：1113自动端点回退（先余额后套餐）；非1113的429/5xx有界退避（20s/40s）；失败历史保留不追认",
+  "index_reconciliation": {
+    "date": "2026-09-19",
+    "kind": "DOCUMENT_INDEX_ONLY",
+    "source_manifest": "validation/release_20260918_5974275/manifest.json",
+    "source_verification": "validation/release_20260918_5974275/verification.json",
+    "scenario_job_id_agreement": true,
+    "rerun_performed": false
+  },
+  "superseded_index_entries": {
+    "entries": [
+      {
+        "id": "mechanical",
+        "job_id": "a882b52a2081481481b6db959639083c",
+        "status": "DEGRADED",
+        "docx": "PASS",
+        "pdf": "PASS",
+        "error": null
+      },
+      {
+        "id": "chemical",
+        "job_id": "6f83cdd441134e6ab0f78bcc4d332b97",
+        "status": "DEGRADED",
+        "docx": "PASS",
+        "pdf": "PASS",
+        "error": null
+      },
+      {
+        "id": "pharma_synthetic",
+        "job_id": "eea07536f5a54d1eb90c595b6e16ce27",
+        "status": "DEGRADED",
+        "docx": "PASS",
+        "pdf": "PASS",
+        "error": null
+      },
+      {
+        "id": "S1",
+        "job_id": "28c10accfe4c47f3bac5fe72de0e2120",
+        "status": "DEGRADED",
+        "docx": "PASS",
+        "pdf": "PASS",
+        "error": null
+      },
+      {
+        "id": "S2",
+        "job_id": "69f3e416e8fa4d78862eaf74a4d37a53",
+        "status": "DEGRADED",
+        "docx": "PASS",
+        "pdf": "PASS",
+        "error": null
+      },
+      {
+        "id": "S3",
+        "job_id": "0c270a2606f14cff8c3cbbc4b29163c0",
+        "status": "DEGRADED",
+        "docx": "PASS",
+        "pdf": "PASS",
+        "error": null
+      },
+      {
+        "id": "Q2",
+        "job_id": "b494f0d51f3f46a8bb9b9b4404afd61d",
+        "status": "DEGRADED",
+        "docx": "PASS",
+        "pdf": "PASS",
+        "error": null
+      }
+    ],
+    "reason": "Not matched to this run manifest/verification; preserved for audit, not active report IDs",
+    "origin": "UNVERIFIED"
+  },
+  "receipt_linkage": {
+    "status": "PARTIAL_RUN_LEVEL_ONLY",
+    "scope": "model_live/retrieval/rpa/browser receipts identify run and commit; per-job artifact byte bindings are not supplied by all these receipts",
+    "scenario_mapping": "manifest and verification agree on all seven scenario job IDs"
+  },
+  "public_manifest": "validation/release_20260918_5974275/manifest.json",
+  "management_audit": {
+    "date": "2026-09-19",
+    "source_commit": "cdd9cb90d1f2e38fac429e82d89e46765e2317d2",
+    "document": "../../../docs/repository/AUDIT_20260919.md",
+    "automatic_status_meaning": "Archived verifier result; not independently rerun here and not competition acceptance",
+    "current_material_gaps": [
+      "Human attribution/readability/layout review pending",
+      "Latest GLM run not identical to published historical report media",
+      "Demo recording lacks an executed RPA sending step",
+      "Heatmap lacks required product/month cross-analysis",
+      "Forecast and additional backend evidence-contract issues require fixes"
+    ]
+  }
 }
