@@ -42,13 +42,16 @@ def verify() -> list[str]:
         errors.append("competition_ready requires recorded human acceptance")
 
     facts = read_json(ROOT / "docs/repository/media_facts.json")
-    for entry in facts["files"]:
-        path = APP / facts["directory"] / entry["name"]
-        if not path.is_file():
-            errors.append(f"missing media: {entry['name']}")
-            continue
-        if hashlib.sha256(path.read_bytes()).hexdigest() != entry["sha256"]:
-            errors.append(f"media checksum differs: {entry['name']}")
+    collections = [{"directory": facts["directory"], "files": facts["files"]}]
+    collections += facts.get("additional_collections", [])
+    for collection in collections:
+        for entry in collection["files"]:
+            path = APP / collection["directory"] / entry["name"]
+            if not path.is_file():
+                errors.append(f"missing media: {entry['name']}")
+                continue
+            if hashlib.sha256(path.read_bytes()).hexdigest() != entry["sha256"]:
+                errors.append(f"media checksum differs: {entry['name']}")
 
     # Current entry points only: historical audit prose is not a navigation contract.
     documents = [ROOT / "README.md", ROOT / "CONTRIBUTING.md"]

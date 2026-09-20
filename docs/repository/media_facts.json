@@ -1,14 +1,14 @@
 {
-  "date": "2026-09-19",
-  "scope": "Current generated delivery; preceding identities retained",
+  "date": "2026-09-20",
+  "scope": "Current generated delivery; superseded demo video identity retained; demo_20260920 collection enforced",
   "directory": "07_交付/delivery_20260919_final",
   "source_run": "delivery_20260919_final",
   "tested_code_commit": "04011c2a595a5d9f8efdd8de92bd5fd1dfcd8830",
   "files": [
     {
       "name": "README.md",
-      "bytes": 1771,
-      "sha256": "cb77d48e44647e9e131d094016173adb9071b489bacec2d9e35a6d253ffd1459"
+      "bytes": 1956,
+      "sha256": "cf7c4486f213712352ff70960ce6295795a70421aaed6a647fa197873e340229"
     },
     {
       "name": "deck/README.md",
@@ -92,8 +92,8 @@
     },
     {
       "name": "demo/demo_receipt.json",
-      "bytes": 10967,
-      "sha256": "d5d755eee6aca67a67df13e55c07da4706fffd5927d47c3724dc1722e5590ca5"
+      "bytes": 11334,
+      "sha256": "da72b1d9586e1bb40cce61fad77134a886f6e4575a5a32ec8890efb4ffc583de"
     },
     {
       "name": "demo/report.docx",
@@ -119,11 +119,6 @@
       "name": "demo/visual_qa.json",
       "bytes": 1754,
       "sha256": "d53d95d7dbf1610777cc47f0ed63cec20a2f202bdb6e1e95b167fa05832583d0"
-    },
-    {
-      "name": "demo/yaoheng_demo_narrated.webm",
-      "bytes": 4131180,
-      "sha256": "0ec76cfba39deef84364eaebd27af31171547542f28e7687e67b4e2e5a4f3882"
     },
     {
       "name": "human_review_pending.csv",
@@ -377,8 +372,12 @@
     }
   ],
   "video": {
-    "duration_seconds": 59.16,
-    "simulation": true
+    "duration_seconds": 169.76,
+    "simulation": true,
+    "directory": "07_交付/demo_20260920",
+    "name": "yaoheng_full_demo_20260920.mp4",
+    "sha256": "a653ecdf7908ba37e7a9af2ef2b2ba6b0b63f11efb7b0ccdcc185b67c29fb716",
+    "note": "全流程重制：可见光标+逐步中文注释+完整对标三步法；旧 narrated.webm 见 superseded_files"
   },
   "historical_collections": [
     {
@@ -545,6 +544,41 @@
         }
       ],
       "current_scope": "Current retained media with archived reading-preview identity"
+    }
+  ],
+  "superseded_files": [
+    {
+      "name": "demo/yaoheng_demo_narrated.webm",
+      "bytes": 4131180,
+      "sha256": "0ec76cfba39deef84364eaebd27af31171547542f28e7687e67b4e2e5a4f3882",
+      "duration_seconds": 59.16,
+      "reason": "用户要求的旧演示视频删除与全流程重制（提交 00c429f）；目录 README 与 demo_receipt 已加 superseded 标注",
+      "superseded_by": {
+        "directory": "07_交付/demo_20260920",
+        "name": "yaoheng_full_demo_20260920.mp4",
+        "sha256": "a653ecdf7908ba37e7a9af2ef2b2ba6b0b63f11efb7b0ccdcc185b67c29fb716",
+        "duration_seconds": 169.76,
+        "format": "mp4/h264"
+      },
+      "removed_at_commit": "00c429f"
+    }
+  ],
+  "additional_collections": [
+    {
+      "directory": "07_交付/demo_20260920",
+      "scope": "2026-09-20 全流程演示视频集合；文件身份与主台账同等强制",
+      "files": [
+        {
+          "name": "yaoheng_full_demo_20260920.mp4",
+          "bytes": 6137231,
+          "sha256": "a653ecdf7908ba37e7a9af2ef2b2ba6b0b63f11efb7b0ccdcc185b67c29fb716"
+        },
+        {
+          "name": "demo_receipt.json",
+          "bytes": 2046,
+          "sha256": "78f451d3b94ea956ce606f7bfc92c959e162d732de6e62847fdd2d5ccaa6e43f"
+        }
+      ]
     }
   ]
 }
