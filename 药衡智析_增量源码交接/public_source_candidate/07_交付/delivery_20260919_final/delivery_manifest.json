@@ -121,7 +121,10 @@
     {
       "name": "demo/yaoheng_demo_narrated.webm",
       "bytes": 4131180,
-      "sha256": "0ec76cfba39deef84364eaebd27af31171547542f28e7687e67b4e2e5a4f3882"
+      "sha256": "0ec76cfba39deef84364eaebd27af31171547542f28e7687e67b4e2e5a4f3882",
+      "removed": "2026-09-20",
+      "superseded_by": "../demo_20260920/yaoheng_full_demo_20260920.mp4",
+      "note": "旧59秒视频已删除；现行全流程演示视频见 demo_20260920"
     },
     {
       "name": "human_review_pending.csv",

@@ -1,0 +1,51 @@
+{
+  "status": "DELIVERED",
+  "delivered_at": "2026-09-20T05:33:43.234466+00:00",
+  "video": {
+    "path": "yaoheng_full_demo_20260920.mp4",
+    "format": "mp4/h264",
+    "duration_seconds": 169.8,
+    "viewport": {
+      "width": 1366,
+      "height": 768
+    },
+    "fps": 25,
+    "size_bytes": 6137231,
+    "sha256": "a653ecdf7908ba37e7a9af2ef2b2ba6b0b63f11efb7b0ccdcc185b67c29fb716",
+    "cursor": "page-rendered pointer, easeInOutQuad ~0.55px/ms, 1s hold after each move",
+    "annotations": "every operation overlaid with Chinese banner (top/bottom), 2-4s post-operation pacing",
+    "recorder": "Playwright 1.58 (msedge headless) recordVideo + ffmpeg h264; script: 05_原型/frontend/record_full_demo_20260920.mjs"
+  },
+  "tested_code_commit": "03a5a30",
+  "base_url": "http://127.0.0.1:8765",
+  "deployment": "Docker Compose 三服务（deploy/docker-compose.yml）",
+  "scenario": "pharmaceutical:competition · 银黄口服液 · 中药一厂 · 2026-06 · 月度 · 单位口径",
+  "flow": [
+    "①工作台载入赛题原始数据",
+    "②产品切换",
+    "③成本看板四指标",
+    "④⑤指标口径与来源抽屉",
+    "⑥⑦±10%自动重点分析",
+    "⑧ECharts图表",
+    "⑨跨厂对标进入",
+    "⑩找差异-差异总览",
+    "⑪拆结构-要素贡献",
+    "⑫⑬拆原因-RAG归因与证据边界",
+    "⑭⑮报告生成完成（模型参与，人工待评）",
+    "⑯Word/PDF下载",
+    "⑰⑱建议转整改任务",
+    "⑲⑳确认发送模拟RPA送达",
+    "㉑㉒任务统计与闭环总结"
+  ],
+  "evidence_binding": {
+    "report_job_mode": "llm（预热生成，录制时命中缓存）",
+    "benchmark_narrative_model_live": true,
+    "rpa": "模拟送达（不等于整改完成）",
+    "human_review": "PENDING（不由AI代填）"
+  },
+  "replaces": [
+    "delivery_20260919_final/demo/yaoheng_demo_narrated.webm",
+    "demo_20260918/yaoheng_demo_narrated.webm",
+    "release_20260918/demo/synthetic-framework-demo.mp4"
+  ]
+}

@@ -91,6 +91,9 @@ frontend/dist/
 # 2026-09-18 讲解版演示与答辩材料（视频/PPT/实渲染验证），随最终运行发布
 !/药衡智析_增量源码交接/public_source_candidate/07_交付/demo_20260918/
 !/药衡智析_增量源码交接/public_source_candidate/07_交付/demo_20260918/**
+# 2026-09-20 全流程演示视频（可见光标+逐步中文注释，替代旧三段视频），现行演示交付
+!/药衡智析_增量源码交接/public_source_candidate/07_交付/demo_20260920/
+!/药衡智析_增量源码交接/public_source_candidate/07_交付/demo_20260920/**
 # 白名单目录内的运行产物仍不入库（mock RPA 被引用时生成的缓存等）
 药衡智析_增量源码交接/public_source_candidate/00_赛题原始资料/**/__pycache__/
 药衡智析_增量源码交接/public_source_candidate/**/__pycache__/

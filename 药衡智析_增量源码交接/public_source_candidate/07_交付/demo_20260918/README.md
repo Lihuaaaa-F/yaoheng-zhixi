@@ -29,3 +29,5 @@ PPT本体及原生10页渲染可读，但以文字提纲为主，缺三场景结
 
 
 2026-09-19 治理更新：C02 的 7 份知识 PDF 使用 PACKAGE 原件，路径映射见 `docs/repository/deduplication_mapping.json`（Git 根相对路径）；CSV 与原 ZIP 保留。C05 另绘阅读 PDF/10 张 PNG 已归档移除，当前阅读使用 `pptx_render` 原生渲染；旧阅读版身份保留于媒体历史清单。默认生成仅 PPTX，`--reading-preview` 可选预览输出到忽略的 `_reading_preview/`。
+
+> 2026-09-20：本目录原演示视频文件已删除；现行全流程演示视频（2分50秒，含完整对标三步与整改闭环）见 `../demo_20260920/`。
