@@ -449,3 +449,15 @@ def test_multiple_products_preserve_isolated_costs_units_and_sources(monkeypatch
     assert first['metrics']['unit_cost']['unit']==second['metrics']['unit_cost']['unit']
     assert all(row.endswith('-second') for row in second['metrics']['unit_cost']['row_keys'])
     assert not any(row.endswith('-second') for row in first['metrics']['unit_cost']['row_keys'])
+
+
+def test_dead_registry_entry_does_not_break_catalog_and_reimport_overwrites(tmp_path,monkeypatch):
+    """注册表里指向已删除目录的条目必须被视为死条目：目录枚举不崩溃，同键再注册不冲突。"""
+    import pharma.industry as module
+    registry=tmp_path/'registry.json'
+    registry.write_text(json.dumps({'pharmaceutical:imp-gone':str(tmp_path/'deleted-enterprise.json')}),encoding='utf-8')
+    monkeypatch.setattr(module,'ENTERPRISE_REGISTRY',registry)
+    pack=load_pack('pharmaceutical')
+    entries=module._enterprises(pack)
+    assert [e['id'] for e in entries]==[entries[0]['id']]      # 死条目被跳过，目录不崩溃
+    assert 'pharmaceutical:imp-gone' not in module._registered()  # 冲突检查看不见死键，同键可再注册

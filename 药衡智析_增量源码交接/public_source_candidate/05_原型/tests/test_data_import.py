@@ -16,6 +16,10 @@ def isolated_runtime(tmp_path, monkeypatch):
     importlib.reload(config)
     importlib.reload(data_import)
     importlib.reload(model_settings)
+    # 企业注册表是 industry 的模块级常量，reload 不会跟随 config 更新；
+    # 不隔离会把指向 pytest 临时目录的条目写进共享 .runtime。
+    import pharma.industry as industry
+    monkeypatch.setattr(industry, 'ENTERPRISE_REGISTRY', tmp_path / 'enterprise_registry.json')
     return tmp_path
 
 

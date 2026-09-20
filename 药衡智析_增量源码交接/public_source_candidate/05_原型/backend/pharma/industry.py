@@ -249,7 +249,10 @@ def _load_enterprise_file(path):
 
 def _registered():
     if not ENTERPRISE_REGISTRY.is_file():return {}
-    return json.loads(ENTERPRISE_REGISTRY.read_text())
+    entries=json.loads(ENTERPRISE_REGISTRY.read_text())
+    # A registered import whose files were deleted is dead, not fatal: the
+    # catalog must keep working and a later re-import may overwrite the key.
+    return {k:v for k,v in entries.items() if Path(v).is_file()}
 
 
 def _enterprises(pack):
