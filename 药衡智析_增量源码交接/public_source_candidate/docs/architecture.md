@@ -59,7 +59,7 @@ flowchart LR
     A["原始文档<br/>PDF/DOCX/TXT/JSON"] --> B["解析 section_blocks<br/>标题继承·维修事件行隔离<br/>文档编号/版本/生效日期元数据"]
     B --> C["清洗切分<br/>500字边界+80字重叠<br/>低质分片拒收"]
     C --> D1["FTS5 索引<br/>jieba+企业词表"]
-    C --> D2["Chroma 向量<br/>bge-small-zh ONNX"]
+    C --> D2["Chroma 向量<br/>bge-large-zh ONNX"]
     Q["分析查询"] --> E{"知识图谱扩展<br/>(制药上下文)"}
     G["graph<br/>产品→药材/工序"] --> E
     E -->|"BM25 词补充"| F["双路召回"]
@@ -72,7 +72,7 @@ flowchart LR
 ```
 
 **切分策略 / Chunking**：按段落/换行边界切 500 字、保留 80 字重叠；文档控制行（编号/版本/密级）与短标题行只作元数据不进入正文证据。
-**向量化 / Embedding**：`Xenova/bge-small-zh-v1.5` 量化 ONNX，CPU 推理，SHA 指纹纳入知识版本。
+**向量化 / Embedding**：`Xenova/bge-large-zh-v1.5`（BAAI 基座，1024 维）量化 ONNX，CPU 推理，SHA 指纹纳入知识版本。
 **检索策略 / Retrieval**：BM25+向量双路，RRF 融合；含具体参数/文档名词的查询按词法锚定加权；行业包可配置 purpose 补充检索（如当期维修事件预留位）。知识图谱把所选产品的药材与工序名补充进 BM25 查询词（仅制药上下文，召回仍受全部适用性合同约束）。
 **来源定位 / Provenance**：每条证据携带文件名、页码/段落位置、文档版本与适用范围；引用进入正文前必须逐字匹配。
 

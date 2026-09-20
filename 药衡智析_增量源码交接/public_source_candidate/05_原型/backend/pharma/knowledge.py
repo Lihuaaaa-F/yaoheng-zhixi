@@ -1,7 +1,7 @@
 """版本化本地检索：文档是不可信证据，绝不当作指令执行。
 Versioned local retrieval. Documents are untrusted evidence, never instructions.
 
-检索栈：jieba 分词 + SQLite FTS5（BM25）与 Chroma 向量（bge-small-zh ONNX 量化）
+检索栈：jieba 分词 + SQLite FTS5（BM25）与 Chroma 向量（bge-large-zh ONNX 量化）
 双路召回，RRF 融合排序；候选先过产品/工厂/期间/规格/文档版本适用性过滤，
 再进入排名。切分保留标题继承与维修事件行隔离，版本指纹绑定词表与源文件。
 """
@@ -15,7 +15,7 @@ import sqlite3
 import time
 from .config import ROOT, PACKAGE, RUNTIME
 
-EMBEDDING_SHA = '75c43b069aac4d136ba6bc1122f995fedcfd2781'
+EMBEDDING_SHA = 'a48549b3259a6165364f226599cd91f39923d5d5'
 PARSER_VERSION = 'scope-prefilter-v7-private-terminology'
 RETRIEVER_VERSION = 'bm25-chroma-prefilter-rrf-v5-keyword-expansion'
 def _string_list(value, label):
@@ -204,7 +204,7 @@ class Knowledge:
         if namespace: self.path = self.path / namespace
         self.path.mkdir(parents=True, exist_ok=True)
         self.source_dir = Path(source_dir) if source_dir else package / '03_制药知识文档'
-        self.model_dir = Path(os.environ.get('PHARMA_EMBEDDING_DIR',str(runtime / 'models/bge-small-zh-v1.5')))
+        self.model_dir = Path(os.environ.get('PHARMA_EMBEDDING_DIR',str(runtime / 'models/bge-large-zh-v1.5')))
         self.vector_enabled = vector_enabled
         if reranker and not reranker_version: raise ValueError('RERANKER_VERSION_REQUIRED')
         self.reranker_version = reranker_version
@@ -309,7 +309,7 @@ class Knowledge:
                 collection.upsert(ids=[c['evidence_id'] for c in chunks],embeddings=vectors,documents=[c['text'] for c in chunks],metadatas=[{'evidence_id':c['evidence_id']} for c in chunks])
             except Exception as exc:
                 vector_error = type(exc).__name__ + ': ' + str(exc)[:180]
-        record = {'terminology_hash':terms_hash,'status':'PASS' if self.vector_enabled and not vector_error and not failures else 'DEGRADED','knowledge_version':version,'chunks':len(chunks),'pages':pages,'sources':fingerprints,'embedding':{'repo':'Xenova/bge-small-zh-v1.5','sha':EMBEDDING_SHA,'pooling':'CLS normalized','runtime':'CPU ONNX quantized'},'failures':failures,'vector_error':vector_error,'built_at':time.time()}
+        record = {'terminology_hash':terms_hash,'status':'PASS' if self.vector_enabled and not vector_error and not failures else 'DEGRADED','knowledge_version':version,'chunks':len(chunks),'pages':pages,'sources':fingerprints,'embedding':{'repo':'Xenova/bge-large-zh-v1.5','sha':EMBEDDING_SHA,'pooling':'CLS normalized','runtime':'CPU ONNX quantized'},'failures':failures,'vector_error':vector_error,'built_at':time.time()}
         (target/'chunks.json').write_text(json.dumps(chunks,ensure_ascii=False,indent=2))
         manifest.write_text(json.dumps(record,ensure_ascii=False,indent=2))
         # Parsing failure must not replace the last valid knowledge snapshot.

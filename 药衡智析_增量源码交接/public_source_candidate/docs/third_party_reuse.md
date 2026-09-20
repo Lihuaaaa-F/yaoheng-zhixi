@@ -26,9 +26,9 @@
 
 ## CPU embedding来源及权利边界
 
-实际运行的是 [Xenova/bge-small-zh-v1.5固定转换提交](https://huggingface.co/Xenova/bge-small-zh-v1.5/tree/75c43b069aac4d136ba6bc1122f995fedcfd2781)，SHA `75c43b069aac4d136ba6bc1122f995fedcfd2781`。本轮只读复用本机既有量化ONNX与tokenizer，配置为工程外PHARMA_EMBEDDING_DIR；两文件哈希经实际核验，未重新下载或公开分发。
+当前运行的是 [Xenova/bge-large-zh-v1.5固定转换提交](https://huggingface.co/Xenova/bge-large-zh-v1.5/tree/a48549b3259a6165364f226599cd91f39923d5d5)，SHA `a48549b3259a6165364f226599cd91f39923d5d5`（2026-09-21 由 bge-small-zh-v1.5 升级，1024 维）。两文件经镜像下载并按 `docs/embedding_manifest.json` 哈希核验后落位本地运行时，不进入公开源码包；此前 bge-small（SHA `75c43b06…`）的身份记录保留在该 manifest 的 previous_model 字段。
 
-基础 [BAAI/bge-small-zh-v1.5模型卡](https://huggingface.co/BAAI/bge-small-zh-v1.5) 声明MIT；本轮未在Xenova转换权重处确认独立许可证文件。因此记录为“基础模型MIT，转换权重单独许可未明确”，不能将基础模型许可自动等同转换分发已获完整确认。当前只作已授权本地CPU演示，模型缓存不进入公开源码包；正式分发前应保留出处并核对对应权利说明。
+基础 [BAAI/bge-large-zh-v1.5模型卡](https://huggingface.co/BAAI/bge-large-zh-v1.5) 声明MIT；未在Xenova转换权重处确认独立许可证文件。因此记录为“基础模型MIT，转换权重单独许可未明确”，不能将基础模型许可自动等同转换分发已获完整确认。当前只作已授权本地CPU演示，模型缓存不进入公开源码包；正式分发前应保留出处并核对对应权利说明。
 
 ## 本轮工程Skills
 

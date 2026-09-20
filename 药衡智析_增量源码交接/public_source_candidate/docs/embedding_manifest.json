@@ -1,18 +1,24 @@
 {
-  "repo": "Xenova/bge-small-zh-v1.5",
-  "revision": "75c43b069aac4d136ba6bc1122f995fedcfd2781",
-  "base_model": "BAAI/bge-small-zh-v1.5",
+  "repo": "Xenova/bge-large-zh-v1.5",
+  "revision": "a48549b3259a6165364f226599cd91f39923d5d5",
+  "base_model": "BAAI/bge-large-zh-v1.5",
   "base_model_license": "MIT",
-  "license_source": "https://huggingface.co/BAAI/bge-small-zh-v1.5/blob/main/README.md",
-  "onnx_card": "https://huggingface.co/Xenova/bge-small-zh-v1.5/blob/75c43b069aac4d136ba6bc1122f995fedcfd2781/README.md",
+  "license_source": "https://huggingface.co/BAAI/bge-large-zh-v1.5/blob/main/README.md",
+  "onnx_card": "https://huggingface.co/Xenova/bge-large-zh-v1.5/blob/a48549b3259a6165364f226599cd91f39923d5d5/README.md",
   "files": {
     "model_quantized.onnx": {
-      "sha256": "15b717c382bcb518ba457b93ea6850ede7f4f1cd8937454aa06972366cd19bcc",
-      "bytes": 24010842
+      "sha256": "49277b15e898b5cd50f87f13f677609a9cdde71d24fa8817477ca50076bf13ef",
+      "bytes": 327363707
     },
     "tokenizer.json": {
-      "sha256": "48cea5d44424912a6fd1ea647bf4fe50b55ab8b1e5879c3275f80e339e8fae26",
-      "bytes": 439125
+      "sha256": "7dfbf1966ebf99d471c3796e9b457329d2b2182b817e144f1e904b957745c839",
+      "bytes": 439124
     }
+  },
+  "previous_model": {
+    "repo": "Xenova/bge-small-zh-v1.5",
+    "revision": "75c43b069aac4d136ba6bc1122f995fedcfd2781",
+    "replaced_at": "2026-09-21",
+    "note": "bge-small 索引身份保留在历史知识版本目录；EMBEDDING_SHA 变更自动触发全量重建"
   }
 }

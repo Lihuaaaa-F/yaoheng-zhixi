@@ -7,7 +7,7 @@ sys.path.insert(0,str(APP/'backend'))
 from pharma.config import RUNTIME
 root=APP.parent;manifest=json.loads((root/'docs/embedding_manifest.json').read_text())
 external=bool(os.getenv('PHARMA_EMBEDDING_DIR'))
-target=Path(os.getenv('PHARMA_EMBEDDING_DIR',str(RUNTIME/'models/bge-small-zh-v1.5')));target.mkdir(parents=True,exist_ok=True)
+target=Path(os.getenv('PHARMA_EMBEDDING_DIR',str(RUNTIME/'models'/manifest['repo'].split('/')[-1])));target.mkdir(parents=True,exist_ok=True)
 for name,meta in manifest['files'].items():
  p=target/name
  if p.exists() and hashlib.sha256(p.read_bytes()).hexdigest()==meta['sha256']:print(name,'verified existing');continue
