@@ -74,7 +74,7 @@ def test_template_identity_sanitized_by_role_without_private_literals():
     sanitize_template_identity(doc)
     assert table.cell(0,1).text=='财务部成本会计'  # 模板md固定值（2026-09-21三轮：模板为准）
     assert table.cell(1,1).text=='财务总监'  # 模板md固定值
-    assert text.text=='药衡智析 · 成本分析'
+    assert text.text=='独立合成公司水印'  # 四轮：模板/合成水印文字原样保留（用户裁定）
     assert '合成人名' not in doc.element.xml
 
 
