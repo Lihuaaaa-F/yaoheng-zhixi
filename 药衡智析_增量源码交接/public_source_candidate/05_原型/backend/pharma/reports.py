@@ -420,7 +420,10 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
         before=p.text
         for field in dynamic:
             if '{{'+field+'}}' in before:dynamic_anchors[field]=p
-        replacements=[('整体解决方案','成本分析报告'),('ERP系统成本模块','创灵境题包模拟CSV（非实时ERP）'),('财务总监','待人工审核'),('与中药二厂',benchmark_labels(benchmark)[2])]
+        # 2026-09-21 真人评审三轮：模板已显示的文字一律原样保留（整体解决方案/
+        # ERP系统成本模块/财务总监等不再改写）；仅保留跨厂厂名的动态替换与
+        # 季度口径词替换（模板未覆盖的场合）。
+        replacements=[('与中药二厂',benchmark_labels(benchmark)[2])]
         if snapshot['analysis_type']=='quarterly':
             replacements += [('本月','本季度'),('上月','上季度'),('去年同月','去年同期季度'),('分析月份','分析期间')]
         rewrite_template_prose(p,replacements)
