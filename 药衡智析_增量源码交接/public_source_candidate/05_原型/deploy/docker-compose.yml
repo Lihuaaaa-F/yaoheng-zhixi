@@ -11,11 +11,12 @@ x-app-base: &app-base
   build:
     context: ../..
     dockerfile: 05_原型/deploy/Dockerfile
-    # 预定义代理 build-args（仅构建期生效，不进入镜像）。apt 已用国内源，
-    # 代理用于加速 pip/npm；可用 PHARMA_BUILD_PROXY 覆盖或置空禁用。
+    # 代理 build-args（仅构建期生效，不进入镜像）。默认不走代理：apt 已用国内源，
+    # pip/npm 配国内镜像，干净评测机可直接构建。开发机如需代理加速，
+    # 显式设置环境变量 PHARMA_BUILD_PROXY=http://host.docker.internal:7897 。
     args:
-      HTTP_PROXY: ${PHARMA_BUILD_PROXY:-http://host.docker.internal:7897}
-      HTTPS_PROXY: ${PHARMA_BUILD_PROXY:-http://host.docker.internal:7897}
+      HTTP_PROXY: ${PHARMA_BUILD_PROXY:-}
+      HTTPS_PROXY: ${PHARMA_BUILD_PROXY:-}
   init: true
   environment: &app-env
     PHARMA_RUNTIME_DIR: /data/runtime
@@ -28,7 +29,7 @@ x-app-base: &app-base
     RPA_BASE_URL: http://rpa:8090
     # 密钥只从宿主机文件读入；留空则系统按"确定性分析可用、模型降级"运行
     PHARMA_MODEL_KEY_FILE: ${PHARMA_MODEL_KEY_FILE:-}
-    PHARMA_MODEL: ${PHARMA_MODEL:-glm-5.3-flash}
+    PHARMA_MODEL: ${PHARMA_MODEL:-glm-5.3}
     PHARMA_MODEL_MAX_CALLS: ${PHARMA_MODEL_MAX_CALLS:-40}
     # 首次拉取向量模型优先国内镜像（内容仍按固定哈希校验）
     PHARMA_EMBEDDING_MIRROR: "1"

@@ -5,11 +5,19 @@ import FocusAnalysis from './FocusAnalysis';
 import { api, fmt, pct } from './api';
 import {cleanText,periodLabel} from './presentation';
 const colors = ['#227c81', '#729bc2', '#e8b36c', '#aa7cb1', '#be694b', '#75a98b'];
+// 接口字段名 → 业务可读表头（未收录的键原样显示，不隐藏数据）
+const KEY_LABELS: Record<string, string> = {
+    factory: '工厂', product_name: '产品名称', product: '产品', specification: '产品规格', month: '月份',
+    quantity: '产量', material_name: '原材料名称', unit_material_cost: '单位消耗成本(元/盒)', total_material_cost: '原材料总成本(元)',
+    share: '占比', expense_category: '费用类别', unit_expense: '单位费用(元/盒)', total_expense: '费用总额(元)',
+    total_labor: '直接人工总额(元)', total_hours: '总工时(小时)', workers: '生产人数(人)', working_days: '工作天数(天)',
+    name: '名称', unit: '单位', previous: '上期', current: '本期', delta: '变动额', rate: '变动率', value: '数值',
+};
 export function DataTable({ rows, empty = '暂无可用明细' }: {
     rows: any[];
     empty?: string;
 }) { if (!rows?.length)
-    return <p className="empty">{empty}</p>; const keys = Object.keys(rows[0]).filter(k => !['source_hash', 'row_key', 'metric_refs', 'evidence_refs', 'hash', 'snapshot_id'].includes(k) && !k.startsWith('_')); return <div className="table-scroll"><table><thead><tr>{keys.map(k => <th key={k}>{k}</th>)}</tr></thead><tbody>{rows.map((r, i) => <tr key={i}>{keys.map(k => <td key={k}>{typeof r[k] === 'object' ? '详见机器审计附件' : cleanText(r[k] ?? '未提供')}</td>)}</tr>)}</tbody></table></div>; }
+    return <p className="empty">{empty}</p>; const keys = Object.keys(rows[0]).filter(k => !['source_hash', 'row_key', 'metric_refs', 'evidence_refs', 'hash', 'snapshot_id'].includes(k) && !k.startsWith('_')); return <div className="table-scroll"><table><thead><tr>{keys.map(k => <th key={k}>{KEY_LABELS[k] ?? k}</th>)}</tr></thead><tbody>{rows.map((r, i) => <tr key={i}>{keys.map(k => <td key={k}>{typeof r[k] === 'object' ? '详见机器审计附件' : cleanText(r[k] ?? '未提供')}</td>)}</tr>)}</tbody></table></div>; }
 export function Details({ details }: {
     details: any;
 }) { return <section className="panel"><h2>原料与费用下钻</h2>{!details?.available ? <p className="notice">{details?.reason ?? '该工厂未提供可下钻明细，不能按比例推算。'}</p> : <><p className="muted">原料单位消耗成本是元/盒；市场行情不能替代企业采购单价或实物耗量。</p>{[['materials', '原料'], ['expenses', '制造费用'], ['labor', '人工'], ['market', '市场参考']].map(([k, title]) => <details key={k} open={k === 'materials'}><summary>{title}明细</summary><DataTable rows={details[k]}/></details>)}</>}</section>; }
@@ -23,7 +31,7 @@ export default function Analysis({ snapshot, basis, onEvidence }: {
     const [forecast,setForecast]=useState<any>(null);
     useEffect(()=>{const c=new AbortController();setForecast(null);
         const p=new URLSearchParams({context_id:snapshot.context_id,factory:snapshot.factory,product:snapshot.product,month:snapshot.month,analysis_type:snapshot.analysis_type,basis});
-        api(`/forecast?${p}`,undefined,c.signal).then(x=>{if(!c.signal.aborted)setForecast(x)}).catch(()=>{});
+        api(`/forecast?${p}`,undefined,c.signal).then(x=>{if(!c.signal.aborted)setForecast(x)}).catch(e=>{if(!c.signal.aborted)setForecast({status:'ERROR',reason:`预测加载失败：${e instanceof Error?e.message:String(e)}`})});
         return()=>c.abort()},[snapshot.snapshot_id,basis]);
     const fp=forecast?.status==='PASS'?(forecast.points??[]):[];
     const m = snapshot.metrics, elements = snapshot.elements ?? [], t = snapshot.trend ?? [], isUnit = basis === 'unit', comp = snapshot.comparison?.[comparisonKey], start = Number(comp?.base ?? 0), end = Number(comp?.current ?? 0);

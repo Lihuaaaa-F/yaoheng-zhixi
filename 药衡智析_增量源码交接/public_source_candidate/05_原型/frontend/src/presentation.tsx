@@ -21,7 +21,7 @@ export function AnalysisStatus({narrative,review}: {narrative:any;review?:any}) 
  const mode=narrative?.generation_mode;
  const generation=mode==='llm'&&narrative?.model_live===true?'模型解释':mode==='mixed'?'模型与规则混合解释':mode==='rules'?'规则分析':'解释来源待核验';
  const verified=Boolean(review?.readability?.reviewer&&review?.visual_quality?.reviewer); const reviewedScore=review?.human_attribution_score;
- return <p className={narrative?.status==='PASS'?'muted':'notice'}>解释来源：{generation}。解释合同：{narrative?.status==='PASS'?'已通过':'待补充或复核'}。人工审核：{verified?'已审核':review?.status==='STALE'?'原审核已失效，待重审':'待评'}{verified&&Number.isFinite(reviewedScore)?`；归因评分 ${reviewedScore}/5`:''}。</p>;
+ return <p className={narrative?.status==='PASS'?'muted':'notice'}>解释来源：{generation}。{narrative?.status==='PASS'?'数字与证据自动校验已通过。':'部分解释未通过数字与证据自动校验，已降级为基础分析；可重新生成。'}人工审核：{verified?'已审核':review?.status==='STALE'?'原审核已失效，待重审':'待评'}{verified&&Number.isFinite(reviewedScore)?`；归因评分 ${reviewedScore}/5`:''}。</p>;
 }
 const dimensions=[['file_openable','文件可打开'],['calculation_consistency','计算一致'],['section_completeness','章节实质完整'],['evidence_applicability','证据适用'],['readability','内容可读'],['visual_quality','视觉合格'],['task_actionability','任务可执行'],['model_participation','模型实际参与']];
 const statusText=(s:any)=>({PASS:'通过',FAIL:'未通过',FAILED:'未通过',PENDING:'待评',PENDING_HUMAN:'待人工评审',NOT_RUN:'未验证',DEGRADED:'未通过',NOT_APPLICABLE:'不适用',BLOCKED:'未通过',UNVERIFIED:'未验证'}[String(s)]??'待评');

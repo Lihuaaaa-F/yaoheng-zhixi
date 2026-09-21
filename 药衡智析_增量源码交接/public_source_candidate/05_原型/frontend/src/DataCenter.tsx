@@ -125,8 +125,8 @@ export default function DataCenter() {
         <button className="primary" disabled={busy} onClick={doValidate}>执行质量检查与能力预览</button>
       </div>
       {preview && <div className="table-scroll" style={{ marginTop: 16 }}>
-        <table><thead><tr><th>预览（前 8 行 / 共 {preview.row_count} 行）</th>{preview.sample_rows?.[0]?.map((_: any, i: number) => <th key={i}>列{i + 1}</th>)}</tr></thead>
-          <tbody>{(preview.sample_rows ?? []).slice(0, 8).map((row: any, i: number) => <tr key={i}>{headers[i] && <td>{headers[i]}</td>}{row.map((c: any, j: number) => <td key={j}>{c}</td>)}</tr>)}</tbody></table>
+        <table><thead><tr><th>预览（前 8 行 / 共 {preview.row_count} 行）</th>{(headers.length ? headers : (preview.sample_rows?.[0] ?? []).map((_: any, i: number) => `列${i + 1}`)).map((h: string, i: number) => <th key={i}>{h}</th>)}</tr></thead>
+          <tbody>{(preview.sample_rows ?? []).slice(0, 8).map((row: any, i: number) => <tr key={i}><td className="muted">{i + 1}</td>{row.map((c: any, j: number) => <td key={j}>{c}</td>)}</tr>)}</tbody></table>
       </div>}
     </section>}
 

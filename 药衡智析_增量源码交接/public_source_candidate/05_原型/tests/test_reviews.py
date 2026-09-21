@@ -94,3 +94,26 @@ def test_draft_preview_and_final_download_contract(tmp_path):
     import pytest
     with pytest.raises(ValueError):
         store.artifact_path(job['id'] + '-docx')
+
+
+def test_fail_verdict_never_claims_all_passed():
+    """回归：evidence_applicability 判 FAIL 时理由禁止出现"全部通过"。
+
+    三种失败来源（证据检索异常 / 未进入适用性核对 / 逐条不通过）都必须
+    在 reason 中如实呈现，否则回执自相矛盾。2026-09-21 审计问题 #15。
+    """
+    actionable = {'claim_type': 'recommendation', 'suggestion': '核对采购合同', 'verification_target': '本期采购',
+                  'expected_evidence': ['合同'], 'responsible_role': '采购部', 'deadline_basis': '复核前'}
+    base = {'docx': {'status': 'PASS', 'verification': {'core_numbers': True, 'numeric_bindings_checked': 90, 'numeric_binding_failures': []}},
+            'pdf': {'status': 'PASS'}, 'evidence': {'status': 'PASS', 'evidence': []},
+            'narrative': {'status': 'DEGRADED', 'model_live': True, 'evidence_applicability_checked': False, 'findings': [actionable]}}
+    dim = assess_report(base)['evidence_applicability']
+    assert dim['status'] == 'FAIL'
+    assert dim['reason'].startswith('证据适用未通过：')
+    assert '；全部通过' not in dim['reason']
+    assert '数字合同' in dim['reason']
+    base2 = {**base, 'evidence': {'status': 'DEGRADED'}}
+    dim2 = assess_report(base2)['evidence_applicability']
+    assert dim2['status'] == 'FAIL'
+    assert '；全部通过' not in dim2['reason']
+    assert '证据检索状态异常' in dim2['reason']

@@ -805,11 +805,15 @@ def assess_report(result,review=None):
         dim=(review or {}).get('dimensions',{}).get(dimension) if review else None
         if not dim:return {'status':'PENDING','reason':default_reason}
         return {'status':dim['status'],'reason':dim.get('comment') or '','reviewer':review.get('reviewer'),'reviewed_at':review.get('reviewed_at'),'review_id':review.get('id')}
+    evidence_reasons=[]
+    if not evidence_ok:evidence_reasons.append(f'证据检索状态异常（{ev.get("status") if isinstance(ev,dict) else "不可用"}），不满足适用性核对前提')
+    if not n.get('evidence_applicability_checked'):evidence_reasons.append('模型解释未全部通过数字合同校验，未进入证据适用性逐条核对')
+    evidence_reasons.extend(f'{i+1}. {msg}' for i,msg in enumerate(claim_failures[:5]))
     r={
       'file_openable':verdict(dx.get('status')=='PASS' and pdf.get('status')=='PASS','DOCX结构检查与PDF实际打开'),
       'calculation_consistency':verdict(checks.get('core_numbers') and _binding_floor(checks)<=checks.get('numeric_bindings_checked',0) and not checks.get('numeric_binding_failures'),'固定快照与模板位置逐项核对'),
       'section_completeness':human('section_completeness','六个固定章节的业务实质待真人评审'),
-      'evidence_applicability':verdict(evidence_ok and bool(n.get('evidence_applicability_checked')) and not claim_failures,f'逐条核对{claims_checked}项结论的证据引用与适用性；'+('全部通过' if not claim_failures else '；'.join(claim_failures[:5]))),
+      'evidence_applicability':verdict(evidence_ok and bool(n.get('evidence_applicability_checked')) and not claim_failures, f'逐条核对{claims_checked}项结论的证据引用与适用性；全部通过' if not evidence_reasons else '证据适用未通过：'+'；'.join(evidence_reasons)),
       'readability':human('readability','真人可读性评审待完成'),
       'visual_quality':human('visual_quality','逐页渲染检查与真人版式审核待完成'),
       'task_actionability':verdict(bool(actions) and all(all(isinstance(f.get(k),str) and f[k].strip() and not RESIDUAL.search(f[k]) for k in ('suggestion','verification_target','responsible_role','deadline_basis')) and isinstance(f.get('expected_evidence'),list) and bool(f['expected_evidence']) and all(isinstance(x,str) and x.strip() and not RESIDUAL.search(x) for x in f['expected_evidence']) for f in actions),'建议必须包含对象、预期证据、责任角色和期限依据'),
