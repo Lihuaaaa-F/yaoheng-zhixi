@@ -37,8 +37,9 @@ export default function DataCenter() {
   const [packs, setPacks] = useState<any[]>([]);
   const [imports, setImports] = useState<ImportRecord[]>([]);
 
-  const refreshImports = () => api('/imports').then(setImports).catch(() => setImports([]));
-  useState(() => { void refreshImports(); api('/industry/catalog').then((x: any) => { setPacks(x.industries ?? x.packs ?? []); const first = (x.industries ?? x.packs ?? [])[0]; if (first) setPackId(first.industry_id ?? first.id ?? ''); }).catch(() => {}); });
+  const [importsError,setImportsError]=useState('');
+  const refreshImports = () => api('/imports').then(x=>{setImports(x);setImportsError('')}).catch(e=>{setImports([]);setImportsError(e instanceof Error?e.message:String(e))});
+  useState(() => { void refreshImports(); api('/industry/catalog').then((x: any) => { setPacks(x.industries ?? x.packs ?? []); const first = (x.industries ?? x.packs ?? [])[0]; if (first) setPackId(first.industry_id ?? first.id ?? ''); }).catch(e=>setImportsError(e instanceof Error?e.message:String(e))); });
 
   const doUpload = async () => {
     if (!file) { setError('请先选择文件'); return; }
@@ -171,7 +172,8 @@ export default function DataCenter() {
 
     <section className="panel">
       <h2>导入历史</h2>
-      {imports.length === 0 ? <div className="empty">还没有导入记录</div> : <div className="table-scroll"><table>
+      {importsError && <p className="error" role="alert">导入历史加载失败：{importsError}</p>}
+      {!importsError && imports.length === 0 ? <div className="empty">还没有导入记录</div> : <div className="table-scroll"><table>
         <thead><tr><th>类型</th><th>文件</th><th>大小</th><th>编码</th><th>状态</th><th>时间</th></tr></thead>
         <tbody>{imports.map((r, i) => <tr key={r.id ?? i}><td>{KIND_LABELS[r.kind] ?? r.kind}</td><td>{r.filename}</td><td>{((r.size ?? 0) / 1024).toFixed(1)} KB</td><td>{r.encoding || '—'}</td><td>{r.status}{r.meta?.published ? '（已发布）' : ''}</td><td className="muted">{(r.created ?? '').slice(0, 19).replace('T', ' ')}</td></tr>)}</tbody>
       </table></div>}
