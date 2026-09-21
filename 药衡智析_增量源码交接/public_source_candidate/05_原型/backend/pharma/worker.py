@@ -42,6 +42,10 @@ def process_job(store,job):
         if 'snapshot' not in result:result['snapshot']=store.get_snapshot(payload['snapshot_id'])
         snapshot=result['snapshot'];snapshot['template_version']=payload.get('versions',{}).get('template','UNKNOWN');store.update(id,'RETRIEVING',result)
         if 'evidence' not in result:
+            # 知识源幂等校验（2026-09-21 修复）：build() 内部按源文件指纹判断，
+            # 源未变化时秒级返回；补充知识目录增删改后报告链路自动纳入新版本，
+            # 不再依赖手动触发构建（实测旧版本会在检索侧静默沿用）。
+            Knowledge().build()
             from .context_services import retrieve
             result['evidence']=retrieve(snapshot,snapshot['product']+' 工序 批次 成本 维修 单耗 核查')
         store.update(id,'GENERATING',result)

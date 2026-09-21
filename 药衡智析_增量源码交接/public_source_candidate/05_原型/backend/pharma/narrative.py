@@ -688,7 +688,7 @@ class ModelGateway:
         self.credential_scope = {'host': urlsplit(self.base_url).hostname, 'protocol': self.provider,
                                  'source': 'key_file' if keypath and generic_key else
                                            'PHARMA_API_KEY' if generic_key else 'GLM/ZHIPU_ENV' if self.key else 'NONE'}
-        self.client = client or httpx.Client(timeout=httpx.Timeout(55,connect=15), follow_redirects=False)
+        self.client = client or httpx.Client(timeout=httpx.Timeout(float(os.getenv('PHARMA_MODEL_TIMEOUT','90')),connect=15), follow_redirects=False)
         self.max_calls = max_calls if max_calls is not None else int(os.getenv('PHARMA_MODEL_MAX_CALLS','40'))
         self.max_repairs = max(0,min(2,max_repairs if max_repairs is not None else int(os.getenv('PHARMA_MODEL_MAX_REPAIRS','2'))))
         self.dbpath = self.runtime/'model_gateway.sqlite3'
@@ -775,7 +775,10 @@ class ModelGateway:
                 body = {'model':self.model,'max_tokens':2500,'system':system,'messages':[{'role':'user','content':user}]}
             elif self.provider == 'openai':
                 body = {'model':self.model,'max_tokens':int(os.getenv('PHARMA_MODEL_MAX_TOKENS','8192')),'temperature':0,'response_format':{'type':'json_object'},'messages':[{'role':'system','content':system},{'role':'user','content':user}]}
-                if self.model == 'glm-5.3-flash':
+                # GLM-5 系列始终思考（端点错误 1210 明示不支持关闭）：
+                # flash 与 glm-5.3 都必须显式给 reasoning_effort，low 档显著
+                # 降低时延（2026-09-21 实测 glm-5.3 默认档 55s+ 读超时）。
+                if self.model.startswith('glm-5'):
                     effort=os.getenv('PHARMA_MODEL_REASONING_EFFORT','low')
                     if effort not in ('low','high','max'):raise ValueError('UNSUPPORTED_GLM_REASONING_EFFORT')
                     body['reasoning_effort']=effort
