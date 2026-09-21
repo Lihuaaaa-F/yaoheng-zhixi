@@ -15,7 +15,7 @@ RESIDUAL = re.compile(r'\{\{[^{}]*\}\}|\[\[[^\[\]]*\]\]')
 _TEMPLATE_DIR = Path(os.environ.get('PHARMA_TEMPLATE_DIR', str(ROOT / '04_方案与文档')))
 TEMPLATE = _TEMPLATE_DIR / '月度成本分析报告工作模板.docx'
 MAP_PATH = _TEMPLATE_DIR / 'placeholder_map.json'
-RENDERER_VERSION='reader-20260921-template-v6'
+RENDERER_VERSION='reader-20260921-template-v7'
 NA = 'N/A（无可用基期或明细）'
 
 def replace_text_nodes(nodes, mapping):
@@ -334,13 +334,8 @@ def sanitize_template_identity(doc):
                             _text(paragraph, paragraph.text, '')
     parts = [doc.part] + [section.header.part for section in doc.sections] + [section.footer.part for section in doc.sections]
     for part in parts:
-        for watermark in part.element.xpath('.//*[local-name()="textpath"]'):
-            if watermark.get('string') is not None:watermark.set('string','药衡智析 · 成本分析')
-        for box in part.element.xpath('.//*[local-name()="txbxContent"]'):
-            nodes = list(box.iter('{'+W+'}t'))
-            if nodes:
-                nodes[0].text = '药衡智析 · 成本分析'
-                for node in nodes[1:]: node.text = ''
+        # 2026-09-21 四轮（用户裁定）：模板水印文字原样保留，不再改写。
+        pass
     doc.core_properties.author = '药衡智析演示团队'
     doc.core_properties.last_modified_by = '药衡智析'
 
@@ -852,9 +847,9 @@ def add_reader_summary(doc,snapshot,narrative,output):
     anchor.insert_paragraph_before('核心发现：本月单位成本 '+number(m['unit_cost'])+' 元/盒，总成本 '+number(m['total_cost'])+' 元。对成本影响最大的是'+lead['name']+'，每盒比上月'+('增加' if _lead_delta>=0 else '减少')+' '+number(str(lead.get('unit_delta') or '0').lstrip('-'))+' 元。正文第三节按要素拆解变动并给出方向评估，第五节是与中药二厂的对比，第六节给出可直接执行的核查建议。')
     # 目录（真人评审二轮）：完整子目录；条目插在模板目录域提示行之后（保留域可更新），
     # 一级行保持全角空格前缀以兼容 convert_pdf 的页码回写。
-    hint=next((p for p in doc.paragraphs if '更新域' in p.text),None)
-    if hint is None:return
-    insert_at=hint
+    title=next((p for p in doc.paragraphs if p.text.strip().replace(chr(0x3000),'').replace(' ','')=='目录'),None)
+    if title is None:return
+    insert_at=title
     heads=[(para,layout_text(para.text).strip()) for para in doc.paragraphs]
     heads=[(para,t) for para,t in heads if re.match(r'^[一二三四五六七八九十]+、',t) or re.match(r'^[1-9][.][1-9](?:[.][1-9])?[ ]',t)]
     for index,(para,t) in enumerate(heads):
