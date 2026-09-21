@@ -689,7 +689,7 @@ def convert_pdf(docx_path,timeout=90,converter='libreoffice',_toc_pass=0):
                 if not start.paragraph_format.page_break_before:
                     start.paragraph_format.page_break_before=True;layout_changed=True
         # 竖排目录逐行回填实际页码；目录标题行(带YH_TOC书签)保持不变
-        toc_lines={'一、基本信息':'一、封面与基本信息','二、总成本概览':'二、总成本概览','三、要素明细':'三、成本要素明细分析','四、专项分析':'四、重点产品专项分析','五、对标分析':'五、对标分析','六、总结与建议':'六、总结与建议'}
+        toc_lines={k:k for k in ('一、封面与基本信息','二、总成本概览','三、成本要素明细分析','四、重点产品专项分析','五、对标分析','六、总结与建议')}
         toc_updated=False;toc_verified={}
         for paragraph in d.paragraphs:
             text=paragraph.text
