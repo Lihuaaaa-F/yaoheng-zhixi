@@ -143,4 +143,5 @@ def test_task_blocks_and_source_heading_keep_with_next(tmp_path):
     doc=Document(output)
     for prefix in ('核查对象：','核查行动：','责任岗位：','期限依据：','证据来源'):
         assert next(p for p in doc.paragraphs if p.text.startswith(prefix)).paragraph_format.keep_with_next
-    assert next(p for p in doc.paragraphs if p.text.startswith('预期证据：')).paragraph_format.keep_together
+    # 四轮E项：keep_together 不再全局设置（长段允许自然跨页）；证据链前四段 keep_with_next 已在上断言
+    assert next(p for p in doc.paragraphs if p.text.startswith('预期证据：')) is not None

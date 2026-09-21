@@ -1,5 +1,6 @@
 """Synthetic regressions for numeric grouping and report comparison labels."""
 from docx import Document
+from docx.shared import Pt
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 import pytest
@@ -19,13 +20,17 @@ def test_numeric_unit_group_preserves_runs_and_bookmark():
     once=p.text;style_reader(doc);assert p.text==once
 
 
-def test_plain_named_heading_and_source_keep_next():
+def test_style_reader_preserves_template_content_and_styles_additions():
+    """四轮E项：style_reader 不再覆盖模板内容样式；只装饰图题与目录行。"""
     doc=Document();heading=doc.add_heading('总成本概览',1)
     source=doc.add_paragraph('证据来源');doc.add_paragraph('合成证据条目')
+    cap=doc.add_paragraph('图｜测试图题');toc=doc.add_paragraph(chr(0x3000)+'一、测试')
+    heading.runs[0].font.size=Pt(15)
     style_reader(doc)
-    assert heading.paragraph_format.keep_with_next
-    assert source.paragraph_format.keep_with_next
-    assert all(run.bold for run in heading.runs)
+    assert heading.runs[0].font.size==Pt(15)  # 模板/普通内容样式不被覆盖
+    assert not (source.paragraph_format.first_line_indent or 0)
+    assert cap.alignment is not None and cap.runs[0].font.size==Pt(8.5)
+    assert toc.runs[0].font.size==Pt(10.5)
 
 
 @pytest.mark.parametrize('left,right', [('示范工厂A','示范工厂B'),('示范工厂B','示范工厂A')])
@@ -82,7 +87,7 @@ def test_footer_replaces_legacy_textbox_and_preserves_explicit_page_roles():
     assert not footer._element.xpath('.//*[local-name()="txbxContent"]')
     assert [x.get(qn('w:instr')) for x in footer._element.xpath('.//w:fldSimple')]==['PAGE','NUMPAGES']
     all_text=''.join(x.text or '' for x in footer._element.iter(qn('w:t')))
-    assert all_text=='第 1 页 / 共 1 页'
+    assert all_text=='第1页共1页'  # 模板页脚格式（四轮E项）
     rebuild_report_footer(doc)
     assert len(footer.paragraphs)==1
 
@@ -156,8 +161,8 @@ def test_footer_body_clearance_and_full_period_label():
     from pharma.reports import report_period_label, benchmark_precision
     doc=Document();doc.add_paragraph('独立合成正文');style_reader(doc)
     section=doc.sections[0]
-    assert section.bottom_margin.cm == pytest.approx(2.2,abs=.01)
-    assert section.footer_distance.cm == pytest.approx(1.0,abs=.01)
+    # 四轮E项：模板节边距不再被覆盖（默认 2.54cm 保持原样）
+    assert section.bottom_margin.cm == pytest.approx(2.54,abs=.01)
     assert section.bottom_margin.pt-section.footer_distance.pt > 30
     context={'month':'2026-06','analysis_type':'quarterly','period':{'start':'2026-04','end':'2026-06'}}
     assert report_period_label(context)=='2026-04 至 2026-06'
