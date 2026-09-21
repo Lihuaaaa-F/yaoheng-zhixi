@@ -150,7 +150,7 @@ def test_reference_verifier_declares_expected_bindings(tmp_path):
 
 # ---------- fix4：叙事模型路由贯穿配置解析与实际调用 ----------
 
-def test_generate_defaults_to_narrative_route(monkeypatch, tmp_path):
+def test_generate_defaults_to_analysis_route(monkeypatch, tmp_path):
     routes_requested = []
 
     class GatewayStub:
@@ -171,7 +171,7 @@ def test_generate_defaults_to_narrative_route(monkeypatch, tmp_path):
     from pharma.industry import analyze_reference
     snapshot = analyze_reference('mechanical_demo:synthetic-mechanical', month='2026-06')
     result = narrative.generate(snapshot, {'status': 'PASS', 'evidence': []}, use_cache=False)
-    assert routes_requested == ['narrative']
+    assert routes_requested == ['analysis']
     assert result['model'] == 'route-model'
 
 

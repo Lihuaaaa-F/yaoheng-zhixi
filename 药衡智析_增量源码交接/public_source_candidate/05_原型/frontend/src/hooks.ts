@@ -1,5 +1,5 @@
-// 数据获取 hooks（2026-09-21 重构 #23）：从 App.tsx 抽出的任务/整改轮询逻辑，
-// 状态归属与轮询节奏集中一处；App 只消费 {jobs, actions, refresh}。
+// 数据获取 hooks（2026-09-21 重构 #23；2026-09-22 三模块改版）：报告生成/
+// 问题整改两个工作台子页需要任务与整改轮询；tab<0 表示当前页不轮询。
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, contextQuery } from './api';
 import { Job, RpaAction } from './types';
@@ -12,6 +12,7 @@ export function useJobsActions(tab: number, contextId: string) {
   currentContext.current = contextId;
   const refresh = useCallback(async () => {
     const id = contextId;
+    if (!id) return;
     const [j, a] = await Promise.all([api(`/jobs?${contextQuery(id)}`), api(`/actions?${contextQuery(id)}`)]);
     if (currentContext.current !== id) return;
     setJobs(Array.isArray(j) ? j : []);

@@ -210,11 +210,19 @@ class Knowledge:
         # 语义不变；文件哈希计入知识版本指纹，增删改自动重建。
         from .config import KNOWLEDGE_SUPPLEMENT_DIR
         self.extra_dir = None
+        self.ingest_dir = None
         if not self.context and self.source_files is None and source_dir is None:
             supplement = Path(KNOWLEDGE_SUPPLEMENT_DIR)
             if supplement.is_dir():
                 self.extra_dir = supplement
-        self.model_dir = Path(os.environ.get('PHARMA_EMBEDDING_DIR',str(runtime / 'models/bge-large-zh-v1.5')))
+            # 数据中心“知识库数据”用户上传的资料落库目录（2026-09-22 三模块改版）：
+            # 与补充目录同语义，仅默认上下文追加；文件哈希进入版本指纹。
+            ingest = RUNTIME / 'imports' / 'knowledge'
+            if ingest.is_dir():
+                self.ingest_dir = ingest
+        # 向量模型目录：环境变量 → 模型设置文件（向量模型“确认”切换后写入）→ 默认。
+        from . import model_settings as _model_settings
+        self.model_dir = _model_settings.embedding_dir()
         self.vector_enabled = vector_enabled
         if reranker and not reranker_version: raise ValueError('RERANKER_VERSION_REQUIRED')
         self.reranker_version = reranker_version
@@ -238,21 +246,32 @@ class Knowledge:
             self._embedding = CpuEmbedding(self.model_dir)
         return self._embedding
 
-    def build(self):
+    def build(self, progress=None):
         from .locks import exclusive
         with exclusive(self.path / 'build.lock'):
-            return self._build()
+            return self._build(progress)
 
-    def _build(self):
+    def _build(self, progress=None):
+        def _report(pct, detail):
+            if progress is not None:
+                try: progress(int(pct), detail)
+                except Exception: pass  # 进度回调绝不影响构建本身
         # An explicit enterprise entry is an allowlist, never a hint to scan its
         # parent. Directory mode remains for the private competition document set.
         sources = sorted(self.source_files) if self.source_files is not None else sorted(p for p in self.source_dir.iterdir() if p.suffix.lower() in ('.pdf','.docx','.txt') or p.name == 'knowledge.json')
-        if self.source_files is None and self.extra_dir is not None:
-            sources = sources + sorted(p for p in self.extra_dir.iterdir()
-                                       if p.suffix.lower() in ('.pdf','.docx','.txt') and p.is_file())
+        if self.source_files is None:
+            if self.extra_dir is not None:
+                sources = sources + sorted(p for p in self.extra_dir.iterdir()
+                                           if p.suffix.lower() in ('.pdf','.docx','.txt') and p.is_file())
+            if self.ingest_dir is not None:
+                sources = sources + sorted(p for p in self.ingest_dir.iterdir()
+                                           if p.suffix.lower() == '.txt' and p.is_file())
+        from . import model_settings as _model_settings
+        embedding_sha = _model_settings.embedding_fingerprint(self.model_dir)
+        _report(5, f'读取知识源（{len(sources)} 份）…')
         fingerprints = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in sources}
         terms_hash=terminology_hash()
-        version = hashlib.sha256(json.dumps([fingerprints, EMBEDDING_SHA, PARSER_VERSION, self.context, terms_hash], sort_keys=True).encode()).hexdigest()[:20]
+        version = hashlib.sha256(json.dumps([fingerprints, embedding_sha, PARSER_VERSION, self.context, terms_hash], sort_keys=True).encode()).hexdigest()[:20]
         target = self.path / version
         manifest = target / 'manifest.json'
         if manifest.exists():
@@ -260,10 +279,12 @@ class Knowledge:
             if record['status'] == 'PASS' or (not self.vector_enabled and not record.get('failures')):
                 (self.path/'CURRENT.tmp').write_text(version)
                 os.replace(self.path/'CURRENT.tmp',self.path/'CURRENT')
+                _report(100, '知识索引已是最新版本，直接切换')
                 return record
         target.mkdir(exist_ok=True)
         chunks, failures, pages = [], [], 0
-        for source in sources:
+        for index, source in enumerate(sources):
+            _report(8 + 20 * index / max(len(sources), 1), f'解析文档 {index + 1}/{len(sources)}：{source.name}')
             try:
                 source_pages = set()
                 for block in section_blocks(source,self.context.get('industry_id')):
@@ -299,6 +320,7 @@ class Knowledge:
                 failures.append({'source':source.name,'reason':type(exc).__name__})
         if not chunks:
             return {'status':'FAILED','failures':failures,'knowledge_version':version}
+        _report(28, f'文档解析完成（{len(chunks)} 个知识分块），建立词法索引…')
         dbtmp = target / 'fts.sqlite.tmp'
         if dbtmp.exists(): dbtmp.unlink()
         db = sqlite3.connect(dbtmp)
@@ -312,17 +334,25 @@ class Knowledge:
         finally:
             db.close()  # Windows cannot replace a file with an open handle
         os.replace(dbtmp,target/'fts.sqlite')
+        _report(45, '词法索引（BM25）完成，开始向量索引…')
         vector_error = None
         if self.vector_enabled:
             try:
                 import chromadb
-                vectors = self._model().encode([c['text'] for c in chunks])
                 client = chromadb.PersistentClient(path=str(target/'chroma'), settings=chromadb.Settings(anonymized_telemetry=False))
                 collection = client.get_or_create_collection('pharma_evidence',metadata={'hnsw:space':'cosine'})
-                collection.upsert(ids=[c['evidence_id'] for c in chunks],embeddings=vectors,documents=[c['text'] for c in chunks],metadatas=[{'evidence_id':c['evidence_id']} for c in chunks])
+                texts=[c['text'] for c in chunks]; ids=[c['evidence_id'] for c in chunks]
+                documents=texts; metadatas=[{'evidence_id':c['evidence_id']} for c in chunks]
+                batch=32
+                for offset in range(0,len(texts),batch):
+                    sl=slice(offset,min(offset+batch,len(texts)))
+                    vectors=self._model().encode(texts[sl])
+                    collection.upsert(ids=ids[sl],embeddings=vectors,documents=documents[sl],metadatas=metadatas[sl])
+                    _report(45+40*(offset+batch)/max(len(texts),1), f'向量化 {min(offset+batch,len(texts))}/{len(texts)} 段')
             except Exception as exc:
                 vector_error = type(exc).__name__ + ': ' + str(exc)[:180]
-        record = {'terminology_hash':terms_hash,'status':'PASS' if self.vector_enabled and not vector_error and not failures else 'DEGRADED','knowledge_version':version,'chunks':len(chunks),'pages':pages,'sources':fingerprints,'embedding':{'repo':'Xenova/bge-large-zh-v1.5','sha':EMBEDDING_SHA,'pooling':'CLS normalized','runtime':'CPU ONNX quantized'},'failures':failures,'vector_error':vector_error,'built_at':time.time()}
+        _report(90, '索引构建完成，写入清单并验证…')
+        record = {'terminology_hash':terms_hash,'status':'PASS' if self.vector_enabled and not vector_error and not failures else 'DEGRADED','knowledge_version':version,'chunks':len(chunks),'pages':pages,'sources':fingerprints,'embedding':{'repo':self.model_dir.name,'path':str(self.model_dir),'sha':embedding_sha,'pooling':'CLS normalized','runtime':'CPU ONNX quantized' if self.model_dir.is_dir() else 'unknown'},'failures':failures,'vector_error':vector_error,'built_at':time.time()}
         (target/'chunks.json').write_text(json.dumps(chunks,ensure_ascii=False,indent=2))
         manifest.write_text(json.dumps(record,ensure_ascii=False,indent=2))
         # Parsing failure must not replace the last valid knowledge snapshot.

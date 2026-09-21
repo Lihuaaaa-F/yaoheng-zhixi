@@ -21,13 +21,13 @@ PACKAGE = Path(os.environ.get('PHARMA_DATA_PACKAGE',str(ROOT / '00_赛题原始�
 # 不受影响。
 KNOWLEDGE_SUPPLEMENT_DIR = Path(os.environ.get('PHARMA_KNOWLEDGE_SUPPLEMENT_DIR',
     str(ROOT / 'competition_configuration/knowledge_supplement')))
-# 中药二厂合成明细目录（2026-09-21 修复 #19，用户授权"构建标注合成明细"）：
-# 题包二厂仅有成本汇总；本目录 CSV 由 scripts/generate_synthetic_plant2_details.py
-# 按一厂结构比例生成、Decimal 精确校准至二厂汇总（audit 全通过）。文件哈希进入
-# 数据快照指纹；置 PHARMA_SYNTHETIC_DETAIL_DIR='' 可完全停用（回到纯题包口径）。
-SYNTHETIC_DETAIL_DIR = Path(os.environ.get('PHARMA_SYNTHETIC_DETAIL_DIR',
-    str(ROOT / 'competition_configuration/synthetic_detail_中药二厂'))) \
-    if os.environ.get('PHARMA_SYNTHETIC_DETAIL_DIR', 'default') != '' else None
+# 中药二厂合成明细（2026-09-21 修复 #19 构建的标注合成明细）：
+# 2026-09-22 三模块改版后默认停用——对标"拆结构/拆原因"按题包真实汇总口径
+# 执行，二厂缺明细时以"证据支持假设/证据不足"输出归因推测，不再以合成明细
+# 演示结构结论。评测对照需要时显式设 PHARMA_SYNTHETIC_DETAIL_DIR=<目录>
+# 重新启用（脚本 scripts/generate_synthetic_plant2_details.py 可重建）。
+_env_synth = os.environ.get('PHARMA_SYNTHETIC_DETAIL_DIR', '')
+SYNTHETIC_DETAIL_DIR = Path(_env_synth) if _env_synth.strip() else None
 SYNTHETIC_DETAIL_FACTORIES = {'中药二厂'} if SYNTHETIC_DETAIL_DIR is not None else set()
 DB_PATH = RUNTIME / 'app.sqlite3'
 ARTIFACTS = Path(os.environ.get('PHARMA_ARTIFACTS_DIR',str(ROOT / '07_交付/业务报告')))

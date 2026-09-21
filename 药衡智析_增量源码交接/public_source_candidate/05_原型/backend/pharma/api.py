@@ -106,7 +106,11 @@ def get_catalog(context_id:str|None=None):
 def analysis(req:AnalysisRequest):
     from .dashboard import focus_analysis
     snapshot=store.snapshot(scoped_analysis(req))
-    enabled=os.getenv('PHARMA_AUTO_EXPLAIN','false').lower() in ('1','true','yes')
+    # 赛题 5.2.3：要素环比严格超过±10%自动生成重点分析段落——默认开启自动
+    # 模型解释（2026-09-22 起；入队按版本指纹幂等，重复浏览不重复计费）。
+    # 未配置模型时自动降级为确定性变化说明，不发起调用。置
+    # PHARMA_AUTO_EXPLAIN=0 可关闭。
+    enabled=os.getenv('PHARMA_AUTO_EXPLAIN','true').lower() in ('1','true','yes')
     available=False
     if enabled:
         from .narrative import ModelGateway
@@ -163,14 +167,15 @@ def _generation_versions(snapshot,req):
     版本键清单单一来源 versions.py（修复 #21）：本函数与 worker 的重提交
     校验从同一组 soft/hard 清单派生，新增键不再双份维护。
     """
-    from .reports import TEMPLATE,normalize_template
+    from .reports import TEMPLATE,normalize_template,working_template
     from .narrative import ModelGateway
     from .versions import soft_items,hard_items
     if snapshot['context_id']=='pharmaceutical:competition':
-        if not TEMPLATE.exists():normalize_template()
-        template_version=hashlib.sha256(TEMPLATE.read_bytes()).hexdigest()
+        template_file,_map=working_template(snapshot.get('analysis_type','monthly'))
+        if template_file==TEMPLATE and not TEMPLATE.exists():normalize_template()
+        template_version=hashlib.sha256(template_file.read_bytes()).hexdigest()
     else:template_version=snapshot['analysis_context']['template_version']
-    gateway=ModelGateway.for_route('narrative')  # 与 generate() 实际网关同源（fix4）
+    gateway=ModelGateway.for_route('analysis')  # 与 generate() 实际网关同源（fix4）
     versions={**dict(soft_items(gateway)),**dict(hard_items(snapshot)),
         'snapshot':snapshot['snapshot_id'],'knowledge':snapshot['analysis_context']['knowledge_snapshot'],
         'template':template_version,'context':snapshot['analysis_context'],'model_available':bool(gateway.key),
@@ -280,8 +285,57 @@ def import_reviews(payload:ReviewImport):
     return {'imported':imported,'errors':errors}
 @app.post('/api/imports',status_code=202)
 def imports():return {'job_id':store.enqueue('import',{})['id']}
+
+# ---- 数据中心 v2：类型化上传、原始预览、解析流水线（进度经 /api/jobs/{id} 轮询） ----
+def _reject_active_parse(kind:str):
+    for existing in store.list_jobs(limit=60):
+        if existing['kind']==kind and existing['status'] in ('QUEUED','RUNNING'):
+            raise ValueError(f'PARSE_ALREADY_RUNNING:{existing["id"]}')
+
+class DataParseRequest(BaseModel):
+    model_config=ConfigDict(extra='forbid')
+    enterprise_name:str=Field(default='',max_length=80)
+    quantity_unit:str=Field(default='',max_length=12)
+class VectorSwitchRequest(BaseModel):
+    model_config=ConfigDict(extra='forbid')
+    path:str=Field(min_length=2,max_length=400)
+
+@app.post('/api/data/parse',status_code=202)
+def data_parse(req:DataParseRequest):
+    """解析数据：全部待解析业务文件进入一条流水线（预处理→映射→质检→归因→发布）。"""
+    from . import data_import
+    waiting=data_import.waiting_imports('business')
+    if not waiting:raise ValueError('NO_WAITING_BUSINESS_IMPORTS')
+    _reject_active_parse('data_parse')
+    j=store.enqueue('data_parse',{'import_ids':[r['id'] for r in waiting],**req.model_dump()})
+    for record in waiting:data_import.mark_import_status(record,'PARSING',{'parse_job':j['id']})
+    return {'job_id':j['id'],'status':j['status'],'import_count':len(waiting)}
+
 @app.post('/api/kb/build',status_code=202)
-def kb_build():return {'job_id':store.enqueue('kb',{})['id']}
+def kb_build():
+    """构建知识索引：解析全部待解析知识文档并入向量知识库全流程。"""
+    from . import data_import
+    waiting=data_import.waiting_imports('knowledge')
+    _reject_active_parse('kb')
+    j=store.enqueue('kb',{'import_ids':[r['id'] for r in waiting],'rebuild':True})
+    for record in waiting:data_import.mark_import_status(record,'PARSING',{'parse_job':j['id']})
+    return {'job_id':j['id'],'status':j['status'],'import_count':len(waiting)}
+
+@app.post('/api/templates/parse',status_code=202)
+def template_parse():
+    """解析报告模板：全部待解析模板经结构检查/语义绑定分析后安装。"""
+    from . import data_import
+    waiting=data_import.waiting_imports('template')
+    if not waiting:raise ValueError('NO_WAITING_TEMPLATE_IMPORTS')
+    _reject_active_parse('template_parse')
+    j=store.enqueue('template_parse',{'import_ids':[r['id'] for r in waiting]})
+    for record in waiting:data_import.mark_import_status(record,'PARSING',{'parse_job':j['id']})
+    return {'job_id':j['id'],'status':j['status'],'import_count':len(waiting)}
+
+@app.get('/api/templates')
+def templates():
+    from .reports import installed_templates
+    return {'templates':installed_templates()}
 
 # ---- 数据中心：用户自助接入（上传→预览→映射→质检→能力预览→发布） ----
 class ImportMappingRequest(BaseModel):
@@ -297,10 +351,21 @@ class KnowledgePublishRequest(BaseModel):
     options:dict[str,Any]={}
 
 @app.post('/api/imports/uploads',status_code=201)
-async def import_upload(kind:str=Form(...),file:UploadFile=File(...)):
+async def import_upload(kind:str=Form(...),data_type:str=Form(''),file:UploadFile=File(...)):
     from . import data_import
     payload=await file.read()
-    return data_import.create_upload(kind,file.filename or 'upload.bin',payload)
+    return data_import.create_upload(kind,file.filename or 'upload.bin',payload,data_type)
+@app.get('/api/imports/{import_id}/preview')
+def import_preview(import_id:str):
+    """预览上传的原始文件（表格/文本/内嵌PDF），只读无副作用。"""
+    from . import data_import
+    return data_import.preview_original(data_import.get_import(import_id))
+@app.get('/api/imports/{import_id}/file')
+def import_file(import_id:str):
+    from . import data_import
+    path=data_import.original_path(data_import.get_import(import_id))
+    return FileResponse(path,filename=data_import.get_import(import_id)['filename'],
+                        headers={'Content-Disposition':f'inline; filename="{path.name}"'})
 @app.get('/api/imports')
 def import_list(kind:str|None=None):
     from . import data_import
@@ -463,13 +528,31 @@ def put_model_settings(req:ModelSettingsPayload):
     from . import model_settings
     return model_settings.save_settings(req.model_dump())
 @app.post('/api/settings/models/test')
-def test_model_settings(route:str='narrative',overrides:dict[str,Any]|None=None):
+def test_model_settings(route:str='analysis',overrides:dict[str,Any]|None=None):
     from . import model_settings
     return model_settings.test_connection(route,overrides)
 @app.get('/api/settings/models/list')
-def list_model_settings(route:str='narrative',base_url:str|None=None,key_file:str|None=None):
+def list_model_settings(route:str='analysis',base_url:str|None=None,key_file:str|None=None):
     from . import model_settings
     overrides={'base_url':base_url,'key_file':key_file} if (base_url or key_file) else None
     return model_settings.list_remote_models(route,overrides)
+
+@app.get('/api/settings/models/presets')
+def model_presets():
+    """厂商预填充：API/本地厂商清单、模型档位与角色限制规则（前端关联选项数据源）。"""
+    from .model_registry import presets_payload
+    return presets_payload()
+
+@app.get('/api/settings/vector-model')
+def vector_model_status():
+    from . import model_settings
+    return model_settings.vector_status()
+
+@app.post('/api/settings/vector-model/switch',status_code=202)
+def vector_model_switch(req:VectorSwitchRequest):
+    """向量模型切换：脚本校验+数据分析模型适配评估+知识库重建（进度任务）。"""
+    _reject_active_parse('vector_switch')
+    j=store.enqueue('vector_switch',{'path':req.path})
+    return {'job_id':j['id'],'status':j['status']}
 
 if (APP/'frontend/dist').is_dir():app.mount('/',StaticFiles(directory=APP/'frontend/dist',html=True),name='ui')

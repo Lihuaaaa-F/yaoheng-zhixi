@@ -115,16 +115,17 @@ def test_model_route_fallback_and_env_override(tmp_path,monkeypatch):
 
 def test_routes_status_reports_dedicated_flags(tmp_path,monkeypatch):
     monkeypatch.delenv('PHARMA_MODEL_ROUTES',raising=False)
+    # 2026-09-22 三模块改版：路由更名 extraction/analysis；旧名 DECISION 仍可注入
     monkeypatch.setenv('PHARMA_MODEL_DECISION_MODEL','glm-4-flash')
     # 以临时 runtime 构造，避免读写本机运行库
     from pharma.narrative import ModelGateway as GW
     original=GW.__init__
     monkeypatch.setattr(GW,'__init__',lambda self,**kw:original(self,runtime=tmp_path,**kw))
     status=GW.routes_status()
-    assert set(status['routes'])=={'narrative','decision'}
-    assert status['routes']['decision']['dedicated'] is True
-    assert status['routes']['narrative']['dedicated'] is False
-    assert status['routes']['decision']['model']=='glm-4-flash'
+    assert set(status['routes'])=={'extraction','analysis'}
+    assert status['routes']['extraction']['dedicated'] is True
+    assert status['routes']['analysis']['dedicated'] is False
+    assert status['routes']['extraction']['model']=='glm-4-flash'
 
 @pytest.mark.parametrize('identity_status', ['MISMATCH', 'UNVERIFIED_MISSING'])
 def test_advisory_rejects_unverified_identity(tmp_path, identity_status):

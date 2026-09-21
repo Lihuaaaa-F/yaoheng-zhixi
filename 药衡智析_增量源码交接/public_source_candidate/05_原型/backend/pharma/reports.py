@@ -5,7 +5,7 @@ from xml.etree import ElementTree as ET
 import hashlib, json, os, re, shutil, subprocess, tempfile
 from datetime import datetime
 from decimal import Decimal
-from .config import ROOT, PACKAGE, ARTIFACTS
+from .config import ROOT, PACKAGE, ARTIFACTS, RUNTIME
 W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
 NS = {'w': W}
 PATTERN = re.compile(r'\{\{([^{}]+)\}\}')
@@ -15,8 +15,86 @@ RESIDUAL = re.compile(r'\{\{[^{}]*\}\}|\[\[[^\[\]]*\]\]')
 _TEMPLATE_DIR = Path(os.environ.get('PHARMA_TEMPLATE_DIR', str(ROOT / '04_方案与文档')))
 TEMPLATE = _TEMPLATE_DIR / '月度成本分析报告工作模板.docx'
 MAP_PATH = _TEMPLATE_DIR / 'placeholder_map.json'
+# 用户安装模板（数据中心“报告模板”解析后安装）：按报告类型存放；
+# 季度/专题未安装时回退月度模板（绑定合同一致，仅期间口径不同）。
+RUNTIME_TEMPLATES = RUNTIME / 'templates'
 RENDERER_VERSION='reader-20260921-template-v7'
 NA = 'N/A（无可用基期或明细）'
+
+
+def working_template(analysis_type='monthly'):
+    """按报告类型解析当前模板：已安装模板优先，否则回退题包月度工作模板。
+
+    返回 (模板路径, 占位符清单路径)；安装目录无对应文件或清单缺失均回退。
+    """
+    analysis_type = analysis_type if analysis_type in ('monthly', 'quarterly', 'special') else 'monthly'
+    installed = RUNTIME_TEMPLATES / f'{analysis_type}.docx'
+    installed_map = RUNTIME_TEMPLATES / f'{analysis_type}.placeholder_map.json'
+    if installed.is_file() and installed_map.is_file():
+        return installed, installed_map
+    return TEMPLATE, MAP_PATH
+
+
+def installed_templates() -> list[dict]:
+    """已安装模板清单（数据中心报告模板页展示）。"""
+    result = []
+    for analysis_type, label in (('monthly', '月度成本分析'), ('quarterly', '季度成本分析'), ('special', '专题分析')):
+        path, map_path = working_template(analysis_type)
+        installed = path.parent == RUNTIME_TEMPLATES
+        meta = {}
+        if installed and map_path.is_file():
+            try: meta = json.loads(map_path.read_text(encoding='utf-8'))
+            except (OSError, ValueError): meta = {}
+        result.append({'analysis_type': analysis_type, 'label': label, 'installed': installed,
+                       'path': str(path), 'placeholder_count': len(meta.get('placeholders', [])),
+                       'template_hash': meta.get('template_hash'),
+                       'installed_at': meta.get('installed_at')})
+    return result
+
+
+def install_template(source: Path, analysis_type: str) -> dict:
+    """安装用户上传的报告模板：通用 {{占位符}}→书签规范化后写入运行时模板目录。
+
+    与题包专属的 normalize_template 区分：不做题包段落级修正与 compact 手术，
+    占位符保留原名（渲染绑定按名称合同执行）；书签供 verify_docx 逐项核对。
+    """
+    if analysis_type not in ('monthly', 'quarterly', 'special'):
+        raise ValueError('UNKNOWN_TEMPLATE_TYPE')
+    RUNTIME_TEMPLATES.mkdir(parents=True, exist_ok=True)
+    source = Path(source)
+    output = RUNTIME_TEMPLATES / f'{analysis_type}.docx'
+    map_path = RUNTIME_TEMPLATES / f'{analysis_type}.placeholder_map.json'
+    entries = []
+    with ZipFile(source) as zin, ZipFile(output, 'w', ZIP_DEFLATED) as zout:
+        for info in zin.infolist():
+            raw = zin.read(info.filename)
+            if info.filename.startswith('word/') and info.filename.endswith('.xml'):
+                xml = ET.fromstring(raw)
+                for i, p in enumerate(xml.findall('.//w:p', NS)):
+                    nodes = p.findall('.//w:t', NS)
+                    text = ''.join(t.text or '' for t in nodes)
+                    marker = 'YHU_' + hashlib.sha256((analysis_type + info.filename).encode()).hexdigest()[:8] + '_' + str(i)
+                    if PATTERN.search(text):
+                        mark = ET.Element('{' + W + '}bookmarkStart', {'{' + W + '}id': str(20000 + i), '{' + W + '}name': marker})
+                        p.insert(0, mark)
+                        p.append(ET.Element('{' + W + '}bookmarkEnd', {'{' + W + '}id': str(20000 + i)}))
+                    for match in PATTERN.finditer(text):
+                        name = match.group(1)
+                        ratio = text[match.end():].lstrip().startswith('%')
+                        semantic, unit = binding_semantics(name, ratio)
+                        entries.append({'original': name, 'field': name, 'xml_part': info.filename,
+                                        'paragraph_index': i, 'marker': marker, 'context': text,
+                                        'unit': unit, 'source': semantic,
+                                        'missing_policy': 'N/A并说明缺值原因',
+                                        'semantic': name + ('变动率' if ratio else '')})
+                raw = ET.tostring(xml, encoding='utf-8', xml_declaration=True)
+            zout.writestr(info, raw)
+    result = {'analysis_type': analysis_type, 'source': str(source), 'source_filename': source.name,
+              'template_hash': hashlib.sha256(output.read_bytes()).hexdigest(),
+              'placeholders': entries, 'placeholder_count': len(entries),
+              'installed_at': datetime.now().isoformat(), 'reader_template_version': 'installed-v1'}
+    map_path.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding='utf-8')
+    return result
 
 def replace_text_nodes(nodes, mapping):
     """Replace split-run tokens without assigning paragraph.text or removing runs."""
@@ -404,9 +482,11 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
     from docx.shared import Inches, Pt
     from docx.oxml import OxmlElement
     from docx.oxml.ns import qn
-    if not TEMPLATE.exists():normalize_template()
-    elif json.loads(MAP_PATH.read_text()).get('reader_template_version') not in ('reader-v2','reader-v3-truetype'):compact_working_template(TEMPLATE,MAP_PATH)
-    meta=json.loads(MAP_PATH.read_text());doc=Document(TEMPLATE)
+    template_path, template_map = working_template(snapshot.get('analysis_type', 'monthly'))
+    if template_path == TEMPLATE:
+        if not TEMPLATE.exists():normalize_template()
+        elif json.loads(MAP_PATH.read_text()).get('reader_template_version') not in ('reader-v2','reader-v3-truetype'):compact_working_template(TEMPLATE,MAP_PATH)
+    meta=json.loads(template_map.read_text());doc=Document(template_path)
     sanitize_template_identity(doc)
     values=build_bindings(snapshot,narrative,benchmark)
     for entry in meta['placeholders']:values.setdefault(entry['field'], NA)

@@ -9,7 +9,7 @@ def process_job(store,job):
     from .metrics import benchmark,benchmark_analysis
     from .knowledge import Knowledge
     from .narrative import generate
-    from .reports import render_docx,convert_pdf,assess_report
+    from .reports import render_docx,convert_pdf,assess_report,working_template
     id=job['id'];result=job['result'];payload=job['input']
     try:
         store.update(id,'VALIDATING',result)
@@ -17,13 +17,23 @@ def process_job(store,job):
             from .ingestion import ingest
             result['manifest']=ingest();store.update(id,'SUCCEEDED',result);return
         if job['kind']=='kb':
-            result['knowledge']=Knowledge().build();store.update(id,'SUCCEEDED' if result['knowledge']['status']=='PASS' else 'DEGRADED',result);return
+            from .import_pipeline import run_kb_build
+            run_kb_build(store,job);return
+        if job['kind']=='data_parse':
+            from .import_pipeline import run_data_parse
+            run_data_parse(store,job);return
+        if job['kind']=='template_parse':
+            from .import_pipeline import run_template_parse
+            run_template_parse(store,job);return
+        if job['kind']=='vector_switch':
+            from .vector_switch import run_vector_switch
+            run_vector_switch(store,job);return
         versions=payload.get('versions',{})
         from .reports import TEMPLATE
         from .narrative import ModelGateway
         from .versions import soft_items,hard_items
         from .ingestion import ingest
-        gateway=ModelGateway.for_route('narrative')  # 版本核对与 generate() 实际网关同源（fix4）
+        gateway=ModelGateway.for_route('analysis')  # 版本核对与 generate() 实际网关同源（fix4）
         snapshot=store.get_snapshot(payload['snapshot_id'])
         synthetic=bool(snapshot.get('context_id') and snapshot['context_id']!='pharmaceutical:competition')
         from .industry import resolve_context
@@ -34,7 +44,7 @@ def process_job(store,job):
             if versions.get(key) and versions[key]!=current:raise ValueError(key.upper()+'_VERSION_CHANGED_RESUBMIT')
         for key,current in hard_items(snapshot):
             if versions.get(key)!=current:raise ValueError(key.upper()+'_VERSION_CHANGED_RESUBMIT')
-        if not synthetic and versions.get('template') and hashlib.sha256(TEMPLATE.read_bytes()).hexdigest()!=versions['template']:
+        if not synthetic and versions.get('template') and hashlib.sha256(working_template(snapshot.get('analysis_type','monthly'))[0].read_bytes()).hexdigest()!=versions['template']:
             raise ValueError('TEMPLATE_VERSION_CHANGED_RESUBMIT')
         # resolve_context above binds source knowledge; retrieval records its
         # separate index/embedding/retriever version in the evidence bundle.

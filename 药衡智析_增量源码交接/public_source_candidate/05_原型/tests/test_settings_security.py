@@ -37,9 +37,9 @@ def test_override_base_url_https_or_loopback_only():
 
 
 def test_saved_settings_reject_plaintext_external_base_url():
-    errors = model_settings._validate_connection({'base_url': 'http://api.example.com/v4', 'protocol': 'openai'})
+    errors = model_settings._validate_connection('analysis', {'base_url': 'http://api.example.com/v4', 'protocol': 'openai'})
     assert any('https' in e for e in errors)
-    errors_ok = model_settings._validate_connection({'base_url': 'http://host.docker.internal:3000/v4', 'protocol': 'openai'})
+    errors_ok = model_settings._validate_connection('analysis', {'base_url': 'http://host.docker.internal:3000/v4', 'protocol': 'openai'})
     assert errors_ok == []
 
 

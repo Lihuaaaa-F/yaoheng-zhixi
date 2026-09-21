@@ -329,7 +329,11 @@ def knowledge_entry_for_context(context):
 
 
 def resolve_context(context_id=None):
-    context_id = context_id or 'pharmaceutical:synthetic-pharma'
+    # 缺省上下文跟随目录默认（赛题数据 → 用户导入企业）；目录为空时不再
+    # 回落合成演示数据——无数据即显式失败，引导到数据中心导入。
+    if context_id is None:
+        context_id=context_catalog()['default_context_id']
+        if not context_id:raise ValueError('NO_AVAILABLE_DATA_CONTEXT: 请先在数据中心导入业务数据')
     pack_id, _, company = context_id.partition(':')
     pack = load_pack(pack_id)
     enterprise = _enterprise(pack,None if context_id=='pharmaceutical:competition' else company)
@@ -577,23 +581,30 @@ def _competition_available():
 
 
 def context_catalog():
-    # 正式演示收敛到赛题制药：机械/化工合成上下文默认不进目录（数据与
-    # 测试保留在行业包内，置 PHARMA_SHOW_TEST_CONTEXTS=1 可列出）。
+    # 2026-09-22 三模块改版：系统专注制药赛题定制，目录只列真实数据源——
+    # 赛题原始数据上下文与用户导入企业；合成演示上下文（含制药包默认合成
+    # 企业 synthetic-pharma 与机械/化工参考包）默认不进目录。行业包架构
+    # （industry_packs/ + 文档）完整保留，供其他行业改装复用。
+    # 置 PHARMA_SHOW_TEST_CONTEXTS=1 可列出全部合成上下文（测试/迁移验证）。
     show_test=os.environ.get('PHARMA_SHOW_TEST_CONTEXTS')=='1'
     contexts=[]
     for raw in list_packs():
         pack=load_pack(raw)
-        if pack.id in ('mechanical_demo','chemical_demo') and not show_test: continue
+        if pack.id!='pharmaceutical' and not show_test: continue
         for enterprise in _enterprises(pack):
+            if enterprise['id']=='synthetic-pharma' and not show_test: continue
             dataset=_read_dataset(pack,enterprise)
             cid=pack.id+':'+enterprise['id']
+            label='用户导入数据（数据中心发布）' if enterprise.get('source_mode')=='imported_cost' else pack.data_label
             contexts.append({'id':cid,'context_id':cid,'industry_id':pack.id,'industry_name':pack.name,
                  'company_id':enterprise['id'],'company_name':enterprise['name'],
-                 'capabilities':capabilities(pack,dataset),'data_label':pack.data_label})
-    default='pharmaceutical:synthetic-pharma'
+                 'capabilities':capabilities(pack,dataset),'data_label':label})
+    default=None
     if os.environ.get('PHARMA_DATA_PACKAGE') or _competition_available():
         contexts.append({'id':'pharmaceutical:competition','context_id':'pharmaceutical:competition','industry_id':'pharmaceutical','industry_name':'制药行业包','company_id':'competition','company_name':'赛题原始数据','capabilities':[],'data_label':'赛题原始数据，按团队授权使用'})
         default='pharmaceutical:competition'
+    elif contexts:
+        default=contexts[0]['context_id']
     return {'contexts':contexts,'default_context_id':default}
 
 

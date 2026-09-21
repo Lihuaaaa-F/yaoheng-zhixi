@@ -65,22 +65,25 @@ export PYTHONPATH="$app_dir/backend" ANONYMIZED_TELEMETRY=False OTEL_SDK_DISABLE
 case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) export TMPDIR="$TEMP";; *) export TMPDIR=/tmp;; esac
 "$pharma_python" scripts/fetch_embedding.py --check-only || echo "嵌入模型不可用：保留关键词检索，未下载或覆盖外置模型。"
 "$pharma_python" - <<'BOOTSTRAP'
-import os
+# 2026-09-22 三模块改版：系统专注制药赛题定制——赛题数据目录在位即摄取
+# （企业主数据默认解析仓库内 competition_configuration），冒烟验证默认上下文；
+# 合成演示上下文不再出现在目录（PHARMA_SHOW_TEST_CONTEXTS=1 可列出校验）。
 from pharma.config import PACKAGE
 from pharma.industry import context_catalog,analyze_reference
 from pharma.context_services import retrieve
-# 原题数据摄取只在显式启用比赛企业配置（README“启用比赛数据”）时执行；
-# 默认公共路径只验证合成包，不能拿合成合同去校验原题数据而崩溃。
-if PACKAGE.is_dir() and os.environ.get('PHARMA_DATA_PACKAGE') and os.environ.get('PHARMA_PRIVATE_MASTERDATA_FILE'):
+if PACKAGE.is_dir():
     from pharma.ingestion import ingest
     from pharma.reports import normalize_template,TEMPLATE
-    print('私有制药摄取：',ingest()['status'])
+    print('赛题数据摄取：',ingest()['status'])
     if not TEMPLATE.exists():normalize_template()
-elif PACKAGE.is_dir():
-    print('未启用比赛企业配置：跳过原题摄取，仅构建合成包上下文')
-for entry in context_catalog()['contexts']:
-    if entry['context_id']=='pharmaceutical:competition':continue
-    snapshot=analyze_reference(entry['context_id'])
+else:
+    print('未找到赛题数据目录：跳过摄取，可在数据中心导入业务数据')
+catalog=context_catalog()
+default=catalog['default_context_id']
+if not default:
+    print('无可用数据上下文（赛题数据缺失且未导入企业）：工作台将引导到数据中心')
+else:
+    snapshot=analyze_reference(default)
     evidence=retrieve(snapshot,'成本 工序 核查')
-    print(entry['context_id'],evidence['status'])
+    print(default,evidence['status'],'上下文共',len(catalog['contexts']),'个')
 BOOTSTRAP

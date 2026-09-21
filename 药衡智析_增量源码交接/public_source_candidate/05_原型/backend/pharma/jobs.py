@@ -13,9 +13,16 @@ class JobStore:
     def __init__(self,path=DB_PATH):
         self.path=Path(path);self.path.parent.mkdir(parents=True,exist_ok=True)
         with self.db() as c:c.executescript('''CREATE TABLE IF NOT EXISTS snapshots(id TEXT PRIMARY KEY,body TEXT NOT NULL,created TEXT NOT NULL);
-        CREATE TABLE IF NOT EXISTS jobs(id TEXT PRIMARY KEY,cache_key TEXT UNIQUE,kind TEXT NOT NULL,status TEXT NOT NULL,stage TEXT NOT NULL,input TEXT NOT NULL,result TEXT NOT NULL,created TEXT NOT NULL,updated TEXT NOT NULL,error TEXT);
-        CREATE TABLE IF NOT EXISTS job_events(id INTEGER PRIMARY KEY,job_id TEXT,stage TEXT,at TEXT);
+        CREATE TABLE IF NOT EXISTS jobs(id TEXT PRIMARY KEY,cache_key TEXT UNIQUE,kind TEXT NOT NULL,status TEXT NOT NULL,stage TEXT NOT NULL,input TEXT NOT NULL,result TEXT NOT NULL,created TEXT NOT NULL,updated TEXT NOT NULL,error TEXT,progress INTEGER,detail TEXT);
+        CREATE TABLE IF NOT EXISTS job_events(id INTEGER PRIMARY KEY,job_id TEXT,stage TEXT,at TEXT,detail TEXT);
         CREATE TABLE IF NOT EXISTS artifacts(id TEXT PRIMARY KEY,job_id TEXT,path TEXT NOT NULL,sha256 TEXT NOT NULL,format TEXT NOT NULL);''')
+        # 旧库就地迁移：进度条列（2026-09-22 三模块改版，数据中心解析流水线用）
+        with self.db() as c:
+            for column,ddl in (('progress','ALTER TABLE jobs ADD COLUMN progress INTEGER'),
+                               ('detail','ALTER TABLE jobs ADD COLUMN detail TEXT'),
+                               ('event_detail','ALTER TABLE job_events ADD COLUMN detail TEXT')):
+                try:c.execute(ddl)
+                except sqlite3.OperationalError:pass
     @contextmanager
     def db(self):
         c=sqlite3.connect(self.path,timeout=15);c.row_factory=sqlite3.Row;c.execute('PRAGMA journal_mode=WAL')
@@ -53,7 +60,10 @@ class JobStore:
                     if previous['result'].get('narrative',{}).get('status')=='PASS':initial['narrative']=previous['result']['narrative']
                     initial['repair_provenance']={'source_job_id':old['id'],'reason':payload.get('repair_reason') or payload['retry_reason']}
                 if old:c.execute('UPDATE jobs SET cache_key=NULL WHERE id=?',(old['id'],))
-            c.execute('INSERT INTO jobs VALUES(?,?,?,?,?,?,?,?,?,?)',(id,cache_key,kind,'QUEUED','VALIDATING',json.dumps(payload,ensure_ascii=False),json.dumps(initial,ensure_ascii=False),stamp(),stamp(),None))
+            c.execute('INSERT INTO jobs(id,cache_key,kind,status,stage,input,result,created,updated,progress,detail) '
+                      'VALUES(?,?,?,?,?,?,?,?,?,?,?)',
+                      (id,cache_key,kind,'QUEUED','VALIDATING',json.dumps(payload,ensure_ascii=False),
+                       json.dumps(initial,ensure_ascii=False),stamp(),stamp(),0,'排队等待处理'))
         return self.get(id)
     def _decode(self,row):
         if row is None:raise KeyError('JOB_NOT_FOUND')
@@ -93,12 +103,22 @@ class JobStore:
         with self.db() as c:
             r=c.execute("SELECT * FROM jobs WHERE status NOT IN ('SUCCEEDED','DEGRADED','FAILED') ORDER BY created LIMIT 1").fetchone()
             return self._decode(r) if r else None
-    def update(self,id,stage,result=None,error=None):
+    def update(self,id,stage,result=None,error=None,progress=None,detail=None):
+        """更新任务状态；progress(0-100)+detail(当前进度内容) 供前端进度条轮询。
+
+        progress=None 表示本阶段未给出新百分比（保留上次值）；终态时进度强制收敛
+        （SUCCEEDED/DEGRADED=100，FAILED 保留出错的百分比便于定位）。
+        """
+        status=stage if stage in TERMINAL else 'RUNNING'
+        if progress is None and status in ('SUCCEEDED','DEGRADED'):progress=100
         with self.db() as c:
-            c.execute('UPDATE jobs SET status=?,stage=?,result=COALESCE(?,result),error=?,updated=? WHERE id=?',(stage if stage in TERMINAL else 'RUNNING',stage,json.dumps(result,ensure_ascii=False) if result is not None else None,error,stamp(),id))
-            c.execute('INSERT INTO job_events(job_id,stage,at) VALUES(?,?,?)',(id,stage,stamp()))
+            c.execute('UPDATE jobs SET status=?,stage=?,result=COALESCE(?,result),error=?,'
+                      'progress=COALESCE(?,progress),detail=COALESCE(?,detail),updated=? WHERE id=?',
+                      (status,stage,json.dumps(result,ensure_ascii=False) if result is not None else None,
+                       error,progress,detail,stamp(),id))
+            c.execute('INSERT INTO job_events(job_id,stage,at,detail) VALUES(?,?,?,?)',(id,stage,stamp(),detail))
     def history(self,id):
-        with self.db() as c:return [dict(r) for r in c.execute('SELECT stage,at FROM job_events WHERE job_id=? ORDER BY id',(id,))]
+        with self.db() as c:return [dict(r) for r in c.execute('SELECT stage,at,detail FROM job_events WHERE job_id=? ORDER BY id',(id,))]
     def artifact(self,job_id,record,format):
         id=job_id+'-'+format;path=Path(record['path']).resolve()
         if not path.is_relative_to(ARTIFACTS.resolve()):raise ValueError('ARTIFACT_OUTSIDE_ROOT')
