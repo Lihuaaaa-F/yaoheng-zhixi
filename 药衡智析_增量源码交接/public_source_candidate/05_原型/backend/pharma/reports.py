@@ -659,7 +659,7 @@ def convert_pdf(docx_path,timeout=90,converter='libreoffice',_toc_pass=0):
                 headings=['一、封面与基本信息','二、总成本概览','三、成本要素明细分析','四、重点产品专项分析','五、对标分析','六、总结与建议']
                 for index,page in enumerate(doc,1):
                     lines=page.get_text().splitlines()
-                    meaningful=[line.strip() for line in lines if line.strip() and not re.match(r'^第\s*\d+\s*页',line.strip())]
+                    meaningful=[line.strip() for line in lines if line.strip() and not re.match(r'^第\s*\d+\s*页',line.strip()) and not line.startswith(chr(0x3000))]
                     if meaningful and (re.match(r'^[一二三四五六]、|^[2-6]\.\d+(?:\.\d+)?\s+',meaningful[-1]) or '｜' in meaningful[-1]):orphan_headings.append(meaningful[-1])
                     # 章节标题按“≥13pt 大字号行”识别（2026-09-21 四轮 F 项）：目录行
                     # (10.5pt) 与表格单元格(9pt，含阅读指南引用)中的同名文本不再误判。
@@ -679,6 +679,7 @@ def convert_pdf(docx_path,timeout=90,converter='libreoffice',_toc_pass=0):
         layout_changed=False
         paragraphs=d.paragraphs
         for index,paragraph in enumerate(paragraphs):
+            if paragraph.text.startswith(chr(0x3000)):continue  # 静态目录行不是孤儿标题
             if paragraph.text.strip() in orphan_headings:
                 # Walk actual XML siblings: Document.paragraphs skips tables and
                 # could otherwise move a distant chapter across an entire table.
