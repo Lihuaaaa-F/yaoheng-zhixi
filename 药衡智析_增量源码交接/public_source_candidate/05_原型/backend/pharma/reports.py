@@ -58,7 +58,8 @@ def binding_semantics(field,ratio=False):
     return 'period_values.'+period+'.'+metric,'盒' if metric=='quantity' else '元' if metric=='total_cost' else '元/盒'
 
 def normalize_template(output=TEMPLATE, map_path=MAP_PATH):
-    original = next((PACKAGE / '04_报告模板').glob('*.docx'))
+    # 跳过 Word 锁文件（~$ 前缀）并按名排序保证选择稳定（2026-09-21：容器内锁文件曾致 BadZipFile）
+    original = next(p for p in sorted((PACKAGE / '04_报告模板').glob('*.docx')) if not p.name.startswith('~$'))
     entries=[]; original_names=[]
     output=Path(output);output.parent.mkdir(parents=True,exist_ok=True)
     with ZipFile(original) as zin, ZipFile(output,'w',ZIP_DEFLATED) as zout:
