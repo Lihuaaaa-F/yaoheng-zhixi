@@ -692,8 +692,11 @@ def convert_pdf(docx_path,timeout=90,converter='libreoffice',_toc_pass=0):
                     if candidate._p.xpath('.//w:drawing'):break
                     if candidate.text.strip() and not re.match(r'^[一二三四五六七八九十]+、|^[1-9]\.\d+(?:\.\d+)?\s+',candidate.text.strip()):break
                     start=candidate;previous=previous.getprevious()
-                if not start.paragraph_format.page_break_before:
-                    start.paragraph_format.page_break_before=True;layout_changed=True
+                # 孤儿标题补救改用 keep-with-next（2026-09-21 五轮：page_break_before
+                # 会把标题强推新页、在上一页留下大片空白；keepNext 只把标题与后续
+                # 首段绑在一起移动，空白上界为后续首段高度）。
+                if not start.paragraph_format.keep_with_next:
+                    start.paragraph_format.keep_with_next=True;layout_changed=True
         # 竖排目录逐行回填实际页码；目录标题行(带YH_TOC书签)保持不变
         toc_lines={k:k for k in ('一、封面与基本信息','二、总成本概览','三、成本要素明细分析','四、重点产品专项分析','五、对标分析','六、总结与建议')}
         toc_updated=False;toc_verified={}
