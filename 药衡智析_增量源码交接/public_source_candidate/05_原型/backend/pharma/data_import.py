@@ -32,15 +32,36 @@ MAX_UPLOAD_BYTES = 50 * 1024 * 1024
 KINDS = ('business', 'knowledge', 'template')
 TEXT_ENCODINGS = ('utf-8-sig', 'utf-8', 'gb18030', 'big5')
 
-# 赛题成本宽表预设映射：字段名 → 目标角色
+# 数据中心三类数据的导入类型（2026-09-22 三模块改版）：上传入口按类型分流，
+# 列表按类型展示；类型同时决定解析流水线（业务→数据解析，知识→知识索引，
+# 模板→模板解析）。
+DATA_TYPES = {
+    'business': ('cost_summary', 'material_detail', 'manufacturing_detail', 'labor_detail', 'budget'),
+    'knowledge': ('product', 'industry', 'enterprise'),
+    'template': ('monthly', 'quarterly', 'special'),
+}
+DATA_TYPE_LABELS = {
+    'cost_summary': '成本汇总数据', 'material_detail': '原材料消耗明细', 'manufacturing_detail': '制造费用明细',
+    'labor_detail': '人工工时明细', 'budget': '预算数据',
+    'product': '产品知识', 'industry': '行业知识', 'enterprise': '企业内部知识',
+    'monthly': '月度成本分析', 'quarterly': '季度成本分析', 'special': '专题分析',
+}
+# 待解析/解析中/已解析/解析失败 状态机（UPLOADED 为上传后等待解析）。
+IMPORT_STATUSES = ('UPLOADED', 'PARSING', 'PARSED', 'PARSE_FAILED')
+# 用户上传的知识资料落库目录：文本化后作为默认知识上下文的补充来源。
+KNOWLEDGE_INGEST_DIR = IMPORTS_ROOT / 'knowledge'
+
+# 赛题成本宽表预设映射：字段名 → 目标角色（含题包实际表头 元/盒 变体）
 PRESET_WIDE_MAPPING = {
     '工厂': 'factory_id', '车间': 'factory_id', '工厂/车间': 'factory_id',
     '产品': 'product_id', '产品名称': 'product_id', '产品编号': 'product_id',
     '月份': 'period', '期间': 'period', '核算期间': 'period', '年月': 'period',
     '产量': 'quantity', '完工数量': 'quantity', '合格产量': 'quantity', '产量(盒)': 'quantity',
     '直接材料': 'element:material', '材料成本': 'element:material', '直接材料(元)': 'element:material',
+    '直接材料(元/盒)': 'element:material', '材料成本(元/盒)': 'element:material',
     '直接人工': 'element:labor', '人工成本': 'element:labor', '直接人工(元)': 'element:labor',
-    '制造费用': 'element:overhead', '制造费用(元)': 'element:overhead',
+    '直接人工(元/盒)': 'element:labor', '人工成本(元/盒)': 'element:labor',
+    '制造费用': 'element:overhead', '制造费用(元)': 'element:overhead', '制造费用(元/盒)': 'element:overhead',
     '总成本': 'total_cost', '总成本(元)': 'total_cost', '成本合计': 'total_cost',
 }
 DIMENSION_ROLES = ('factory_id', 'product_id', 'period')
@@ -123,15 +144,18 @@ def _folder(id_: str) -> Path:
 
 # ---------- 上传与预览 ----------
 
-def create_upload(kind: str, filename: str, payload: bytes) -> dict[str, Any]:
+def create_upload(kind: str, filename: str, payload: bytes, data_type: str = '') -> dict[str, Any]:
     if kind not in KINDS:
         raise ValueError('UNKNOWN_IMPORT_KIND')
+    if data_type and data_type not in DATA_TYPES.get(kind, ()):
+        raise ValueError('UNKNOWN_DATA_TYPE_FOR_KIND:' + str(data_type))
+    data_type = data_type or DATA_TYPES[kind][0]
     if not payload:
         raise ValueError('EMPTY_FILE')
     if len(payload) > MAX_UPLOAD_BYTES:
         raise ValueError('FILE_TOO_LARGE')
     suffix = Path(filename).suffix.lower()
-    allowed = {'.csv': {'business'}, '.xlsx': {'business'},
+    allowed = {'.csv': {'business', 'knowledge'}, '.xlsx': {'business'},
                '.pdf': {'knowledge'}, '.docx': {'knowledge', 'template'},
                '.txt': {'knowledge'}}
     if suffix not in allowed or kind not in allowed[suffix]:
@@ -142,7 +166,7 @@ def create_upload(kind: str, filename: str, payload: bytes) -> dict[str, Any]:
     if original.exists():  # 同内容重复上传：幂等返回已有记录
         return _row(import_id)
     original.write_bytes(payload)  # 原始字节保留
-    meta: dict[str, Any] = {'filename': filename, 'suffix': suffix}
+    meta: dict[str, Any] = {'filename': filename, 'suffix': suffix, 'data_type': data_type}
     if suffix in ('.csv', '.txt'):
         meta['encoding'] = detect_encoding(payload)
     preview = _build_preview(kind, suffix, payload, meta)
@@ -459,6 +483,10 @@ def publish_knowledge(record: dict[str, Any], options: dict[str, Any]) -> dict[s
         from docx import Document
         document = Document(path)
         pages = ['\n'.join(p.text for p in document.paragraphs)]
+    elif suffix == '.csv':
+        # 行情/基准等表格类知识：按行转文本入库（保留列名行）。
+        headers, rows = _read_table(suffix, path.read_bytes(), record['encoding'] or 'utf-8', '')
+        pages = ['\n'.join(','.join(r) for r in [headers] + rows)] if headers else []
     elif suffix == '.txt':
         pages = [path.read_text(encoding=record['encoding'] or 'utf-8')]
     text = '\n'.join(pages).strip()
@@ -478,21 +506,250 @@ def publish_knowledge(record: dict[str, Any], options: dict[str, Any]) -> dict[s
 
 
 def check_template(record: dict[str, Any]) -> dict[str, Any]:
-    """报告模板兼容性检查：章节结构与占位符契约，不自动安装。"""
+    """报告模板兼容性检查：章节结构与占位符契约。
+
+    章节识别兼容两种形态（2026-09-22 修复）：Heading 1 样式（python-docx 生成）
+    与中文 Word 常见的“正文样式 + 一、二、… 编号标题”（题包原件即此形态）。
+    """
     from docx import Document
     folder = IMPORTS_ROOT / record['id']
     path = folder / ('original' + record['meta']['suffix'])
     document = Document(path)
-    headings = [p.text.strip() for p in document.paragraphs if p.style.name.startswith('Heading 1') and p.text.strip()]
-    placeholders = sorted(set(re.findall(r'\{\{([^{}]{1,40})\}\}', '\n'.join(p.text for p in document.paragraphs))))
+    headings = [p.text.strip() for p in document.paragraphs if p.text.strip() and (
+        p.style.name.startswith('Heading 1') or re.match(r'^[一二三四五六七八九十]+、', p.text.strip()))]
+    # 占位符同时扫描段落与表格单元格（题包原件约 88 个占位符位于动态表格内）
+    body = '\n'.join(p.text for p in document.paragraphs)
+    for table in document.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                body += '\n' + cell.text
     required_sections = ['一、封面与基本信息', '二、总成本概览', '三、成本要素明细分析',
                          '四、重点产品专项分析', '五、对标分析', '六、总结与建议']
-    missing = [s for s in required_sections if s not in headings]
+    # 前缀匹配：题包原件的章节标题带后缀（如“四、重点产品专项分析 — {{产品名称}}”）
+    missing = [s for s in required_sections if not any(h.startswith(s) for h in headings)]
+    placeholders = sorted(set(re.findall(r'\{\{([^{}]{1,40})\}\}', body)))
     return {'sections': headings, 'section_count': len(headings),
-            'compatible': len(headings) == 6 and not missing,
+            'compatible': len(headings) >= 6 and not missing,
             'missing_sections': missing,
-            'placeholders': placeholders[:80], 'placeholder_count': len(placeholders),
-            'note': '模板兼容性检查仅供参考；正式模板由行业包统一管理，安装需开发流程'}
+            'placeholders': placeholders[:120], 'placeholder_count': len(placeholders),
+            'note': '章节与占位符契约通过后安装为对应类型当前模板；渲染绑定按占位符名称合同执行'}
+
+
+# ---------- 数据中心 v2：原始预览、待解析列表、批量发布与状态流转 ----------
+
+def preview_original(record: dict[str, Any]) -> dict[str, Any]:
+    """预览上传的原始文件内容（未经映射/清洗），供列表预览按钮实时查看。
+
+    csv/xlsx → 表格（前 200 行）；docx/txt/csv → 文本；pdf → 浏览器内嵌原始文件。
+    一次只预览一份由前端保证；本端点只读原始字节，不产生任何写副作用。
+    """
+    folder = IMPORTS_ROOT / record['id']
+    path = folder / ('original' + record['meta']['suffix'])
+    suffix = record['meta']['suffix']
+    if not path.is_file():
+        raise KeyError('ORIGINAL_FILE_MISSING')
+    common = {'import_id': record['id'], 'filename': record['filename'], 'suffix': suffix,
+              'kind': record['kind'], 'data_type': record.get('meta', {}).get('data_type', ''),
+              'size': record.get('size', path.stat().st_size)}
+    if suffix in ('.csv', '.xlsx'):
+        encoding = record.get('encoding') or 'utf-8'
+        headers, rows = _read_table(suffix, path.read_bytes(), encoding, record['meta'].get('sheet'))
+        return {**common, 'format': 'table', 'headers': headers, 'rows': rows[:200],
+                'row_count': len(rows), 'sheet': record['meta'].get('sheet', '')}
+    if suffix == '.pdf':
+        return {**common, 'format': 'pdf', 'url': f'/api/imports/{record["id"]}/file'}
+    if suffix == '.docx':
+        from docx import Document
+        document = Document(path)
+        paragraphs = [p.text for p in document.paragraphs if p.text.strip()]
+        return {**common, 'format': 'docx-text', 'paragraphs': paragraphs[:400],
+                'paragraph_count': len(paragraphs),
+                'tables': [{'rows': [[c.text for c in row.cells] for row in t.rows][:20]} for t in document.tables[:10]]}
+    if suffix == '.txt':
+        text = path.read_text(encoding=record.get('encoding') or 'utf-8')
+        return {**common, 'format': 'text', 'text': text[:80000], 'characters': len(text)}
+    raise ValueError('UNSUPPORTED_PREVIEW_SUFFIX:' + suffix)
+
+
+def original_path(record: dict[str, Any]) -> Path:
+    path = IMPORTS_ROOT / record['id'] / ('original' + record['meta']['suffix'])
+    if not path.is_file():
+        raise KeyError('ORIGINAL_FILE_MISSING')
+    return path
+
+
+def waiting_imports(kind: str) -> list[dict[str, Any]]:
+    """待解析列表：已上传（UPLOADED）与解析失败（PARSE_FAILED，可重试）。"""
+    return [r for r in list_imports(kind) if r['status'] in ('UPLOADED', 'PARSE_FAILED')]
+
+
+def mark_import_status(record: dict[str, Any], status: str, extra_meta: dict[str, Any] | None = None) -> dict[str, Any]:
+    if status not in IMPORT_STATUSES + ('PUBLISHED',):
+        raise ValueError('UNKNOWN_IMPORT_STATUS')
+    record['status'] = status
+    return _save(record, {**record['meta'], **(extra_meta or {})})
+
+
+def publish_business_batch(entries: list[tuple[dict[str, Any], dict[str, str], dict[str, Any]]],
+                           enterprise_name: str, pack_id: str, quantity_unit: str) -> dict[str, Any]:
+    """多文件合并发布（v2 数据解析流水线）：同一企业的 汇总/明细/预算 文件
+    合并为一个 facts 数据集后注册。
+
+    entries = [(import_record, mapping, options), ...]；口径合并规则（防双计）：
+    - 同键金额按数据类型优先级裁决——成本汇总 > 预算 > 明细；低优先级文件
+      只补高优先级未覆盖的键，同值跳过、异值以高优先级为准并记提示；
+    - 同优先级同键异值视为口径冲突，整体失败（不写注册表，不破坏现有数据）；
+    - 产量为独立事实，任何文件间冲突均失败。
+    """
+    from .industry import register_enterprise
+    validations = []
+    for record, mapping, options in entries:
+        validation = validate_business(record, mapping, options)
+        validations.append((record, mapping, options, validation))
+        if validation['status'] != 'VALID':
+            failed = validation['errors'][:5]
+            raise ValueError('IMPORT_VALIDATION_FAILED:' + record['filename'] + ':'
+                             + '；'.join(e.get('reason', str(e)) for e in failed))
+    from .import_pipeline import TYPE_PRIORITY
+    enterprise_id = 'imp-' + hashlib.sha256((enterprise_name + pack_id).encode()).hexdigest()[:8]
+    source_snapshot = hashlib.sha256('|'.join(r['sha256'] for r, _, _, _ in validations).encode()).hexdigest()
+    merged_amounts: dict[tuple[str, str, str, str, str], Decimal] = {}
+    amount_priority: dict[tuple[str, str, str, str, str], int] = {}
+    merged_quantities: dict[tuple[str, str, str, str], Decimal] = {}
+    quantity_source: dict[tuple[str, str, str, str], str] = {}
+    periods: set[str] = set()
+    products: set[str] = set()
+    factories: set[str] = set()
+    merge_warnings: list[str] = []
+    for record, mapping, options, _validation in validations:
+        priority = TYPE_PRIORITY.get(record['meta'].get('data_type', 'cost_summary'), 2)
+        scale = Decimal(str(options.get('amount_scale', '1')))
+        payload = (IMPORTS_ROOT / record['id'] / ('original' + record['meta']['suffix'])).read_bytes()
+        headers, rows = _read_table(record['meta']['suffix'], payload, record['encoding'] or 'utf-8',
+                                    record['meta'].get('sheet'))
+        role_of = {h: mapping.get(h, '') for h in headers}
+        file_amounts: dict[tuple[str, str, str, str, str], Decimal] = {}
+        file_quantities: dict[tuple[str, str, str, str], Decimal] = {}
+        for index, row in enumerate(rows, start=2):
+            cells = dict(zip(headers, row))
+            factory = product = period = ''
+            for header, role in role_of.items():
+                if role == 'factory_id': factory = cells.get(header, '').strip()
+                elif role == 'product_id': product = cells.get(header, '').strip()
+                elif role == 'period': period = normalize_period(cells.get(header, '')) or ''
+            scenario = options.get('scenario', 'actual')
+            if not (factory and product and period):
+                continue
+            periods.add(period); products.add(product); factories.add(factory)
+            for header, role in role_of.items():
+                value = cells.get(header, '')
+                if role == 'quantity':
+                    number = parse_number(value)
+                    if number is not None:
+                        key = (factory, product, period, scenario)
+                        file_quantities[key] = number
+                elif role and (role.startswith('element:') or role == 'total_cost'):
+                    number = parse_number(value)
+                    if number is not None:
+                        element = role.split(':', 1)[1] if role.startswith('element:') else '__total__'
+                        key = (factory, product, period, scenario, element)
+                        file_amounts[key] = file_amounts.get(key, Decimal(0)) + number * scale
+        for key, number in file_quantities.items():
+            if key in merged_quantities and merged_quantities[key] != number:
+                raise ValueError(f'IMPORT_QUANTITY_CONFLICT:{key[0]}/{key[1]}/{key[2]}'
+                                 f' 在 {quantity_source[key]} 与 {record["filename"]} 中冲突：'
+                                 f'{merged_quantities[key]} 与 {number}')
+            merged_quantities[key] = number
+            quantity_source.setdefault(key, record['filename'])
+        for key, amount in file_amounts.items():
+            if key not in merged_amounts:
+                merged_amounts[key] = amount
+                amount_priority[key] = priority
+                continue
+            existing_priority = amount_priority[key]
+            if existing_priority == priority:
+                if merged_amounts[key] != amount:
+                    raise ValueError(f'IMPORT_AMOUNT_CONFLICT:{key[0]}/{key[1]}/{key[2]}/{key[4]}'
+                                     f' 同优先级文件口径冲突：{merged_amounts[key]} 与 {amount}')
+            elif priority < existing_priority:  # 汇总覆盖先前明细/预算
+                if merged_amounts[key] != amount:
+                    merge_warnings.append(f'{key[0]}/{key[1]}/{key[2]}/{key[4]}：以{record["filename"]}（汇总口径）为准')
+                merged_amounts[key] = amount
+                amount_priority[key] = priority
+            elif merged_amounts[key] != amount:  # 低优先级与汇总不一致：汇总为准
+                merge_warnings.append(f'{key[0]}/{key[1]}/{key[2]}/{key[4]}：已由汇总口径覆盖，明细值 {amount} 不采用')
+    amounts = merged_amounts
+    quantities = merged_quantities
+    totals: dict[tuple[str, str, str, str], Decimal] = {}
+    for (factory, product, period, scen, element), amount in amounts.items():
+        totals.setdefault((factory, product, period, scen), Decimal(0))
+        if element != '__total__':
+            totals[(factory, product, period, scen)] += amount
+    for key, amount in amounts.items():
+        if key[4] == '__total__':
+            totals[key[:4]] = amount
+
+    def fact_id(seed: str) -> str:
+        return 'f-' + hashlib.sha256(seed.encode()).hexdigest()[:16]
+
+    facts = []
+    for (factory, product, period, scen), quantity in quantities.items():
+        facts.append({'fact_id': fact_id(f'q:{factory}:{product}:{period}:{scen}'),
+                      'enterprise_id': enterprise_id, 'factory_id': factory, 'product_id': product,
+                      'product_version': '1', 'period': period, 'cost_object': product,
+                      'scenario': scen, 'policy_version': 'imported-v1',
+                      'source_row': 'batch:quantity:{0}:{1}:{2}:{3}'.format(factory, product, period, scen),
+                      'source_snapshot': source_snapshot, 'quantity': str(quantity), 'unit': quantity_unit})
+    elements_present = sorted({key[4] for key in amounts if key[4] != '__total__'})
+    for (factory, product, period, scen), total in totals.items():
+        for element in elements_present:
+            amount = amounts.get((factory, product, period, scen, element))
+            if amount is None:
+                continue
+            facts.append({'fact_id': fact_id(f'c:{factory}:{product}:{period}:{scen}:{element}'),
+                          'enterprise_id': enterprise_id, 'factory_id': factory, 'product_id': product,
+                          'product_version': '1', 'period': period, 'cost_object': product,
+                          'scenario': scen, 'policy_version': 'imported-v1',
+                          'source_row': 'batch:cost:{0}:{1}:{2}:{3}:{4}'.format(factory, product, period, scen, element),
+                          'source_snapshot': source_snapshot,
+                          'element_id': element, 'level': 'detail',
+                          'amount': str(amount), 'currency': 'CNY', 'quantity_unit': quantity_unit})
+    dataset = {'costs': [f for f in facts if 'element_id' in f],
+               'quantities': [f for f in facts if 'quantity' in f],
+               'optional': []}
+    enterprise_dir = IMPORTS_ROOT / 'enterprises' / enterprise_id
+    enterprise_dir.mkdir(parents=True, exist_ok=True)
+    (enterprise_dir / 'facts.json').write_text(json.dumps(dataset, ensure_ascii=False), encoding='utf-8')
+    (enterprise_dir / 'knowledge.json').write_text('[]', encoding='utf-8')
+    specification = options.get('specification') or '导入数据未声明规格'
+    config = {'id': enterprise_id, 'name': enterprise_name, 'dataset_id': source_snapshot[:16],
+              'policy_version': 'imported-v1', 'quantity_unit': quantity_unit, 'currency': 'CNY',
+              'products': {product: {'name': product, 'specification': specification,
+                                     'version': '1'} for product in sorted(products)},
+              'responsibilities': {}, 'source_mode': 'imported_cost'}
+    config_path = enterprise_dir / 'enterprise.json'
+    config_path.write_text(json.dumps(config, ensure_ascii=False), encoding='utf-8')
+    register_enterprise(pack_id, str(config_path))
+    return {'enterprise_id': enterprise_id, 'context_id': f'{pack_id}:{enterprise_id}',
+            'dataset_facts': len(dataset['costs']) + len(dataset['quantities']),
+            'factories': sorted(factories), 'products': sorted(products), 'periods': sorted(periods),
+            'source_files': [r['filename'] for r, _, _, _ in validations],
+            'merge_warnings': merge_warnings[:50],
+            'published_at': _now()}
+
+
+def write_knowledge_source(record: dict[str, Any], text: str) -> Path:
+    """把解析出的知识文本落入知识入库目录（文件哈希进入知识版本，自动重建）。
+
+    文件名前缀保留数据类型（产品知识/行业知识/企业内部知识），检索证据可溯源。
+    """
+    KNOWLEDGE_INGEST_DIR.mkdir(parents=True, exist_ok=True)
+    data_type = record.get('meta', {}).get('data_type', 'enterprise')
+    stem = re.sub(r'[\\/:*?"<>|\s]+', '_', Path(record['filename']).stem)[:60]
+    target = KNOWLEDGE_INGEST_DIR / f'{DATA_TYPE_LABELS.get(data_type, data_type)}__{stem}.txt'
+    header = f'【{DATA_TYPE_LABELS.get(data_type, data_type)}】来源文件：{record["filename"]}\n'
+    target.write_text(header + text, encoding='utf-8')
+    return target
 
 
 def get_import(id_: str) -> dict[str, Any]:

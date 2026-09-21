@@ -6,7 +6,7 @@
 
 # 药衡智析 · 产品成本智能分析报告系统
 
-**基于 RAG 与大模型的制药企业产品成本智能分析报告系统**（2026 年第二届重庆市 AI 大模型创新应用大赛 · 创灵境企业出题）。通用成本分析核心＋可切换行业包：制药赛题合同完整保留，机械零部件、化工为独立合成参考包，用于验证框架横向迁移能力。
+**基于 RAG 与大模型的制药企业产品成本智能分析报告系统**（2026 年第二届重庆市 AI 大模型创新应用大赛 · 创灵境企业出题）。2026-09-22 三模块改版：系统专注制药赛题定制，界面收敛为 **数据中心（业务数据/知识库数据/报告模板）· 工作台（数据分析/跨厂对标/报告生成/问题整改）· 模型配置（数据提取模型/数据分析模型/向量模型）**；不再出现行业包选择与合成演示数据——数据不足时按“证据支持假设/证据不足”合同输出归因推测。行业包架构（`industry_packs/`、受信策略、企业注册合同）在代码层完整保留，供其他行业改装复用（见 `docs/industry/development.md`）。
 
 > **English summary** — Yaoheng Zhixi is a RAG + LLM powered product-cost analysis and reporting system for a pharmaceutical contest scenario. A deterministic Decimal cost engine feeds an evidence-bound report pipeline (Word/PDF), an ECharts dashboard with attribution/waterfall/heatmap, a cross-factory three-step benchmark, and an RPA task loop against a local simulator. Bonus features implemented: knowledge-graph enhanced retrieval, multi-model routing, agent report-or-dashboard decision, and Holt-based cost forecasting. All numbers are program-owned; the model only picks references and wording under a strict validator contract.
 
@@ -51,13 +51,15 @@ bash 05_原型/scripts/stop.sh
 `cp 05_原型/.env.example 05_原型/.env`（无密钥、无 .env 也可基础启动）：
 
 ```bash
-PHARMA_MODEL=glm-5.3-flash
+PHARMA_MODEL=glm-5.3                        # 数据分析模型（大模型）
 PHARMA_MODEL_BASE_URL=https://open.bigmodel.cn/api/paas/v4
 PHARMA_MODEL_KEY_FILE=/受控目录/your_key.txt      # 密钥只走文件路径
-# 多模型协作（可选）：轻量任务路由到更经济的模型
-PHARMA_MODEL_DECISION_MODEL=glm-4.5-air
-# 或 JSON 路由表：PHARMA_MODEL_ROUTES={"decision":{"model":"..."}}
+# 数据提取模型（小模型，赛题多模型协作加分项）；未配置回退主模型
+PHARMA_MODEL_EXTRACTION_MODEL=glm-4.5-air
+# 或 JSON 路由表：PHARMA_MODEL_ROUTES={"extraction":{"model":"..."}}
 ```
+
+“模型配置”页提供厂商预填充（智谱/DeepSeek/通义/Kimi/硅基流动/OpenAI 与本地 Ollama/vLLM/LM Studio，2026-09-22 核对官方文档）与推理强度滑块（低/中/高，按厂商映射为 `reasoning_effort`/`thinking`/`enable_thinking`）；数据提取模型限制为轻量档、数据分析模型限制为旗舰/推理档（未收录型号可手填）。向量模型仅本地 ONNX，切换路径后由脚本校验＋数据分析模型适配评估＋知识库重建自动完成。
 
 支持任意 OpenAI 兼容端点（DeepSeek、通义等）；协议可为 `openai`/`anthropic`。每次调用记录响应 model 身份、预算、usage、缓存与实际端点。仓库记录的2026-09-18暂定授权策略为：主端点错误1113后允许切换PHARMA_MODEL_CODING_BASE_URL，置空可禁用。该记录不证明任意账号套餐都可用；本次管理未调用模型、未改变端点策略。详见docs/ZCODE_HANDOFF.md最新政策段。
 
@@ -87,14 +89,6 @@ bash 05_原型/scripts/verify.sh --manifest <运行目录>/manifest.json
 
 仓库按用户 2026-09-18 明确授权保留原赛题数据（知识、模板与静态交付）并公开提交；密钥、`.env`、运行数据库、待发队列与恢复备份不入库。赛题数据仅限本次大赛使用（见赛题保密条款），本授权不自动扩展到今后真实企业私有资料。历史移除清单见 [资料边界](docs/privacy_boundary.md)。
 
-## 启用比赛数据 / Enable Contest Data
+## 数据范围 / Data Contexts
 
-```bash
-YAOHENG_APP_ROOT="$(pwd -P)"
-export PHARMA_DATA_PACKAGE="$YAOHENG_APP_ROOT/00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据"
-export PHARMA_PRIVATE_MASTERDATA_FILE="$YAOHENG_APP_ROOT/competition_configuration/pharmaceutical_masterdata.json"
-export PHARMA_PRIVATE_TERMINOLOGY_FILE="$YAOHENG_APP_ROOT/competition_configuration/pharmaceutical_terminology_original.json"
-bash 05_原型/scripts/stop.sh 2>/dev/null; bash 05_原型/scripts/bootstrap.sh && bash 05_原型/scripts/start.sh
-```
-
-成功后行业/企业选择中出现 `pharmaceutical:competition`（S1/S2/S3/Q2 原题场景）；三个合成上下文独立保留。`competition_configuration/scenarios.json` 是比赛验收场景清单（`run_acceptance.py --private-scenarios`）。未启用时 bootstrap 跳过原题摄取，仅构建合成包，不会用合成合同校验原题数据。
+赛题数据包位于仓库内，`bootstrap.sh` 默认摄取——启动后“数据范围”即有 `pharmaceutical:competition`（S1/S2/S3/Q2 原题场景，`competition_configuration/scenarios.json` 为验收清单）。通过“数据中心·业务数据”导入并解析的新数据集会追加为新的数据范围。合成演示上下文默认不进目录（`PHARMA_SHOW_TEST_CONTEXTS=1` 可列出校验）；目录为空时工作台引导到数据中心导入。

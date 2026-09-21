@@ -106,7 +106,7 @@ def _rationale(evaluation, signal_ids):
 
 def advise(evaluation, snapshot, gateway_factory=None):
     """模型只选择已验证信号；程序生成与确定性动作一致的说明。"""
-    route = (gateway_factory or _default_gateway_factory)('decision')
+    route = (gateway_factory or _default_gateway_factory)('extraction')
     result = {**evaluation, 'advisory_model': route.model,
               'advisory_prompt_version': ADVISORY_PROMPT_VERSION,
               'advisory_identity': {'requested_model': route.model, 'returned_model': None,

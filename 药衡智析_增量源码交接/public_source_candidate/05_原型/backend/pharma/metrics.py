@@ -311,12 +311,21 @@ def benchmark(product, month, left=None, right=None, analysis_type='monthly'):
             'contribution':contribution(c['delta'],denominator),'numerator':c['delta'],'denominator':denominator,
             'comparison_period':a['period'], 'comparison_object':f'{left}−{right}',
             'contribution_reason':'跨厂单位成本总差额为0' if denominator is not None and D(denominator)==0 else None})
+    from .config import SYNTHETIC_DETAIL_FACTORIES as _synth_factories
+    if _synth_factories:
+        benchmark_hypothesis='跨厂成本差异已由同规格月度成本确认；规模、设备及工艺差异需核查。当前二厂明细为按汇总校准的合成演示数据，结构结论仅用于演示。'
+        benchmark_missing=['二厂真实经营明细（现有为合成演示明细）','相同口径设备利用率与批次工艺记录']
+    else:
+        # 2026-09-22 起默认停用合成明细：二厂只有题包成本汇总口径，拆结构到
+        # 要素层为止，原材料下钻缺失按"证据支持假设/证据不足"合同输出归因推测。
+        benchmark_hypothesis='跨厂成本差异已由同规格月度成本与三要素汇总口径确认；规模、设备及工艺差异需核查。二厂缺少原材料/费用等经营明细，结构归因仅到要素层，更深层原因以证据支持假设表述、不认定因果。'
+        benchmark_missing=['二厂原材料消耗与制造费用明细（当前仅有成本汇总口径）','相同口径设备利用率与批次工艺记录']
     return {'analysis_type':analysis_type,'period':a['period'],'direction':f'{left}−{right}，以{right}为分母','product':product,'month':month,'left':left,'right':right,
             'snapshot_ids':[a['snapshot_id'],b['snapshot_id']], 'summary':summary,'elements':elements,
             'details':{'left':a['details'],'right':b['details']},
-            'hypotheses':[{'claim_type':'hypothesis','hypothesis':'跨厂成本差异已由同规格月度成本确认；规模、设备及工艺差异需核查。当前二厂明细为按汇总校准的合成演示数据，结构结论仅用于演示。',
+            'hypotheses':[{'claim_type':'hypothesis','hypothesis':benchmark_hypothesis,
               'metric_refs':[a['metrics']['unit_cost']['metric_id'],b['metrics']['unit_cost']['metric_id']],
-              'evidence_refs':[],'missing_evidence':['二厂真实经营明细（现有为合成演示明细）','相同口径设备利用率与批次工艺记录'],
+              'evidence_refs':[],'missing_evidence':benchmark_missing,
               'suggestion':'先核对两厂归集口径与真实明细；生产/GMP变更需人工批准。'}],
             'limits':['总成本对比受产量影响，不能作为单位效率结论','文档原因证据由报告检索流程补充；仅表内数值不能证明因果']}
 

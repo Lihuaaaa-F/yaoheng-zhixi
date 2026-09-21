@@ -82,13 +82,13 @@ def test_mapping_plan_reuse_by_header_fingerprint(isolated_runtime):
 
 def test_model_settings_save_resolve_and_no_secret_echo(isolated_runtime):
     result = model_settings.save_settings({'connections': {
-        'narrative': {'model': 'm-x', 'base_url': 'https://api.invalid/v4', 'protocol': 'openai',
+        'analysis': {'model': 'm-x', 'base_url': 'https://api.invalid/v4', 'protocol': 'openai',
                       'api_key': 'sk-SECRET-VALUE'}}})
-    conn = result['connections']['narrative']
+    conn = result['connections']['analysis']
     assert conn['configured'] and conn['key_set']
     assert 'sk-SECRET-VALUE' not in json.dumps(result)            # 状态不回显密钥
     assert 'sk-SECRET-VALUE' not in (isolated_runtime / 'model_settings.json').read_text(encoding='utf-8')
-    resolved = model_settings.resolve('narrative')
+    resolved = model_settings.resolve('analysis')
     assert resolved['model'] == 'm-x' and resolved.get('key_file')
     assert Path(resolved['key_file']).read_text(encoding='utf-8') == 'sk-SECRET-VALUE'
 
@@ -96,4 +96,4 @@ def test_model_settings_save_resolve_and_no_secret_echo(isolated_runtime):
 def test_model_settings_rejects_inline_credentials_in_url(isolated_runtime):
     with pytest.raises(ValueError, match='INVALID_SETTINGS_SECTION'):
         model_settings.save_settings({'connections': {
-            'narrative': {'base_url': 'https://user:pass@api.invalid/v4'}}})
+            'analysis': {'base_url': 'https://user:pass@api.invalid/v4'}}})
