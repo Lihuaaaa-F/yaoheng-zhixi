@@ -67,8 +67,8 @@ def test_template_identity_sanitized_by_role_without_private_literals():
     run=OxmlElement('w:r');text=OxmlElement('w:t');text.text='独立合成公司水印'
     run.append(text);inner.append(run);box.append(inner);p._p.append(box)
     sanitize_template_identity(doc)
-    assert table.cell(0,1).text=='成本智能分析系统（生成稿·待责任人复核署名）'
-    assert table.cell(1,1).text=='待人工审核'
+    assert table.cell(0,1).text=='财务部成本会计'  # 模板md固定值（2026-09-21三轮：模板为准）
+    assert table.cell(1,1).text=='财务总监'  # 模板md固定值
     assert text.text=='药衡智析 · 成本分析'
     assert '合成人名' not in doc.element.xml
 

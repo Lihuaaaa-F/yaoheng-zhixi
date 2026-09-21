@@ -321,8 +321,9 @@ def sanitize_template_identity(doc):
     The original template stays read-only. No original personal name or company
     string is needed in source code to sanitize a working report.
     """
-    labels = {'编制人': '成本智能分析系统（生成稿·待责任人复核署名）', '审核人': '待人工审核',
-              '编制单位': '药衡智析 · 产品成本分析（演示）', '企业名称': '药衡智析演示企业（模拟数据）'}
+    # 模板 md 规定的固定值（2026-09-21 真人评审三轮：模板已显示的以模板为准）
+    labels = {'编制人': '财务部成本会计', '审核人': '财务总监',
+              '编制单位': '中药一厂 财务部', '企业名称': '中药一厂', '数据来源': 'ERP系统成本模块'}
     for table in doc.tables:
         for row in table.rows:
             for index, cell in enumerate(row.cells[:-1]):
@@ -474,12 +475,41 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
         if duplicate:continue
         if target is not None:seen_targets.add(target)
         seen_sigs.append(sig);actionable.append(f)
-    table('改进建议表格',['问题与核查行动','预期证据'],[[str(i+1)+'．'+f.get('rendered_text','')+'\n核查对象：'+f.get('verification_target','待补')+'\n行动：'+f.get('suggestion'), '、'.join(f.get('expected_evidence',[]) if isinstance(f.get('expected_evidence'),list) else [f.get('expected_evidence') or '核查对象的原始记录'])] for i,f in enumerate(actionable)])
-    table('整改任务表格',['责任部门／角色','优先级','期限依据与状态'],[[str(i+1)+'．'+(f.get('department') or '责任部门待定')+'／'+(f.get('responsible_role') or '待分配')+'（姓名待分配）', {'high':'高','medium':'中','low':'低'}.get(f.get('priority'),'中'), (f.get('deadline_basis') or '下次成本复核前，具体日期由用户确认')+'；待确认发送'] for i,f in enumerate(actionable)])
+    # 6.3 列结构按模板 md：序号/建议事项/责任部门/优先级/预期效果/建议完成时间
+    table('改进建议表格',['序号','建议事项','责任部门','优先级','预期效果','建议完成时间'],[[
+        str(i+1),f.get('suggestion','待补'),(f.get('department') or '责任部门待定'),
+        {'high':'高','medium':'中','low':'低'}.get(f.get('priority'),'中'),
+        '、'.join((f.get('expected_evidence') or ['核查对象的原始记录'])[:2]),
+        (f.get('deadline_basis') or '下次成本复核前，具体日期由责任部门确认')]
+        for i,f in enumerate(actionable)])
+    # 6.4 列结构按模板 md：任务编号/任务标题/责任人/优先级/来源/截止时间
+    table('整改任务表格',['任务编号','任务标题','责任人','优先级','来源','截止时间'],[[
+        'YH-'+hashlib.sha256((f.get('suggestion','')+str(i)).encode()).hexdigest()[:8],
+        f.get('verification_target','核查任务'),
+        (f.get('responsible_role') or '待分配'),
+        {'high':'高','medium':'中','low':'低'}.get(f.get('priority'),'中'),
+        '本报告'+str(i+1)+'号建议',
+        (f.get('deadline_basis') or '下次成本复核前，由责任部门确认日期')+'（确认后经模拟RPA发送）']
+        for i,f in enumerate(actionable)])
     output=Path(output);output.parent.mkdir(parents=True,exist_ok=True)
     insert_element_analysis(doc,snapshot,values)
     add_reader_charts(doc,snapshot,benchmark,dynamic_anchors,output)
     add_reader_summary(doc,snapshot,narrative,output)
+    # 编制说明与知识库引用（模板 md 尾部要求；引用位置取自本期检索证据）
+    doc.add_paragraph('编制说明')
+    doc.add_paragraph('本报告由成本智能分析系统自动生成，数据来源于ERP系统，分析文本由AI大模型结合行业知识库自动撰写。如有疑问请联系财务部。')
+    doc.add_paragraph('知识库引用')
+    def _kb_ref(keyword,default_doc):
+        for e in evidence.get('evidence',[]):
+            src=str(e.get('source') or e.get('source_file') or '')
+            if keyword in src:
+                loc=('第'+str(e.get('page'))+'页') if e.get('page') else str(e.get('location') or '见文档')
+                return src+'（'+loc+'）'
+        return default_doc+'（本期未检索到适用段落，待核）'
+    doc.add_paragraph('产品配方：'+_kb_ref('配方','产品配方文档（题包03_制药知识文档）'))
+    doc.add_paragraph('工艺路线：'+_kb_ref('工艺','生产工艺文档_中药一厂.pdf'))
+    doc.add_paragraph('GMP要求：'+_kb_ref('GMP','药品生产质量管理规范GMP.pdf / GMP法规核心摘要'))
+    doc.add_paragraph('行业基准：'+_kb_ref('基准','行业成本基准数据_2026（题包02_行业参考数据）'))
     doc.add_paragraph('来源与审核说明')
     doc.add_paragraph('数据来源：成本汇总表、原材料明细表、人工与制造费用表 · '+snapshot['product']+' · '+snapshot['factory']+' · '+report_period_label(snapshot)+'。金额以元、单位成本以元/盒计；季度按产量加权。')
     source_map={e['evidence_id']:e for e in evidence.get('evidence',[])}
@@ -632,12 +662,12 @@ def compact_working_template(output=TEMPLATE,map_path=MAP_PATH):
     from docx.oxml import OxmlElement
     from docx.oxml.ns import qn
     d=Document(output);meta=json.loads(Path(map_path).read_text())
-    if meta.get('reader_template_version')=='reader-v2':return
+    if meta.get('reader_template_version')=='reader-v3':return
     body=d.element.body
-    heading=next(p._p for p in d.paragraphs if p.text=='一、封面与基本信息')
-    for child in list(body):
-        if child is heading:break
-        body.remove(child)
+    # 2026-09-21 真人评审三轮反馈：模板前置章节（解决方案封面、文档控制三表、
+    # 阅读指南、目录域）是题包模板的组成部分，予以完整保留，不再裁剪；
+    # 报告生成只做占位符回填与"模板未说明"处的增补。
+    _=body
     # Existing blank同比 cells are omissions, not missing data.
     overview=next(t for t in d.tables if any('去年同月' in c.text for c in t.rows[0].cells))
     for row,cn in zip(overview.rows[4:7],['材料','人工','制造费用']):
@@ -656,7 +686,7 @@ def compact_working_template(output=TEMPLATE,map_path=MAP_PATH):
                 for x in list(pp.findall(qn('w:'+tag))):pp.remove(x)
     style_reader(d)
     d.save(output)
-    meta['reader_template_version']='reader-v2'
+    meta['reader_template_version']='reader-v3'
     meta['template_hash']=hashlib.sha256(Path(output).read_bytes()).hexdigest()
     meta['working_changes']=['移除重复封面、空文控表和不适用阅读指南','六个赛题固定章节保留','同比三要素单独绑定','中文字体与A4样式统一']
     Path(map_path).write_text(json.dumps(meta,ensure_ascii=False,indent=2))
@@ -750,7 +780,7 @@ def style_reader(doc):
         fmt.keep_with_next=bool(fmt.keep_with_next) or heading or '｜' in text or (not text and bool(p._p.xpath('.//w:bookmarkStart')))
         if not text and not p._p.xpath('.//w:drawing'):fmt.space_after=Pt(0);fmt.line_spacing=Pt(1)
         if text.endswith('成本分析报告'):fmt.keep_with_next=True
-        fmt.keep_together=True
+        fmt.keep_together=bool(heading or is_caption or len(text)<=120)  # 长段允许跨页，避免整段推页产生大片空白
         if heading:fmt.space_before=Pt(12);fmt.space_after=Pt(6);fmt.first_line_indent=None
         if is_toc:fmt.space_before=Pt(1);fmt.space_after=Pt(1);fmt.line_spacing=1.3;fmt.first_line_indent=None
         if is_caption:
@@ -770,10 +800,11 @@ def style_reader(doc):
         for col,width in zip(t.columns,widths):col.width=Cm(width)
         for row in t.rows:
             for cell,width in zip(row.cells,widths):cell.width=Cm(width)
+        allow_split=len(t.rows)>12  # 长表允许跨页（表头已随 tblHeader 重复），避免整表推页留白
         for i,row in enumerate(t.rows):
             trpr=row._tr.get_or_add_trPr()
             for h in list(trpr.findall(qn('w:trHeight'))):trpr.remove(h)
-            if trpr.find(qn('w:cantSplit')) is None:trpr.append(OxmlElement('w:cantSplit'))
+            if not allow_split and trpr.find(qn('w:cantSplit')) is None:trpr.append(OxmlElement('w:cantSplit'))
             if i==0 and trpr.find(qn('w:tblHeader')) is None:trpr.append(OxmlElement('w:tblHeader'))
             for cell in row.cells:
                 cell.vertical_alignment=1  # 垂直居中
@@ -798,37 +829,45 @@ def add_reader_summary(doc,snapshot,narrative,output):
     from docx.oxml import OxmlElement
     from docx.oxml.ns import qn
     from docx.shared import Pt
-    first=doc.paragraphs[0]
-    title=first.insert_paragraph_before(snapshot['product']+'成本分析报告')
-    title.paragraph_format.keep_with_next=True
+    # 2026-09-21 真人评审三轮：模板前置章节（封面/文档控制/阅读指南/目录域）完整保留，
+    # 自创大标题取消（模板封面已有）。文档头按模板 md 增补；核心发现与审核状态
+    # 作为"模板未说明"的增补插在"一、封面与基本信息"之前。
+    anchor=next((p for p in doc.paragraphs if p.text.strip()=='一、封面与基本信息'),None)
+    if anchor is None:return
     m=snapshot['metrics'];label=snapshot['period']['start'] if snapshot['period']['start']==snapshot['period']['end'] else snapshot['period']['start']+' 至 '+snapshot['period']['end']
-    first.insert_paragraph_before(snapshot['factory']+' · '+label+' · '+snapshot.get('specification',''))
-    first.insert_paragraph_before('人工审核：待审核。')
+    report_no='YH-'+hashlib.sha256((snapshot['snapshot_id']) .encode()).hexdigest()[:8].upper()
+    from datetime import date as _date
+    head_lines=['报告编号：'+report_no,'分析周期：'+label,'编制单位：中药一厂 财务部','编制日期：'+_date.today().isoformat(),'文件密级：内部']
+    for line in head_lines:anchor.insert_paragraph_before(line)
     mode='本次采用基础分析，原因解释待复核。' if not narrative.get('model_live') or narrative.get('status')!='PASS' else '本次采用模型辅助解释；因果归因仍待人工复核。'
-    first.insert_paragraph_before(mode)
+    anchor.insert_paragraph_before('人工审核：待审核。'+mode)
     ranked=sorted(snapshot['elements'],key=lambda e:abs(Decimal(e.get('unit_delta') or '0')),reverse=True)
     lead=ranked[0]
     from decimal import Decimal as _D
     _lead_delta=_D(str(lead.get('unit_delta') or '0'))
-    first.insert_paragraph_before('核心发现：本月单位成本 '+number(m['unit_cost'])+' 元/盒，总成本 '+number(m['total_cost'])+' 元。对成本影响最大的是'+lead['name']+'，每盒比上月'+('增加' if _lead_delta>=0 else '减少')+' '+number(str(lead.get('unit_delta') or '0').lstrip('-'))+' 元。正文第三节按要素拆解变动并给出方向评估，第五节是与中药二厂的对比，第六节给出可直接执行的核查建议。')
-    # 目录（2026-09-21 真人评审二轮反馈）：扫描全文实际标题生成含二级子目录的
-    # 完整目录；每个标题埋书签，目录行做成文档内跳转链接（转 PDF 后链接保留）。
-    # 一级行保持全角空格前缀，兼容 convert_pdf 的页码回写；子标题行无页码。
-    heads=[]
-    for para in doc.paragraphs:
-        t=layout_text(para.text).strip()
-        if re.match(r'^[一二三四五六七八九十]+、',t) or re.match(r'^[1-9][.][1-9](?:[.][1-9])?[ ]',t):
-            heads.append((para,t,re.match(r'^[一二三四五六七八九十]+、',t) is not None))
-    toc=first.insert_paragraph_before('目录')
-    for index,(para,t,is_top) in enumerate(heads):
+    anchor.insert_paragraph_before('核心发现：本月单位成本 '+number(m['unit_cost'])+' 元/盒，总成本 '+number(m['total_cost'])+' 元。对成本影响最大的是'+lead['name']+'，每盒比上月'+('增加' if _lead_delta>=0 else '减少')+' '+number(str(lead.get('unit_delta') or '0').lstrip('-'))+' 元。正文第三节按要素拆解变动并给出方向评估，第五节是与中药二厂的对比，第六节给出可直接执行的核查建议。')
+    # 目录（真人评审二轮）：完整子目录；条目插在模板目录域提示行之后（保留域可更新），
+    # 一级行保持全角空格前缀以兼容 convert_pdf 的页码回写。
+    hint=next((p for p in doc.paragraphs if '更新域' in p.text),None)
+    if hint is None:return
+    insert_at=hint
+    heads=[(para,layout_text(para.text).strip()) for para in doc.paragraphs]
+    heads=[(para,t) for para,t in heads if re.match(r'^[一二三四五六七八九十]+、',t) or re.match(r'^[1-9][.][1-9](?:[.][1-9])?[ ]',t)]
+    for index,(para,t) in enumerate(heads):
         name='YH_SEC_'+str(index)
         bmk=OxmlElement('w:bookmarkStart');bmk.set(qn('w:id'),str(31000+index));bmk.set(qn('w:name'),name)
         bmk_end=OxmlElement('w:bookmarkEnd');bmk_end.set(qn('w:id'),str(31000+index))
         para._p.insert(0,bmk);para._p.append(bmk_end)
-        line=first.insert_paragraph_before((chr(0x3000) if is_top else chr(0x3000)*2)+t)
-        line.paragraph_format.space_after=Pt(1);line.paragraph_format.keep_with_next=True
+        is_top=bool(re.match(r'^[一二三四五六七八九十]+、',t))
+        new_p=OxmlElement('w:p')
+        insert_at._p.addnext(new_p)
+        from docx.text.paragraph import Paragraph
+        line=Paragraph(new_p,insert_at._parent)
+        line.text=(chr(0x3000) if is_top else chr(0x3000)*2)+t
+        line.paragraph_format.space_after=Pt(1)
         line.style='Normal'
-    mark=OxmlElement('w:bookmarkStart');mark.set(qn('w:id'),'30000');mark.set(qn('w:name'),'YH_TOC');toc._p.insert(0,mark)
+        insert_at=line
+    mark=OxmlElement('w:bookmarkStart');mark.set(qn('w:id'),'30000');mark.set(qn('w:name'),'YH_TOC');hint._p.insert(0,mark)
 
 
 def add_reader_charts(doc,snapshot,benchmark,anchors,output):
@@ -876,16 +915,16 @@ def add_reader_charts(doc,snapshot,benchmark,anchors,output):
         neg_bottom=min(deltas+[0]);pos_top=max(deltas+[0])
         neg_span=max(abs(neg_bottom),total_top*0.05,0.05);pos_span=max(pos_top,total_top*0.05,0.05)
         fig,ax=plt.subplots(figsize=(8,3.3));xs=['上期单位成本']+[e['name']+' 变动' for e in els]+['本期单位成本']
-        ax.bar(0,float(base),width=.58,color='#82939F');ax.text(0,float(base)+total_top*0.015,f'{float(base):.2f}',ha='center',va='bottom',fontsize=9)
+        ax.bar(0,float(base),width=.58,color='#82939F',zorder=3);ax.text(0,float(base)+total_top*0.015,f'{float(base):.2f}',ha='center',va='bottom',fontsize=9)
         run_note=float(base)
         for i,e in enumerate(els,1):
             v=deltas[i-1]
-            ax.bar(i,v,width=.58,color='#A56B3D' if v>=0 else '#1F6E5E')
+            ax.bar(i,v,width=.58,color='#A56B3D' if v>=0 else '#1F6E5E',zorder=3)
             ax.text(i,v+(pos_span*0.08 if v>=0 else -pos_span*0.08),(('+' if v>=0 else '−')+number(e.get('unit_delta') or 0).lstrip('-')),ha='center',va='bottom' if v>=0 else 'top',fontsize=9,color='#5A3B28' if v>=0 else '#1F6E5E')
             ax.text(i,neg_bottom-abs(neg_bottom)*0.02,'累计 '+f'{run_note:.2f}→{run_note+v:.2f}',ha='center',va='top',fontsize=7.5,color='#8A8A8A')
             run_note+=v
-        ax.bar(len(els)+1,float(current),width=.58,color='#176C8C');ax.text(len(els)+1,float(current)+total_top*0.015,f'{float(current):.2f}',ha='center',va='bottom',fontsize=9)
-        ax.axhline(0,color='#3A3A3A',lw=1.2)
+        ax.bar(len(els)+1,float(current),width=.58,color='#176C8C',zorder=3);ax.text(len(els)+1,float(current)+total_top*0.015,f'{float(current):.2f}',ha='center',va='bottom',fontsize=9)
+        ax.axhline(0,color='#3A3A3A',lw=1.2,zorder=1)
         ax.set_ylim(neg_bottom-neg_span*0.55,total_top*1.14)
         ax.set_xticks(range(len(els)+2),xs,fontsize=8.5);ax.set_ylabel('元/盒（零线以上=单位成本，零线以下=各要素变动额）');ax.grid(axis='y',alpha=.22)
         insert(fig,'waterfall',anchor,subtitle+'｜上期至本期单位成本变动（零线双区：负向柱在零线下）')
