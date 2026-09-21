@@ -747,6 +747,14 @@ def compact_working_template(output=TEMPLATE,map_path=MAP_PATH):
         if ppr is not None:
             for tag in ('pageBreakBefore','sectPr'):
                 for x in list(ppr.findall(qn('w:'+tag))):ppr.remove(x)
+        # 目录域残留处理（五轮：用户反馈目录标题与内容分两页）：空 TOC 域的
+        # fldChar/instrText 会让 LibreOffice 把域后内容强推下一页；静态目录
+        # 由渲染期生成，域字符与"更新域"提示行一并移除。
+        for r_el in list(pp_._p.iter(qn('w:r'))):
+            if r_el.find(qn('w:fldChar')) is not None or r_el.find(qn('w:instrText')) is not None:
+                pp_._p.remove(r_el)
+        if pp_.text.strip().startswith('（右键点击此处'):
+            pp_._p.getparent().remove(pp_._p)
     if body_start is not None:body_start.paragraph_format.page_break_before=True
     # Existing blank同比 cells are omissions, not missing data.
     overview=next(t for t in d.tables if any('去年同月' in c.text for c in t.rows[0].cells))
