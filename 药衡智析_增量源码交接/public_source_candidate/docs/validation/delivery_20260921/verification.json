@@ -1,0 +1,64 @@
+{
+  "run_id": "delivery_20260921",
+  "commit": "ded9267",
+  "verification_commit": "ded9267",
+  "attempt_id": "attempt-live-20260921",
+  "tested_code_commit": "ded9267",
+  "dimensions": {
+    "narrative_contract": {
+      "status": "PASS",
+      "reason": "两场景 glm-5.3 实调 narrative PASS（v10 四舍五入唯一绑定合同）"
+    },
+    "model_participation": {
+      "status": "PASS",
+      "reason": "model_live+responded+身份核验 VERIFIED，每份 2 次调用"
+    },
+    "evidence_applicability": {
+      "status": "PASS",
+      "reason": "KB 11 源 180 chunks，逐条适用性核对通过"
+    },
+    "deterministic_recalc": {
+      "status": "PASS",
+      "reason": "Decimal 独立重算零误差（沿用既有 golden 回归）"
+    },
+    "rpa_loop": {
+      "status": "PASS",
+      "reason": "DRAFT→confirm→SENT→署名 CONFIRMED 复验通过"
+    },
+    "performance": {
+      "status": "PASS",
+      "reason": "对标冷 14.7-18.6s（原60-72s）；热力图缓存命中 0.29s（原每次~14s）"
+    },
+    "human_review": {
+      "status": "PENDING",
+      "reason": "三场景 0-5 归因/可读性/版式待真人评分"
+    },
+    "media_freshness": {
+      "status": "PENDING",
+      "reason": "演示视频仍为 demo_20260920(03a5a30)，待修复后重录"
+    }
+  },
+  "scenarios": [
+    {
+      "id": "S1_六味地黄胶囊_2026-06",
+      "job_id": "fe8bfa735d9a4f4994108c8b8094f300",
+      "status": "NARRATIVE_PASS_HUMAN_PENDING",
+      "docx": "d218f8a3ba4c25b38da4d12a810137291a4b584ea4fd32baaed43c08629d174b",
+      "pdf": "908a4d915c60a942b4037da5d9b63d4833dda5aa4642d33b8929419448aad32a",
+      "error": null,
+      "snapshot_id": "83a0143c4bd5dde6a3e8017d88a035b4b282f150f58575ea738a3f71e87f6ab6"
+    },
+    {
+      "id": "S2_银黄口服液_2026-06",
+      "job_id": "d13e75ee079e4d4baa1677f535e129e6",
+      "status": "NARRATIVE_PASS_HUMAN_PENDING",
+      "docx": "30ffe07414be6906fe59635292683100a432eb2ed333d29075cababe029ebdfa",
+      "pdf": "d3e8eca25f3c22e87df2ea16e8796c36b480eb586b764bf33cda742a62707ea8",
+      "error": null,
+      "snapshot_id": null
+    }
+  ],
+  "human_review": "PENDING",
+  "competition_ready": false,
+  "status": "PASS_WITH_HUMAN_PENDING"
+}

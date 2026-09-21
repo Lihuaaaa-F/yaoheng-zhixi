@@ -1,0 +1,56 @@
+{
+  "run_id": "delivery_20260921",
+  "attempt_id": "attempt-live-20260921",
+  "revision": "ded9267",
+  "revision_kind": "git",
+  "commit": "ded9267",
+  "required_scenarios": [
+    "S1_六味地黄胶囊_2026-06",
+    "S2_银黄口服液_2026-06"
+  ],
+  "scenarios": [
+    {
+      "id": "S1_六味地黄胶囊_2026-06",
+      "job_id": "fe8bfa735d9a4f4994108c8b8094f300",
+      "attempt_id": "attempt-live-20260921",
+      "status": "NARRATIVE_PASS_HUMAN_PENDING",
+      "docx": "d218f8a3ba4c25b38da4d12a810137291a4b584ea4fd32baaed43c08629d174b",
+      "pdf": "908a4d915c60a942b4037da5d9b63d4833dda5aa4642d33b8929419448aad32a",
+      "error": null,
+      "snapshot_id": "83a0143c4bd5dde6a3e8017d88a035b4b282f150f58575ea738a3f71e87f6ab6",
+      "artifacts": {
+        "docx": "六味地黄胶囊_2026-06.docx",
+        "pdf": "六味地黄胶囊_2026-06.pdf",
+        "audit": "六味地黄胶囊_2026-06_machine_audit.json"
+      }
+    },
+    {
+      "id": "S2_银黄口服液_2026-06",
+      "job_id": "d13e75ee079e4d4baa1677f535e129e6",
+      "attempt_id": "attempt-live-20260921",
+      "status": "NARRATIVE_PASS_HUMAN_PENDING",
+      "docx": "30ffe07414be6906fe59635292683100a432eb2ed333d29075cababe029ebdfa",
+      "pdf": "d3e8eca25f3c22e87df2ea16e8796c36b480eb586b764bf33cda742a62707ea8",
+      "error": null,
+      "snapshot_id": null,
+      "artifacts": {
+        "docx": "银黄口服液_2026-06.docx",
+        "pdf": "银黄口服液_2026-06.pdf",
+        "audit": "银黄口服液_2026-06_machine_audit.json"
+      }
+    }
+  ],
+  "receipts": {
+    "runtime_measurements": "docs/current_run.json#runtime_measurements"
+  },
+  "human_review": "PENDING",
+  "competition_ready": false,
+  "model_provenance": {
+    "model": "glm-5.3",
+    "protocol": "openai",
+    "endpoint": "open.bigmodel.cn/api/paas/v4(+coding fallback)",
+    "identity": "VERIFIED",
+    "prompt_version": "v19-rounded-number-binding",
+    "validator_version": "claim-contract-v10-rounded-metric-binding"
+  }
+}

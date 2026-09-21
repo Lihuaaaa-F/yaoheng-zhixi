@@ -1,40 +1,43 @@
 {
   "run_id": "delivery_20260921",
   "attempt_id": "2b260558de0d42e495a7cea235702b41",
-  "revision": "39c0e75",
+  "revision": "ded9267",
   "revision_kind": "git",
-  "commit": "39c0e75（修复轮：问题清单_全面审计_20260921 全项实施，见 git log 25d44bc..39c0e75）",
+  "commit": "ded9267",
   "required_scenarios": [
-    "mechanical",
-    "chemical",
-    "pharma_synthetic",
-    "S1",
-    "S2",
-    "S3",
-    "Q2"
+    "S1_六味地黄胶囊_2026-06",
+    "S2_银黄口服液_2026-06"
   ],
   "scenarios": [
     {
       "id": "S1_六味地黄胶囊_2026-06",
       "job_id": "fe8bfa735d9a4f4994108c8b8094f300",
+      "attempt_id": "attempt-live-20260921",
       "status": "NARRATIVE_PASS_HUMAN_PENDING",
-      "narrative": "PASS",
-      "model_participation": "PASS",
-      "model": "glm-5.3",
-      "identity": "VERIFIED",
-      "docx": "07_交付/delivery_20260921/六味地黄胶囊_2026-06.docx",
-      "pdf": "07_交付/delivery_20260921/六味地黄胶囊_2026-06.pdf"
+      "docx": "d218f8a3ba4c25b38da4d12a810137291a4b584ea4fd32baaed43c08629d174b",
+      "pdf": "908a4d915c60a942b4037da5d9b63d4833dda5aa4642d33b8929419448aad32a",
+      "error": null,
+      "snapshot_id": "83a0143c4bd5dde6a3e8017d88a035b4b282f150f58575ea738a3f71e87f6ab6",
+      "artifacts": {
+        "docx": "六味地黄胶囊_2026-06.docx",
+        "pdf": "六味地黄胶囊_2026-06.pdf",
+        "audit": "六味地黄胶囊_2026-06_machine_audit.json"
+      }
     },
     {
       "id": "S2_银黄口服液_2026-06",
       "job_id": "d13e75ee079e4d4baa1677f535e129e6",
+      "attempt_id": "attempt-live-20260921",
       "status": "NARRATIVE_PASS_HUMAN_PENDING",
-      "narrative": "PASS",
-      "model_participation": "PASS",
-      "model": "glm-5.3",
-      "identity": "VERIFIED",
-      "docx": "07_交付/delivery_20260921/银黄口服液_2026-06.docx",
-      "pdf": "07_交付/delivery_20260921/银黄口服液_2026-06.pdf"
+      "docx": "30ffe07414be6906fe59635292683100a432eb2ed333d29075cababe029ebdfa",
+      "pdf": "d3e8eca25f3c22e87df2ea16e8796c36b480eb586b764bf33cda742a62707ea8",
+      "error": null,
+      "snapshot_id": null,
+      "artifacts": {
+        "docx": "银黄口服液_2026-06.docx",
+        "pdf": "银黄口服液_2026-06.pdf",
+        "audit": "银黄口服液_2026-06_machine_audit.json"
+      }
     }
   ],
   "receipts": {
@@ -46,10 +49,10 @@
   "human_review": "PENDING",
   "competition_ready": false,
   "model_provenance": "model_provenance.json",
-  "public_manifest": "validation/delivery_20260919_final/manifest.json",
-  "verification_receipt": "validation/delivery_20260919_final/verification.json",
+  "public_manifest": "validation/delivery_20260921/manifest.json",
+  "verification_receipt": "validation/delivery_20260921/verification.json",
   "verification_exit_code": 0,
-  "automatic_status": "PASS",
+  "automatic_status": "PASS_WITH_HUMAN_PENDING",
   "model": {
     "provider": "DeepSeek official API",
     "model": "deepseek-flash",
