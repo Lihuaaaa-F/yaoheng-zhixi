@@ -86,7 +86,12 @@ def normalize_template(output=TEMPLATE, map_path=MAP_PATH):
                         rename[name]='{{'+field+'}}'
                         entries.append({'original':name,'field':field,'xml_part':info.filename,'paragraph_index':i,'marker':marker,'context':text,'unit':binding_semantics(field,ratio)[1],'source':binding_semantics(field,ratio)[0],'missing_policy':'N/A并说明缺值原因','semantic':name+('变动率' if ratio else '')})
                     replace_text_nodes(nodes,rename)
-                # 2026-09-21 真人评审四轮（用户裁定）：模板水印与页眉装饰完整保留，不再剥离。
+                # 2026-09-21 五轮（用户裁定反转）：水印文字移除——只删 v:textpath
+                # 节点本身，页眉 logo 绘图与红线装饰不受影响。
+                for parent in xml.iter():
+                    for child in list(parent):
+                        if isinstance(child.tag,str) and child.tag.endswith('}textpath'):
+                            parent.remove(child)
                 raw=ET.tostring(xml,encoding='utf-8',xml_declaration=True)
             zout.writestr(info,raw)
     result={'original_hash':hashlib.sha256(original.read_bytes()).hexdigest(),'template_hash':hashlib.sha256(output.read_bytes()).hexdigest(),'original_unique':len(set(original_names)),'original_occurrences':len(original_names),'placeholders':entries}
@@ -721,12 +726,28 @@ def compact_working_template(output=TEMPLATE,map_path=MAP_PATH):
     from docx.oxml import OxmlElement
     from docx.oxml.ns import qn
     d=Document(output);meta=json.loads(Path(map_path).read_text())
-    if meta.get('reader_template_version')=='reader-v4':return
+    if meta.get('reader_template_version')=='reader-v5':return
     body=d.element.body
-    # 2026-09-21 真人评审三轮反馈：模板前置章节（解决方案封面、文档控制三表、
-    # 阅读指南、目录域）是题包模板的组成部分，予以完整保留，不再裁剪；
-    # 报告生成只做占位符回填与"模板未说明"处的增补。
-    _=body
+    # 2026-09-21 四轮：前置章节（解决方案封面、文档控制三表、阅读指南、目录域）
+    # 完整保留不裁剪。五轮（用户反馈）：前置区内部解除强制分页与分节（消除
+    # 2-6 页大片空白与页数虚增、编制单位回流封面、目录标题与内容同页），内容
+    # 连续排布；正文起始章强制新起一页。正文（一、封面与基本信息 起）的
+    # 原生分页/分节不受影响。
+    paras=_all_paragraphs(d)
+    body_start=None
+    for pp_ in paras:
+        if pp_.text.strip()=='一、封面与基本信息':body_start=pp_;break
+    in_front=True
+    for pp_ in paras:
+        if body_start is not None and pp_._p is body_start._p:in_front=False
+        if not in_front:continue
+        for br in list(pp_._p.iter(qn('w:br'))):
+            if br.get(qn('w:type'))=='page':br.getparent().remove(br)
+        ppr=pp_._p.find(qn('w:pPr'))
+        if ppr is not None:
+            for tag in ('pageBreakBefore','sectPr'):
+                for x in list(ppr.findall(qn('w:'+tag))):ppr.remove(x)
+    if body_start is not None:body_start.paragraph_format.page_break_before=True
     # Existing blank同比 cells are omissions, not missing data.
     overview=next(t for t in d.tables if any('去年同月' in c.text for c in t.rows[0].cells))
     for row,cn in zip(overview.rows[4:7],['材料','人工','制造费用']):
@@ -740,7 +761,7 @@ def compact_working_template(output=TEMPLATE,map_path=MAP_PATH):
     # 各归各页）完整保留，不再剥离 w:br page 与 pageBreakBefore。
     style_reader(d)
     d.save(output)
-    meta['reader_template_version']='reader-v4'
+    meta['reader_template_version']='reader-v5'
     meta['template_hash']=hashlib.sha256(Path(output).read_bytes()).hexdigest()
     meta['working_changes']=['前置章节与原生分页完整保留（模板为准）','六个赛题固定章节保留','同比三要素单独绑定','动态表格按模板md列结构']
     Path(map_path).write_text(json.dumps(meta,ensure_ascii=False,indent=2))
