@@ -752,15 +752,16 @@ class ModelGateway:
         return {'routes': routes, 'main_model': main.model, 'routing_mechanism': 'PHARMA_MODEL_ROUTES/env-fallback'}
 
     def complete(self,system,user,operation='generate',prompt_version=None):
-        """串行执行一次模型调用；operation 分路由记账与预算，prompt_version 供
-        非叙事任务（如决策说明）传入自己的提示词版本，账本溯源不串用。"""
-        from .locks import exclusive
-        with exclusive(self.runtime/'model-call.lock'):
-            return self._complete(system,user,operation,prompt_version or PROMPT_VERSION)
+        """执行一次模型调用。跨进程文件锁仅覆盖预算计数事务（BEGIN IMMEDIATE
+        的原子性边界），HTTP 调用本身不串行——2026-09-21 修复：原先全程持锁
+        会把报告生成与对标页请求互相阻塞（单次最长 ~4 分钟）。operation 分路由
+        记账与预算，prompt_version 供非叙事任务传入自己的提示词版本。"""
+        return self._complete(system,user,operation,prompt_version or PROMPT_VERSION)
 
     def _complete(self,system,user,operation='generate',prompt_version=None):
         if not self.key: raise RuntimeError('MODEL_KEY_NOT_SET')
-        with _CALL_LOCK, sqlite3.connect(self.dbpath) as db:
+        from .locks import exclusive
+        with _CALL_LOCK, exclusive(self.runtime/'model-call.lock'), sqlite3.connect(self.dbpath) as db:
             db.execute('BEGIN IMMEDIATE')
             count = db.execute("SELECT count(*) FROM calls WHERE operation=?",(operation,)).fetchone()[0]
             if count >= self.max_calls: raise RuntimeError('MODEL_CALL_BUDGET_REACHED')

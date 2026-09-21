@@ -1,7 +1,28 @@
 """Deterministic dashboard views. No model calls or mutable dataset writes."""
+import threading
 from decimal import Decimal, InvalidOperation
 
 FOCUS_VERSION = 'element-mom-focus-v1'
+
+# 产品×月份热力图缓存（2026-09-21 修复 #6：原实现每次请求对 3 产品×6 月
+# 做全量分析约 14 秒，且二次请求不命中）。以目录 snapshot_id（数据版本指纹）
+# 为失效依据：数据导入/重发布后指纹变化，缓存自动失效。仅缓存默认分析器
+# 路径；测试注入的自定义 analyze 不经过缓存。进程内、有界、线程安全。
+_GRID_CACHE = {}
+_GRID_CACHE_LOCK = threading.Lock()
+_GRID_CACHE_MAX = 128
+
+
+def _grid_cache_get(key):
+    with _GRID_CACHE_LOCK:
+        return _GRID_CACHE.get(key)
+
+
+def _grid_cache_put(key, value):
+    with _GRID_CACHE_LOCK:
+        if len(_GRID_CACHE) >= _GRID_CACHE_MAX:
+            _GRID_CACHE.clear()
+        _GRID_CACHE[key] = value
 
 
 def _number(value):
@@ -66,11 +87,18 @@ def product_month_grid(context_id, factory, month, basis, *, options=None, analy
     from .industry import catalog, analyze_reference
     from .metrics import _shift
     options = options if options is not None else catalog(context_id)
+    default_analyzer = analyze is None
     analyze = analyze or analyze_reference
     if basis not in ('unit', 'total'):
         raise ValueError('INVALID_BASIS')
     if factory not in options['factories']:
         raise ValueError('UNKNOWN_FACTORY')
+    version = str(options.get('snapshot_id', options.get('data_version', '')))
+    cache_key = (context_id, factory, basis, month, version) if default_analyzer else None
+    if cache_key is not None:
+        cached = _grid_cache_get(cache_key)
+        if cached is not None:
+            return cached
     months = [_shift(month, offset) for offset in range(-5, 1)]
     elements = {'all': '全部成本'}
     cells = []
@@ -96,6 +124,9 @@ def product_month_grid(context_id, factory, month, basis, *, options=None, analy
                     cell['values'][element['key']] = {'value': value, 'unit': unit,
                         'reason': '要素成本或可比产量缺失' if value is None else None}
             cells.append(cell)
-    return {'context_id': context_id, 'factory': factory, 'basis': basis,
+    result = {'context_id': context_id, 'factory': factory, 'basis': basis,
             'months': months, 'products': options['products'],
             'elements': [{'key': key, 'name': name} for key, name in elements.items()], 'cells': cells}
+    if cache_key is not None:
+        _grid_cache_put(cache_key, result)
+    return result

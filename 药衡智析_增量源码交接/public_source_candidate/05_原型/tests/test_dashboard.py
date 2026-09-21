@@ -102,3 +102,22 @@ def test_api_focus_is_opt_in_and_same_failed_snapshot_is_not_requeued(monkeypatc
     store.update(first['job_id'],'FAILED',error='synthetic failure')
     assert api.analysis(req)['focus']['model_status']=='FAILED'
     assert len(calls)==1
+
+
+def test_product_month_grid_caches_by_data_version(monkeypatch):
+    """热力图版本化缓存：同数据版本二次请求不再重算；版本变化自动失效。"""
+    from pharma import industry
+    calls = []
+
+    def fake_analyze(cid, **kw):
+        calls.append(kw['month'])
+        return snapshot(('11',))
+
+    monkeypatch.setattr(industry, 'analyze_reference', fake_analyze)
+    opts = {'products': ['P1'], 'factories': ['F'], 'months': ['2026-06'], 'snapshot_id': 'v1'}
+    first = product_month_grid('synthetic:company', 'F', '2026-06', 'unit', options=opts)
+    after_first = len(calls)
+    second = product_month_grid('synthetic:company', 'F', '2026-06', 'unit', options=opts)
+    assert len(calls) == after_first and second == first
+    product_month_grid('synthetic:company', 'F', '2026-06', 'unit', options={**opts, 'snapshot_id': 'v2'})
+    assert len(calls) > after_first
