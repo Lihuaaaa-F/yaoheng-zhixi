@@ -888,6 +888,7 @@ def add_reader_charts(doc,snapshot,benchmark,anchors,output):
         ax.axhline(0,color='#3A3A3A',lw=1.2)
         ax.set_ylim(neg_bottom-neg_span*0.55,total_top*1.14)
         ax.set_xticks(range(len(els)+2),xs,fontsize=8.5);ax.set_ylabel('元/盒（零线以上=单位成本，零线以下=各要素变动额）');ax.grid(axis='y',alpha=.22)
+        insert(fig,'waterfall',anchor,subtitle+'｜上期至本期单位成本变动（零线双区：负向柱在零线下）')
 
     be=(benchmark or {}).get('elements',[])
     if be:
