@@ -4,13 +4,14 @@ Bounded generation: the model chooses references, the program owns numbers.
 核心合同：
 - 每个解释任务（explanation_tasks）由程序按告警/章节/跨厂差异生成，
   模型输出只允许 hypothesis / insufficient_evidence 两类定性结论；
-- 任何业务数字必须来自程序计算的指标（metric_refs 绑定），模型正文
-  出现自由数字即整体拒绝（防编造）；
+- 业务数字只能来自程序计算的指标（metric_refs 绑定）；模型文本中的
+  自由数字整体拒绝，唯一例外是注册指标值在其自身精度下的四舍五入
+  简写经程序确定性绑定（见 _rounded_metric_bindings，审计留痕）；
 - 证据引用必须与原文共享具体词组、且通过产品/期间/文档版本适用性检查；
 - 每次调用记录请求/响应 model 并核验身份，缓存键包含全链路版本指纹。
 """
 from pathlib import Path
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from typing import Literal
 import hashlib
 import json
@@ -24,8 +25,8 @@ from pydantic import BaseModel, Field, ConfigDict
 import httpx
 from .config import RUNTIME
 
-PROMPT_VERSION = 'v18-insufficient-grammar-aligned'
-VALIDATOR_VERSION = 'claim-contract-v9-cost-document-synonyms'
+PROMPT_VERSION = 'v19-rounded-number-binding'
+VALIDATOR_VERSION = 'claim-contract-v10-rounded-metric-binding'
 # Aliases may only be added after a live probe has verified that the upstream
 # really serves the requested model under that exact returned id.
 VERIFIED_ALIASES = {'glm-5.3-flash': {'glm-5.3-flash'}}
@@ -442,6 +443,72 @@ def quote_matches_product(quote, product):
     return not mentioned or product in mentioned
 
 
+def _rounded_metric_bindings(checked_text, metrics):
+    """把已扣槽位/上下文/期间/引文后残留的自由数字绑定到注册指标。
+
+    2026-09-21 修复（审计问题 #1 根治手段）：实测 glm-5.3-flash 与 DeepSeek
+    都会在 suggestion/missing_evidence 等字段写出注册值的四舍五入简写
+    （如注册 -15.2152% 被写成"下降15.2%"），旧合同一概拒收导致全线
+    DEGRADED。本函数按确定性规则识别这类简写并从 checked_text 中扣除：
+
+    - 百分号须与注册单位一致（% 标记 ↔ unit=='%'，无标记 ↔ 非 %）；
+    - 数值在自身小数位下等于注册值的 ROUND_HALF_UP 四舍五入，且符号一致；
+      中文方向词（下降/降低/减少等紧邻负值）视作已携带符号；
+    - 整数简写仅接受注册值本身即整数（"77%" 不能洗白 76.92%）；
+    - 唯一匹配才绑定；歧义或无匹配的数字原样保留（上层照旧拒绝），
+      不以放松合同换取通过率——编造的数字依然整体拒收。
+
+    返回 (扣除后的 checked_text, bindings)；bindings 进入 numeric_bindings
+    审计留痕（shown=模型原文、registered=程序注册值）。
+    """
+    registry = []
+    for m in metrics.values():
+        raw = m.get('display_value', m.get('value'))
+        try:
+            value = Decimal(str(raw))
+        except Exception:
+            continue
+        if value.is_finite():
+            registry.append((str(m.get('metric_id', m.get('label', ''))), value, str(m.get('unit', ''))))
+    if not registry:
+        return checked_text, []
+    date_spans = [match.span() for match in re.finditer(r'\d{4}-\d{2}|\d{4}/\d{1,2}', checked_text)]
+    out, last, bindings = [], 0, []
+    for match in re.finditer(r'(-?\d+(?:\.\d+)?)(%)?', checked_text):
+        if any(start <= match.start() < end for start, end in date_spans):
+            continue  # 日期段交由期间绑定/拒绝路径处理
+        token, pct = match.group(1), bool(match.group(2))
+        number = Decimal(token)
+        decimals = len(token.partition('.')[2])
+        signed = number
+        prefix = checked_text[:match.start()]
+        if re.search(r'(?:下降|降低|减少|回落|下调|缩水|收窄)[^。；;，,]{0,6}$', prefix) and number >= 0:
+            signed = -number
+        elif re.search(r'(?:上升|增长|提高|扩大|超支)[^。；;，,]{0,6}$', prefix) and number < 0:
+            signed = None  # 方向词与数值符号矛盾，交由上层拒绝
+        candidates = []
+        if signed is not None:
+            for metric_id, value, unit in registry:
+                if (unit == '%') != pct:
+                    continue
+                if (value < 0) != (signed < 0):
+                    continue
+                exponent = Decimal(1).scaleb(-decimals)
+                if value.quantize(exponent, rounding=ROUND_HALF_UP) == signed and (decimals > 0 or value == signed):
+                    candidates.append(metric_id)
+        if len(candidates) == 1:
+            metric_id = candidates[0]
+            registered = next(value for mid, value, _ in registry if mid == metric_id)
+            bindings.append({'type': 'rounded_registered_metric', 'metric_id': metric_id,
+                             'shown': token + ('%' if pct else ''), 'registered': str(registered)})
+            out.append(checked_text[last:match.start()])
+            last = match.end()
+    if not bindings:
+        return checked_text, []
+    out.append(checked_text[last:])
+    return ''.join(out), bindings
+
+
 def validate_findings(findings,snapshot,evidence):
     metrics = metric_map(snapshot)
     sources = {e['evidence_id']:e for e in evidence}
@@ -509,6 +576,9 @@ def validate_findings(findings,snapshot,evidence):
             if evidence_id in f.evidence_refs and re.search(r'\d',quote) and quote in checked_text:
                 checked_text=checked_text.replace(quote,'')
                 numeric_bindings.append({'type':'positioned_document','value':quote,'evidence_id':evidence_id,'location':sources[evidence_id].get('location') or sources[evidence_id].get('page')})
+        # 注册指标值的四舍五入简写：唯一匹配时绑定并扣除（见 _rounded_metric_bindings）。
+        checked_text,rounded_bindings=_rounded_metric_bindings(checked_text,metrics)
+        numeric_bindings.extend(rounded_bindings)
         if any(x not in f.metric_refs for x in slots): raise ValueError('unbound metric slot')
         if f.claim_type != 'numeric_fact':
             _metric_role_validation(f.text_template,snapshot,alert_refs=f.alert_refs)
@@ -605,7 +675,7 @@ class ModelGateway:
         # 耗尽（错误码 1113）后自动切换至此继续运行；主端点恢复后自动优先，
         # 无需改代码。置 PHARMA_MODEL_CODING_BASE_URL='' 可禁用。
         self.coding_base_url = os.getenv('PHARMA_MODEL_CODING_BASE_URL','https://open.bigmodel.cn/api/coding/paas/v4').rstrip('/')
-        self.model = model or os.getenv('PHARMA_MODEL','') or configured.get('model') or 'glm-5.3-flash'
+        self.model = model or os.getenv('PHARMA_MODEL','') or configured.get('model') or 'glm-5.3'
         keypath_value = key_file or os.getenv('PHARMA_MODEL_KEY_FILE') or os.getenv('PHARMA_API_KEY_FILE') or configured.get('key_file')
         keypath = Path(keypath_value) if keypath_value else None
         # Explicit key files never silently borrow the main environment credential.
@@ -860,6 +930,7 @@ claim_type仅hypothesis或insufficient_evidence。text_template只写定性机�
 有证据支持的机制可选hypothesis，须说“可能”、说明与原文主题有关的机制，并给具体missing_evidence。没有充分证据则选insufficient_evidence，写作语法与程序校验逐条对应：（1）text_template以逗号、分号、句号、问号、感叹号或换行切分后的每个片段，都必须至少含有下列词语之一：不能、无法、不足、尚未、尚不能、缺少、缺乏、未提供、未取得、待核、需核、需要、需补、有待、没有证据、没有记录、没有数据。推荐模板：“未提供｛具体记录｝，尚不能确认｛机制｝，需核查｛对象｝。”禁止先写背景或机制铺垫分句再补限定（如“现有证据仅支持…”“该差异体现在…”开头），这类文本整体拒绝。（2）只说明具体缺什么，不夹带肯定因果；仅复述数字或告警不算原因分析。
 evidence_quotes是对象，键为evidence_refs中的ID，值必须从对应allowed_quotes逐字选择短句；不引用则两个字段分别为空数组、空对象。不得把行情当采购价、维修事件当本期净原因、工单局部损失当月度净减产，不能额外计入费用。
 missing_evidence是具体记录或测量名称的非空数组，不写未绑定的日期、指标数值、空词或确定因果；每一项长度4—120字、不带句读标点，且必须含记录/合同/台账/凭证/单价/耗用/投料/工时/收率/明细/批次/日志/计量/采购价/检验报告等业务对象名词之一（如“对应车间期间批生产记录”“对应月份采购合同台账”），“相关数据”“详细信息”“进一步资料”等泛称不合格。确需日期时，只能使用输入实际/比较期间内的年月，中文年月会规范为ISO；未知日期仍拒绝。
+数字纪律：除 deadline_basis 的1—30工作日建议窗口外，text_template、suggestion、verification_target、expected_evidence、missing_evidence 各字段一律不得手写数字、中文数词或百分比（包括年份、数量、金额、比率）。表达程度只用定性词（“明显下降”“大幅高于”）。确需引用数值程度时：只能引用输入 metrics 的 display 值，且写法必须能在自身小数位下与注册值唯一对应——符号由方向词承担（写“下降15.2%”而不是“-15.2%下降”），百分号必须与注册单位一致；无法唯一对应的数字（如整数简写77%对应76.92%、或编造值）会被整体拒绝，不要尝试绕过。
 recommendation可为null；提供时须有suggestion、verification_target、expected_evidence(具体记录数组)、responsible_role(未知写待分配)、department、priority(high/medium/low)、deadline_basis。建议须可核查，生产工艺或质量控制变更须人工批准。deadline_basis可写月度成本结账后、月度成本分析完成后或报告完成后的一至三十个工作日建议窗口（数字形式如“月度成本结账后5个工作日内”），程序绑定为待责任人确认的期限提议，不是已确认日期；金额与比例不能放在期限字段。仅将输入中的适用证据用于本任务，不编造来源。
 合法形状示例（仅展示结构，不复制示例主题）：{"explanations":[{"task_id":"输入task_id","claim_type":"insufficient_evidence","text_template":"现有证据不足以确认差异原因，需核查对应生产记录。","evidence_refs":[],"evidence_quotes":{},"missing_evidence":["实际生产记录"],"recommendation":null}]}。
 """
