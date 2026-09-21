@@ -15,6 +15,12 @@ if _env.is_file():
 RUNTIME = Path(os.environ.get('PHARMA_RUNTIME_DIR',str(APP / '.runtime')))
 RUNTIME.mkdir(parents=True, exist_ok=True)
 PACKAGE = Path(os.environ.get('PHARMA_DATA_PACKAGE',str(ROOT / '00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据')))
+# 竞赛上下文的补充知识目录（2026-09-21 修复 #7：行情/基准 CSV 未入 RAG、
+# 异常处理记录与对标基线缺失）。仓库自有文件，题包原件保持只读；文件哈希
+# 进入知识版本指纹，增删改自动重建索引。行业包（显式 source_files/context）
+# 不受影响。
+KNOWLEDGE_SUPPLEMENT_DIR = Path(os.environ.get('PHARMA_KNOWLEDGE_SUPPLEMENT_DIR',
+    str(ROOT / 'competition_configuration/knowledge_supplement')))
 DB_PATH = RUNTIME / 'app.sqlite3'
 ARTIFACTS = Path(os.environ.get('PHARMA_ARTIFACTS_DIR',str(ROOT / '07_交付/业务报告')))
 ARTIFACTS.mkdir(parents=True, exist_ok=True)

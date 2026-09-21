@@ -204,6 +204,16 @@ class Knowledge:
         if namespace: self.path = self.path / namespace
         self.path.mkdir(parents=True, exist_ok=True)
         self.source_dir = Path(source_dir) if source_dir else package / '03_制药知识文档'
+        # 竞赛上下文补充知识（2026-09-21 修复 #7）：默认上下文（题包制药）追加
+        # 仓库自有的补充知识目录——行情/基准题包 CSV 转知识文本、异常处理记录与
+        # 对标基线补建。行业包（context/source_files 显式指定）不追加，allowlist
+        # 语义不变；文件哈希计入知识版本指纹，增删改自动重建。
+        from .config import KNOWLEDGE_SUPPLEMENT_DIR
+        self.extra_dir = None
+        if not self.context and self.source_files is None and source_dir is None:
+            supplement = Path(KNOWLEDGE_SUPPLEMENT_DIR)
+            if supplement.is_dir():
+                self.extra_dir = supplement
         self.model_dir = Path(os.environ.get('PHARMA_EMBEDDING_DIR',str(runtime / 'models/bge-large-zh-v1.5')))
         self.vector_enabled = vector_enabled
         if reranker and not reranker_version: raise ValueError('RERANKER_VERSION_REQUIRED')
@@ -237,6 +247,9 @@ class Knowledge:
         # An explicit enterprise entry is an allowlist, never a hint to scan its
         # parent. Directory mode remains for the private competition document set.
         sources = sorted(self.source_files) if self.source_files is not None else sorted(p for p in self.source_dir.iterdir() if p.suffix.lower() in ('.pdf','.docx','.txt') or p.name == 'knowledge.json')
+        if self.source_files is None and self.extra_dir is not None:
+            sources = sources + sorted(p for p in self.extra_dir.iterdir()
+                                       if p.suffix.lower() in ('.pdf','.docx','.txt') and p.is_file())
         fingerprints = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in sources}
         terms_hash=terminology_hash()
         version = hashlib.sha256(json.dumps([fingerprints, EMBEDDING_SHA, PARSER_VERSION, self.context, terms_hash], sort_keys=True).encode()).hexdigest()[:20]
