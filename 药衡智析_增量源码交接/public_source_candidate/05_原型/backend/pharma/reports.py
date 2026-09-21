@@ -887,7 +887,7 @@ def add_reader_summary(doc,snapshot,narrative,output):
         if nxt is None:break
         from docx.text.paragraph import Paragraph as _P
         cand=_P(nxt,title._parent)
-        t=cand.text.strip()
+        t=(cand.text or '').strip()
         if t.startswith(chr(0x3000)) or '更新域' in t:break  # 到条目区/提示行为止
         if not t and removed<4:
             node.addnext(nxt);nxt.getparent().remove(nxt);removed+=1;continue
