@@ -19,6 +19,28 @@ def append_findings(snapshot, evidence, findings, *, elements, metric_id, number
         action('materials','现有明细已定位主要原料驱动；价格与实物耗用的影响尚未分开。',row['name']+'本期与上期采购和批次耗用',
                ['实际采购合同及入库单价','批次投料、合格产出与收率记录'],'采购部、生产部、财务部',
                '按同批次核对采购价、投料与合格产出，分别检查采购变化和生产损耗；工艺调整须经质量部门批准。')
+        # 归因方向假设（2026-09-21 真人评审 2/5 反馈）：材料×市场行情的确定性
+        # 方向判断——行情与材料变动同向则"价格传导可能性较高"，反向则指向单耗。
+        # 全程绑定行情证据原文与材料指标，过 hypothesis 合同，不编造因果。
+        for ev in evidence:
+            from pharma.knowledge import Knowledge
+            if not Knowledge.evidence_applicability(ev,product=snapshot.get('product'),factory=snapshot.get('factory'),period=snapshot.get('period'),specification=snapshot.get('specification'),context=snapshot.get('analysis_context'))['applicable']:continue
+            text_lines=ev.get('text','').splitlines()
+            quote=next((ln.strip() for ln in text_lines if row['name'] in ln and any(w in ln for w in ('上涨','下降','平稳','波动')) and 8<=len(ln.strip())<=180),None)
+            if not quote:continue
+            delta_value=Decimal(str(row.get('delta') or '0'))
+            rising='上涨' in quote
+            same_side=(delta_value>0)==rising
+            direction_word='价格传导可能性较高' if same_side else '价格传导可能性较低，差异更可能来自投料单耗或批次库存结构'
+            candidate={'claim_type':'hypothesis','section':'materials','hypothesis':True,
+                'text_template':row['name']+'的市场行情与本期材料单位成本变动'+('方向一致，可能通过采购价格传导到每盒材料成本；尚不能排除耗用变化的影响，可能性排序高于单耗变化。' if same_side else '方向相反，价格传导可能性较低，每盒材料成本的变动更可能来自投料单耗、收率或批次库存结构；尚不能确认，需按记录核实。')+'若采购价为长协价则行情传导会被截断，需核对合同定价方式。'+('行情依据见引文。' if quote else ''),
+                'metric_refs':[metric_id(refs['delta'])],'evidence_refs':[ev['evidence_id']],'evidence_quotes':{ev['evidence_id']:quote},
+                'missing_evidence':['对应月份'+row['name']+'采购合同单价与定价方式','同批次投料单耗与合格产出记录']}
+            try:
+                item=validate_findings([candidate],snapshot,evidence)[0]
+            except ValueError:break
+            item['origin']='rules';findings.append(item)
+            break
         # A process limit supports a possible mechanism, never an assertion
         # that this month's process actually deteriorated.
         for ev in evidence:

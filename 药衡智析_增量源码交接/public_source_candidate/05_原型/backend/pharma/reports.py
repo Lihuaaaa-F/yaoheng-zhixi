@@ -15,7 +15,7 @@ RESIDUAL = re.compile(r'\{\{[^{}]*\}\}|\[\[[^\[\]]*\]\]')
 _TEMPLATE_DIR = Path(os.environ.get('PHARMA_TEMPLATE_DIR', str(ROOT / '04_方案与文档')))
 TEMPLATE = _TEMPLATE_DIR / '月度成本分析报告工作模板.docx'
 MAP_PATH = _TEMPLATE_DIR / 'placeholder_map.json'
-RENDERER_VERSION='reader-20260921-quality-v4'
+RENDERER_VERSION='reader-20260921-humanreview-v5'
 NA = 'N/A（无可用基期或明细）'
 
 def replace_text_nodes(nodes, mapping):
@@ -257,7 +257,26 @@ def build_bindings(snapshot,narrative,benchmark=None):
     bridges=snapshot.get('budget_bridge') or {}
     if bridges.get('quantity_effect') is not None:
         overview+=' 相对预算总成本差额 '+number(bridges.get('total_delta'))+' 元，其中产量影响 '+number(bridges.get('quantity_effect'))+' 元，单位成本影响 '+number(bridges.get('unit_cost_effect'))+' 元；不能全部归为效率恶化。'
-    values['成本异常排查分析']=overview+'\n'+alert_text
+    directions=[]
+    materials_summary=snapshot.get('materials_summary') or []
+    details_market=(snapshot.get('details') or {}).get('market') or []
+    month_no=int(snapshot['month'][5:]);prev_key=f'{month_no-1}月价格';cur_key=f'{month_no}月价格'
+    if materials_summary:
+        top=materials_summary[0];material_delta=Decimal(str(top.get('delta') or '0'))
+        mrow=next((r for r in details_market if r.get('药材名称')==top.get('name')),None)
+        if mrow and mrow.get(cur_key) not in (None,'','N/A') and mrow.get(prev_key) not in (None,'','N/A'):
+            try:
+                price_now=Decimal(str(mrow[cur_key]));price_prev=Decimal(str(mrow[prev_key]));price_move=price_now-price_prev
+                same_side=(price_move>0)==(material_delta>0)
+                verdict=('与材料单位成本变动方向一致，价格传导可能性较高' if same_side else '与材料单位成本变动方向相反，价格传导可能性低，差异更可能来自单耗或批次结构')
+                directions.append('材料价格传导：'+str(top.get('name'))+'市场价由上期 '+str(price_prev)+' 变为 '+str(price_now)+' '+str(mrow.get('单位','元/kg'))+'（'+str(mrow.get('价格来源','市场行情'))+'），'+verdict+'。证实或证伪：核对采购合同单价与市场价的偏离、以及批次库存结构。')
+            except Exception:pass
+        directions.append('单位耗用变化：投料单耗或提取收率变化会直接改变每盒材料成本，与价格因素叠加。证实或证伪：同批次投料记录与合格产出对照上期，计算单耗变动。')
+    qdelta=snapshot.get('period_changes',{}).get('quantity',{}).get('mom',{}).get('delta')
+    if qdelta is not None and Decimal(str(qdelta))!=0:
+        directions.append('产量分摊：产量环比'+('下降' if Decimal(str(qdelta))<0 else '上升')+' '+number(str(qdelta).lstrip('-'))+' 盒，折旧、间接人工等偏固定费用按产量分摊时，单位成本会随产量'+('上升' if Decimal(str(qdelta))<0 else '下降')+'。证实或证伪：核对制造费用分配表使用的产量基数是否与实际产量一致。')
+    if directions:
+        values['成本异常排查分析']=overview+'\n'+alert_text+'\n'+('归因方向评估（按可能性排序；以下均为待证实假设，供业务判断）：\n'+'\n'.join(str(i)+'. '+d for i,d in enumerate(directions,1)) if directions else overview+'\n'+alert_text)
     values['人工成本归因分析文本']=prose('labor')
     values['制造费用归因分析文本']=prose('overhead')
     be=(benchmark or {}).get('elements',[])
@@ -702,8 +721,10 @@ def style_reader(doc):
         from docx.enum.text import WD_ALIGN_PARAGRAPH
         p.alignment=WD_ALIGN_PARAGRAPH.LEFT
         fmt.page_break_before=False;fmt.widow_control=True
-        fmt.line_spacing=1.15;fmt.space_before=Pt(0);fmt.space_after=Pt(5)
+        fmt.line_spacing=1.38;fmt.space_before=Pt(0);fmt.space_after=Pt(7)
         is_toc=p.text.startswith(chr(0x3000))
+        is_caption=text.startswith('图｜')
+        in_table=p._p.getparent().tag.endswith('}tc')
         heading=(bool(re.match(r'^[一二三四五六]、|^[2-6]\.\d+(?:\.\d+)?\s+',text)) or text in ('来源与审核说明','证据来源') or p.style.name.startswith('Heading ')) and not is_toc
         pp=p._p.get_or_add_pPr();wrap=pp.find(qn('w:wordWrap'))
         if wrap is None:wrap=OxmlElement('w:wordWrap');pp.append(wrap)
@@ -714,9 +735,14 @@ def style_reader(doc):
         fmt.keep_together=True
         if heading:fmt.space_before=Pt(10);fmt.space_after=Pt(5)
         if is_toc:fmt.space_before=Pt(0);fmt.space_after=Pt(0);fmt.line_spacing=1.0
+        if is_caption:
+            from docx.enum.text import WD_ALIGN_PARAGRAPH as _AL
+            p.alignment=_AL.CENTER;fmt.first_line_indent=None;fmt.space_before=Pt(4);fmt.space_after=Pt(10)
+        elif heading or in_table:fmt.first_line_indent=None
+        else:fmt.first_line_indent=Pt(21)  # 正文首行缩进两字符
         for r in p.runs:
-            r.font.name='Noto Sans SC';r.font.size=Pt(9 if is_toc else 20 if text.endswith('成本分析报告') else 14 if re.match('^[一二三四五六]、',text) else 11.5 if heading else 10.5)
-            r.font.bold=heading;r.font.color.rgb=RGBColor.from_string('143D50' if heading else '202D33')
+            r.font.name='Noto Sans SC';r.font.size=Pt(9 if is_toc else 8.5 if is_caption else 20 if text.endswith('成本分析报告') else 14 if re.match('^[一二三四五六]、',text) else 11.5 if heading else 10.5)
+            r.font.bold=heading;r.font.color.rgb=RGBColor.from_string('5A6B70' if is_caption else '143D50' if heading else '202D33')
             rp=r._element.get_or_add_rPr();rp.get_or_add_rFonts().set(qn('w:eastAsia'),'Noto Sans SC')
             for tag in ('spacing','position','szCs'):
                 for child in list(rp.findall(qn('w:'+tag))):rp.remove(child)
@@ -732,9 +758,10 @@ def style_reader(doc):
             if trpr.find(qn('w:cantSplit')) is None:trpr.append(OxmlElement('w:cantSplit'))
             if i==0 and trpr.find(qn('w:tblHeader')) is None:trpr.append(OxmlElement('w:tblHeader'))
             for cell in row.cells:
+                cell.vertical_alignment=1  # 垂直居中
                 for p in cell.paragraphs:
-                    p.paragraph_format.keep_with_next=False;p.paragraph_format.space_after=Pt(3);p.paragraph_format.line_spacing=1.08
-                    for r in p.runs:r.font.size=Pt(9);r.font.bold=i==0
+                    p.paragraph_format.keep_with_next=False;p.paragraph_format.space_after=Pt(3);p.paragraph_format.line_spacing=1.15;p.paragraph_format.first_line_indent=None
+                    for r in p.runs:r.font.size=Pt(9.5);r.font.bold=i==0
                 if i==0:
                     pr=cell._tc.get_or_add_tcPr();shd=OxmlElement('w:shd');shd.set(qn('w:fill'),'EAF2F5');pr.append(shd)
     # Remove layout-only empty paragraphs, keeping anchors/bookmarks and drawings.
@@ -760,7 +787,9 @@ def add_reader_summary(doc,snapshot,narrative,output):
     first.insert_paragraph_before(mode)
     ranked=sorted(snapshot['elements'],key=lambda e:abs(Decimal(e.get('unit_delta') or '0')),reverse=True)
     lead=ranked[0]
-    first.insert_paragraph_before('核心发现：单位成本 '+number(m['unit_cost'])+' 元/盒，总成本 '+number(m['total_cost'])+' 元；较上期变动最大的要素为'+lead['name']+'，每盒变动 '+number(lead.get('unit_delta'))+' 元。建议先核对该要素原始明细，再安排责任部门复核。')
+    from decimal import Decimal as _D
+    _lead_delta=_D(str(lead.get('unit_delta') or '0'))
+    first.insert_paragraph_before('核心发现：本月单位成本 '+number(m['unit_cost'])+' 元/盒，总成本 '+number(m['total_cost'])+' 元。对成本影响最大的是'+lead['name']+'，每盒比上月'+('增加' if _lead_delta>=0 else '减少')+' '+number(str(lead.get('unit_delta') or '0').lstrip('-'))+' 元。正文第三节按要素拆解变动并给出方向评估，第五节是与中药二厂的对比，第六节给出可直接执行的核查建议。')
     toc_items=['一、基本信息','二、总成本概览','三、要素明细','四、专项分析','五、对标分析','六、总结与建议']
     toc=first.insert_paragraph_before('目录')
     for item in toc_items:
@@ -799,19 +828,34 @@ def add_reader_charts(doc,snapshot,benchmark,anchors,output):
     insert(fig,'structure',anchor,subtitle+'｜三要素单位成本与占比')
     base=snapshot.get('comparison',{}).get('mom',{}).get('base');current=snapshot['metrics']['unit_cost']['value']
     if base is not None:
-        fig,ax=plt.subplots(figsize=(8,2.6));running=float(base);xs=['上期']+[e['name'] for e in els]+['本期']
-        ax.bar(0,running,color='#82939F')
-        ax.text(0,running,f'{running:.2f}',ha='center',va='bottom')
+        # 瀑布图（2026-09-21 真人评审反馈修复）：纵轴缩放至变动区间而非从零起——
+        # 此前负变动柱挤在本期值附近不可辨，被误读为"负值画在第一象限"。
+        deltas=[float(e.get('unit_delta') or 0) for e in els]
+        running=float(base);ends=[running]
+        for v in deltas:running+=v;ends.append(running)
+        top=max(ends+[float(base),float(current)]);bot=min(ends+[float(base),float(current)])
+        span=max(top-bot,abs(float(base))*0.02,0.08);pad=span*0.55
+        fig,ax=plt.subplots(figsize=(8,2.7));xs=['上期']+[e['name'] for e in els]+['本期']
+        ax.set_ylim(bot-pad,top+pad)
+        ax.bar(0,float(base),width=.62,color='#82939F');ax.text(0,float(base)+pad*0.12,f'{float(base):.2f}',ha='center',va='bottom',fontsize=9)
+        run=float(base)
         for i,e in enumerate(els,1):
-            v=float(e.get('unit_delta') or 0);bottom=min(running,running+v);ax.bar(i,abs(v),bottom=bottom,color='#A56B3D' if v>=0 else '#176C8C');ax.text(i,max(running,running+v)+.04,(('+' if v>=0 else '')+number(e.get('unit_delta') or 0)),ha='center');running+=v
-        ax.bar(4,float(current),color='#176C8C');ax.text(4,float(current),number(current),ha='center',va='bottom');ax.set_xticks(range(5),xs);ax.set_ylim(0,max(float(base),float(current))*1.22);ax.set_ylabel('元/盒（零基线）')
-        insert(fig,'waterfall',anchor,subtitle+'｜上期至本期单位成本变动')
+            v=deltas[i-1];bottom=min(run,run+v)
+            ax.bar(i,abs(v) if v else span*0.01,bottom=bottom,width=.62,color='#A56B3D' if v>=0 else '#1F6E5E')
+            label=(('+' if v>=0 else '−')+number(e.get('unit_delta') or 0).lstrip('-'))
+            ax.text(i,run+v+(pad*0.14 if v>=0 else -pad*0.14),label,ha='center',va='bottom' if v>=0 else 'top',fontsize=9,color='#5A3B28' if v>=0 else '#1F6E5E')
+            ax.plot([i-1+0.31,i-0.31],[run,run],ls=':',lw=.9,color='#8A8A8A')
+            run+=v
+        ax.bar(len(els)+1,float(current),width=.62,color='#176C8C');ax.text(len(els)+1,float(current)+pad*0.12,f'{float(current):.2f}',ha='center',va='bottom',fontsize=9)
+        ax.set_xticks(range(len(els)+2),xs);ax.set_ylabel('元/盒（纵轴缩放至变动区间）');ax.grid(axis='y',alpha=.25)
+        insert(fig,'waterfall',anchor,subtitle+'｜上期至本期单位成本变动（负向=下降）')
     be=(benchmark or {}).get('elements',[])
     if be:
         fig,ax=plt.subplots(figsize=(8,2.4));pos=list(range(len(be)))
         ax.bar([x-.18 for x in pos],[float(r['right']) for r in be],width=.35,label=benchmark_labels(benchmark)[1],color='#176C8C');ax.bar([x+.18 for x in pos],[float(r['left']) for r in be],width=.35,label=benchmark_labels(benchmark)[0],color='#82939F')
-        for i,r in enumerate(be):peak=max(float(r['right']),float(r['left']));ax.text(i,peak+peak*.05,'差额 '+number(r['delta']),ha='center',bbox={'facecolor':'white','alpha':.8,'edgecolor':'none','pad':1.2})
-        ax.set_xticks(pos,[r['name'] for r in be]);ax.set_ylabel('元/盒（零基线）');ax.set_ylim(0,max(float(r[k]) for r in be for k in ('left','right'))*1.3);ax.legend(ncol=2)
+        peak=max(float(r[k]) for r in be for k in ('left','right'));top_limit=peak*1.45;label_y=peak*1.18
+        for i,r in enumerate(be):ax.text(i,label_y,'差额 '+number(r['delta']),ha='center',fontsize=8.5,color='#444444')
+        ax.set_xticks(pos,[r['name'] for r in be]);ax.set_ylabel('元/盒（零基线）');ax.set_ylim(0,top_limit);ax.legend(ncol=2,loc='upper center',frameon=False)
         insert(fig,'benchmark',anchors['对标差异表格']._p,snapshot['product']+' · '+period_label+'｜跨厂三要素（'+benchmark_labels(benchmark)[2]+'）')
 
 

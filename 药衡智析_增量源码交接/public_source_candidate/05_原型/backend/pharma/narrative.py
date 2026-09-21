@@ -25,7 +25,7 @@ from pydantic import BaseModel, Field, ConfigDict
 import httpx
 from .config import RUNTIME, MODEL_DEFAULT, MODEL_PROTOCOL_DEFAULT, MODEL_BASE_URL_DEFAULT, MODEL_CODING_BASE_URL_DEFAULT
 
-PROMPT_VERSION = 'v19-rounded-number-binding'
+PROMPT_VERSION = 'v20-human-readable-directions'
 VALIDATOR_VERSION = 'claim-contract-v10-rounded-metric-binding'
 # Aliases may only be added after a live probe has verified that the upstream
 # really serves the requested model under that exact returned id.
@@ -936,6 +936,8 @@ claim_type仅hypothesis或insufficient_evidence。text_template只写定性机�
 evidence_quotes是对象，键为evidence_refs中的ID，值必须从对应allowed_quotes逐字选择短句；不引用则两个字段分别为空数组、空对象。不得把行情当采购价、维修事件当本期净原因、工单局部损失当月度净减产，不能额外计入费用。
 missing_evidence是具体记录或测量名称的非空数组，不写未绑定的日期、指标数值、空词或确定因果；每一项长度4—120字、不带句读标点，且必须含记录/合同/台账/凭证/单价/耗用/投料/工时/收率/明细/批次/日志/计量/采购价/检验报告等业务对象名词之一（如“对应车间期间批生产记录”“对应月份采购合同台账”），“相关数据”“详细信息”“进一步资料”等泛称不合格。确需日期时，只能使用输入实际/比较期间内的年月，中文年月会规范为ISO；未知日期仍拒绝。
 数字纪律：除 deadline_basis 的1—30工作日建议窗口外，text_template、suggestion、verification_target、expected_evidence、missing_evidence 各字段一律不得手写数字、中文数词或百分比（包括年份、数量、金额、比率）。表达程度只用定性词（“明显下降”“大幅高于”）。确需引用数值程度时：只能引用输入 metrics 的 display 值，且写法必须能在自身小数位下与注册值唯一对应——符号由方向词承担（写“下降15.2%”而不是“-15.2%下降”），百分号必须与注册单位一致；无法唯一对应的数字（如整数简写77%对应76.92%、或编造值）会被整体拒绝，不要尝试绕过。
+写作风格（人类可读性要求，2026-09-21 真人评审反馈）：面向企业成本会计的书面中文。每句只说一件事，句子以15—40字为主；主语用具体名称（如“直接材料”“山茱萸”），少用“该”“其”“上述”；不写“体现了”“反映了”“综上所述”等空泛词；专业词第一次出现时用括号加一句白话解释；全文不出现英文。
+归因深度要求：对每个主要差异，优先输出2—3条按可能性排序的方向假设（hypothesis），每条写明“可能性较高/中等/较低”及排序依据（与哪条证据或市场趋势同向）、并给出能证实或证伪它的具体记录；行情、工艺、设备、事件类证据都可以作为方向依据。只有当连一条适用证据都没有时，才输出insufficient_evidence。不要用“证据不足”替代方向判断。
 recommendation可为null；提供时须有suggestion、verification_target、expected_evidence(具体记录数组)、responsible_role(未知写待分配)、department、priority(high/medium/low)、deadline_basis。建议须可核查，生产工艺或质量控制变更须人工批准。deadline_basis可写月度成本结账后、月度成本分析完成后或报告完成后的一至三十个工作日建议窗口（数字形式如“月度成本结账后5个工作日内”），程序绑定为待责任人确认的期限提议，不是已确认日期；金额与比例不能放在期限字段。仅将输入中的适用证据用于本任务，不编造来源。
 合法形状示例（仅展示结构，不复制示例主题）：{"explanations":[{"task_id":"输入task_id","claim_type":"insufficient_evidence","text_template":"现有证据不足以确认差异原因，需核查对应生产记录。","evidence_refs":[],"evidence_quotes":{},"missing_evidence":["实际生产记录"],"recommendation":null}]}。
 """
