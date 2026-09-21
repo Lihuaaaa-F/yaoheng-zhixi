@@ -595,7 +595,7 @@ def convert_pdf(docx_path,timeout=90,converter='libreoffice',_toc_pass=0):
                 while previous is not None and previous.tag==qn('w:p'):
                     candidate=Paragraph(previous,start._parent)
                     if candidate._p.xpath('.//w:drawing'):break
-                    if candidate.text.strip() and not re.match(r'^[一二三四五六]、|^[2-6]\.\d+(?:\.\d+)?\s+',candidate.text.strip()):break
+                    if candidate.text.strip() and not re.match(r'^[一二三四五六七八九十]+、|^[1-9]\.\d+(?:\.\d+)?\s+',candidate.text.strip()):break
                     start=candidate;previous=previous.getprevious()
                 if not start.paragraph_format.page_break_before:
                     start.paragraph_format.page_break_before=True;layout_changed=True
@@ -701,6 +701,24 @@ def keep_source_block(doc):
             paragraph.paragraph_format.keep_together = True
 
 
+def expand_soft_breaks(doc):
+    """AA 占位符绑定值中的换行符展开为真实换行 w:br（2026-09-21 真人评审二轮反馈：多行文本被压成一段）。"""
+    from docx.oxml import OxmlElement
+    from docx.oxml.ns import qn
+    NEWLINE=chr(10)
+    for node in list(doc.element.body.iter(qn('w:t'))):
+        text=node.text or ''
+        if NEWLINE not in text:continue
+        parts=text.split(NEWLINE)
+        node.text=parts[0]
+        parent=node.getparent()
+        position=list(parent).index(node)
+        for part in parts[1:]:
+            br=OxmlElement('w:br');position+=1;parent.insert(position,br)
+            new_t=OxmlElement('w:t');new_t.set('{http://www.w3.org/XML/1998/namespace}space','preserve');new_t.text=part
+            position+=1;parent.insert(position,new_t)
+
+
 def style_reader(doc):
     from docx.shared import Pt,Cm,RGBColor
     from docx.oxml import OxmlElement
@@ -725,7 +743,7 @@ def style_reader(doc):
         is_toc=p.text.startswith(chr(0x3000))
         is_caption=text.startswith('图｜')
         in_table=p._p.getparent().tag.endswith('}tc')
-        heading=(bool(re.match(r'^[一二三四五六]、|^[2-6]\.\d+(?:\.\d+)?\s+',text)) or text in ('来源与审核说明','证据来源') or p.style.name.startswith('Heading ')) and not is_toc
+        heading=(bool(re.match(r'^[一二三四五六七八九十]+、|^[1-9]\.\d+(?:\.\d+)?\s+',text)) or text in ('来源与审核说明','证据来源') or p.style.name.startswith('Heading ')) and not is_toc
         pp=p._p.get_or_add_pPr();wrap=pp.find(qn('w:wordWrap'))
         if wrap is None:wrap=OxmlElement('w:wordWrap');pp.append(wrap)
         wrap.set(qn('w:val'),'0')
@@ -733,15 +751,15 @@ def style_reader(doc):
         if not text and not p._p.xpath('.//w:drawing'):fmt.space_after=Pt(0);fmt.line_spacing=Pt(1)
         if text.endswith('成本分析报告'):fmt.keep_with_next=True
         fmt.keep_together=True
-        if heading:fmt.space_before=Pt(10);fmt.space_after=Pt(5)
-        if is_toc:fmt.space_before=Pt(0);fmt.space_after=Pt(0);fmt.line_spacing=1.0
+        if heading:fmt.space_before=Pt(12);fmt.space_after=Pt(6);fmt.first_line_indent=None
+        if is_toc:fmt.space_before=Pt(1);fmt.space_after=Pt(1);fmt.line_spacing=1.3;fmt.first_line_indent=None
         if is_caption:
             from docx.enum.text import WD_ALIGN_PARAGRAPH as _AL
             p.alignment=_AL.CENTER;fmt.first_line_indent=None;fmt.space_before=Pt(4);fmt.space_after=Pt(10)
         elif heading or in_table:fmt.first_line_indent=None
         else:fmt.first_line_indent=Pt(21)  # 正文首行缩进两字符
         for r in p.runs:
-            r.font.name='Noto Sans SC';r.font.size=Pt(9 if is_toc else 8.5 if is_caption else 20 if text.endswith('成本分析报告') else 14 if re.match('^[一二三四五六]、',text) else 11.5 if heading else 10.5)
+            r.font.name='Noto Sans SC';r.font.size=Pt(10.5 if is_toc else 8.5 if is_caption else 20 if text.endswith('成本分析报告') else 14 if re.match('^[一二三四五六]、',text) else 11.5 if heading else 10.5)
             r.font.bold=heading;r.font.color.rgb=RGBColor.from_string('5A6B70' if is_caption else '143D50' if heading else '202D33')
             rp=r._element.get_or_add_rPr();rp.get_or_add_rFonts().set(qn('w:eastAsia'),'Noto Sans SC')
             for tag in ('spacing','position','szCs'):
@@ -759,8 +777,10 @@ def style_reader(doc):
             if i==0 and trpr.find(qn('w:tblHeader')) is None:trpr.append(OxmlElement('w:tblHeader'))
             for cell in row.cells:
                 cell.vertical_alignment=1  # 垂直居中
-                for p in cell.paragraphs:
+                from docx.enum.text import WD_ALIGN_PARAGRAPH as _TA
+                for j,p in enumerate(cell.paragraphs):
                     p.paragraph_format.keep_with_next=False;p.paragraph_format.space_after=Pt(3);p.paragraph_format.line_spacing=1.15;p.paragraph_format.first_line_indent=None
+                    p.alignment=_TA.CENTER if (i==0 or j>0) else _TA.LEFT  # 表头与数值列居中，名目列左对齐
                     for r in p.runs:r.font.size=Pt(9.5);r.font.bold=i==0
                 if i==0:
                     pr=cell._tc.get_or_add_tcPr();shd=OxmlElement('w:shd');shd.set(qn('w:fill'),'EAF2F5');pr.append(shd)
@@ -769,6 +789,7 @@ def style_reader(doc):
         if not p.text.strip() and not p._p.xpath('.//w:drawing | .//w:bookmarkStart | .//w:sectPr'):
             p._p.getparent().remove(p._p)
 
+    expand_soft_breaks(doc)
     keep_source_block(doc)
     rebuild_report_footer(doc)
 
@@ -790,11 +811,22 @@ def add_reader_summary(doc,snapshot,narrative,output):
     from decimal import Decimal as _D
     _lead_delta=_D(str(lead.get('unit_delta') or '0'))
     first.insert_paragraph_before('核心发现：本月单位成本 '+number(m['unit_cost'])+' 元/盒，总成本 '+number(m['total_cost'])+' 元。对成本影响最大的是'+lead['name']+'，每盒比上月'+('增加' if _lead_delta>=0 else '减少')+' '+number(str(lead.get('unit_delta') or '0').lstrip('-'))+' 元。正文第三节按要素拆解变动并给出方向评估，第五节是与中药二厂的对比，第六节给出可直接执行的核查建议。')
-    toc_items=['一、基本信息','二、总成本概览','三、要素明细','四、专项分析','五、对标分析','六、总结与建议']
+    # 目录（2026-09-21 真人评审二轮反馈）：扫描全文实际标题生成含二级子目录的
+    # 完整目录；每个标题埋书签，目录行做成文档内跳转链接（转 PDF 后链接保留）。
+    # 一级行保持全角空格前缀，兼容 convert_pdf 的页码回写；子标题行无页码。
+    heads=[]
+    for para in doc.paragraphs:
+        t=layout_text(para.text).strip()
+        if re.match(r'^[一二三四五六七八九十]+、',t) or re.match(r'^[1-9][.][1-9](?:[.][1-9])?[ ]',t):
+            heads.append((para,t,re.match(r'^[一二三四五六七八九十]+、',t) is not None))
     toc=first.insert_paragraph_before('目录')
-    for item in toc_items:
-        line=first.insert_paragraph_before('　'+item)
-        line.paragraph_format.space_after=Pt(0);line.paragraph_format.keep_with_next=True
+    for index,(para,t,is_top) in enumerate(heads):
+        name='YH_SEC_'+str(index)
+        bmk=OxmlElement('w:bookmarkStart');bmk.set(qn('w:id'),str(31000+index));bmk.set(qn('w:name'),name)
+        bmk_end=OxmlElement('w:bookmarkEnd');bmk_end.set(qn('w:id'),str(31000+index))
+        para._p.insert(0,bmk);para._p.append(bmk_end)
+        line=first.insert_paragraph_before((chr(0x3000) if is_top else chr(0x3000)*2)+t)
+        line.paragraph_format.space_after=Pt(1);line.paragraph_format.keep_with_next=True
         line.style='Normal'
     mark=OxmlElement('w:bookmarkStart');mark.set(qn('w:id'),'30000');mark.set(qn('w:name'),'YH_TOC');toc._p.insert(0,mark)
 
@@ -836,31 +868,35 @@ def add_reader_charts(doc,snapshot,benchmark,anchors,output):
     if base is not None:
         # 瀑布图（2026-09-21 真人评审反馈修复）：纵轴缩放至变动区间而非从零起——
         # 此前负变动柱挤在本期值附近不可辨，被误读为"负值画在第一象限"。
+        # 瀑布图（2026-09-21 真人评审二轮反馈）：零线双区画法——左/右总量柱自 0
+        # 向上；各要素变动柱按自身数值绘制，负向落在零线下方（第四象限），
+        # 量级在负区独立可辨；零线加粗，全图加高容纳正负两方向。
         deltas=[float(e.get('unit_delta') or 0) for e in els]
-        running=float(base);ends=[running]
-        for v in deltas:running+=v;ends.append(running)
-        top=max(ends+[float(base),float(current)]);bot=min(ends+[float(base),float(current)])
-        span=max(top-bot,abs(float(base))*0.02,0.08);pad=span*0.55
-        fig,ax=plt.subplots(figsize=(8,2.7));xs=['上期']+[e['name'] for e in els]+['本期']
-        ax.set_ylim(bot-pad,top+pad)
-        ax.bar(0,float(base),width=.62,color='#82939F');ax.text(0,float(base)+pad*0.12,f'{float(base):.2f}',ha='center',va='bottom',fontsize=9)
-        run=float(base)
+        total_top=max(float(base),float(current),0)
+        neg_bottom=min(deltas+[0]);pos_top=max(deltas+[0])
+        neg_span=max(abs(neg_bottom),total_top*0.05,0.05);pos_span=max(pos_top,total_top*0.05,0.05)
+        fig,ax=plt.subplots(figsize=(8,3.3));xs=['上期单位成本']+[e['name']+' 变动' for e in els]+['本期单位成本']
+        ax.bar(0,float(base),width=.58,color='#82939F');ax.text(0,float(base)+total_top*0.015,f'{float(base):.2f}',ha='center',va='bottom',fontsize=9)
+        run_note=float(base)
         for i,e in enumerate(els,1):
-            v=deltas[i-1];bottom=min(run,run+v)
-            ax.bar(i,abs(v) if v else span*0.01,bottom=bottom,width=.62,color='#A56B3D' if v>=0 else '#1F6E5E')
-            label=(('+' if v>=0 else '−')+number(e.get('unit_delta') or 0).lstrip('-'))
-            ax.text(i,run+v+(pad*0.14 if v>=0 else -pad*0.14),label,ha='center',va='bottom' if v>=0 else 'top',fontsize=9,color='#5A3B28' if v>=0 else '#1F6E5E')
-            ax.plot([i-1+0.31,i-0.31],[run,run],ls=':',lw=.9,color='#8A8A8A')
-            run+=v
-        ax.bar(len(els)+1,float(current),width=.62,color='#176C8C');ax.text(len(els)+1,float(current)+pad*0.12,f'{float(current):.2f}',ha='center',va='bottom',fontsize=9)
-        ax.set_xticks(range(len(els)+2),xs);ax.set_ylabel('元/盒（纵轴缩放至变动区间）');ax.grid(axis='y',alpha=.25)
-        insert(fig,'waterfall',anchor,subtitle+'｜上期至本期单位成本变动（负向=下降）')
+            v=deltas[i-1]
+            ax.bar(i,v,width=.58,color='#A56B3D' if v>=0 else '#1F6E5E')
+            ax.text(i,v+(pos_span*0.08 if v>=0 else -pos_span*0.08),(('+' if v>=0 else '−')+number(e.get('unit_delta') or 0).lstrip('-')),ha='center',va='bottom' if v>=0 else 'top',fontsize=9,color='#5A3B28' if v>=0 else '#1F6E5E')
+            ax.text(i,neg_bottom-abs(neg_bottom)*0.02,'累计 '+f'{run_note:.2f}→{run_note+v:.2f}',ha='center',va='top',fontsize=7.5,color='#8A8A8A')
+            run_note+=v
+        ax.bar(len(els)+1,float(current),width=.58,color='#176C8C');ax.text(len(els)+1,float(current)+total_top*0.015,f'{float(current):.2f}',ha='center',va='bottom',fontsize=9)
+        ax.axhline(0,color='#3A3A3A',lw=1.2)
+        ax.set_ylim(neg_bottom-neg_span*0.55,total_top*1.14)
+        ax.set_xticks(range(len(els)+2),xs,fontsize=8.5);ax.set_ylabel('元/盒（零线以上=单位成本，零线以下=各要素变动额）');ax.grid(axis='y',alpha=.22)
+
     be=(benchmark or {}).get('elements',[])
     if be:
         fig,ax=plt.subplots(figsize=(8,2.4));pos=list(range(len(be)))
         ax.bar([x-.18 for x in pos],[float(r['right']) for r in be],width=.35,label=benchmark_labels(benchmark)[1],color='#176C8C');ax.bar([x+.18 for x in pos],[float(r['left']) for r in be],width=.35,label=benchmark_labels(benchmark)[0],color='#82939F')
-        peak=max(float(r[k]) for r in be for k in ('left','right'));top_limit=peak*1.45;label_y=peak*1.18
-        for i,r in enumerate(be):ax.text(i,label_y,'差额 '+number(r['delta']),ha='center',fontsize=8.5,color='#444444')
+        peak=max(float(r[k]) for r in be for k in ('left','right'));top_limit=peak*1.30
+        for i,r in enumerate(be):
+            pair_top=max(float(r['right']),float(r['left']))
+            ax.text(i,pair_top+peak*0.03,'差额 '+number(r['delta']),ha='center',va='bottom',fontsize=8.5,color='#444444')
         ax.set_xticks(pos,[r['name'] for r in be]);ax.set_ylabel('元/盒（零基线）');ax.set_ylim(0,top_limit);ax.legend(ncol=2,loc='upper center',frameon=False)
         insert(fig,'benchmark',anchors['对标差异表格']._p,snapshot['product']+' · '+period_label+'｜跨厂三要素（'+benchmark_labels(benchmark)[2]+'）')
 
