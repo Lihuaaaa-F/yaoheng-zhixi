@@ -234,6 +234,14 @@ def ingest(source=None, destination=None):
     source, destination = Path(source or ORIGINAL), Path(destination or SNAPSHOTS)
     contract_hash=source_contract_hash()
     records, files, errors = _read(source)
+    # 二厂合成明细覆盖目录（2026-09-21 修复 #19）：题包只读不动，合成 CSV 并入
+    # 同一数据管线（audit 精确校验），manifest 标注 synthetic，快照指纹随之变化。
+    from .config import SYNTHETIC_DETAIL_DIR
+    if SYNTHETIC_DETAIL_DIR is not None and Path(SYNTHETIC_DETAIL_DIR).is_dir():
+        s_records, s_files, s_errors = _read(SYNTHETIC_DETAIL_DIR)
+        records += s_records
+        errors += s_errors
+        files += [{**f, 'path': '合成明细/' + f['path'], 'synthetic': True} for f in s_files]
     if not records: errors.append({'error':'EMPTY_SOURCE_DATA'})
     version = hashlib.sha256(json.dumps([VERSION, files, contract_hash], sort_keys=True, ensure_ascii=False).encode()).hexdigest()
     destination.mkdir(parents=True, exist_ok=True)

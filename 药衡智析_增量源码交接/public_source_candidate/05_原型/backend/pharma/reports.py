@@ -263,7 +263,12 @@ def build_bindings(snapshot,narrative,benchmark=None):
     be=(benchmark or {}).get('elements',[])
     left,right,direction=benchmark_labels(benchmark)
     values['差异结构拆解分析']=direction+'。'+('；'.join(r['name']+'差额 '+number(r.get('delta'))+' 元/盒，占跨厂单位成本总差额 '+number(r.get('contribution'))+'%' for r in be)+'。' if be else '该期间没有可比跨厂记录。')
-    values['差异归因分析文本']=prose('benchmark') or '三要素差额用于定位核查重点。二厂缺原料、工时及费用明细，尚不能分解到二厂单项原料；请两厂成本会计核对同规格的领料、工时与费用分摊记录。'
+    benchmark_details=(benchmark or {}).get('details') or {}
+    synthetic_notes=[]
+    for side,factory in (('left',left),('right',right)):
+        label=(benchmark_details.get(side) or {}).get('data_label')
+        if label:synthetic_notes.append(factory+'明细：'+label)
+    values['差异归因分析文本']=(prose('benchmark') or '三要素差额用于定位核查重点。请两厂成本会计核对同规格的领料、工时与费用分摊记录。')+('数据边界：'+'；'.join(synthetic_notes)+'。' if synthetic_notes else '')
     values['本月亮点']='本期单位成本 '+number(m['unit_cost'])+' 元/盒，产量 '+number(m['quantity'],0)+' 盒。管理重点是先核查贡献最大的要素，再区分产量变化和单位成本变化对总支出的影响。'
     values['需关注问题']='原料成本上涨不能直接等同采购价上涨。平均小时工资为题包折算口径，不能据此认定基础薪率上调。跨厂原料差异需补二厂明细。'
     delta=changes.get('unit_cost',{}).get('mom',{}).get('delta')

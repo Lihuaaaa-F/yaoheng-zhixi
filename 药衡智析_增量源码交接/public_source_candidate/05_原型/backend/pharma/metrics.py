@@ -190,6 +190,11 @@ def analyze(factory, product, month, analysis_type='monthly', basis='unit'):
             details[r['kind']].append({**r['data'],'row_key':r['row_key'],'source_hash':r['source_hash']})
             details['available']=True
             details['reason']=None
+    # 二厂明细为合成演示数据（按题包汇总精确校准）：在明细出口统一标注，
+    # 报告/看板/对标均携带该声明，不冒充真实二厂经营明细。
+    from .config import SYNTHETIC_DETAIL_FACTORIES
+    if details['available'] and factory in SYNTHETIC_DETAIL_FACTORIES:
+        details['data_label'] = '合成演示数据：数值按题包二厂成本汇总精确校准（结构比例取自一厂），非真实二厂经营明细'
     material_names = {r['原材料名称'] for r in details['materials']}
     details['market'] = [{**{k:v for k,v in r['data'].items() if not k.endswith('月价格') or int(k[:-3]) <= int(month[5:])},'row_key':r['row_key'],'source_hash':r['source_hash']} for r in all_rows if r['kind']=='market' and r['data']['药材名称'] in material_names]
     if manifest.get('masterdata_hash')!=source_contract_hash():raise ValueError('MASTERDATA_CHANGED_DURING_ANALYSIS')
@@ -309,10 +314,10 @@ def benchmark(product, month, left=None, right=None, analysis_type='monthly'):
     return {'analysis_type':analysis_type,'period':a['period'],'direction':f'{left}−{right}，以{right}为分母','product':product,'month':month,'left':left,'right':right,
             'snapshot_ids':[a['snapshot_id'],b['snapshot_id']], 'summary':summary,'elements':elements,
             'details':{'left':a['details'],'right':b['details']},
-            'hypotheses':[{'claim_type':'hypothesis','hypothesis':'跨厂成本差异已由同规格月度成本确认；规模、设备及工艺差异需核查。',
+            'hypotheses':[{'claim_type':'hypothesis','hypothesis':'跨厂成本差异已由同规格月度成本确认；规模、设备及工艺差异需核查。当前二厂明细为按汇总校准的合成演示数据，结构结论仅用于演示。',
               'metric_refs':[a['metrics']['unit_cost']['metric_id'],b['metrics']['unit_cost']['metric_id']],
-              'evidence_refs':[],'missing_evidence':['二厂原料/费用/工时明细','相同口径设备利用率与批次工艺记录'],
-              'suggestion':'先核对两厂归集口径和可用明细；生产/GMP变更需人工批准。'}],
+              'evidence_refs':[],'missing_evidence':['二厂真实经营明细（现有为合成演示明细）','相同口径设备利用率与批次工艺记录'],
+              'suggestion':'先核对两厂归集口径与真实明细；生产/GMP变更需人工批准。'}],
             'limits':['总成本对比受产量影响，不能作为单位效率结论','文档原因证据由报告检索流程补充；仅表内数值不能证明因果']}
 
 
