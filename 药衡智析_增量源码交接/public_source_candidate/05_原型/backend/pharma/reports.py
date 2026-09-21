@@ -86,12 +86,12 @@ def normalize_template(output=TEMPLATE, map_path=MAP_PATH):
                         rename[name]='{{'+field+'}}'
                         entries.append({'original':name,'field':field,'xml_part':info.filename,'paragraph_index':i,'marker':marker,'context':text,'unit':binding_semantics(field,ratio)[1],'source':binding_semantics(field,ratio)[0],'missing_policy':'N/A并说明缺值原因','semantic':name+('变动率' if ratio else '')})
                     replace_text_nodes(nodes,rename)
-                # 2026-09-21 五轮（用户裁定反转）：水印文字移除——只删 v:textpath
-                # 节点本身，页眉 logo 绘图与红线装饰不受影响。
-                for parent in xml.iter():
-                    for child in list(parent):
-                        if isinstance(child.tag,str) and child.tag.endswith('}textpath'):
-                            parent.remove(child)
+                # 2026-09-21 五轮修正（用户最终裁定）：水印保留原文字
+                # （"重庆创灵境数字技术有限公司"textpath 原样），不剥离不改写。
+                # 此前"显示错误"的两处根因均已修复：①文字被 sanitize 改写为
+                # "药衡智析 · 成本分析"——该改写已删除；②水印仅在 1 页显示——
+                # 旧版 compact 全局删分节把带水印的正文页眉压缩到 1 页，现仅
+                # 前置区解除分节、正文分节原样保留，水印随正文页眉每页正确显示。
                 raw=ET.tostring(xml,encoding='utf-8',xml_declaration=True)
             zout.writestr(info,raw)
     result={'original_hash':hashlib.sha256(original.read_bytes()).hexdigest(),'template_hash':hashlib.sha256(output.read_bytes()).hexdigest(),'original_unique':len(set(original_names)),'original_occurrences':len(original_names),'placeholders':entries}
