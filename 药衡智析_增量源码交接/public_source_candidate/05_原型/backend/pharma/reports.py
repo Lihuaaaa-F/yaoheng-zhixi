@@ -870,6 +870,21 @@ def add_reader_summary(doc,snapshot,narrative,output):
     # 一级行保持全角空格前缀以兼容 convert_pdf 的页码回写。
     title=next((p for p in doc.paragraphs if p.text.strip().replace(chr(0x3000),'').replace(' ','')=='目录'),None)
     if title is None:return
+    # 五轮（用户反馈：目录标题与内容被分到两页）：标题与条目之间的域尾部
+    # 空段/空标题段删除，标题与首条目 keep-with-next 锁定为同页。
+    node=title._p
+    removed=0
+    while True:
+        nxt=node.getnext()
+        if nxt is None:break
+        from docx.text.paragraph import Paragraph as _P
+        cand=_P(nxt,title._parent)
+        t=cand.text.strip()
+        if t.startswith(chr(0x3000)) or '更新域' in t:break  # 到条目区/提示行为止
+        if not t and removed<4:
+            node.addnext(nxt);nxt.getparent().remove(nxt);removed+=1;continue
+        break
+    title.paragraph_format.keep_with_next=True
     insert_at=title
     heads=[(para,layout_text(para.text).strip()) for para in doc.paragraphs]
     heads=[(para,t) for para,t in heads if re.match(r'^[一二三四五六七八九十]+、',t) or re.match(r'^[1-9][.][1-9](?:[.][1-9])?[ ]',t)]
