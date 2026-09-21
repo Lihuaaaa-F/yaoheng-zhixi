@@ -15,7 +15,7 @@ RESIDUAL = re.compile(r'\{\{[^{}]*\}\}|\[\[[^\[\]]*\]\]')
 _TEMPLATE_DIR = Path(os.environ.get('PHARMA_TEMPLATE_DIR', str(ROOT / '04_方案与文档')))
 TEMPLATE = _TEMPLATE_DIR / '月度成本分析报告工作模板.docx'
 MAP_PATH = _TEMPLATE_DIR / 'placeholder_map.json'
-RENDERER_VERSION='reader-20260920-benchmark-basis-unit-v3'
+RENDERER_VERSION='reader-20260921-quality-v4'
 NA = 'N/A（无可用基期或明细）'
 
 def replace_text_nodes(nodes, mapping):
@@ -269,8 +269,29 @@ def build_bindings(snapshot,narrative,benchmark=None):
         label=(benchmark_details.get(side) or {}).get('data_label')
         if label:synthetic_notes.append(factory+'明细：'+label)
     values['差异归因分析文本']=(prose('benchmark') or '三要素差额用于定位核查重点。请两厂成本会计核对同规格的领料、工时与费用分摊记录。')+('数据边界：'+'；'.join(synthetic_notes)+'。' if synthetic_notes else '')
-    values['本月亮点']='本期单位成本 '+number(m['unit_cost'])+' 元/盒，产量 '+number(m['quantity'],0)+' 盒。管理重点是先核查贡献最大的要素，再区分产量变化和单位成本变化对总支出的影响。'
-    values['需关注问题']='原料成本上涨不能直接等同采购价上涨。平均小时工资为题包折算口径，不能据此认定基础薪率上调。跨厂原料差异需补二厂明细。'
+    # 本月亮点（2026-09-21 修复 #11）：从注册指标与行业分位确定性生成，
+    # 不再输出通用管理提示。每条都绑定可核对数字；无显著改善时如实说明。
+    highlights=[]
+    mom_value=m['mom'].get('value')
+    if mom_value is not None and Decimal(str(mom_value))<0:
+        highlights.append('单位成本环比下降 '+number(m['mom'])+'%（本期 '+number(m['unit_cost'])+' 元/盒）')
+    improving=[e for e in snapshot.get('elements',[]) if e.get('unit_mom') is not None and Decimal(str(e['unit_mom']))<0]
+    if improving:
+        best=min(improving,key=lambda e:Decimal(str(e['unit_mom'])))
+        highlights.append('改善最大的成本要素：'+best['name']+'（单位环比 '+number(str(best['unit_mom']))+'%）')
+    for row in (snapshot.get('industry') or {}).get('rows') or []:
+        if str(row.get('指标',''))=='人工成本占比' and row.get('本厂水平(中药一厂)') and row.get('行业P50'):
+            try:
+                if Decimal(str(row['本厂水平(中药一厂)']).rstrip('%'))<Decimal(str(row['行业P50']).rstrip('%')):
+                    highlights.append('人工成本占比 '+str(row['本厂水平(中药一厂)'])+' 低于行业中位 '+str(row['行业P50'])+'（题包静态参考）')
+            except Exception:pass
+        if str(row.get('指标',''))=='单位成本(元/粒)' and row.get('本厂水平(中药一厂)') and row.get('行业P50'):
+            try:
+                if Decimal(str(row['本厂水平(中药一厂)']))<=Decimal(str(row['行业P50'])):
+                    highlights.append('单位成本 '+str(row['本厂水平(中药一厂)'])+' 元/粒 不高于行业中位 '+str(row['行业P50'])+'（题包静态参考）')
+            except Exception:pass
+    values['本月亮点']=('；'.join(highlights)+'。') if highlights else ('本期单位成本 '+number(m['unit_cost'])+' 元/盒，产量 '+number(m['quantity'],0)+' 盒；本期无显著优于基期或行业中位的确定性亮点。')
+    values['需关注问题']='原料成本上涨不能直接等同采购价上涨。平均小时工资为题包折算口径，不能据此认定基础薪率上调。跨厂原料差异需核对二厂明细（当前为按汇总校准的合成明细）。'
     delta=changes.get('unit_cost',{}).get('mom',{}).get('delta')
     values['合计贡献度']='100.00' if delta is not None and Decimal(delta)!=0 else 'N/A（总变动为0或无基期）'
     return values
@@ -281,8 +302,8 @@ def sanitize_template_identity(doc):
     The original template stays read-only. No original personal name or company
     string is needed in source code to sanitize a working report.
     """
-    labels = {'编制人': '演示编制人（模拟数据）', '审核人': '待人工审核',
-              '编制单位': '药衡智析演示团队（模拟数据）', '企业名称': '药衡智析演示企业（模拟数据）'}
+    labels = {'编制人': '成本智能分析系统（生成稿·待责任人复核署名）', '审核人': '待人工审核',
+              '编制单位': '药衡智析 · 产品成本分析（演示）', '企业名称': '药衡智析演示企业（模拟数据）'}
     for table in doc.tables:
         for row in table.rows:
             for index, cell in enumerate(row.cells[:-1]):
@@ -417,7 +438,21 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
     table('近6个月成本趋势表格',['月份','单位成本（元/盒）','产量（盒）','总成本（元）'],[[r['month'],number(r['unit_cost']),number(r['quantity'],0),number(r['total_cost'])] for r in snapshot['trend']])
     table('原材料价格跟踪表格',['药材','参考月份','市场价格','单位（非采购价）'],[[r['药材名称'],snapshot['month'],r.get(str(int(snapshot['month'][5:]))+'月价格',NA),r['单位']] for r in details.get('market',[])])
     table('对标差异表格',['要素',benchmark_labels(benchmark)[0]+'（元/盒）',benchmark_labels(benchmark)[1]+'（元/盒）','差异（元/盒）','差异率（%）'],[[r.get('name','单位成本'),number(r.get('left'),benchmark_precision(snapshot)),number(r.get('right'),benchmark_precision(snapshot)),number(r.get('delta'),benchmark_precision(snapshot)),number(r.get('rate'))] for r in (benchmark or {}).get('summary',[])[:1]+(benchmark or {}).get('elements',[])])
-    actionable=[f for f in narrative.get('findings',[]) if f.get('suggestion','').strip()]
+    # 建议去重（2026-09-21 修复 #11）：模型建议与确定性回退建议可能同主题
+    # 重复（实测 8 条中 4 条主题重复）。按核查对象 + 建议文本二元组相似度
+    # （字符二元组 Jaccard ≥0.6）去重；模型来源优先保留，纯规则来源仅补缺。
+    def _shingles(text):
+        cleaned=re.sub(r'[^\u4e00-\u9fff0-9a-zA-Z]','',str(text))
+        return {cleaned[i:i+2] for i in range(max(len(cleaned)-1,0))}
+    actionable=[];seen_targets=set();seen_sigs=[]
+    candidates=[f for f in narrative.get('findings',[]) if f.get('suggestion','').strip()]
+    candidates.sort(key=lambda f:f.get('origin')=='rules')  # 模型来源在前，同主题保留模型版
+    for f in candidates:
+        sig=_shingles(f.get('suggestion',''))
+        duplicate=(f.get('verification_target','') in seen_targets
+                   or any(sig and s and len(sig&s)/len(sig|s)>=0.6 for s in seen_sigs))
+        if duplicate:continue
+        seen_targets.add(f.get('verification_target',''));seen_sigs.append(sig);actionable.append(f)
     table('改进建议表格',['问题与核查行动','预期证据'],[[str(i+1)+'．'+f.get('rendered_text','')+'\n核查对象：'+f.get('verification_target','待补')+'\n行动：'+f.get('suggestion'), '、'.join(f.get('expected_evidence',[]) if isinstance(f.get('expected_evidence'),list) else [f.get('expected_evidence') or '核查对象的原始记录'])] for i,f in enumerate(actionable)])
     table('整改任务表格',['责任部门／角色','优先级','期限依据与状态'],[[str(i+1)+'．'+(f.get('department') or '责任部门待定')+'／'+(f.get('responsible_role') or '待分配')+'（姓名待分配）', {'high':'高','medium':'中','low':'低'}.get(f.get('priority'),'中'), (f.get('deadline_basis') or '下次成本复核前，具体日期由用户确认')+'；待确认发送'] for i,f in enumerate(actionable)])
     output=Path(output);output.parent.mkdir(parents=True,exist_ok=True)
@@ -428,10 +463,20 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
     doc.add_paragraph('数据来源：成本汇总表、原材料明细表、人工与制造费用表 · '+snapshot['product']+' · '+snapshot['factory']+' · '+report_period_label(snapshot)+'。金额以元、单位成本以元/盒计；季度按产量加权。')
     source_map={e['evidence_id']:e for e in evidence.get('evidence',[])}
     used=set()
+    doc.add_paragraph('正文引用的证据来源（位置可回溯）：')
     for f in narrative.get('findings',[]):
         for ref in f.get('evidence_refs',[]):
             if ref in source_map and ref not in used:
-                e=source_map[ref];doc.add_paragraph(readable_source(e));used.add(ref)
+                e=source_map[ref];doc.add_paragraph('· '+readable_source(e));used.add(ref)
+    # 检索证据全量清单（2026-09-21 修复 #11）：附录不再只列被引用的 3 条，
+    # 未被正文引用的候选证据也按文档列出（引用与否不代表因果证实）。
+    uncovered=[e for e in evidence.get('evidence',[]) if e['evidence_id'] not in used]
+    if uncovered:
+        doc.add_paragraph('本期检索到但未被正文直接引用的证据（候选依据 '+str(len(uncovered))+' 条）：')
+        for e in uncovered[:12]:
+            doc.add_paragraph('· '+readable_source(e))
+        if len(uncovered)>12:
+            doc.add_paragraph('· ……其余 '+str(len(uncovered)-12)+' 条见机器审计附件。')
     doc.add_paragraph('人工归因评分：待评（0—5分）；内容可读性与逐页版式：待人工审核。引用只说明依据来源，不等于已证实因果。')
     style_reader(doc)
     audit=output.with_name('machine_audit.json')
