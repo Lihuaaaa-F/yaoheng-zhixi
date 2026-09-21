@@ -19,21 +19,20 @@ def process_job(store,job):
         if job['kind']=='kb':
             result['knowledge']=Knowledge().build();store.update(id,'SUCCEEDED' if result['knowledge']['status']=='PASS' else 'DEGRADED',result);return
         versions=payload.get('versions',{})
-        from .reports import TEMPLATE,RENDERER_VERSION
-        from .narrative import ModelGateway,PROMPT_VERSION,VALIDATOR_VERSION
-        from .knowledge import PARSER_VERSION,RETRIEVER_VERSION,EMBEDDING_SHA,terminology_hash
+        from .reports import TEMPLATE
+        from .narrative import ModelGateway
+        from .versions import soft_items,hard_items
         from .ingestion import ingest
-        from .context_services import retrieval_policy_version
         gateway=ModelGateway.for_route('narrative')  # 版本核对与 generate() 实际网关同源（fix4）
         snapshot=store.get_snapshot(payload['snapshot_id'])
         synthetic=bool(snapshot.get('context_id') and snapshot['context_id']!='pharmaceutical:competition')
         from .industry import resolve_context
         if snapshot.get('context_id') and resolve_context(snapshot['context_id']).model_dump()!=snapshot.get('analysis_context'):raise ValueError('CONTEXT_VERSION_CHANGED_RESUBMIT')
-        for key,current in [('renderer',RENDERER_VERSION),('model',gateway.model),('protocol',gateway.provider),('endpoint',gateway.base_url),('prompt',PROMPT_VERSION)]:
+        # 版本键清单单一来源 versions.py（修复 #21）：软项缺省容忍、变化拒收；
+        # 硬项缺失即拒收，旧任务不能在异合同下复用结果。
+        for key,current in soft_items(gateway):
             if versions.get(key) and versions[key]!=current:raise ValueError(key.upper()+'_VERSION_CHANGED_RESUBMIT')
-        # A legacy job without these bindings cannot reuse partial/completed
-        # results under a different validation or knowledge parsing contract.
-        for key,current in [('retrieval_policy',retrieval_policy_version(snapshot.get('analysis_context') or {})),('validator',VALIDATOR_VERSION),('parser',PARSER_VERSION),('terminology',terminology_hash()),('retriever',RETRIEVER_VERSION),('embedding',EMBEDDING_SHA)]:
+        for key,current in hard_items(snapshot):
             if versions.get(key)!=current:raise ValueError(key.upper()+'_VERSION_CHANGED_RESUBMIT')
         if not synthetic and versions.get('template') and hashlib.sha256(TEMPLATE.read_bytes()).hexdigest()!=versions['template']:
             raise ValueError('TEMPLATE_VERSION_CHANGED_RESUBMIT')

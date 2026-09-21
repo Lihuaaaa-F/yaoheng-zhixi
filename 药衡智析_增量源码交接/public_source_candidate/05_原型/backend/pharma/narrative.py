@@ -23,7 +23,7 @@ import time
 from urllib.parse import urlsplit, urlunsplit
 from pydantic import BaseModel, Field, ConfigDict
 import httpx
-from .config import RUNTIME
+from .config import RUNTIME, MODEL_DEFAULT, MODEL_PROTOCOL_DEFAULT, MODEL_BASE_URL_DEFAULT, MODEL_CODING_BASE_URL_DEFAULT
 
 PROMPT_VERSION = 'v19-rounded-number-binding'
 VALIDATOR_VERSION = 'claim-contract-v10-rounded-metric-binding'
@@ -669,13 +669,13 @@ class ModelGateway:
         configured = _settings.resolve('narrative')
         self.runtime = Path(runtime) if runtime else RUNTIME
         self.runtime.mkdir(parents=True,exist_ok=True)
-        self.provider = provider or os.getenv('PHARMA_MODEL_PROTOCOL','') or configured.get('protocol') or 'openai'
-        self.base_url = (base_url or os.getenv('PHARMA_MODEL_BASE_URL','') or configured.get('base_url') or 'https://open.bigmodel.cn/api/paas/v4').rstrip('/')
+        self.provider = provider or os.getenv('PHARMA_MODEL_PROTOCOL','') or configured.get('protocol') or MODEL_PROTOCOL_DEFAULT
+        self.base_url = (base_url or os.getenv('PHARMA_MODEL_BASE_URL','') or configured.get('base_url') or MODEL_BASE_URL_DEFAULT).rstrip('/')
         # Coding Plan 端点（用户 2026-09-18 授权的暂定政策）：主端点余额/资源包
         # 耗尽（错误码 1113）后自动切换至此继续运行；主端点恢复后自动优先，
         # 无需改代码。置 PHARMA_MODEL_CODING_BASE_URL='' 可禁用。
-        self.coding_base_url = os.getenv('PHARMA_MODEL_CODING_BASE_URL','https://open.bigmodel.cn/api/coding/paas/v4').rstrip('/')
-        self.model = model or os.getenv('PHARMA_MODEL','') or configured.get('model') or 'glm-5.3'
+        self.coding_base_url = os.getenv('PHARMA_MODEL_CODING_BASE_URL', MODEL_CODING_BASE_URL_DEFAULT).rstrip('/')
+        self.model = model or os.getenv('PHARMA_MODEL','') or configured.get('model') or MODEL_DEFAULT
         keypath_value = key_file or os.getenv('PHARMA_MODEL_KEY_FILE') or os.getenv('PHARMA_API_KEY_FILE') or configured.get('key_file')
         keypath = Path(keypath_value) if keypath_value else None
         # Explicit key files never silently borrow the main environment credential.
@@ -730,7 +730,8 @@ class ModelGateway:
             if value: config[field] = value
         gateway = cls(model=config.get('model'), base_url=config.get('base_url'),
                       provider=config.get('protocol'), key_file=config.get('key_file'), **overrides)
-        main_host = urlsplit(os.getenv('PHARMA_MODEL_BASE_URL', 'https://open.bigmodel.cn/api/paas/v4')).hostname
+        from .config import MODEL_BASE_URL_DEFAULT as _MBU
+        main_host = urlsplit(os.getenv('PHARMA_MODEL_BASE_URL', _MBU)).hostname
         main_protocol = os.getenv('PHARMA_MODEL_PROTOCOL', 'openai')
         if ((urlsplit(gateway.base_url).hostname, gateway.provider) != (main_host, main_protocol)
                 and not config.get('key_file') and not overrides.get('key_file')):

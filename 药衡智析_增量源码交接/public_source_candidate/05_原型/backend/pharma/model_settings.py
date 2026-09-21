@@ -17,7 +17,7 @@ import stat
 from pathlib import Path
 from typing import Any
 
-from .config import RUNTIME
+from .config import RUNTIME, MODEL_BASE_URL_DEFAULT
 
 SETTINGS_PATH = RUNTIME / 'model_settings.json'
 KEYS_DIR = RUNTIME / 'keys'
@@ -201,7 +201,7 @@ def list_remote_models(route: str = 'narrative', overrides: dict[str, Any] | Non
     gateway_overrides = _sanitize_overrides(overrides)
     resolved = resolve(route) or {k: v for k, v in gateway_overrides.items()}
     base = (gateway_overrides.get('base_url') or resolved.get('base_url')
-            or os.getenv('PHARMA_MODEL_BASE_URL', 'https://open.bigmodel.cn/api/paas/v4')).rstrip('/')
+            or os.getenv('PHARMA_MODEL_BASE_URL', MODEL_BASE_URL_DEFAULT)).rstrip('/')
     key = ''
     key_file = gateway_overrides.get('key_file') or resolved.get('key_file') or os.getenv('PHARMA_MODEL_KEY_FILE')
     if key_file and Path(key_file).is_file():

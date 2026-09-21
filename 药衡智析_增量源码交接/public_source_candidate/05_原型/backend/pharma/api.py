@@ -158,26 +158,28 @@ def get_benchmark(product:str,month:str,left:str,right:str,analysis_type:Literal
     result['hypotheses']=[{**f,'hypothesis':f['rendered_text']} for f in result['narrative']['findings']]
     return result
 def _generation_versions(snapshot,req):
-    """报告生成输入指纹：任何影响产物的组件版本变化都会使缓存失效。"""
-    from .reports import TEMPLATE,normalize_template,RENDERER_VERSION
-    from .narrative import PROMPT_VERSION,VALIDATOR_VERSION,ModelGateway
-    from .context_services import retrieval_policy_version
-    from .knowledge import PARSER_VERSION,RETRIEVER_VERSION,EMBEDDING_SHA,terminology_hash
+    """报告生成输入指纹：任何影响产物的组件版本变化都会使缓存失效。
+
+    版本键清单单一来源 versions.py（修复 #21）：本函数与 worker 的重提交
+    校验从同一组 soft/hard 清单派生，新增键不再双份维护。
+    """
+    from .reports import TEMPLATE,normalize_template
+    from .narrative import ModelGateway
+    from .knowledge import terminology_hash
+    from .versions import soft_items,hard_items
     if snapshot['context_id']=='pharmaceutical:competition':
         if not TEMPLATE.exists():normalize_template()
         template_version=hashlib.sha256(TEMPLATE.read_bytes()).hexdigest()
     else:template_version=snapshot['analysis_context']['template_version']
     gateway=ModelGateway.for_route('narrative')  # 与 generate() 实际网关同源（fix4）
-    return {'retrieval_policy':retrieval_policy_version(snapshot['analysis_context']),'renderer':RENDERER_VERSION,
+    versions={**dict(soft_items(gateway)),**dict(hard_items(snapshot)),
         'snapshot':snapshot['snapshot_id'],'knowledge':snapshot['analysis_context']['knowledge_snapshot'],
-        'template':template_version,'prompt':PROMPT_VERSION,'validator':VALIDATOR_VERSION,
-        'parser':PARSER_VERSION,'terminology':terminology_hash(),'model':gateway.model,'protocol':gateway.provider,
-        'endpoint':gateway.base_url,'context':snapshot['analysis_context'],'model_available':bool(gateway.key),
+        'template':template_version,'context':snapshot['analysis_context'],'model_available':bool(gateway.key),
         'generation_parameters':{'max_tokens':os.getenv('PHARMA_MODEL_MAX_TOKENS','8192'),
             'reasoning_effort':os.getenv('PHARMA_MODEL_REASONING_EFFORT','low'),'max_repairs':gateway.max_repairs},
-        'retriever':RETRIEVER_VERSION,'embedding':EMBEDDING_SHA,
         'retrieval_parameters':{'mode':'hybrid','weight_policy':'lexical-anchor:0.75/0.25;otherwise:0.5/0.5','reranker':'none','limit':8},
         'run_id':req.run_id}
+    return versions
 
 def _enqueue_report(req:ReportRequest):
     """报告任务入队：POST /api/reports 与 Agent 决策执行共用同一路径。"""

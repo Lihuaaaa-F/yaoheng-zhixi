@@ -33,3 +33,10 @@ DB_PATH = RUNTIME / 'app.sqlite3'
 ARTIFACTS = Path(os.environ.get('PHARMA_ARTIFACTS_DIR',str(ROOT / '07_交付/业务报告')))
 ARTIFACTS.mkdir(parents=True, exist_ok=True)
 RPA_BASE_URL = os.environ.get('RPA_BASE_URL', 'http://127.0.0.1:8090').rstrip('/')
+# 模型默认值单一来源（2026-09-21 修复 #22）：此前 'glm-5.3' 与端点默认值
+# 散落在 narrative/model_settings/api/compose/.env.example 多处，改默认需
+# 逐处同步。环境变量与设置文件的优先级解析仍在各使用方，默认值只在此定义。
+MODEL_DEFAULT = 'glm-5.3'
+MODEL_PROTOCOL_DEFAULT = 'openai'
+MODEL_BASE_URL_DEFAULT = 'https://open.bigmodel.cn/api/paas/v4'
+MODEL_CODING_BASE_URL_DEFAULT = 'https://open.bigmodel.cn/api/coding/paas/v4'
