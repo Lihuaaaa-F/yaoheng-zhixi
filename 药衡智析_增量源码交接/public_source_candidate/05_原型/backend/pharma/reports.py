@@ -811,21 +811,27 @@ def add_reader_charts(doc,snapshot,benchmark,anchors,output):
     plt.rcParams.update({'font.family':family,'font.size':9,'axes.unicode_minus':False,'axes.spines.top':False,'axes.spines.right':False})
     period_label=snapshot['period']['start']+' 至 '+snapshot['period']['end'] if snapshot['analysis_type']=='quarterly' else snapshot['month']
     subtitle=snapshot['product']+' · '+snapshot['factory']+' · '+period_label
-    def insert(fig,name,anchor,title):
+    def insert(fig,name,anchor,title,width_cm=17):
         fig.tight_layout();path=output.with_name(name+'.png');fig.savefig(path,dpi=190,bbox_inches='tight');plt.close(fig)
-        cap=doc.add_paragraph(title);cap.paragraph_format.keep_with_next=True
-        pic=doc.add_paragraph();pic.add_run().add_picture(str(path),width=Cm(17))
+        cap=doc.add_paragraph('图｜'+title);cap.paragraph_format.keep_with_next=True
+        pic=doc.add_paragraph();pic.add_run().add_picture(str(path),width=Cm(width_cm))
         anchor.addnext(cap._p);cap._p.addnext(pic._p)
     trend=snapshot['trend'];fig,ax=plt.subplots(figsize=(8,2.5))
     vals=[float(r['unit_cost']) for r in trend];ax.plot([r['month'] for r in trend],vals,'o-',color='#176C8C');ax.set_ylabel('单位成本（元/盒）')
     span=max(vals)-min(vals);margin=max(span*.6,max(vals)*.07);ax.set_ylim(max(0,min(vals)-margin),max(vals)+margin)
     for i,v in enumerate(vals):ax.annotate(f'{v:.2f}',(i,v),xytext=(0,7),textcoords='offset points',ha='center')
     ax.grid(axis='y',alpha=.2);insert(fig,'trend',anchors['近6个月成本趋势表格']._p,snapshot['product']+' · '+snapshot['factory']+' · '+trend[0]['month']+' 至 '+trend[-1]['month']+'｜单位成本趋势（纵轴范围见刻度）')
-    fig,ax=plt.subplots(figsize=(8,2.1));els=snapshot['elements'];vals=[float(e['unit']) for e in els]
-    ax.barh([e['name'] for e in els],vals,color=['#176C8C','#46978D','#82939F']);ax.set_xlim(0,max(vals)*1.35);ax.set_xlabel('元/盒（零基线）')
-    for i,(v,e) in enumerate(zip(vals,els)):ax.text(v+.02,i,f'{v:.2f} / {number(e["share"])}%',va='center')
+    els=snapshot['elements']
+    # 占比数据用饼图（2026-09-21 真人评审反馈：占比不应画横向柱状图）
+    fig,ax=plt.subplots(figsize=(6.8,2.9))
+    sizes=[float(e['unit']) for e in els]
+    labels=[e['name']+' '+number(e['unit'])+' 元' for e in els]
+    wedges,texts,autotexts=ax.pie(sizes,labels=labels,autopct=lambda pct:f'{pct:.1f}%',startangle=90,counterclock=False,
+        colors=['#176C8C','#46978D','#82939F','#B08968'][:len(els)],wedgeprops={'linewidth':1.2,'edgecolor':'white'},textprops={'fontsize':9})
+    for t in autotexts:t.set_color('white');t.set_fontsize(8.5)
+    ax.set_aspect('equal')
     anchor=next(p._p for p in doc.paragraphs if p.text.startswith('2.2'))
-    insert(fig,'structure',anchor,subtitle+'｜三要素单位成本与占比')
+    insert(fig,'structure',anchor,subtitle+'｜三要素单位成本构成占比',width_cm=13)
     base=snapshot.get('comparison',{}).get('mom',{}).get('base');current=snapshot['metrics']['unit_cost']['value']
     if base is not None:
         # 瀑布图（2026-09-21 真人评审反馈修复）：纵轴缩放至变动区间而非从零起——
