@@ -626,7 +626,12 @@ def analyze_reference(context_id, factory=None, product=None, month=None, analys
         month=month or choices['months'][-1]
         snapshot=analyze(factory,product,month,analysis_type,basis)
         context=resolve_context(context_id)
-        return {**snapshot,'context_id':context_id,'analysis_context':context.model_dump(),'context_hash':context.context_hash}
+        merged={**snapshot,'context_id':context_id,'analysis_context':context.model_dump(),'context_hash':context.context_hash}
+        # 2026-09-21 修复：快照标识纳入上下文版本（模板/知识指纹）。此前 snapshot_id
+        # 只含数据指纹，模板重建后同名快照命中旧行、携旧 analysis_context，
+        # worker 的 CONTEXT_VERSION_CHANGED 校验必然失败（重生成即 500/FAILED）。
+        merged['snapshot_id']=digest({'base_snapshot':snapshot['snapshot_id'],'context':context.context_hash})
+        return merged
     context=resolve_context(context_id);pack=load_pack(context.industry_id);enterprise=_enterprise(pack,context.enterprise_id)
     # Read once, verify those exact bytes, then retain an independent JSON copy.
     # Queued reports consume this bound copy rather than the mutable pack file.
