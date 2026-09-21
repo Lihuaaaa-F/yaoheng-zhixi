@@ -866,7 +866,7 @@ def add_reader_summary(doc,snapshot,narrative,output):
         line.paragraph_format.space_after=Pt(1)
         line.style='Normal'
         insert_at=line
-    mark=OxmlElement('w:bookmarkStart');mark.set(qn('w:id'),'30000');mark.set(qn('w:name'),'YH_TOC');hint._p.insert(0,mark)
+    mark=OxmlElement('w:bookmarkStart');mark.set(qn('w:id'),'30000');mark.set(qn('w:name'),'YH_TOC');title._p.insert(0,mark)
 
 
 def add_reader_charts(doc,snapshot,benchmark,anchors,output):
