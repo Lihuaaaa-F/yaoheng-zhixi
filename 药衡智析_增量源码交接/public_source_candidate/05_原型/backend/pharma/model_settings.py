@@ -35,16 +35,55 @@ def _load() -> dict[str, Any]:
     return value if isinstance(value, dict) else {}
 
 
+def _loopback_host(base: str) -> bool:
+    """http 明文仅允许回环/容器内宿主机地址；其余端点必须 https。"""
+    try:
+        from urllib.parse import urlsplit
+        host = (urlsplit(base).hostname or '').lower()
+    except ValueError:
+        return False
+    return host in ('localhost', '127.0.0.1', '::1', '0.0.0.0', 'host.docker.internal')
+
+
+def _validate_base_url(base: str) -> str | None:
+    if not base.startswith(('http://', 'https://')):
+        return 'base_url 必须以 http(s):// 开头'
+    if '@' in base.split('://', 1)[-1]:
+        return 'base_url 不得内嵌凭据'
+    if base.startswith('http://') and not _loopback_host(base):
+        return '非回环地址必须使用 https://（明文 http 仅允许 localhost/127.0.0.1/::1/host.docker.internal）'
+    return None
+
+
+def _sanitize_overrides(overrides: dict[str, Any] | None) -> dict[str, Any]:
+    """请求参数携带的覆盖项安全化（2026-09-21 修复 #4）：
+
+    - key_file 只接受 KEYS_DIR 内的文件名（basename），拒绝任意路径读取；
+    - base_url 必须通过 https/回环策略校验，防把密钥发往任意明文端点。
+    """
+    cleaned = {k: str(v) for k, v in (overrides or {}).items() if k in FIELDS and str(v).strip()}
+    if 'key_file' in cleaned:
+        name = cleaned['key_file'].strip()
+        if name != Path(name).name or name in ('.', '..'):
+            raise ValueError('KEY_FILE_OVERRIDE_RESTRICTED: 请求参数中的密钥文件只允许 RUNTIME/keys/ 目录内的文件名')
+        cleaned['key_file'] = str(KEYS_DIR / name)
+    if 'base_url' in cleaned:
+        error = _validate_base_url(cleaned['base_url'])
+        if error:
+            raise ValueError('BASE_URL_OVERRIDE_INVALID: ' + error)
+    return cleaned
+
+
 def _validate_connection(section: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     protocol = section.get('protocol', 'openai')
     if protocol not in ('openai', 'anthropic'):
         errors.append('protocol 仅支持 openai / anthropic')
     base = str(section.get('base_url', ''))
-    if base and not base.startswith(('http://', 'https://')):
-        errors.append('base_url 必须以 http(s):// 开头')
-    if base and '@' in base.split('://', 1)[-1]:
-        errors.append('base_url 不得内嵌凭据')
+    if base:
+        error = _validate_base_url(base)
+        if error:
+            errors.append(error)
     if section.get('model') and not str(section['model']).strip():
         errors.append('model 不能为空白')
     return errors
@@ -127,7 +166,7 @@ def status() -> dict[str, Any]:
 def test_connection(route: str = 'narrative', overrides: dict[str, Any] | None = None) -> dict[str, Any]:
     """真实短生成测试：验证连通、身份回显与结构化输出，而非仅探测地址。"""
     from .narrative import ModelGateway
-    overrides = {k: str(v) for k, v in (overrides or {}).items() if k in FIELDS and v} or None
+    overrides = _sanitize_overrides(overrides) or None
     gateway = ModelGateway.for_route(route, **(overrides or {})) if overrides else ModelGateway.for_route(route)
     if not gateway.key:
         return {'status': 'NO_KEY', 'reason': '未配置密钥：请先在设置中填写密钥或配置 PHARMA_MODEL_KEY_FILE'}
@@ -159,7 +198,7 @@ def test_connection(route: str = 'narrative', overrides: dict[str, Any] | None =
 def list_remote_models(route: str = 'narrative', overrides: dict[str, Any] | None = None) -> dict[str, Any]:
     """尝试拉取模型列表；失败时明确提示可手填，绝不阻塞设置。"""
     import httpx
-    gateway_overrides = {k: str(v) for k, v in (overrides or {}).items() if k in FIELDS and v}
+    gateway_overrides = _sanitize_overrides(overrides)
     resolved = resolve(route) or {k: v for k, v in gateway_overrides.items()}
     base = (gateway_overrides.get('base_url') or resolved.get('base_url')
             or os.getenv('PHARMA_MODEL_BASE_URL', 'https://open.bigmodel.cn/api/paas/v4')).rstrip('/')

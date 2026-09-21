@@ -13,6 +13,18 @@ from .metrics import benchmark_analysis
 
 store=JobStore();actions=ActionStore()
 app=FastAPI(title='药衡智析',version='0.1.0')
+# 可选 API 鉴权（2026-09-21 修复 #4）：默认（本地演示，端口仅绑 127.0.0.1）
+# 不设置 token、行为不变；部署到局域网/公网时设置 PHARMA_API_TOKEN 环境变量，
+# 所有 /api/* 请求须携带 X-API-Token 头。/health 与静态页面豁免。
+@app.middleware('http')
+async def optional_token_guard(request,call_next):
+    token=os.getenv('PHARMA_API_TOKEN','').strip()
+    if token and request.url.path.startswith('/api'):
+        import secrets
+        provided=request.headers.get('x-api-token','')
+        if not secrets.compare_digest(provided.encode('utf-8'),token.encode('utf-8')):
+            return JSONResponse(status_code=401,content={'error':{'code':'UNAUTHORIZED','message':'缺少或错误的 X-API-Token'},'status':'FAILED'})
+    return await call_next(request)
 class AnalysisRequest(BaseModel):
     model_config=ConfigDict(extra='forbid')
     context_id:str|None=None
