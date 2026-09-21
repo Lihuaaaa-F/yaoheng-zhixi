@@ -279,7 +279,7 @@ def build_bindings(snapshot,narrative,benchmark=None):
     if improving:
         best=min(improving,key=lambda e:Decimal(str(e['unit_mom'])))
         highlights.append('改善最大的成本要素：'+best['name']+'（单位环比 '+number(str(best['unit_mom']))+'%）')
-    for row in (snapshot.get('industry') or {}).get('rows') or []:
+    for row in ((snapshot.get('industry') or {}).get('rows') or []) if snapshot.get('factory')=='中药一厂' else []:
         if str(row.get('指标',''))=='人工成本占比' and row.get('本厂水平(中药一厂)') and row.get('行业P50'):
             try:
                 if Decimal(str(row['本厂水平(中药一厂)']).rstrip('%'))<Decimal(str(row['行业P50']).rstrip('%')):
@@ -449,10 +449,12 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
     candidates.sort(key=lambda f:f.get('origin')=='rules')  # 模型来源在前，同主题保留模型版
     for f in candidates:
         sig=_shingles(f.get('suggestion',''))
-        duplicate=(f.get('verification_target','') in seen_targets
+        target=f.get('verification_target','') or None  # 空核查对象不作为合并键，避免误删不同建议
+        duplicate=(target is not None and target in seen_targets
                    or any(sig and s and len(sig&s)/len(sig|s)>=0.6 for s in seen_sigs))
         if duplicate:continue
-        seen_targets.add(f.get('verification_target',''));seen_sigs.append(sig);actionable.append(f)
+        if target is not None:seen_targets.add(target)
+        seen_sigs.append(sig);actionable.append(f)
     table('改进建议表格',['问题与核查行动','预期证据'],[[str(i+1)+'．'+f.get('rendered_text','')+'\n核查对象：'+f.get('verification_target','待补')+'\n行动：'+f.get('suggestion'), '、'.join(f.get('expected_evidence',[]) if isinstance(f.get('expected_evidence'),list) else [f.get('expected_evidence') or '核查对象的原始记录'])] for i,f in enumerate(actionable)])
     table('整改任务表格',['责任部门／角色','优先级','期限依据与状态'],[[str(i+1)+'．'+(f.get('department') or '责任部门待定')+'／'+(f.get('responsible_role') or '待分配')+'（姓名待分配）', {'high':'高','medium':'中','low':'低'}.get(f.get('priority'),'中'), (f.get('deadline_basis') or '下次成本复核前，具体日期由用户确认')+'；待确认发送'] for i,f in enumerate(actionable)])
     output=Path(output);output.parent.mkdir(parents=True,exist_ok=True)

@@ -19,7 +19,7 @@ app=FastAPI(title='药衡智析',version='0.1.0')
 @app.middleware('http')
 async def optional_token_guard(request,call_next):
     token=os.getenv('PHARMA_API_TOKEN','').strip()
-    if token and request.url.path.startswith('/api'):
+    if token and (request.url.path.startswith('/api') or request.url.path in ('/docs','/redoc','/openapi.json')):
         import secrets
         provided=request.headers.get('x-api-token','')
         if not secrets.compare_digest(provided.encode('utf-8'),token.encode('utf-8')):
@@ -165,7 +165,6 @@ def _generation_versions(snapshot,req):
     """
     from .reports import TEMPLATE,normalize_template
     from .narrative import ModelGateway
-    from .knowledge import terminology_hash
     from .versions import soft_items,hard_items
     if snapshot['context_id']=='pharmaceutical:competition':
         if not TEMPLATE.exists():normalize_template()
