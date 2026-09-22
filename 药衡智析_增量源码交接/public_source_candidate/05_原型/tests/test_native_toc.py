@@ -43,7 +43,7 @@ def test_native_toc_field_structure_and_dirty_flag():
     # （2026-09-22 用户截图反馈）；缓存页码已与 Word 分页逐条一致，无需强更。
     assert flds[0].get(qn('w:dirty')) is None
     instr = body.findall('.//' + qn('w:instrText'))[0].text
-    assert 'TOC' in instr and '\\h' in instr and '\\o "1-2"' in instr
+    assert 'TOC' in instr and '\\h' in instr and '\\o "1-4"' in instr  # 与题包原件域参数一致
 
 
 def test_toc_entries_hyperlinked_and_level_filtered():
@@ -58,7 +58,8 @@ def test_toc_entries_hyperlinked_and_level_filtered():
     # 一级章 + 2.1 小标题两条入目录；3.1.1 为三级不进
     assert anchors == ['YH_SEC_T0', 'YH_SEC_T1']
     texts = [''.join(t.text or '' for t in h.findall('.//' + qn('w:t'))) for h in hyperlinks]
-    assert any(t.lstrip('\u3000').startswith('2.1') for t in texts)      # 小标题进目录
+    assert any(t.startswith('2.1') for t in texts)      # 小标题进目录（缩进走 TOC2 样式，不用 U+3000）
+    assert all(not t.startswith('\u3000') for t in texts)  # U+3000 缺字方框问题（用户截图 #12）不再出现
     assert not any('3.1.1' in t for t in texts)                          # 三级不进目录
     assert all(t.rstrip().endswith('第1页') for t in texts)               # 页码占位待 convert_pdf 回填
 
