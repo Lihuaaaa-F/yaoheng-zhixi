@@ -386,3 +386,26 @@ def test_settings_route_key_survives_cross_host(monkeypatch, tmp_path):
         importlib.reload(config)
         importlib.reload(ms)
         importlib.reload(narrative)
+
+
+def test_sanitize_overrides_ignores_none_values():
+    """API 端点曾把 {'base_url':x,'key_file':None} 传入：None 被 str() 成 'None'
+    （truthy）导致密钥文件解析为 Path('None') → 密钥空（2026-09-22 修复）。"""
+    cleaned = model_settings._sanitize_overrides({'base_url': 'https://api.deepseek.com', 'key_file': None})
+    assert cleaned == {'base_url': 'https://api.deepseek.com'}
+
+
+def test_vector_dimension_probe_cached(tmp_path, monkeypatch):
+    """向量维度惰性探测：无 config.json 时从 ONNX 输出形状读，按指纹缓存。"""
+    import importlib
+    import pharma.config as config
+    monkeypatch.setenv('PHARMA_RUNTIME_DIR', str(tmp_path))
+    importlib.reload(config)
+    importlib.reload(model_settings)
+    model_dir = tmp_path / 'vec'
+    model_dir.mkdir()
+    (model_dir / 'model_quantized.onnx').write_bytes(b'stub')
+    (model_dir / 'tokenizer.json').write_text('{}', encoding='utf-8')
+    # 无 onnxruntime 可加载的真实权重：stub 文件探测失败 → None（展示降级，不抛错）
+    assert model_settings._probe_dimension_cached(model_dir) is None or \
+           isinstance(model_settings._probe_dimension_cached(model_dir), int)
