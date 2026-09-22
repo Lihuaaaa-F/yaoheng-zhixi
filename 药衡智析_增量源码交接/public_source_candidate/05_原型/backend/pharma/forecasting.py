@@ -2,14 +2,23 @@
 
 设计原则：
 - 只消费已固化的分析快照趋势数据（snapshot['trend']），不引入新依赖；
-- 方法透明可审计：Holt 双参数指数平滑（固定 α/β），实验性波动范围由样本内一步残差估计；
+- 方法透明可审计：Holt 双参数指数平滑（固定 α/β，不拟合调参），实验性
+  波动范围由样本内一步残差估计；
 - 预测是趋势外推参考，不是预算或承诺，所有输出必须携带告示文案；
 - 数值全部走 float 常规运算后按 4 位小数取整，保证同输入同输出（可测试）。
+
+v3（2026-09-22）：初始化从"末两点差分"改为"前半段最小二乘"。两点差分对
+单月异常敏感（次月尖峰会把初始斜率污染成整月差额，且 BETA 平滑收敛慢，
+系统性高估后续预测）——反例 [10.0, 12.5, 10.2, 10.4, 10.6, 10.8] 实测：
+两点初始化预测 11.73/12.13/12.54，OLS 初始化 10.72。真实题包三产品
+滚动留出 MAE：0.250 → 0.188（六味 0.372→0.282）。OLS 是 Hyndman/statsmodels
+的标准初始化做法，仍不引入调参。同时新增滚动原点留出评估（holdout），
+把"尚无独立留出期验证"的告示替换为实测留出误差。
 """
 import math
 
 # 方法版本号：参数或口径变化时必须递增，调用方据此判断缓存/回执有效性。
-FORECAST_VERSION = 'holt-alpha0.6-beta0.3-v2-contiguous'
+FORECAST_VERSION = 'holt-alpha0.6-beta0.3-v3-ols-init'
 ALPHA, BETA = 0.6, 0.3          # 水平/斜率平滑系数：固定值，不拟合调参
 RESIDUAL_SCALE = 1.0           # ±一步残差均方根；未经覆盖率验证的实验性范围
 MIN_POINTS = 3                  # 少于 3 个有效月度点无法区分水平与斜率
@@ -24,15 +33,30 @@ def _next_month(month, step=1):
     return f'{total // 12:04d}-{total % 12 + 1:02d}'
 
 
-def _holt(values, horizon):
-    """Holt 线性指数平滑：返回 (预测列表, 样本内一步残差列表)。
+def _ols_init(values):
+    """对序列前 k 个点做最小二乘，返回 (末位水平, 斜率, 用作初始化的点数)。
 
-    以首两个点初始化水平与斜率，随后逐步更新；残差只收集实际的一步预测
-    误差（初始化点的恒零残差不计入，避免系统性低估区间宽度）。
+    k = min(3, max(2, (n+1)//2))：n=3 时退化为两点（与 v2 一致，保住 1 个
+    残差样本）；n>=4 时用 3 点拟合，异常月被平均而非全额进入初始斜率。
     """
-    level, slope = values[1], values[1] - values[0]
+    n = len(values)
+    k = min(3, max(2, (n + 1) // 2))
+    head = values[:k]
+    mean_x, mean_y = (k - 1) / 2, sum(head) / k
+    slope = sum((i - mean_x) * (v - mean_y) for i, v in enumerate(head)) \
+        / sum((i - mean_x) ** 2 for i in range(k))
+    return mean_y + slope * ((k - 1) - mean_x), slope, k
+
+
+def _holt(values, horizon):
+    """Holt 线性指数平滑：返回 (预测列表, 样本内一步残差列表, 初始化点数)。
+
+    初始水平/斜率由前半段最小二乘给出（v3，见模块 docstring）；残差只收集
+    初始化段之后实际观测的一步预测误差（初始化段的拟合不构成一步检验）。
+    """
+    level, slope, init_k = _ols_init(values)
     residuals = []
-    for actual in values[2:]:
+    for actual in values[init_k:]:
         residuals.append(actual - (level + slope))
         prev_level = level
         level = ALPHA * actual + (1 - ALPHA) * (level + slope)
@@ -41,7 +65,23 @@ def _holt(values, horizon):
     for _ in range(horizon):
         level_now = level_now + slope  # 仅外推，不再吸收新观测
         points.append(level_now)
-    return points, residuals
+    return points, residuals, init_k
+
+
+def _rolling_holdout(values):
+    """滚动原点留出评估：用 [0..t-1] 预测 t（t 从 3 起，保证至少 3 点历史）。
+
+    返回 (原点数, Holt 留出MAE, 上期值基线留出MAE)；原点数为 0 表示历史
+    太短无法做独立留出（此时沿用样本内口径并如实声明）。
+    """
+    errs, baseline_errs = [], []
+    for t in range(3, len(values)):
+        preds, _residuals, _k = _holt(values[:t], 1)
+        errs.append(abs(preds[0] - values[t]))
+        baseline_errs.append(abs(values[t - 1] - values[t]))
+    if not errs:
+        return 0, None, None
+    return len(errs), sum(errs) / len(errs), sum(baseline_errs) / len(baseline_errs)
 
 
 def forecast_series(series, horizon=3):
@@ -75,23 +115,34 @@ def forecast_series(series, horizon=3):
         return {'status': 'INSUFFICIENT_HISTORY', 'reason': f'连续有效月度观测不足 {MIN_POINTS} 个，不输出预测',
                 'forecast_version': FORECAST_VERSION, 'observations': len(points), 'points': []}
     values = [float(v) for _, v in points]
-    projections, residuals = _holt(values, horizon)
+    projections, residuals, _init_k = _holt(values, horizon)
     # 一步残差均方根，不声称分布或覆盖概率；精确线性/常量序列可为 0。
     sigma = math.sqrt(sum(r * r for r in residuals) / len(residuals)) if residuals else 0.0
+    holdout_origins, holdout_mae, holdout_baseline_mae = _rolling_holdout(values)
     rows = []
     for step, point in enumerate(projections, 1):
         low, high = point - RESIDUAL_SCALE * sigma, point + RESIDUAL_SCALE * sigma
         rows.append({'month': _next_month(months[-1], step), 'point': round(point, 4),
                      'low': round(low, 4), 'high': round(high, 4),
                      'negative_warning': point <= 0})
-    return {'status': 'PASS', 'forecast_version': FORECAST_VERSION, 'method': 'Holt双参数指数平滑(α=0.6,β=0.3)',
+    holdout = {'origins': holdout_origins,
+               'mae': round(holdout_mae, 4) if holdout_mae is not None else None,
+               'baseline_mae': round(holdout_baseline_mae, 4) if holdout_baseline_mae is not None else None}
+    if holdout_origins:
+        evaluation_notice = (f'滚动原点留出验证（{holdout_origins} 个原点，留出一步MAE：Holt {holdout["mae"]}，'
+                             f'上期值基线 {holdout["baseline_mae"]}）；波动范围仍由样本内残差估计，未验证覆盖率。')
+    else:
+        evaluation_notice = '历史仅够初始化，无独立留出原点；仅报告样本内一步误差，波动范围未验证覆盖率。'
+    return {'status': 'PASS', 'forecast_version': FORECAST_VERSION,
+            'method': 'Holt双参数指数平滑(α=0.6,β=0.3，OLS初始化)',
             'observations': len(points), 'history_months': [months[0], months[-1]],
             'residual_std': round(sigma, 4), 'interval': '实验性波动范围（±样本内一步残差均方根；未验证覆盖率）',
-            'one_step_mae': round(sum(abs(r) for r in residuals) / len(residuals), 4),
+            'one_step_mae': round(sum(abs(r) for r in residuals) / len(residuals), 4) if residuals else 0.0,
+            'holdout': holdout,
             'baseline': {'method': 'last_observation',
                          'points': [{'month': row['month'], 'point': values[-1]} for row in rows],
-                         'one_step_mae': round(sum(abs(values[i]-values[i-1]) for i in range(2,len(values))) / len(residuals), 4)},
-            'evaluation_notice': '仅比较初始化后的样本内一步误差，观测有限，尚无独立留出期验证；不代表专业预测已验收。',
+                         'one_step_mae': round(sum(abs(values[i]-values[i-1]) for i in range(_init_k,len(values))) / max(len(residuals),1), 4)},
+            'evaluation_notice': evaluation_notice,
             'points': rows, 'caveat': CAVEAT}
 
 
@@ -132,4 +183,4 @@ def forecast_snapshot(snapshot, horizon=3):
             'product': snapshot.get('product'), 'factory': snapshot.get('factory'),
             'history_months': overall.get('history_months'), 'series': series_out,
             'points': overall.get('points', []), 'caveat': CAVEAT,
-            **{key: overall.get(key) for key in ('method','interval','residual_std','baseline','one_step_mae','evaluation_notice','reason_code')}}
+            **{key: overall.get(key) for key in ('method','interval','residual_std','baseline','one_step_mae','holdout','evaluation_notice','reason_code')}}
