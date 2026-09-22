@@ -94,3 +94,40 @@ def test_missing_month_blocks_forecast(series):
     result=forecasting.forecast_series(series,horizon=1)
     assert result['status']=='INSUFFICIENT_HISTORY' and result['points']==[]
     assert result['reason_code']=='NON_CONTIGUOUS_HISTORY'
+
+
+def test_ols_init_robust_to_second_month_spike():
+    """v3 初始化反例（2026-09-22 修复）：次月尖峰 [10, 12.5, 10.2, ...] 不再
+    污染初始斜率——两点差分初始斜率=+2.5 会把 3 步预测拉到 12.5+；OLS 初始化
+    的预测必须明显低于旧实现且贴近序列真实水平（≈10.2-11.0）。"""
+    spike = [('2026-0%d' % m, v) for m, v in enumerate([10.0, 12.5, 10.2, 10.4, 10.6, 10.8], 1)]
+    result = forecasting.forecast_series(spike, horizon=3)
+    assert result['status'] == 'PASS'
+    points = [p['point'] for p in result['points']]
+    # 旧两点初始化实测输出 11.73/12.13/12.54；新初始化应全部 < 11.2
+    assert all(p < 11.2 for p in points), points
+    # OLS 初始化不拟合调参：仍是固定 α/β
+    assert forecasting.ALPHA == 0.6 and forecasting.BETA == 0.3
+
+
+def test_holdout_rolling_origin_reported():
+    """滚动原点留出：>=4 点时给出实测留出 MAE；线性序列留出误差为 0。"""
+    linear = [('2026-0%d' % m, float(m) * 5) for m in range(1, 7)]  # 5,10,...,30
+    result = forecasting.forecast_series(linear, horizon=1)
+    holdout = result['holdout']
+    assert holdout['origins'] == 3 and holdout['mae'] == 0 and holdout['baseline_mae'] == 5
+    assert '留出' in result['evaluation_notice'] and '3 个原点' in result['evaluation_notice']
+    # 3 点历史无独立留出原点：如实声明而非伪造
+    short = forecasting.forecast_series([('2026-01', 1.0), ('2026-02', 2.0), ('2026-03', 3.0)], horizon=1)
+    assert short['holdout']['origins'] == 0 and short['holdout']['mae'] is None
+    assert '无独立留出原点' in short['evaluation_notice']
+
+
+def test_real_contest_series_holdout_improves_over_two_point_init():
+    """真实题包序列（银黄 2026 单位成本）回归锚点：v3 留出 MAE 优于 v2 两点
+    初始化（v2 实测 0.219，v3 实测 0.165）——防回归到敏感初始化。"""
+    series = [('2026-0%d' % m, v) for m, v in
+              enumerate([10.7, 10.87, 10.53, 10.9, 11.21, 10.93], 1)]
+    result = forecasting.forecast_series(series, horizon=1)
+    assert result['holdout']['origins'] == 3
+    assert result['holdout']['mae'] < 0.219, result['holdout']
