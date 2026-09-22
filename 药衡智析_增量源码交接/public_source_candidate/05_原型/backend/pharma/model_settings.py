@@ -88,7 +88,8 @@ def _sanitize_overrides(overrides: dict[str, Any] | None) -> dict[str, Any]:
     - key_file 只接受 KEYS_DIR 内的文件名（basename），拒绝任意路径读取；
     - base_url 必须通过 https/回环策略校验，防把密钥发往任意明文端点。
     """
-    cleaned = {k: str(v) for k, v in (overrides or {}).items() if k in FIELDS and str(v).strip()}
+    cleaned = {k: str(v) for k, v in (overrides or {}).items()
+               if v is not None and str(v).strip() and k in FIELDS}
     if 'key_file' in cleaned:
         name = cleaned['key_file'].strip()
         if name != Path(name).name or name in ('.', '..'):
@@ -323,6 +324,42 @@ def clear_vector_model() -> None:
     SETTINGS_PATH.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding='utf-8')
 
 
+def _probe_dimension_cached(directory: Path) -> int | None:
+    """向量维度惰性探测（带缓存）：默认模型目录无 config.json（Xenova 布局
+    常只有 onnx+tokenizer），从 ONNX 输出形状读最后一维；按资产指纹缓存到
+    RUNTIME/vector_dimension.json，切换模型自动失效。探测失败返回 None
+    （展示层降级为"—"，不影响检索功能）。
+    """
+    cache = RUNTIME / 'vector_dimension.json'
+    fingerprint = embedding_fingerprint(directory)
+    try:
+        if cache.is_file():
+            data = json.loads(cache.read_text(encoding='utf-8'))
+            if data.get('fingerprint') == fingerprint:
+                return data.get('dimension')
+    except (OSError, ValueError):
+        pass
+    onnx_path = next((directory / n for n in ('model_quantized.onnx', 'onnx/model_quantized.onnx', 'model.onnx')
+                      if (directory / n).is_file()), None)
+    if onnx_path is None:
+        return None
+    try:
+        import onnxruntime as ort
+        options = ort.SessionOptions()
+        options.inter_op_num_threads = 1
+        options.intra_op_num_threads = 1
+        session = ort.InferenceSession(str(onnx_path), sess_options=options,
+                                       providers=['CPUExecutionProvider'])
+        shape = session.get_outputs()[0].shape
+        dimension = shape[-1] if shape and isinstance(shape[-1], int) else None
+        if dimension:
+            cache.write_text(json.dumps({'fingerprint': fingerprint, 'dimension': dimension}),
+                             encoding='utf-8')
+        return dimension
+    except Exception:
+        return None
+
+
 def vector_status() -> dict[str, Any]:
     """当前本地向量模型信息（预填充展示与切换按钮的默认值）。"""
     directory = embedding_dir()
@@ -343,6 +380,9 @@ def vector_status() -> dict[str, Any]:
             name = ''
     else:
         name = ''
+    if dim is None:
+        # Xenova 布局无 config.json：从 ONNX 输出形状惰性探测（带指纹缓存）
+        dim = _probe_dimension_cached(directory)
     return {'mode': 'local', 'name': directory.name or str(directory), 'path': str(directory),
             'is_default': str(directory).replace('\\', '/') == str(RUNTIME / DEFAULT_EMBEDDING_SUBDIR).replace('\\', '/'),
             'onnx_present': bool(onnx_ok), 'tokenizer_present': bool(files.get('tokenizer.json')),

@@ -534,8 +534,10 @@ def test_model_settings(route:str='analysis',overrides:dict[str,Any]|None=None):
 @app.get('/api/settings/models/list')
 def list_model_settings(route:str='analysis',base_url:str|None=None,key_file:str|None=None):
     from . import model_settings
-    overrides={'base_url':base_url,'key_file':key_file} if (base_url or key_file) else None
-    return model_settings.list_remote_models(route,overrides)
+    # 只携带实际提供的字段：None 值进入覆盖字典会被误当成字符串 "None"
+    # （2026-09-22 修复：带 base_url 拉列表时密钥被解析为空）。
+    overrides={k:v for k,v in (('base_url',base_url),('key_file',key_file)) if v}
+    return model_settings.list_remote_models(route,overrides or None)
 
 @app.get('/api/settings/models/presets')
 def model_presets():
