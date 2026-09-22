@@ -65,3 +65,10 @@ details.workbench-collapse>summary span{font-size:12px;color:#6b7a77}
 .grow{flex:1}
 .vector-status{margin-top:8px}
 .vector-model .filters{align-items:end}
+
+/* ===== 2026-09-22 知识图谱三维化：大窗与全屏 ===== */
+.chart-3d{min-height:520px}
+.kg-fullscreen{position:fixed;inset:0;z-index:80;background:#fff;overflow:auto;padding:16px 20px;margin:0;border-radius:0}
+.kg-fullscreen .chart-3d{min-height:0}
+.kg-tooltip{position:absolute;z-index:20;pointer-events:none;background:#fff;border:1px solid var(--border);
+ border-radius:6px;padding:6px 10px;font-size:12px;color:#28414d;box-shadow:0 4px 14px rgba(20,32,38,.18);white-space:nowrap}

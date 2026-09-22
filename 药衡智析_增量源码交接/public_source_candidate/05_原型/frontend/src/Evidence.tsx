@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { api, contextQuery } from './api';
 import { cleanText, sourceLabel, DeveloperDetails, MetricDetails } from './presentation';
-import Chart from './Chart';
+import Chart3D from './Chart3D';
 export default function Evidence({ contextId, product, month, factory, onOpen }: {contextId:string;product:string; month?:string; factory?:string; onOpen:(v:any)=>void}) {
  const searchController=useRef<AbortController|undefined>(undefined);
  const [query,setQuery]=useState('设备停机记录'),[mode,setMode]=useState('hybrid'),[results,setResults]=useState<any>(null),[status,setStatus]=useState<any>(null),[error,setError]=useState(''),[busy,setBusy]=useState(false);
@@ -12,19 +12,110 @@ export default function Evidence({ contextId, product, month, factory, onOpen }:
  return <><section className="panel"><h2>数据与知识来源</h2><p className="muted">按文档名、章节和真实页码核查。文档有记录不等于已证实本期成本原因。</p>{status&&<><p>已登记来源 {Object.keys(status.sources??{}).length} 份；索引{status.status==='PASS'?'可用':'需要复核'}。</p><DeveloperDetails value={status}/></>}</section><section className="panel"><h2>适用证据检索</h2><form className="search-row" onSubmit={e=>{e.preventDefault();void search()}}><input aria-label="知识检索问题" value={query} onChange={e=>setQuery(e.target.value)} placeholder="输入工艺、物料或设备问题"/><select aria-label="检索方式" value={mode} onChange={e=>setMode(e.target.value)}><option value="hybrid">语义与关键词混合</option><option value="bm25">关键词 BM25</option><option value="vector">语义向量</option></select><button className="primary" disabled={busy||!query.trim()}>{busy?'检索中…':'检索证据'}</button></form><p className="muted">核查范围：{product} · {factory} · {month}。通用知识仅解释机制；本期归因还须核对规格、期间和文档版本。</p>{error&&<p role="alert" className="error">{error}</p>}{results&&<p role="status">找到 {hits.length} 条候选依据{results.degraded_reason?'；部分检索能力未通过，请复核证据覆盖。':''}</p>}{results&&!hits.length&&<p className="empty">证据不足：没有适用记录，请补充相关产品和期间的原始资料。</p>}{hits.map((h:any,i:number)=><article className="evidence-result" key={h.evidence_id??i}><strong>{sourceLabel(h)}</strong><p>适用范围：{h.products?.join('、')||h.scope_label||'产品适用性待核对'}。{h.applicability?.reason??'引用前请核对该记录是否支持当前问题。'}</p><button onClick={()=>onOpen(h)}>查看来源与适用性</button></article>)}{results&&<DeveloperDetails value={results}/>}</section><KnowledgeGraphPanel contextId={contextId}/></>
 }
 
-// 知识图谱面板（赛题加分项）：产品-药材-工序关系可视化，检索词由此增强。
+// 知识图谱面板（赛题加分项）：产品-药材-工序关系三维可视化。
+// 2026-09-22 改版：graphGL（正交相机+2D roam，无真三维旋转）→ scatter3D 节点
+// + lines3D 边 + grid3D 轨道相机——左键拖拽真三维旋转、滚轮缩放、右键平移，
+// 悬停显示节点/关系说明，支持对 21 节点/27 边结构做视觉分析。
 function KnowledgeGraphPanel({contextId}:{contextId:string}) {
  const [graph,setGraph]=useState<any>(null);
+ const [fullscreen,setFullscreen]=useState(false);
+ const [hoverInfo,setHoverInfo]=useState<{text:string;x:number;y:number}|null>(null);
+ const chartDomRef=useRef<HTMLDivElement|null>(null);
  useEffect(()=>{const c=new AbortController();setGraph(null);api(`/kb/graph?${contextQuery(contextId)}`,undefined,c.signal).then(x=>{if(!c.signal.aborted)setGraph(x)}).catch(()=>{if(!c.signal.aborted)setGraph(null)});return()=>c.abort()},[contextId]);
  if(!graph)return null;
  if(graph.status!=='PASS')return <section className="panel"><h2>知识图谱</h2><p className="notice">{graph.reason??'当前知识源未解析出配方或工艺结构，图谱为空。'}</p></section>;
- const categories=[{name:'产品'},{name:'药材'},{name:'工序'}];
+ const colors=['#227c81','#c08a3e','#8f5b7a'];
  const typeIndex=(t:string)=>({product:0,material:1,process:2})[t]??0;
- const nodes=graph.nodes.map((n:any)=>({id:n.id,name:n.label,category:typeIndex(n.type),symbolSize:n.type==='product'?46:22,value:n.type==='product'?'产品':n.type==='material'?'药材':'工序'}));
- const edges=graph.edges.map((e:any)=>({source:e.source,target:e.target,value:e.relation}));
- return <section className="panel"><div className="panel-heading"><h2>知识图谱 · 配方与工艺</h2><span>{graph.stats?.products??0} 产品 · {graph.stats?.materials??0} 药材 · {graph.stats?.process_steps??0} 工序</span></div>
-  <Chart label="知识图谱" option={{tooltip:{show:false},legend:{data:categories.map(c=>c.name),bottom:4},series:[{type:'graph',layout:'force',roam:true,draggable:true,categories,label:{show:true},force:{repulsion:220,edgeLength:[60,120]},data:nodes,links:edges,emphasis:{focus:'adjacency'},lineStyle:{color:'#9eafb9',curveness:0.15},edgeLabel:{show:false}}]}}/>
-  <p className="muted">图谱由当前知识库版本确定性抽取（规则 {graph.rules_version}），检索时自动把所选产品的药材与工序补充进关键词检索。图中关系不构成成本归因结论。</p></section>;
+ const typeLabel=(t:string)=>({product:'产品',material:'药材',process:'工序'})[t]??t;
+ const height=fullscreen?Math.round(window.innerHeight*0.88):720;
+ // 确定性三维布局：产品按等边三角分布，各产品的药材与工序绕本产品在
+ // 倾斜环上按索引均匀转角；关系完全来自后端确定性抽取，坐标只影响展示。
+ const productNodes=graph.nodes.filter((n:any)=>n.type==='product');
+ const R=380, H=200;
+ const posById=new Map<string,[number,number,number]>();
+ const nodeMeta=new Map<string,{color:string;size:number;kind:string}>();
+ productNodes.forEach((p:any,pi:number)=>{
+   const angle=-Math.PI/2+pi*2*Math.PI/Math.max(productNodes.length,1);
+   posById.set(p.id,[Math.cos(angle)*R,0,Math.sin(angle)*R]);
+   nodeMeta.set(p.id,{color:colors[0],size:16,kind:'产品'});
+ });
+ const neighborOf=new Map<string,string[]>();
+ for(const e of graph.edges){
+   for(const [s,t] of [[e.source,e.target],[e.target,e.source]]){
+     const list=neighborOf.get(s)??[];list.push(t);neighborOf.set(s,list);
+   }
+ }
+ for(const p of graph.nodes.filter((n:any)=>n.type==='product')){
+   const [cx,,cz]=posById.get(p.id)!;
+   const neighbors=(neighborOf.get(p.id)??[]).filter((id:string)=>!posById.has(id));
+   neighbors.forEach((id:string,idx:number)=>{
+     if(posById.has(id))return;
+     const a=idx*2*Math.PI/Math.max(neighbors.length,1)+ (posById.keys().next().value===p.id?0:.7);
+     const y=H*(idx%2===0?1:-.6);
+     posById.set(id,[cx+Math.cos(a)*190,y,cz+Math.sin(a)*190]);
+   });
+ }
+ const nodeData=graph.nodes.filter((n:any)=>posById.has(n.id)).map((n:any)=>{
+   const meta=nodeMeta.get(n.id)??{color:typeIndex(n.type)===1?colors[1]:colors[2],size:typeIndex(n.type)===1?9:8,kind:typeLabel(n.type)};
+   const [x,y,z]=posById.get(n.id)!;
+   return {name:n.label,value:[x,y,z],
+     itemStyle:{color:meta.color,opacity:.95,borderColor:'#fff',borderWidth:1},
+     symbolSize:n.type==='product'?20:meta.size,
+     tooltip_kind:meta.kind};
+ });
+ // lines3D 的布局器不支持 cartesian3D（只支持 globe/geo3D/mapbox），改用
+ // scatter3D 密集采样点渲染边：所有边的插值点合并进单一系列（减少 drawcall，
+ // 27 边×41 点≈1100 符号，单系列渲染开销可控）。
+ const SAMPLES=40;
+ const edgePoints:any[]=[];
+ for(const e of graph.edges){
+   if(!posById.has(e.source)||!posById.has(e.target))continue;
+   const a=posById.get(e.source)!,b=posById.get(e.target)!;
+   const label=`${e.source} —${e.value||'相关'}→ ${e.target}`;
+   for(let i=0;i<=SAMPLES;i++){
+     const t=i/SAMPLES;
+     edgePoints.push({value:[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t],
+       name:i===0||i===SAMPLES?label:'',tooltip_kind:'边'});
+   }
+ }
+ const edgeSeriesOption={type:'scatter3D',coordinateSystem:'cartesian3D',
+   data:edgePoints,symbolSize:1.8,
+   itemStyle:{color:'#7d97a6',opacity:.45}};
+ return <section className={`panel${fullscreen?' kg-fullscreen':''}`}>
+  <div className="panel-heading"><h2>知识图谱 · 配方与工艺（三维）</h2>
+   <div className="button-row"><span>{graph.stats?.products??0} 产品 · {graph.stats?.materials??0} 药材 · {graph.stats?.process_steps??0} 工序</span>
+    <button onClick={()=>setFullscreen(f=>!f)}>{fullscreen?'退出全屏':'放大视图'}</button></div></div>
+  <div ref={chartDomRef} style={{position:'relative'}}>
+  <Chart3D label="知识图谱三维视图" height={height}
+   onHover={(info:any)=>setHoverInfo(info)} option={{
+    tooltip:{formatter:(p:any)=>{
+      const label=p.data?.name||p.name||'';
+      if(p.data?.tooltip_kind==='边')return label;
+      return `${label}（${p.data?.tooltip_kind??''}）`;
+    }},
+    legend:{show:false},
+    series:[
+      edgeSeriesOption,
+      {type:'scatter3D',coordinateSystem:'cartesian3D',data:nodeData,
+       tooltip:{show:true,formatter:(p:any)=>`${p.name}（${p.data?.tooltip_kind??''}）`},
+       label:{show:true,formatter:(p:any)=>p.name,position:'right',distance:1,
+         textStyle:{fontSize:13,color:'#28414d',fontWeight:400}},
+       emphasis:{label:{show:true,fontSize:15,fontWeight:600}}},
+    ],
+    xAxis3D:{show:false},yAxis3D:{show:false},zAxis3D:{show:false},
+    grid3D:{
+      width:900,height:520,depth:900,
+      show:false,boxWidth:200,
+      viewControl:{alpha:22,beta:20,distance:260,minDistance:60,maxDistance:620,
+        rotateSensitivity:1,zoomSensitivity:1,panSensitivity:1,damping:.85,
+        autoRotate:false,autoRotateAfterStill:4,autoRotateSpeed:8},
+      light:{main:{intensity:1.1,shadow:false},ambient:{intensity:.5}},
+      axisLine:{show:false},axisLabel:{show:false},splitLine:{show:false},
+      axisPointer:{show:false},
+    }}}/>
+    {hoverInfo && <div className="kg-tooltip" style={{left:hoverInfo.x, top:hoverInfo.y}}>{hoverInfo.text}</div>}
+  </div>
+  <p className="muted">三维操作：左键拖拽<b>旋转</b> · 滚轮<b>缩放</b> · 右键拖拽<b>平移</b> · 静止 4 秒后<b>自动缓旋</b> · 悬停节点/连线<b>查看说明</b>。图谱由当前知识库版本确定性抽取（规则 {graph.rules_version}），检索时自动把所选产品的药材与工序补充进关键词检索。图中关系不构成成本归因结论。</p></section>;
 }
 export function EvidenceDrawer({value,onClose}:{value:any;onClose:()=>void}) {
  useEffect(()=>{const fn=(e:KeyboardEvent)=>{if(e.key==='Escape')onClose()};document.addEventListener('keydown',fn);return()=>document.removeEventListener('keydown',fn)},[onClose]);
