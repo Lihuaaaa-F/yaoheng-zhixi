@@ -63,7 +63,9 @@ def process_job(store,job):
             if synthetic:
                 from .industry import catalog as scoped_catalog,benchmark_reference
                 factories=scoped_catalog(snapshot['context_id'])['factories']
-                other=next((x for x in factories if x!=snapshot['factory']),None)
+                from .metrics import benchmark_partner
+                other=benchmark_partner(snapshot['factory'], snapshot['product'])
+                if other not in factories: other=next((x for x in factories if x!=snapshot['factory']),None)
                 if other:
                     cross_snapshot,result['benchmark']=benchmark_reference(snapshot['context_id'],snapshot['product'],snapshot['month'],snapshot['factory'],other,snapshot['analysis_type'],snapshot['basis'])
                     snapshot['benchmark_context']=cross_snapshot.get('benchmark_context',{})
@@ -71,8 +73,8 @@ def process_job(store,job):
                 else:result['benchmark']={'status':'UNAVAILABLE','reason':'缺少第二工厂'}
             else:
                 if ingest()['snapshot_id']!=snapshot.get('data_version'):raise ValueError('DATA_VERSION_CHANGED_RESUBMIT')
-                from .metrics import catalog
-                factories=catalog()['factories'];other=next((x for x in factories if x!=snapshot['factory']),None)
+                from .metrics import catalog,benchmark_partner
+                factories=catalog()['factories'];other=benchmark_partner(snapshot['factory'], snapshot['product'])
                 if other:
                     cross_snapshot,result['benchmark']=benchmark_analysis(snapshot['product'],snapshot['month'],snapshot['factory'],other,analysis_type=snapshot['analysis_type'])
                     snapshot['benchmark_context']=cross_snapshot['benchmark_context']

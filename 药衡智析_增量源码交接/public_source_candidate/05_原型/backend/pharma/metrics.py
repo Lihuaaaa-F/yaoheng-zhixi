@@ -289,6 +289,30 @@ def analyze(factory, product, month, analysis_type='monthly', basis='unit'):
     return result
 
 
+def benchmark_partner(factory=None, product=None):
+    """报告对标基准厂的统一策略（2026-09-22 扩展性）：
+    ① 主数据 benchmark_factory 指定优先（赛题口径：与中药二厂对标）；
+    ② 指定厂不生产该产品（新药品只部分厂生产）时，回退到生产该产品的
+       其他厂——配对必须有可比数据，否则报告对标章节整体失败；
+    ③ 无产品约束时回退目录序第一个其他厂。
+    UI 跨厂对标页不受此限制（用户任选两厂）。"""
+    factories=source_contract()['factories']
+    factory=factory or factories[0]
+    designated=source_contract().get('benchmark_factory')
+    def produces(f):
+        if product is None:
+            return True
+        rows = [r for r in load_rows() if r['kind']=='cost' and r['factory']==f and r['product']==product]
+        return bool(rows)
+    if designated and designated!=factory and designated in factories and produces(designated):
+        return designated
+    candidates=[x for x in factories if x!=factory and produces(x)]
+    if not candidates:
+        rows=[r for r in load_rows() if r['kind']=='cost' and r['product']==product] if product else []
+        by_data=sorted({r['factory'] for r in rows}-{factory})
+        candidates=by_data
+    return candidates[0] if candidates else None
+
 def _benchmark_factories(left, right):
     factories=source_contract()['factories']
     if len(factories)<2 and (left is None or right is None):raise ValueError('TWO_FACTORIES_REQUIRED')
