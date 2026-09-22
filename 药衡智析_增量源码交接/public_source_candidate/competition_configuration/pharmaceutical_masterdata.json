@@ -22,5 +22,6 @@
   "factories": [
     "中药一厂",
     "中药二厂"
-  ]
+  ],
+  "benchmark_factory": "中药二厂"
 }

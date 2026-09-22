@@ -35,11 +35,18 @@ def source_contract():
         path=Path(configured)
         if path.suffix.lower()!='.json' or path.stat().st_size>1_000_000:raise ValueError('INVALID_MASTERDATA_FILE')
         master=json.loads(path.read_text(encoding='utf-8'))
-        if not isinstance(master,dict) or set(master)!={'specifications','factories'}:raise ValueError('INVALID_MASTERDATA_SHAPE')
+        # benchmark_factory（可选，2026-09-22 扩展性）：报告对标章节的指定基准厂；
+        # 多厂场景下报告自动配对用它（缺省回退第一个其他厂），UI 对标仍可任选。
+        if not isinstance(master,dict) or not set(master)<= {'specifications','factories','benchmark_factory'} or not {'specifications','factories'}<=set(master):raise ValueError('INVALID_MASTERDATA_SHAPE')
         value={**value,**master}
     factories=value['factories'];specs=value['specifications']
     if not isinstance(factories,list) or not factories or any(not isinstance(x,str) or not x.strip() for x in factories) or len(set(factories))!=len(factories):
         raise ValueError('INVALID_MASTERDATA_FACTORIES')
+    designated=master.get('benchmark_factory') if isinstance(master,dict) else None
+    if designated is not None and (not isinstance(designated,str) or designated not in factories):
+        raise ValueError('INVALID_MASTERDATA_BENCHMARK_FACTORY')
+    if designated is not None:
+        value['benchmark_factory']=designated
     if not isinstance(specs,dict) or not specs:raise ValueError('INVALID_MASTERDATA_SPECIFICATIONS')
     for product,spec in specs.items():
         if not isinstance(product,str) or not product.strip() or not isinstance(spec,list) or len(spec)!=4:
@@ -132,8 +139,14 @@ def audit(records, errors=None):
             errors.append({'group': group, **failure})
     # Validate every numeric source value before Decimal arithmetic. Infinity is
     # ordered and previously passed the non-negative check; NaN can raise.
+    # 字段为 None 表示行字段数与表头不符（用户新增数据常见错型）：报清晰
+    # 校验错，不让 audit 以 TypeError 崩溃（2026-09-22 扩展性加固）。
     for row in records:
         for field, raw in row['data'].items():
+            if field is None or raw is None:
+                errors.append({'row_key': row['row_key'], 'field': str(field),
+                               'error': 'MISSING_OR_EXTRA_FIELDS'})
+                continue
             numeric = ('(' in field or field.endswith('月价格') or field in
                        ('行业P25', '行业P50', '行业P75', '占总材料成本比例'))
             if not numeric:
