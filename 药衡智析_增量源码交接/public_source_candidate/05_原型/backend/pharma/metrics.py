@@ -299,16 +299,23 @@ def benchmark_partner(factory=None, product=None):
     factories=source_contract()['factories']
     factory=factory or factories[0]
     designated=source_contract().get('benchmark_factory')
+    def rows_safe():
+        # 未导入数据快照（新部署/CI 无 .runtime/data）时按“无产品数据”处理，
+        # 候选为空 → 返回 None；调用方各自已有“缺少第二工厂”降级路径。
+        try:
+            return load_rows()
+        except FileNotFoundError:
+            return []
     def produces(f):
         if product is None:
             return True
-        rows = [r for r in load_rows() if r['kind']=='cost' and r['factory']==f and r['product']==product]
+        rows = [r for r in rows_safe() if r['kind']=='cost' and r['factory']==f and r['product']==product]
         return bool(rows)
     if designated and designated!=factory and designated in factories and produces(designated):
         return designated
     candidates=[x for x in factories if x!=factory and produces(x)]
     if not candidates:
-        rows=[r for r in load_rows() if r['kind']=='cost' and r['product']==product] if product else []
+        rows=[r for r in rows_safe() if r['kind']=='cost' and r['product']==product] if product else []
         by_data=sorted({r['factory'] for r in rows}-{factory})
         candidates=by_data
     return candidates[0] if candidates else None
