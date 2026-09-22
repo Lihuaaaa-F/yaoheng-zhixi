@@ -39,7 +39,9 @@ def test_native_toc_field_structure_and_dirty_flag():
     body = doc.element.body
     flds = body.findall('.//' + qn('w:fldChar'))
     assert [f.get(qn('w:fldCharType')) for f in flds] == ['begin', 'separate', 'end']
-    assert flds[0].get(qn('w:dirty')) == 'true'  # Word 打开时自动更新
+    # 不标 dirty：Word/WPS 打开脏域会弹"域可能引用其他文件"询问框
+    # （2026-09-22 用户截图反馈）；缓存页码已与 Word 分页逐条一致，无需强更。
+    assert flds[0].get(qn('w:dirty')) is None
     instr = body.findall('.//' + qn('w:instrText'))[0].text
     assert 'TOC' in instr and '\\h' in instr and '\\o "1-2"' in instr
 

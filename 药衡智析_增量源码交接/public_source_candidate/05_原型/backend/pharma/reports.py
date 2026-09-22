@@ -1172,7 +1172,12 @@ def _insert_native_toc(doc,title,heads):
         tabs.append(tab);ppr.append(tabs);para.append(ppr)
         if index==0:
             r=OxmlElement('w:r');fc=OxmlElement('w:fldChar')
-            fc.set(qn('w:fldCharType'),'begin');fc.set(qn('w:dirty'),'true');r.append(fc);para.append(r)
+            # 不标 w:dirty：Word/WPS 打开时会对脏域弹"该文档包含的域可能
+            # 引用了其他文件"询问框（2026-09-22 用户截图反馈）。缓存条目
+            # 页码由 convert_pdf 按 LibreOffice 分页回填，且已验证与 Word
+            # 自身分页逐条一致（14/14 报告实测），无需打开时强制更新；
+            # 需要时用户仍可右键/F9 手动更新域。
+            fc.set(qn('w:fldCharType'),'begin');r.append(fc);para.append(r)
             r=OxmlElement('w:r');it=OxmlElement('w:instrText')
             it.set(qn('xml:space'),'preserve');it.text=' TOC \\o "1-2" \\h \\z \\u ';r.append(it);para.append(r)
             r=OxmlElement('w:r');fc=OxmlElement('w:fldChar')
