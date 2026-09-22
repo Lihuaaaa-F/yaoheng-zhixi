@@ -24,7 +24,7 @@ MAP_PATH = _TEMPLATE_DIR / 'placeholder_map.json'
 # 用户安装模板（数据中心“报告模板”解析后安装）：按报告类型存放；
 # 季度/专题未安装时回退月度模板（绑定合同一致，仅期间口径不同）。
 RUNTIME_TEMPLATES = RUNTIME / 'templates'
-RENDERER_VERSION='reader-20260922-native-toc-v8'
+RENDERER_VERSION='reader-20260923-caption-v9'
 NA = 'N/A（无可用基期或明细）'
 
 
@@ -598,7 +598,8 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
                 replace_text_nodes(list(p._p.iter('{'+W+'}t')),values)
             pg=section._sectPr.find(qn('w:pgNumType'))
             if pg is not None:pg.attrib.pop(qn('w:start'),None)
-    def table(anchor,headers,rows,paragraph=None):
+    dynamic_tbl_specs=[]  # 书签 YHU_TBL_i → 语义名（供"表几-几"题注；lxml 代理 id() 不稳定，不可作键）
+    def table(anchor,headers,rows,paragraph=None,caption=None):
         from docx.oxml import OxmlElement as _OE
         from docx.oxml.ns import qn as _qn
         from docx.enum.text import WD_ALIGN_PARAGRAPH as _TA
@@ -610,6 +611,12 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
         for row in rows or [['N/A：无可用明细']+['—']*(len(headers)-1)]:
             for cell,val in zip(t.add_row().cells,row):cell.text=str(val if val is not None else NA)
         p._p.addnext(t._tbl)
+        idx=len(dynamic_tbl_specs)
+        dynamic_tbl_specs.append(caption if caption is not None else (anchor or '').replace('表格',''))
+        cell_p=t.rows[0].cells[0].paragraphs[0]._p
+        bm=_OE('w:bookmarkStart');bm.set(_qn('w:id'),str(40000+idx));bm.set(_qn('w:name'),'YHU_TBL_'+str(idx))
+        be=_OE('w:bookmarkEnd');be.set(_qn('w:id'),str(40000+idx))
+        cell_p.insert(0,bm);cell_p.append(be)
         # 模板表格外观（2026-09-21 四轮 E 项）：黑色细边框 + 灰底(D9D9D9)表头 +
         # 表头加粗居中；数据行首列左对齐、数值列居中；长表允许跨页（表头重复）。
         borders=_OE('w:tblBorders')
@@ -688,7 +695,7 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
                 _rk_rows.append(['附','对照厂反事实（DiD，'+str(_did.get('control'))+'）',str(_did.get('tau'))+' 元/盒',
                                  '—','平行趋势'+str(_did.get('parallel_trend')),
                                  '安慰剂τ='+str(_did.get('placebo_tau') or '未检')+'；估计值，'+str(_did.get('assumption',''))[:40]])
-            table(None,['排序','根因集','解释力/估计','方向','可能性(评分)','依据'],_rk_rows,paragraph=cap)
+            table(None,['排序','根因集','解释力/估计','方向','可能性(评分)','依据'],_rk_rows,paragraph=cap,caption='根因定位')
     # 5.1 列结构按模板 md：对比维度/两厂/差异金额/差异率/方向
     _bl,_br,_bd=benchmark_labels(benchmark)
     _rows_b=[[r.get('name','单位成本'),number(r.get('left'),benchmark_precision(snapshot)),number(r.get('right'),benchmark_precision(snapshot)),number(r.get('delta'),benchmark_precision(snapshot)),number(r.get('rate')),
@@ -731,7 +738,12 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
     output=Path(output);output.parent.mkdir(parents=True,exist_ok=True)
     insert_element_analysis(doc,snapshot,values)
     add_reader_charts(doc,snapshot,benchmark,dynamic_anchors,output)
-    add_reader_summary(doc,snapshot,narrative,output)
+    add_reader_summary(doc,snapshot,narrative,output,benchmark=benchmark)
+    # 表格统一美化 + 图表规范编号（2026-09-23）：列宽内容加权修复模板表
+    # 第一列挤压、表头灰底跨页重复、斑马纹、涨跌列红绿；动态表格出
+    # "表几-几"题注（模板原生表按用户裁定不加）、图出"图几-几"图题。
+    _beautify_native_tables(doc)
+    _number_and_caption(doc,dynamic_tbl_specs)
     # 编制说明与知识库引用（模板 md 尾部要求；引用位置取自本期检索证据）
     doc.add_paragraph('编制说明')
     doc.add_paragraph('本报告由成本智能分析系统自动生成，数据来源于ERP系统，分析文本由AI大模型结合行业知识库自动撰写。如有疑问请联系财务部。')
@@ -1039,7 +1051,8 @@ def style_reader(doc):
     for p in _all_paragraphs(doc):
         protect_number_units(p)
         text=layout_text(p.text).strip()
-        if text.startswith('图｜'):
+        # 图表题注（2026-09-23）：旧"图｜"与新"图几-几/表几-几"统一居中灰字
+        if re.match(r'^(图｜|图\d+-\d+|表\d+-\d+)',text):
             fmt=p.paragraph_format
             p.alignment=WD_ALIGN_PARAGRAPH.CENTER;fmt.first_line_indent=None
             fmt.space_before=Pt(4);fmt.space_after=Pt(10)
@@ -1054,6 +1067,256 @@ def style_reader(doc):
 
 
 _FONT='Noto Sans SC'
+_CN_NUM={'一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9,'十':10}
+
+def _body_usable_emu(doc):
+    """正文区可用宽度（EMU）；边距未显式设置的节回退 1 英寸。"""
+    _EMU_INCH=914400
+    sec=doc.sections[-1]
+    return sec.page_width-(sec.left_margin or _EMU_INCH)-(sec.right_margin or _EMU_INCH)
+
+def _fit_table_columns(t,usable_emu):
+    """表格列宽自适应（2026-09-23 用户反馈"最开头的表丑陋"）：固定布局，
+    列宽按内容渲染宽度分配。核心约束——数字绝不允许折行：数值列宽度=最长
+    数字渲染宽度（含收窄后的单元格边距），文本列可按词换行故限宽弹性
+    压缩；整体放不下时先降数据字号 8.5pt 再等比缩。含合并单元格的表跳过。"""
+    from docx.oxml.ns import qn
+    from docx.oxml import OxmlElement
+    ncols=len(t.columns)
+    if ncols<2:return False
+    for row in t.rows:
+        if len(row.cells)!=ncols:return False
+    avail=int(usable_emu/635)-60  # 1 twip = 635 EMU；60 为边框余量
+    num_pat=re.compile(r'^[-+−]?[\d.,]+\s*(%|％|元|盒|万|h|kg|kWh|元/盒)?[。]?$')
+    # 收窄单元格左右边距（默认 108/侧 → 50/侧），宽表省出的宽度可观
+    mar=OxmlElement('w:tblCellMar')
+    for side,v in (('top',15),('left',50),('bottom',15),('right',50)):
+        e=OxmlElement('w:'+side);e.set(qn('w:w'),str(v));e.set(qn('w:type'),'dxa');mar.append(e)
+    tblPr=t._tbl.tblPr
+    for old in tblPr.findall(qn('w:tblCellMar')):tblPr.remove(old)
+    tblPr.append(mar)
+    def plan(font_pt):
+        cjk=font_pt*20;asc=font_pt*11;margin=140  # 边距100+缓冲40
+        needs=[];numeric_flags=[]
+        for ci in range(ncols):
+            need=0;numeric=0
+            for row in t.rows:
+                txt=(row.cells[ci].text or '').strip()
+                for seg in txt.split('\n'):
+                    w=0
+                    for ch in seg:w+=cjk if ord(ch)>0x2E80 else asc
+                    need=max(need,w)
+                if num_pat.match(txt):numeric+=1
+            needs.append(need+margin)
+            numeric_flags.append(numeric>=max(2,int(0.6*(len(t.rows)-1))))
+        return needs,numeric_flags
+    def allocate(needs,numeric_flags):
+        widths=[]
+        for need,isnum in zip(needs,numeric_flags):
+            widths.append(need if isnum else min(need,1800))  # 文本列限宽（可按词换行）
+        total=sum(widths)
+        if total>avail:  # 数值全保仍溢出：等比缩（极端表）
+            f=avail/total
+            widths=[int(w*f) for w in widths]
+        else:  # 富余全部补给文本列（按需比例）
+            extra=avail-total
+            text_total=sum(w for w,isnum in zip(widths,numeric_flags) if not isnum)
+            if text_total>0:
+                for i,(w,isnum) in enumerate(zip(widths,numeric_flags)):
+                    if not isnum:widths[i]=w+int(extra*w/text_total)
+            else:
+                widths=[avail//ncols]*ncols
+        widths[widths.index(max(widths))]+=avail-sum(widths)
+        return widths
+    needs,flags=plan(9)
+    widths=allocate(needs,flags)
+    shrunk=False
+    if sum(needs)>avail and any(f and n>0 for f,n in zip(flags,needs)):
+        # 9pt 放不下数值列需求：数据字号降到 8.5pt 重新规划
+        needs2,flags2=plan(8.5)
+        if sum(min(n,1800 if not f else n) for n,f in zip(needs2,flags2))<sum(min(n,1800 if not f else n) for n,f in zip(needs,flags)):
+            widths=allocate(needs2,flags2);shrunk=True
+    if shrunk:
+        from docx.shared import Pt
+        for i,row in enumerate(t.rows):
+            if i==0:continue
+            for c in row.cells:
+                for pp in c.paragraphs:
+                    for r in pp.runs:r.font.size=Pt(8.5)
+    for old in tblPr.findall(qn('w:tblLayout')):tblPr.remove(old)
+    layout=OxmlElement('w:tblLayout');layout.set(qn('w:type'),'fixed');tblPr.append(layout)
+    for old in tblPr.findall(qn('w:tblW')):tblPr.remove(old)
+    tw=OxmlElement('w:tblW');tw.set(qn('w:w'),str(int(usable_emu/635)));tw.set(qn('w:type'),'dxa');tblPr.append(tw)
+    grid=t._tbl.find(qn('w:tblGrid'))
+    if grid is not None:
+        for col,w in zip(grid.findall(qn('w:gridCol')),widths):
+            col.set(qn('w:w'),str(int(w)))
+    for row in t.rows:
+        for ci,cell in enumerate(row.cells):
+            tcPr=cell._tc.get_or_add_tcPr()
+            for old in tcPr.findall(qn('w:tcW')):tcPr.remove(old)
+            tcw=OxmlElement('w:tcW');tcw.set(qn('w:w'),str(int(widths[ci])));tcw.set(qn('w:type'),'dxa');tcPr.append(tcw)
+    return True
+
+def _beautify_native_tables(doc):
+    """统一所有表格外观（2026-09-23）：模板原生表此前完全无样式（无表头底
+    色/无跨页表头/第一列挤压），与动态表格观感割裂。此处对全部表格统一：
+    表头灰底加粗+跨页重复、隔行浅灰、数据 9pt、涨跌列红绿着色（成本升红/
+    降绿，中文财务惯例）、列宽按内容加权。"""
+    from docx.oxml import OxmlElement as _OE
+    from docx.oxml.ns import qn as _qn
+    from docx.shared import Pt,RGBColor
+    from docx.enum.text import WD_ALIGN_PARAGRAPH as _TA
+    usable=_body_usable_emu(doc)
+    for t in doc.tables:
+        first=t.rows[0]
+        def _fill(cell):
+            pr=cell._tc.tcPr
+            return pr is not None and pr.find(_qn('w:shd')) is not None and pr.find(_qn('w:shd')).get(_qn('w:fill'))
+        has_header=any(_fill(c)=='D9D9D9' for c in first.cells)
+        if not has_header:
+            for c in first.cells:
+                pr=c._tc.get_or_add_tcPr()
+                if pr.find(_qn('w:shd')) is None:
+                    shd=_OE('w:shd');shd.set(_qn('w:fill'),'D9D9D9');pr.append(shd)
+                for pp in c.paragraphs:
+                    pp.alignment=_TA.CENTER
+                    for r in pp.runs:r.font.bold=True;r.font.size=Pt(9)
+            trpr=first._tr.get_or_add_trPr()
+            if trpr.find(_qn('w:tblHeader')) is None:trpr.append(_OE('w:tblHeader'))
+            borders=_OE('w:tblBorders')
+            for edge in ('top','left','bottom','right','insideH','insideV'):
+                e=_OE('w:'+edge);e.set(_qn('w:val'),'single');e.set(_qn('w:sz'),'4');e.set(_qn('w:color'),'000000');borders.append(e)
+            t._tbl.tblPr.append(borders)
+        headers=[c.text.strip() for c in first.cells]
+        delta_cols={i for i,h in enumerate(headers) if any(k in h for k in ('环比','同比','变动','偏差','涨幅','差异率'))}
+        num_pat=re.compile(r'^[-+−]?[\d.,]+\s*(%|％|元|盒|万|h|kg|kWh|元/盒)?[。]?$')
+        for i,row in enumerate(t.rows):
+            if i==0:continue
+            if i%2==0:
+                for c in row.cells:
+                    pr=c._tc.get_or_add_tcPr()
+                    if pr.find(_qn('w:shd')) is None:
+                        shd=_OE('w:shd');shd.set(_qn('w:fill'),'F7F7F7');pr.append(shd)
+            for ci,c in enumerate(row.cells):
+                if num_pat.match((c.text or '').strip()):
+                    pr=c._tc.get_or_add_tcPr()
+                    if pr.find(_qn('w:noWrap')) is None:pr.append(_OE('w:noWrap'))
+                for pp in c.paragraphs:
+                    for r in pp.runs:r.font.size=Pt(9)
+                    if ci in delta_cols:
+                        txt=pp.text.strip()
+                        color='008000' if txt[:1] in ('-','−','↓') else ('C00000' if txt[:1] in ('+','↑') else None)
+                        if color:
+                            for r in pp.runs:r.font.color.rgb=RGBColor.from_string(color)
+        _fit_table_columns(t,usable)
+
+def _number_and_caption(doc,dynamic_tbl_specs=None):
+    """图表规范编号（2026-09-23 用户要求：图表须有"图几-几/表几-几"）。
+
+    仅对程序生成的动态表格加"表几-几"题注（上方，名称来自锚点语义名；
+    动态表以表内 YHU_TBL_i 书签识别——lxml 代理 id() 不稳定不可作键）；
+    模板原生表格（封面信息/总成本概览等）按用户裁定不加题注——它们是
+    赛题模板的固定结构。图题注在图下方（"图4-1 标题"），从旧"图｜副题｜
+    标题"重写并绑定图与图题同页。前置区（目录前）与封面装饰图不编号。"""
+    from docx.oxml.ns import qn as _qn
+    from docx.text.paragraph import Paragraph
+    from docx.shared import Pt
+    from docx.enum.text import WD_ALIGN_PARAGRAPH as _TA
+    dynamic_tbl_specs=dynamic_tbl_specs or []
+    chapter=None;last_head='';tbl_n={};fig_n={}
+    for node in list(doc.element.body):
+        if node.tag==_qn('w:p'):
+            para=Paragraph(node,doc)
+            t=layout_text(para.text).strip()
+            lvl=_heading_level(t)
+            if lvl==1:
+                m=re.match(r'^([一二三四五六七八九十]+)、',t)
+                chapter=_CN_NUM.get(m.group(1)) if m else None
+                last_head=re.sub(r'^[一二三四五六七八九十]+、','',t)
+            elif lvl==2:
+                last_head=re.sub(r'^\d+(?:\.\d+)*\s*','',t)
+            if chapter and node.findall('.//'+_qn('w:drawing')):
+                fig_n[chapter]=fig_n.get(chapter,0)+1
+                label='图'+str(chapter)+'-'+str(fig_n[chapter])
+                cap=None
+                nxt=node.getnext()
+                if nxt is not None and nxt.tag==_qn('w:p'):
+                    cand=Paragraph(nxt,doc)
+                    if cand.text.strip().startswith('图｜'):
+                        title=cand.text.strip().split('｜')[-1]
+                        ts=list(cand._p.iter('{'+W+'}t'))
+                        if ts:
+                            ts[0].text=label+' '+title
+                            for extra in ts[1:]:extra.text=''
+                        else:cand.add_run(label+' '+title)
+                        cap=cand
+                if cap is None:
+                    cap=doc.add_paragraph();node.addnext(cap._p);cap.add_run(label)
+                cap.alignment=_TA.CENTER
+                para.paragraph_format.keep_with_next=True  # 图与图题同页
+        elif node.tag==_qn('w:tbl') and chapter:
+            spec=None
+            for bm in node.findall('.//'+_qn('w:bookmarkStart')):
+                name=bm.get(_qn('w:name')) or ''
+                if name.startswith('YHU_TBL_'):
+                    try:spec=dynamic_tbl_specs[int(name[len('YHU_TBL_'):])]
+                    except (IndexError,ValueError):spec=''
+                    break
+            if spec is None:continue  # 模板原生表不加题注（用户裁定）
+            tbl_n[chapter]=tbl_n.get(chapter,0)+1
+            label='表'+str(chapter)+'-'+str(tbl_n[chapter])
+            cap=doc.add_paragraph()
+            run=cap.add_run(label+' '+(spec or last_head or '数据明细'))
+            run.font.bold=True;run.font.size=Pt(9)
+            cap.alignment=_TA.CENTER
+            cap.paragraph_format.space_before=Pt(6);cap.paragraph_format.space_after=Pt(3)
+            cap.paragraph_format.keep_with_next=True  # 题注与表格同页
+            node.addprevious(cap._p)
+
+def _key_conclusion_lines(snapshot,narrative,benchmark=None):
+    """核心结论结构化条目（2026-09-23 用户反馈"核心结论太少太简陋"）：
+    从快照/归因/对标/建议四个程序数据源各取一条，缺数据则跳过该条，
+    不编造。数字全部程序所有（number() 渲染），符合数字合同。"""
+    from decimal import Decimal as _D
+    lines=[]
+    m=snapshot.get('metrics') or {}
+    pc=snapshot.get('period_changes') or {}
+    def _rate(r):
+        try:
+            v=float((r or {}).get('rate'))
+            return ('上升' if v>0 else '下降' if v<0 else '持平')+f'{abs(v):.2f}%'
+        except Exception:return '数据缺失'
+    if m.get('unit_cost') is not None:
+        line='总量：本月总成本 '+number(m.get('total_cost'))+' 元（产量 '+number(m.get('quantity'),0)+' 盒），单位成本 '+number(m['unit_cost'])+' 元/盒，环比'+_rate((pc.get('unit_cost') or {}).get('mom'))
+        yoy=_rate((pc.get('unit_cost') or {}).get('yoy'))
+        if yoy!='数据缺失':line+='，同比'+yoy
+        lines.append(line+'。')
+    els=snapshot.get('elements') or []
+    ranked=sorted(els,key=lambda e:abs(_D(str(e.get('unit_delta') or '0'))),reverse=True)
+    if ranked:
+        seg='、'.join((e['name']+' '+('+' if _D(str(e.get('unit_delta') or '0'))>=0 else '')+number(str(e.get('unit_delta') or '0'))+' 元/盒') for e in ranked)
+        lead=ranked[0];d=_D(str(lead.get('unit_delta') or '0'))
+        lines.append('要素：三要素单位成本环比 '+seg+'；影响最大的是'+lead['name']+'（每盒'+('增加' if d>=0 else '减少')+' '+number(str(d).lstrip('-'))+' 元）。')
+    attr=snapshot.get('attribution') or {}
+    if attr.get('status')=='PASS':
+        top=(attr.get('ranking') or [{}])[0]
+        if top.get('cause'):
+            did=(attr.get('did') or {})
+            lines.append('根因：多维归因首位“'+str(top.get('cause'))+'”'+str(top.get('direction') or '')+'（解释力 '+str(top.get('ep_pct') or '—')+'，可能性'+str(top.get('label') or '—')+'）；对照厂 DiD 检验'+('稳健' if did.get('parallel_trend')=='稳健' else '结论见 4.2 节')+'。')
+    if benchmark:
+        rows=(benchmark.get('summary') or [])
+        if rows:
+            r=rows[0]
+            try:delta=float(r.get('delta'))
+            except (TypeError,ValueError):delta=None
+            if delta is not None:
+                lines.append('对标：对比 '+str(benchmark.get('right') or '对标厂')+'，单位成本差异 '+number(r.get('delta'))+' 元/盒（'+('本厂较高' if delta>0 else '对标厂较高')+'），差异结构与拆解见第五章。')
+    sugg=[f for f in narrative.get('findings',[]) if (f.get('suggestion') or '').strip()]
+    if sugg:
+        first=re.sub(r'\s+',' ',sugg[0].get('suggestion',''))[:60]
+        lines.append('行动：共 '+str(len(sugg))+' 条整改/核查建议（第六章）；优先项——'+first+'……')
+    return lines
 
 def _set_east_asia(rpr_holder):
     from docx.oxml.ns import qn
@@ -1196,25 +1459,29 @@ def _insert_native_toc(doc,title,heads):
     return entries
 
 
-def add_reader_summary(doc,snapshot,narrative,output):
+def add_reader_summary(doc,snapshot,narrative,output,benchmark=None):
     from docx.oxml import OxmlElement
     from docx.oxml.ns import qn
     from docx.shared import Pt
     # 2026-09-21 真人评审三轮：模板前置章节（封面/文档控制/阅读指南/目录域）完整保留，
-    # 自创大标题取消（模板封面已有）。文档头按模板 md 增补；核心发现与审核状态
+    # 自创大标题取消（模板封面已有）。文档头按模板 md 增补；核心结论与审核状态
     # 作为"模板未说明"的增补插在"一、封面与基本信息"之前。
     anchor=next((p for p in doc.paragraphs if p.text.strip()=='一、封面与基本信息'),None)
     if anchor is None:return
-    m=snapshot['metrics'];label=snapshot['period']['start'] if snapshot['period']['start']==snapshot['period']['end'] else snapshot['period']['start']+' 至 '+snapshot['period']['end']
+    label=snapshot['period']['start'] if snapshot['period']['start']==snapshot['period']['end'] else snapshot['period']['start']+' 至 '+snapshot['period']['end']
     report_no='YH-'+hashlib.sha256((snapshot['snapshot_id']) .encode()).hexdigest()[:8].upper()
     anchor.insert_paragraph_before('报告编号：'+report_no+'（分析周期 '+label+'）')
     mode='本次采用基础分析，原因解释待复核。' if not narrative.get('model_live') or narrative.get('status')!='PASS' else '本次采用模型辅助解释；因果归因仍待人工复核。'
     anchor.insert_paragraph_before('人工审核：待审核。'+mode)
-    ranked=sorted(snapshot['elements'],key=lambda e:abs(Decimal(e.get('unit_delta') or '0')),reverse=True)
-    lead=ranked[0]
-    from decimal import Decimal as _D
-    _lead_delta=_D(str(lead.get('unit_delta') or '0'))
-    anchor.insert_paragraph_before('核心发现：本月单位成本 '+number(m['unit_cost'])+' 元/盒，总成本 '+number(m['total_cost'])+' 元。对成本影响最大的是'+lead['name']+'，每盒比上月'+('增加' if _lead_delta>=0 else '减少')+' '+number(str(lead.get('unit_delta') or '0').lstrip('-'))+' 元。正文第三节按要素拆解变动并给出方向评估，第五节是与中药二厂的对比，第六节给出可直接执行的核查建议。')
+    # 核心结论（2026-09-23 用户反馈"核心结论太少太简陋"）：单段改为结构化
+    # 条目——总量/要素/根因/对标/行动，数据缺则跳过不编造，数字程序所有。
+    conclusions=_key_conclusion_lines(snapshot,narrative,benchmark)
+    if conclusions:
+        head=anchor.insert_paragraph_before('核心结论（'+str(len(conclusions))+' 项）')
+        for r in head.runs:r.font.bold=True;r.font.size=Pt(12)
+        for i,line in enumerate(conclusions,1):
+            p=anchor.insert_paragraph_before(str(i)+'. '+line)
+            for r in p.runs:r.font.size=Pt(10.5)
     # 目录（真人评审二轮）：完整子目录；条目插在模板目录域提示行之后（保留域可更新），
     # 一级行保持全角空格前缀以兼容 convert_pdf 的页码回写。
     title=next((p for p in doc.paragraphs if p.text.strip().replace(chr(0x3000),'').replace(' ','')=='目录'),None)
@@ -1267,17 +1534,16 @@ def add_reader_charts(doc,snapshot,benchmark,anchors,output):
     subtitle=snapshot['product']+' · '+snapshot['factory']+' · '+period_label
     def insert(fig,name,anchor,title,width_cm=17):
         fig.tight_layout();path=output.with_name(name+'.png');fig.savefig(path,dpi=190,bbox_inches='tight');plt.close(fig)
-        cap=doc.add_paragraph('图｜'+title);cap.paragraph_format.keep_with_next=True
-        # 2026-09-22 图片居中+宽度钳制（用户反馈：图片偏左、右侧几乎无间距，
-        # 与居中的表格视觉差距大）：宽度按各节正文区最小可用宽度封顶，
-        # 段落水平居中，与表格对齐方式一致。边距未显式设置的节回退 1 英寸。
+        cap=doc.add_paragraph('图｜'+title)
+        # 2026-09-23 图题移到图下方（规范），编号由 _number_and_caption
+        # 后处理改写为"图几-几 标题"；图段 keep-with-next 绑定图与图题。
         from docx.enum.text import WD_ALIGN_PARAGRAPH as _AL
         _EMU_INCH=914400
         usable=min((s.page_width-(s.left_margin or _EMU_INCH)-(s.right_margin or _EMU_INCH)) for s in doc.sections)
         usable_cm=usable/360000
-        pic=doc.add_paragraph();pic.alignment=_AL.CENTER
+        pic=doc.add_paragraph();pic.alignment=_AL.CENTER;pic.paragraph_format.keep_with_next=True
         pic.add_run().add_picture(str(path),width=Cm(min(width_cm,usable_cm)))
-        anchor.addnext(cap._p);cap._p.addnext(pic._p)
+        anchor.addnext(pic._p);pic._p.addnext(cap._p)
     trend=snapshot['trend'];fig,ax=plt.subplots(figsize=(8,2.5))
     vals=[float(r['unit_cost']) for r in trend];ax.plot([r['month'] for r in trend],vals,'o-',color='#176C8C');ax.set_ylabel('单位成本（元/盒）')
     span=max(vals)-min(vals);margin=max(span*.6,max(vals)*.07);ax.set_ylim(max(0,min(vals)-margin),max(vals)+margin)
