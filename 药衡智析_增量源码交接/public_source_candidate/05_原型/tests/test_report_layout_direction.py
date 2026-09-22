@@ -14,7 +14,10 @@ def test_numeric_unit_group_preserves_runs_and_bookmark():
     p.add_run('本期变动 0.2');p.add_run('2 元/盒；产量 1200.00 件。')
     original=p.text
     style_reader(doc)
-    assert '0\ufeff.\ufeff2\ufeff2' in p.text
+    # 2026-09-22 合同更新：数字与单位只用 NBSP 绑定（Word 显示为普通空格），
+    # 禁止 U+FEFF——部分 Word 版本渲染为可见异常符号（用户在"7.26 元"处所见）。
+    assert '0.22\u00a0元' in p.text and '1200.00\u00a0件' in p.text
+    assert '\ufeff' not in p.text
     assert layout_text(p.text) == original
     assert p._p.xpath('.//w:bookmarkStart[@w:name="metric_position"]')
     once=p.text;style_reader(doc);assert p.text==once

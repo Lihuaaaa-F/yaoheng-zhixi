@@ -24,7 +24,7 @@ MAP_PATH = _TEMPLATE_DIR / 'placeholder_map.json'
 # 用户安装模板（数据中心“报告模板”解析后安装）：按报告类型存放；
 # 季度/专题未安装时回退月度模板（绑定合同一致，仅期间口径不同）。
 RUNTIME_TEMPLATES = RUNTIME / 'templates'
-RENDERER_VERSION='reader-20260921-template-v7'
+RENDERER_VERSION='reader-20260922-native-toc-v8'
 NA = 'N/A（无可用基期或明细）'
 
 
@@ -314,8 +314,10 @@ def layout_text(text):
 def protect_number_units(paragraph):
     """Keep a number and its unit together without destroying runs/bookmarks.
 
-    LibreOffice ignores U+2060 at some CJK template boundaries; U+FEFF is
-    its supported zero-width no-break space. This is layout, not recoding."""
+    仅用 U+00A0 绑定数字与单位（Word 正常显示为空格）。2026-09-22 之前还
+    在数字边界注入 U+FEFF：Word 部分版本将其渲染为可见异常符号（用户在
+    目录数字与"7.26 元"处看到），故彻底停注；layout_text 在每次进入时
+    清除历史残留。"""
     nodes = list(paragraph._p.iter('{'+W+'}t'))
     for node in nodes:
         node.text = layout_text(node.text or '')
@@ -324,15 +326,13 @@ def protect_number_units(paragraph):
         return
     unit = r'(?:万元|元|kWh|kg|吨|盒|粒|袋|支|件|小时|分钟|万盒|%|％)(?:/(?:kg|吨|盒|粒|袋|支|件|小时|分钟|万盒))?'
     pattern = r'(?<![A-Za-z0-9_.])[-+−]?\d+(?:,\d{3})*(?:\.\d+)?[ \u00a0]*' + unit
-    boundaries = set()
     unbreakable_spaces = set()
     for match in re.finditer(pattern, text):
-        boundaries.update(range(match.start()+1, match.end()))
         unbreakable_spaces.update(i for i in range(match.start(),match.end()) if text[i]==' ')
     offset = 0
     for node in nodes:
         original = node.text or ''
-        node.text = ''.join(('\ufeff' if offset+i in boundaries else '')+('\u00a0' if offset+i in unbreakable_spaces else char) for i,char in enumerate(original))
+        node.text = ''.join(('\u00a0' if offset+i in unbreakable_spaces else char) for i,char in enumerate(original))
         offset += len(original)
 
 
@@ -841,7 +841,7 @@ def convert_pdf(docx_path,timeout=90,converter='libreoffice',_toc_pass=0):
             import fitz
             with fitz.open(target) as doc:
                 text=''.join(p.get_text() for p in doc);pages=len(doc)
-                page_map={};orphan_headings=[]
+                page_map={};entry_pages={};orphan_headings=[]
                 headings=['一、封面与基本信息','二、总成本概览','三、成本要素明细分析','四、重点产品专项分析','五、对标分析','六、总结与建议']
                 for index,page in enumerate(doc,1):
                     lines=page.get_text().splitlines()
@@ -854,7 +854,10 @@ def convert_pdf(docx_path,timeout=90,converter='libreoffice',_toc_pass=0):
                         for l in b.get('lines',[]):
                             ltext=''.join(sp['text'] for sp in l['spans']).strip()
                             sizes=[sp['size'] for sp in l['spans'] if sp['text'].strip()]
-                            if ltext and sizes and max(sizes)>=13:big.add(ltext)
+                            if ltext and sizes and max(sizes)>=13:
+                                big.add(ltext)
+                                # 2026-09-22 原生目录：H2=14pt 同入大字号集，顺带收集子标题页码。
+                                if re.match(r'^\d[.]\d[ ]',ltext):entry_pages.setdefault(ltext.replace('\u00a0',' ').strip(),index)
                     for heading in headings:
                         if any(t==heading or t.startswith(heading+'（') or t.startswith(heading+' —') for t in big):page_map.setdefault(heading,index)
                 if not text.strip() or RESIDUAL.search(text):return {'status':'FAILED','reason':'PDF_CONTENT_INVALID'}
@@ -883,23 +886,28 @@ def convert_pdf(docx_path,timeout=90,converter='libreoffice',_toc_pass=0):
                 # 首段绑在一起移动，空白上界为后续首段高度）。
                 if not start.paragraph_format.keep_with_next:
                     start.paragraph_format.keep_with_next=True;layout_changed=True
-        # 竖排目录逐行回填实际页码；目录标题行(带YH_TOC书签)保持不变
-        toc_lines={k:k for k in ('一、封面与基本信息','二、总成本概览','三、成本要素明细分析','四、重点产品专项分析','五、对标分析','六、总结与建议')}
+        # 原生目录域缓存条目回填实际页码（2026-09-22）：条目文本与页码都在
+        # w:hyperlink 内，Paragraph.text 取不到，按 XML 定位；页码为条目段
+        # 最后一个 w:t。条目文本匹配优先子标题页码表，回退六章页码表。
+        from docx.oxml.ns import qn as _qn
+        def _norm(s):return re.sub(r'[\s\u00a0\u3000]+','',s)
+        toc_entry_paras=[p for p in d.paragraphs if p._p.xpath('.//w:hyperlink[starts-with(@w:anchor,"YH_SEC_T")]')]
         toc_updated=False;toc_verified={}
-        for paragraph in d.paragraphs:
-            text=paragraph.text
-            # 目录行以全角空格开头；真实章节标题不以全角空格开头，避免污染正文
-            if not text.startswith(chr(0x3000)):continue
-            key=next((k for k in toc_lines if text.lstrip(chr(0x3000)).split('　')[0].startswith(k)),None)
-            if key is None or paragraph is toc:continue
-            page=page_map.get(toc_lines[key])
-            fresh=chr(0x3000)+key+('　·　第'+str(page)+'页' if page else '')
-            if paragraph.text!=fresh:_text(paragraph,paragraph.text,fresh);toc_updated=True
-            if page and paragraph.text==fresh:toc_verified[toc_lines[key]]=page
+        for paragraph in toc_entry_paras:
+            texts=paragraph._p.findall('.//'+_qn('w:t'))
+            if len(texts)<2:continue
+            base=re.sub(r'第\d+页$','',_norm(''.join(t.text or '' for t in texts[:-1])))
+            page=next((pg for key,pg in entry_pages.items() if _norm(key).startswith(base) or base.startswith(_norm(key))),None)
+            if page is None:page=next((pg for key,pg in page_map.items() if base.startswith(_norm(key)) or _norm(key).startswith(base)),None)
+            if not page:continue
+            fresh='第'+str(page)+'页'
+            if (texts[-1].text or '')!=fresh:
+                texts[-1].text=fresh;texts[-1].set(_qn('xml:space'),'preserve');toc_updated=True
+            toc_verified[base]=page
         if _toc_pass<5 and (layout_changed or toc_updated):
             d.save(path)
             return convert_pdf(path,timeout,converter,_toc_pass+1)
-        return {'status':'PASS','scope':'file_conversion','toc_updated':len(toc_verified)==6 and toc_verified==page_map and not toc_updated,'orphan_headings':orphan_headings,'toc_pages':page_map,'path':str(pdf),'pages':pages,'sha256':hashlib.sha256(pdf.read_bytes()).hexdigest()}
+        return {'status':'PASS','scope':'file_conversion','toc_updated':bool(toc_verified) and len(toc_verified)>=len(toc_entry_paras) and not toc_updated,'orphan_headings':orphan_headings,'toc_pages':page_map,'path':str(pdf),'pages':pages,'sha256':hashlib.sha256(pdf.read_bytes()).hexdigest()}
     except (OSError,subprocess.TimeoutExpired) as exc:return {'status':'FAILED','reason':type(exc).__name__}
 
 
@@ -1045,6 +1053,144 @@ def style_reader(doc):
     rebuild_report_footer(doc)
 
 
+_FONT='Noto Sans SC'
+
+def _set_east_asia(rpr_holder):
+    from docx.oxml.ns import qn
+    from docx.oxml import OxmlElement
+    rpr=rpr_holder.get_or_add_rPr() if hasattr(rpr_holder,'get_or_add_rPr') else rpr_holder
+    rf=rpr.find(qn('w:rFonts'))
+    if rf is None:
+        rf=OxmlElement('w:rFonts');rpr.insert(0,rf)
+    for attr in ('w:ascii','w:hAnsi','w:eastAsia'):
+        rf.set(qn(attr),_FONT)
+
+def _ensure_outline_styles(doc):
+    """定义标准标题与目录样式（2026-09-22 用户要求：原生目录+小标题入目录+
+    字号层级符合标准；题包原件标题是 Normal 直排，无任何层级样式）。
+
+    层级：H1 小三 15pt、H2 四号 14pt、H3 小四 12pt，黑体系加粗黑色；
+    toc 1/toc 2 供 Word 更新目录域后 regenerate 的条目使用（styleId 固定
+    TOC1/TOC2，Word 按名称映射）。"""
+    from docx.shared import Pt,RGBColor,Cm
+    from docx.enum.style import WD_STYLE_TYPE
+    from docx.oxml.ns import qn
+    def heading(name,size,before,after):
+        try:st=doc.styles[name]
+        except KeyError:st=doc.styles.add_style(name,WD_STYLE_TYPE.PARAGRAPH)
+        st.font.size=Pt(size);st.font.bold=True;st.font.color.rgb=RGBColor(0,0,0);st.font.name=_FONT
+        _set_east_asia(st.element)
+        pf=st.paragraph_format
+        pf.space_before=Pt(before);pf.space_after=Pt(after);pf.keep_with_next=True;pf.line_spacing=1.3
+    heading('Heading 1',15,12,6);heading('Heading 2',14,10,5);heading('Heading 3',12,8,4)
+    for name,style_id,indent in (('toc 1','TOC1',None),('toc 2','TOC2',Cm(0.74))):
+        try:st=doc.styles[name]
+        except KeyError:
+            st=doc.styles.add_style(name,WD_STYLE_TYPE.PARAGRAPH)
+            st.base_style=doc.styles['Normal']
+        st.font.size=Pt(10.5);st.font.name=_FONT;_set_east_asia(st.element)
+        st.element.set(qn('w:styleId'),style_id)
+        pf=st.paragraph_format
+        pf.space_before=Pt(1);pf.space_after=Pt(1);pf.line_spacing=1.3;pf.first_line_indent=None
+        if indent is not None:pf.left_indent=indent
+
+def _heading_level(text):
+    if re.match(r'^[一二三四五六七八九十]+、',text):return 1
+    if re.match(r'^[1-9][.][1-9](?:[.][1-9])?[ ]',text):
+        return 2 if re.match(r'^[1-9][.][1-9][ ]',text) else 3
+    return 0
+
+def _apply_outline_styles(doc,heads):
+    """把章节/小标题段落挂到 Heading 样式（进 Word 原生目录与导航窗格），
+    同时在 run 层写死字号/加粗/黑色/中文字体——样式与直排双保险，渲染
+    外观不依赖样式解析。"""
+    from docx.shared import Pt,RGBColor
+    sizes={1:15,2:14,3:12}
+    for para,t in heads:
+        level=_heading_level(t)
+        if not level:continue
+        try:para.style=doc.styles['Heading '+str(level)]
+        except KeyError:pass
+        for r in para.runs:
+            r.font.size=Pt(sizes[level]);r.font.bold=True
+            r.font.color.rgb=RGBColor(0,0,0);r.font.name=_FONT
+            _set_east_asia(r._element)
+
+def _fix_reading_guide(doc):
+    """修正题包原件自带的阅读指南截断（2026-09-22 用户指出语义不通）：
+    原件写作"三、成本要素明、四、重点产品专、…"——章节名被截断，
+    补全为完整章节名。替换是纯子串级（非占位符语法），文本并入首 run
+    保样式；阅读指南单元格无占位符/书签，重排安全。"""
+    from docx.oxml.ns import qn
+    fixes={'成本要素明、':'成本要素明细分析、','重点产品专、':'重点产品专项分析、'}
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                for p in cell.paragraphs:
+                    nodes=list(p._p.iter('{'+W+'}t'))
+                    text=''.join(n.text or '' for n in nodes)
+                    if not any(k in text for k in fixes):continue
+                    for k,v in fixes.items():text=text.replace(k,v)
+                    for i,n in enumerate(nodes):
+                        if i==0:
+                            n.text=text;n.set(qn('xml:space'),'preserve')
+                        else:n.text=''
+
+def _insert_native_toc(doc,title,heads):
+    """用 Word 原生目录域替换旧静态目录（2026-09-22 用户要求：目录可自动
+    跳转）。结构：多段缓存条目包裹在 TOC 域 begin(separate)…end 之间——
+    条目即缓存结果，未更新域的查看器（LibreOffice/PDF）直接可见；域标
+    dirty=true，Word 打开时自动重建并接管页码与超链接。缓存条目本身用
+    w:hyperlink 指向标题书签（YH_SEC_*），Word/PDF 中均可点击跳转。"""
+    from docx.oxml import OxmlElement
+    from docx.oxml.ns import qn
+    from docx.text.paragraph import Paragraph
+    # 清除旧静态条目/提示行（\u3000 前缀）直至遇到其他正文
+    node=title._p
+    while True:
+        nxt=node.getnext()
+        if nxt is None or nxt.tag!=qn('w:p'):break
+        cand=Paragraph(nxt,title._parent);t=cand.text or ''
+        if t.startswith(chr(0x3000)) or '更新域' in t or not t.strip():
+            nxt.getparent().remove(nxt);continue
+        break
+    sec=doc.sections[-1]
+    _EMU_INCH=914400
+    usable=sec.page_width-(sec.left_margin or _EMU_INCH)-(sec.right_margin or _EMU_INCH)
+    tab_pos=str(int(usable/360000*1440))  # EMU→twips，右对齐制表位带点线
+    entries=[(t,_heading_level(t)) for _,t in heads]
+    entries=[(t,lvl) for t,lvl in entries if lvl in (1,2)]
+    if not entries:return
+    paras=[]
+    for index,(t,level) in enumerate(entries):
+        bmk='YH_SEC_T'+str(index)
+        para=OxmlElement('w:p')
+        ppr=OxmlElement('w:pPr')
+        st=OxmlElement('w:pStyle');st.set(qn('w:val'),'TOC1' if level==1 else 'TOC2');ppr.append(st)
+        tabs=OxmlElement('w:tabs');tab=OxmlElement('w:tab')
+        tab.set(qn('w:val'),'right');tab.set(qn('w:leader'),'dot');tab.set(qn('w:pos'),tab_pos)
+        tabs.append(tab);ppr.append(tabs);para.append(ppr)
+        if index==0:
+            r=OxmlElement('w:r');fc=OxmlElement('w:fldChar')
+            fc.set(qn('w:fldCharType'),'begin');fc.set(qn('w:dirty'),'true');r.append(fc);para.append(r)
+            r=OxmlElement('w:r');it=OxmlElement('w:instrText')
+            it.set(qn('xml:space'),'preserve');it.text=' TOC \\o "1-2" \\h \\z \\u ';r.append(it);para.append(r)
+            r=OxmlElement('w:r');fc=OxmlElement('w:fldChar')
+            fc.set(qn('w:fldCharType'),'separate');r.append(fc);para.append(r)
+        hl=OxmlElement('w:hyperlink');hl.set(qn('w:anchor'),bmk);hl.set(qn('w:history'),'1')
+        r=OxmlElement('w:r');wt=OxmlElement('w:t');wt.set(qn('xml:space'),'preserve')
+        wt.text=(chr(0x3000) if level==1 else chr(0x3000)*2)+t;r.append(wt);hl.append(r)
+        r=OxmlElement('w:r');r.append(OxmlElement('w:tab'));hl.append(r)
+        r=OxmlElement('w:r');wt=OxmlElement('w:t');wt.text='第1页';r.append(wt);hl.append(r)
+        para.append(hl)
+        if index==len(entries)-1:
+            r=OxmlElement('w:r');fc=OxmlElement('w:fldChar')
+            fc.set(qn('w:fldCharType'),'end');r.append(fc);para.append(r)
+        paras.append(para)
+    for para in reversed(paras):title._p.addnext(para)
+    return entries
+
+
 def add_reader_summary(doc,snapshot,narrative,output):
     from docx.oxml import OxmlElement
     from docx.oxml.ns import qn
@@ -1083,23 +1229,22 @@ def add_reader_summary(doc,snapshot,narrative,output):
             node.addnext(nxt);nxt.getparent().remove(nxt);removed+=1;continue
         break
     title.paragraph_format.keep_with_next=True
-    insert_at=title
     heads=[(para,layout_text(para.text).strip()) for para in doc.paragraphs]
-    heads=[(para,t) for para,t in heads if re.match(r'^[一二三四五六七八九十]+、',t) or re.match(r'^[1-9][.][1-9](?:[.][1-9])?[ ]',t)]
+    heads=[(para,t) for para,t in heads if _heading_level(t)]
+    # 2026-09-22 原生目录改造：标题挂 Heading 样式（小标题进目录+字号层级
+    # 标准）；阅读指南截断修复；静态目录行替换为可跳转的 TOC 域缓存条目。
+    _ensure_outline_styles(doc)
+    _apply_outline_styles(doc,heads)
+    _fix_reading_guide(doc)
+    entry_index=0
     for index,(para,t) in enumerate(heads):
-        name='YH_SEC_'+str(index)
+        level=_heading_level(t)
+        name='YH_SEC_T'+str(entry_index) if level in (1,2) else 'YH_SEC_'+str(index)
+        entry_index+=1 if level in (1,2) else 0
         bmk=OxmlElement('w:bookmarkStart');bmk.set(qn('w:id'),str(31000+index));bmk.set(qn('w:name'),name)
         bmk_end=OxmlElement('w:bookmarkEnd');bmk_end.set(qn('w:id'),str(31000+index))
         para._p.insert(0,bmk);para._p.append(bmk_end)
-        is_top=bool(re.match(r'^[一二三四五六七八九十]+、',t))
-        new_p=OxmlElement('w:p')
-        insert_at._p.addnext(new_p)
-        from docx.text.paragraph import Paragraph
-        line=Paragraph(new_p,insert_at._parent)
-        line.text=(chr(0x3000) if is_top else chr(0x3000)*2)+t
-        line.paragraph_format.space_after=Pt(1)
-        line.style='Normal'
-        insert_at=line
+    _insert_native_toc(doc,title,heads)
     mark=OxmlElement('w:bookmarkStart');mark.set(qn('w:id'),'30000');mark.set(qn('w:name'),'YH_TOC');title._p.insert(0,mark)
 
 
@@ -1118,7 +1263,15 @@ def add_reader_charts(doc,snapshot,benchmark,anchors,output):
     def insert(fig,name,anchor,title,width_cm=17):
         fig.tight_layout();path=output.with_name(name+'.png');fig.savefig(path,dpi=190,bbox_inches='tight');plt.close(fig)
         cap=doc.add_paragraph('图｜'+title);cap.paragraph_format.keep_with_next=True
-        pic=doc.add_paragraph();pic.add_run().add_picture(str(path),width=Cm(width_cm))
+        # 2026-09-22 图片居中+宽度钳制（用户反馈：图片偏左、右侧几乎无间距，
+        # 与居中的表格视觉差距大）：宽度按各节正文区最小可用宽度封顶，
+        # 段落水平居中，与表格对齐方式一致。边距未显式设置的节回退 1 英寸。
+        from docx.enum.text import WD_ALIGN_PARAGRAPH as _AL
+        _EMU_INCH=914400
+        usable=min((s.page_width-(s.left_margin or _EMU_INCH)-(s.right_margin or _EMU_INCH)) for s in doc.sections)
+        usable_cm=usable/360000
+        pic=doc.add_paragraph();pic.alignment=_AL.CENTER
+        pic.add_run().add_picture(str(path),width=Cm(min(width_cm,usable_cm)))
         anchor.addnext(cap._p);cap._p.addnext(pic._p)
     trend=snapshot['trend'];fig,ax=plt.subplots(figsize=(8,2.5))
     vals=[float(r['unit_cost']) for r in trend];ax.plot([r['month'] for r in trend],vals,'o-',color='#176C8C');ax.set_ylabel('单位成本（元/盒）')
