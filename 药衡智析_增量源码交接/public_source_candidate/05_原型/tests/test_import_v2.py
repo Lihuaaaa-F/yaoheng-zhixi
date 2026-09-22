@@ -208,6 +208,9 @@ def _template_docx(path: Path, sections=True, placeholder_count=24):
 
 def test_template_parse_installs_and_reports(isolated_runtime, tmp_path, monkeypatch):
     import pharma.reports as reports
+    # 隔离安装目录：reports 模块常量不受 fixture 的 runtime 隔离影响（2026-09-22
+    # 修复——此前测试把合成模板写进真实 .runtime/templates）。
+    monkeypatch.setattr(reports, 'RUNTIME_TEMPLATES', tmp_path / 'templates')
     store = _store(tmp_path)
     source = _template_docx(tmp_path / 'tpl.docx')
     record = data_import.create_upload('template', 'tpl.docx', source.read_bytes(), 'quarterly')
@@ -226,7 +229,9 @@ def test_template_parse_installs_and_reports(isolated_runtime, tmp_path, monkeyp
     assert 'templates' not in str(path) or path.name != 'special.docx'
 
 
-def test_template_parse_missing_sections_fails(isolated_runtime, tmp_path):
+def test_template_parse_missing_sections_fails(isolated_runtime, tmp_path, monkeypatch):
+    import pharma.reports as reports
+    monkeypatch.setattr(reports, 'RUNTIME_TEMPLATES', tmp_path / 'templates')
     store = _store(tmp_path)
     source = _template_docx(tmp_path / 'bad.docx', sections=False)
     record = data_import.create_upload('template', 'bad.docx', source.read_bytes(), 'monthly')
@@ -339,3 +344,45 @@ def test_catalog_show_test_contexts_opt_in(isolated_runtime, monkeypatch):
     ids = [c['context_id'] for c in catalog['contexts']]
     assert 'pharmaceutical:synthetic-pharma' in ids
     assert catalog['default_context_id'] == 'pharmaceutical:competition'
+
+
+def test_settings_route_key_survives_cross_host(monkeypatch, tmp_path):
+    """设置文件的路由专属密钥不被主 env 密钥遮蔽、不被跨主机保护清空（2026-09-22 修复）。
+
+    场景：主配置 glm（env PHARMA_MODEL_KEY_FILE 指向 glm 密钥），
+    extraction 在设置文件指向 deepseek 并带专属密钥——网关必须用专属密钥。
+    隔离：必须先 reload config 再 reload model_settings/narrative（conftest 在
+    收集期已导入 config，且 autouse fixture 注入 PHARMA_MODEL* 主变量需清除），
+    否则设置/密钥会写入真实 .runtime。
+    """
+    import importlib
+    monkeypatch.setenv('PHARMA_RUNTIME_DIR', str(tmp_path))
+    for var in ('PHARMA_MODEL', 'PHARMA_MODEL_BASE_URL', 'PHARMA_MODEL_PROTOCOL'):
+        monkeypatch.delenv(var, raising=False)
+    monkeypatch.setenv('PHARMA_MODEL_KEY_FILE', str(tmp_path / 'glm.key'))
+    (tmp_path / 'glm.key').write_text('glm-main-key', encoding='utf-8')
+    import pharma.config as config
+    importlib.reload(config)
+    import pharma.model_settings as ms
+    import pharma.narrative as narrative
+    importlib.reload(ms)
+    importlib.reload(narrative)
+    try:
+        key_file = ms.KEYS_DIR / 'extraction.key'
+        key_file.parent.mkdir(parents=True, exist_ok=True)
+        key_file.write_text('deepseek-route-key', encoding='utf-8')
+        ms.save_settings({'connections': {'extraction': {
+            'model': 'deepseek-flash', 'base_url': 'https://api.deepseek.com',
+            'protocol': 'openai', 'key_file': str(key_file)}}})
+        gw = narrative.ModelGateway.for_route('extraction')
+        assert gw.key == 'deepseek-route-key'
+        assert gw.base_url == 'https://api.deepseek.com'
+        assert gw.model == 'deepseek-flash'
+        assert gw.credential_scope['source'] == 'key_file'
+        # 主路由不受影响：无设置节时仍用主 env 密钥
+        main_gw = narrative.ModelGateway.for_route('analysis')
+        assert main_gw.key == 'glm-main-key'
+    finally:
+        importlib.reload(config)
+        importlib.reload(ms)
+        importlib.reload(narrative)

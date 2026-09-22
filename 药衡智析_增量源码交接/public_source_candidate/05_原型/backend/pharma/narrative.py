@@ -753,6 +753,15 @@ class ModelGateway:
             for prefix in prefixes:
                 value = os.getenv(prefix + field.upper())
                 if value: config[field] = value; break
+        # 设置文件的路由专属密钥优先于主环境密钥（2026-09-22 修复）：__init__ 的
+        # key 解析顺序为 显式参数→env→设置文件，主 env 密钥（PHARMA_MODEL_KEY_FILE）
+        # 会把路由专属密钥遮蔽，随后跨主机保护把密钥清空——用户在"模型配置"页为
+        # 跨厂商路由保存的密钥从未生效。这里把它提升为显式参数；env 路由变量与
+        # 请求覆盖仍优先于设置文件。
+        from . import model_settings as _settings_module
+        settings_section = _settings_module.resolve(route)
+        if settings_section.get('key_file') and 'key_file' not in config and 'key_file' not in overrides:
+            config['key_file'] = settings_section['key_file']
         gateway = cls(model=config.get('model'), base_url=config.get('base_url'),
                       provider=config.get('protocol'), key_file=config.get('key_file'),
                       route=route, reasoning_effort=config.get('reasoning_effort'), **overrides)
