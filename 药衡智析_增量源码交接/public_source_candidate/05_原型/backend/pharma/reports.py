@@ -56,7 +56,11 @@ def install_template(source: Path, analysis_type: str) -> dict:
     """安装用户上传的报告模板：通用 {{占位符}}→书签规范化后写入运行时模板目录。
 
     与题包专属的 normalize_template 区分：不做题包段落级修正与 compact 手术，
-    占位符保留原名（渲染绑定按名称合同执行）；书签供 verify_docx 逐项核对。
+    占位符按题包绑定合同改名（“人工环比%”等比例位 → _比例 后缀，与
+    build_bindings 的键一致）；书签供 verify_docx 逐项核对。安装后执行与
+    compact_working_template 相同的通用前置区手术（解除前置区强制分页、清理
+    目录域字符——LibreOffice 对域后内容强制分页的教训，2026-09-21 d5e343a），
+    跳过题包专属的同比表格补绑定。渲染绑定按占位符名称合同执行。
     """
     if analysis_type not in ('monthly', 'quarterly', 'special'):
         raise ValueError('UNKNOWN_TEMPLATE_TYPE')
@@ -81,20 +85,92 @@ def install_template(source: Path, analysis_type: str) -> dict:
                     for match in PATTERN.finditer(text):
                         name = match.group(1)
                         ratio = text[match.end():].lstrip().startswith('%')
-                        semantic, unit = binding_semantics(name, ratio)
-                        entries.append({'original': name, 'field': name, 'xml_part': info.filename,
+                        # 题包绑定合同的改名规则（normalize_template 同款）：比例/
+                        # 金额后缀区分同名占位符，保证 build_bindings 键命中；
+                        # 改写走 replace_text_nodes 保留 run 样式。
+                        field = name + '_' + ('比例' if ratio else '金额') \
+                            if name in ('人工环比', '制造费用环比') else name
+                        if field != name:
+                            replace_text_nodes(nodes, {name: '{{' + field + '}}'})
+                        semantic, unit = binding_semantics(field, ratio)
+                        entries.append({'original': name, 'field': field, 'xml_part': info.filename,
                                         'paragraph_index': i, 'marker': marker, 'context': text,
                                         'unit': unit, 'source': semantic,
                                         'missing_policy': 'N/A并说明缺值原因',
                                         'semantic': name + ('变动率' if ratio else '')})
                 raw = ET.tostring(xml, encoding='utf-8', xml_declaration=True)
             zout.writestr(info, raw)
+    # 通用前置区手术：与 compact_working_template 同源逻辑（安全子集）。
+    _relayout_front_section(output, entries)
     result = {'analysis_type': analysis_type, 'source': str(source), 'source_filename': source.name,
               'template_hash': hashlib.sha256(output.read_bytes()).hexdigest(),
               'placeholders': entries, 'placeholder_count': len(entries),
               'installed_at': datetime.now().isoformat(), 'reader_template_version': 'installed-v1'}
     map_path.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding='utf-8')
     return result
+
+
+def _relayout_front_section(path, entries):
+    """安装模板的通用手术（compact_working_template 安全子集）：
+
+    ① 前置区（正文首章“一、封面与基本信息”之前）解除强制分页/分节、移除
+    目录域字符与“更新域”提示行；正文首章强制新起一页。章节缺失（不会发生：
+    安装前 check_template 已要求六章节）时跳过分页调整。
+    ② 总成本概览表“去年同月/同比”空白单元格补占位符绑定（题包原件的这些
+    单元格是遗漏而非缺数）；模板无该表时安全跳过。
+    """
+    from docx import Document
+    from docx.oxml import OxmlElement
+    from docx.oxml.ns import qn
+    d = Document(path)
+    paras = _all_paragraphs(d)
+    body_start = next((pp for pp in paras if pp.text.strip() == '一、封面与基本信息'), None)
+    in_front = True
+    for pp in paras:
+        if body_start is not None and pp._p is body_start._p:
+            in_front = False
+        if not in_front:
+            continue
+        for br in list(pp._p.iter(qn('w:br'))):
+            if br.get(qn('w:type')) == 'page':
+                br.getparent().remove(br)
+        ppr = pp._p.find(qn('w:pPr'))
+        if ppr is not None:
+            for tag in ('pageBreakBefore', 'sectPr'):
+                for x in list(ppr.findall(qn('w:' + tag))):
+                    ppr.remove(x)
+        for r_el in list(pp._p.iter(qn('w:r'))):
+            if r_el.find(qn('w:fldChar')) is not None or r_el.find(qn('w:instrText')) is not None:
+                pp_ = r_el.getparent()
+                if pp_ is not None:
+                    pp_.remove(r_el)
+        if pp.text.strip().startswith('（右键点击此处'):
+            pp._p.getparent().remove(pp._p)
+    if body_start is not None:
+        body_start.paragraph_format.page_break_before = True
+    try:
+        overview = next(t for t in d.tables if any('去年同月' in c.text for c in t.rows[0].cells))
+    except StopIteration:
+        overview = None
+    if overview is not None and len(overview.rows) >= 7:
+        for row, cn in zip(overview.rows[4:7], ['材料', '人工', '制造费用']):
+            for index, field, ratio in [(4, '去年' + cn + '成本' if cn != '制造费用' else '去年制造费用', False),
+                                        (5, cn + '成本同比', True)]:
+                p = row.cells[index].paragraphs[0]
+                p.text = '{{' + field + '}}' + ('%' if ratio else '')
+                marker = 'YH_reader_' + field
+                mark = OxmlElement('w:bookmarkStart')
+                mark.set(qn('w:id'), str(23000 + len(entries)))
+                mark.set(qn('w:name'), marker)
+                p._p.insert(0, mark)
+                end = OxmlElement('w:bookmarkEnd')
+                end.set(qn('w:id'), mark.get(qn('w:id')))
+                p._p.append(end)
+                entries.append({'original': field, 'field': field, 'context': p.text,
+                                'marker': marker, 'xml_part': 'word/document.xml',
+                                'source': 'period_values.yoy.elements_unit / elements.comparisons.yoy.unit.rate',
+                                'unit': '%' if ratio else '元/盒'})
+    d.save(path)
 
 def replace_text_nodes(nodes, mapping):
     """Replace split-run tokens without assigning paragraph.text or removing runs."""
@@ -669,12 +745,12 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
     audit=output.with_name('machine_audit.json')
     audit.write_text(json.dumps({'snapshot':snapshot,'narrative':narrative,'evidence':evidence,'benchmark':benchmark,'bindings':values},ensure_ascii=False,indent=2))
     temp=output.with_suffix('.tmp.docx');doc.save(temp)
-    check=verify_docx(temp,snapshot,sections,narrative=narrative)
+    check=verify_docx(temp,snapshot,sections,narrative=narrative,placeholders=meta['placeholders'])
     if check['status']!='PASS':raise ValueError('报告验证失败:'+json.dumps(check,ensure_ascii=False))
     temp.replace(output)
     return {'status':'PASS','scope':'file_generation','path':str(output),'sha256':hashlib.sha256(output.read_bytes()).hexdigest(),'verification':check,'bindings':values}
 
-def verify_docx(path,snapshot,sections=None,narrative=None):
+def verify_docx(path,snapshot,sections=None,narrative=None,placeholders=None):
     if snapshot.get('context_id') and snapshot['context_id']!='pharmaceutical:competition':
         from .reference_report import verify
         result=verify(path,snapshot)
@@ -682,6 +758,9 @@ def verify_docx(path,snapshot,sections=None,narrative=None):
         if result['explanation_binding_failures']:result['status']='FAIL'
         return result
     explanation_check=explanation_presence(path,narrative)
+    # 书签核对必须用本次渲染的占位符清单（2026-09-22 修复）：用户安装模板的
+    # 书签前缀/位置与题包 MAP 不同，死读题包 map 会把全部绑定误判为 null。
+    if placeholders is None:placeholders=json.loads(MAP_PATH.read_text())['placeholders']
     with ZipFile(path) as z:
         strings=[]
         for n in z.namelist():
@@ -697,7 +776,7 @@ def verify_docx(path,snapshot,sections=None,narrative=None):
                     actual=layout_text(''.join(t.text or '' for t in p.findall('.//w:t',NS)))
                     for mark in p.findall('w:bookmarkStart',NS):by_marker[mark.get('{'+W+'}name')]=actual
         failures=[];checked=0
-        for entry in json.loads(MAP_PATH.read_text())['placeholders']:
+        for entry in placeholders:
             field=entry['field'];value=numeric_bindings.get(field)
             if value is None or not (re.match(r'^-?\d',str(value)) or str(value).startswith('N/A')) or field=='编制日期':continue
             expected=entry['context'].replace('{{'+entry['original']+'}}',str(value))
