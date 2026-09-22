@@ -469,6 +469,20 @@ def forecast(context_id:str|None=None,factory:str|None=None,product:str|None=Non
     snapshot=store.snapshot(resolved_analysis(context_id,factory,product,month,analysis_type,basis))
     return forecast_snapshot(snapshot,horizon=horizon)
 
+@app.get('/api/attribution')
+def attribution(context_id:str|None=None,factory:str|None=None,product:str|None=None,month:str|None=_month_query(),
+               basis:Literal['unit','total']='unit',compare:Literal['mom','yoy']='mom'):
+    """确定性归因（2026-09-22 方法论落地）：多维根因定位(EP+JSD)+对照厂DiD+价格信号+假设排序。
+    全部程序计算，不调用模型；数据不满足的部件返回 UNAVAILABLE+原因。"""
+    from .attribution import analyze_attribution
+    cid=selected_context(context_id)
+    if cid!='pharmaceutical:competition':
+        return {'status':'UNAVAILABLE','reason':'多维根因定位需要摄取型成本数据（当前数据范围未接入）'}
+    from .industry import catalog as scoped_catalog
+    options=scoped_catalog(cid)
+    return analyze_attribution(factory or options['factories'][0],product or options['products'][0],
+        month or options['months'][-1],basis,compare)
+
 @app.get('/api/agent/decision')
 def agent_decision(context_id:str|None=None,factory:str|None=None,product:str|None=None,month:str|None=_month_query(),
                    analysis_type:Literal['monthly','quarterly','special']='monthly',basis:Literal['unit','total']='unit',

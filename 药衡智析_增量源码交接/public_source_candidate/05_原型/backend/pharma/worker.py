@@ -80,6 +80,15 @@ def process_job(store,job):
                     snapshot['benchmark_context']=cross_snapshot['benchmark_context']
                     snapshot['metrics'].update({k:v for k,v in cross_snapshot['metrics'].items() if k.startswith('benchmark:')})
                 else:result['benchmark']={'status':'UNAVAILABLE','reason':'缺少第二工厂'}
+        # 确定性归因中间层（2026-09-22 方法论落地）：多维根因+DiD+价格信号，
+        # 程序计算供叙事与报告引用；失败降级为 UNAVAILABLE，不阻断报告生成。
+        if 'attribution' not in snapshot:
+            try:
+                from .attribution import analyze_attribution
+                snapshot['attribution']=analyze_attribution(snapshot['factory'],snapshot['product'],
+                    snapshot['month'],basis=snapshot.get('basis','unit'))
+            except Exception as exc:  # noqa: BLE001
+                snapshot['attribution']={'status':'UNAVAILABLE','reason':type(exc).__name__+': '+str(exc)[:120]}
         if 'narrative' not in result:result['narrative']=generate(snapshot,result['evidence'])
         store.update(id,'RENDERING_DOCX',result)
         folder=ARTIFACTS/id;folder.mkdir(parents=True,exist_ok=True)

@@ -25,7 +25,7 @@ from pydantic import BaseModel, Field, ConfigDict
 import httpx
 from .config import RUNTIME, MODEL_DEFAULT, MODEL_PROTOCOL_DEFAULT, MODEL_BASE_URL_DEFAULT, MODEL_CODING_BASE_URL_DEFAULT
 
-PROMPT_VERSION = 'v20-human-readable-directions'
+PROMPT_VERSION = 'v21-attribution-directions'
 VALIDATOR_VERSION = 'claim-contract-v10-rounded-metric-binding'
 # Aliases may only be added after a live probe has verified that the upstream
 # really serves the requested model under that exact returned id.
@@ -968,7 +968,7 @@ evidence_quotes是对象，键为evidence_refs中的ID，值必须从对应allow
 missing_evidence是具体记录或测量名称的非空数组，不写未绑定的日期、指标数值、空词或确定因果；每一项长度4—120字、不带句读标点，且必须含记录/合同/台账/凭证/单价/耗用/投料/工时/收率/明细/批次/日志/计量/采购价/检验报告等业务对象名词之一（如“对应车间期间批生产记录”“对应月份采购合同台账”），“相关数据”“详细信息”“进一步资料”等泛称不合格。确需日期时，只能使用输入实际/比较期间内的年月，中文年月会规范为ISO；未知日期仍拒绝。
 数字纪律：除 deadline_basis 的1—30工作日建议窗口外，text_template、suggestion、verification_target、expected_evidence、missing_evidence 各字段一律不得手写数字、中文数词或百分比（包括年份、数量、金额、比率）。表达程度只用定性词（“明显下降”“大幅高于”）。确需引用数值程度时：只能引用输入 metrics 的 display 值，且写法必须能在自身小数位下与注册值唯一对应——符号由方向词承担（写“下降15.2%”而不是“-15.2%下降”），百分号必须与注册单位一致；无法唯一对应的数字（如整数简写77%对应76.92%、或编造值）会被整体拒绝，不要尝试绕过。
 写作风格（人类可读性要求，2026-09-21 真人评审反馈）：面向企业成本会计的书面中文。每句只说一件事，句子以15—40字为主；主语用具体名称（如“直接材料”“山茱萸”），少用“该”“其”“上述”；不写“体现了”“反映了”“综上所述”等空泛词；专业词第一次出现时用括号加一句白话解释；全文不出现英文。
-归因深度要求：对每个主要差异，优先输出2—3条按可能性排序的方向假设（hypothesis），每条写明“可能性较高/中等/较低”及排序依据（与哪条证据或市场趋势同向）、并给出能证实或证伪它的具体记录；行情、工艺、设备、事件类证据都可以作为方向依据。只有当连一条适用证据都没有时，才输出insufficient_evidence。不要用“证据不足”替代方向判断。
+程序已计算确定性根因排序（attribution_directions，含要素/药材/两因子根因、行情同向、对照厂反事实方向）。假设优先与这些方向对齐或显式讨论分歧；只能引用其名称与方向定性词，不得复述其中的数值。归因深度要求：对每个主要差异，优先输出2—3条按可能性排序的方向假设（hypothesis），每条写明“可能性较高/中等/较低”及排序依据（与哪条证据或市场趋势同向）、并给出能证实或证伪它的具体记录；行情、工艺、设备、事件类证据都可以作为方向依据。只有当连一条适用证据都没有时，才输出insufficient_evidence。不要用“证据不足”替代方向判断。
 recommendation可为null；提供时须有suggestion、verification_target、expected_evidence(具体记录数组)、responsible_role(未知写待分配)、department、priority(high/medium/low)、deadline_basis。建议须可核查，生产工艺或质量控制变更须人工批准。deadline_basis可写月度成本结账后、月度成本分析完成后或报告完成后的一至三十个工作日建议窗口（数字形式如“月度成本结账后5个工作日内”），程序绑定为待责任人确认的期限提议，不是已确认日期；金额与比例不能放在期限字段。仅将输入中的适用证据用于本任务，不编造来源。
 合法形状示例（仅展示结构，不复制示例主题）：{"explanations":[{"task_id":"输入task_id","claim_type":"insufficient_evidence","text_template":"现有证据不足以确认差异原因，需核查对应生产记录。","evidence_refs":[],"evidence_quotes":{},"missing_evidence":["实际生产记录"],"recommendation":null}]}。
 """
@@ -977,7 +977,14 @@ recommendation可为null；提供时须有suggestion、verification_target、exp
     for ev in sources[:12]:
         quotes=[line.strip() for line in ev['text'].splitlines() if 8<=len(line.strip())<=180 and quote_matches_product(line,snapshot.get('product')) and not re.search(r'忽略.*指令|system prompt|api.?key|https?://',line,re.I)][:8]
         if quotes:excerpts.append({'evidence_id':ev['evidence_id'],'source':ev['source'],'location':ev.get('location'),'heading':ev.get('heading'),'scope':ev.get('scope'),'allowed_quotes':quotes})
-    user=json.dumps({'metrics':prompt_metrics,'context':{k:snapshot.get(k) for k in ('month','factory','product','specification','analysis_context')},'alerts':required_alerts(snapshot),'required_alerts':required_alerts(snapshot),'required_sections':required_explanation_sections(snapshot),'tasks':explanation_tasks(snapshot),'benchmark_context':snapshot.get('benchmark_context'),'quantity_comparisons':snapshot.get('period_changes',{}).get('quantity'),'evidence':excerpts},ensure_ascii=False,default=str)
+    attribution_directions=[]
+    _attr=snapshot.get('attribution') or {}
+    if _attr.get('status')=='PASS':
+        for _rk in (_attr.get('ranking') or [])[:5]:
+            attribution_directions.append({'cause':_rk.get('cause'),'direction':_rk.get('direction'),'likelihood':_rk.get('label'),'basis':_rk.get('basis')})
+        if (_attr.get('did') or {}).get('status')=='PASS':
+            attribution_directions.append({'cause':'对照厂反事实估计','direction':('与本期变动同向' if (_attr['did'].get('parallel_trend')=='稳健') else '平行趋势存疑'),'likelihood':None,'basis':'DiD'+_attr['did'].get('parallel_trend','')})
+    user=json.dumps({'metrics':prompt_metrics,'context':{k:snapshot.get(k) for k in ('month','factory','product','specification','analysis_context')},'alerts':required_alerts(snapshot),'required_alerts':required_alerts(snapshot),'required_sections':required_explanation_sections(snapshot),'tasks':explanation_tasks(snapshot),'benchmark_context':snapshot.get('benchmark_context'),'quantity_comparisons':snapshot.get('period_changes',{}).get('quantity'),'attribution_directions':attribution_directions,'evidence':excerpts},ensure_ascii=False,default=str)
     failures, usage, valid, failed_sections, sections = [], {}, {}, {}, {}
     identities, model_responded = [], False
     accepted_units,failed_units = {}, {}

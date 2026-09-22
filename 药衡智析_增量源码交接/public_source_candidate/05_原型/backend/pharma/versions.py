@@ -18,8 +18,9 @@ def soft_items(gateway):
     """网关耦合版本项：[(键, 当前值)]。"""
     from .reports import RENDERER_VERSION
     from .narrative import PROMPT_VERSION
+    from .attribution import ATTRIBUTION_VERSION
     return [('renderer', RENDERER_VERSION), ('model', gateway.model), ('protocol', gateway.provider),
-            ('endpoint', gateway.base_url), ('prompt', PROMPT_VERSION)]
+            ('endpoint', gateway.base_url), ('prompt', PROMPT_VERSION), ('attribution', ATTRIBUTION_VERSION)]
 
 
 def hard_items(snapshot):
