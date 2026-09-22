@@ -265,6 +265,39 @@ def _recalc_acceptance(job_id):
     expired=[{'review_id':r['id'],'reviewed_at':r['reviewed_at'],'reason':'产物哈希已变化，审核过期'} for r in reviews.list_for_job(job_id) if (r['docx_sha256'],r['pdf_sha256'])!=(hashes['docx'],hashes['pdf'])]
     return {'status':acceptance['overall'],'acceptance':acceptance,'active_review':(review or {}).get('id'),'expired_reviews':expired}
 
+@app.post('/api/reports/{job_id}/acceptance-doc',status_code=201)
+async def upload_acceptance_doc(job_id:str,file:UploadFile=File(...),reviewer:str=Form(...),
+    attribution_score:int=Form(5),section_completeness:str=Form('PASS'),readability:str=Form('PASS'),
+    visual_quality:str=Form('PASS'),comment:str=Form('')):
+    """人工验收：上传验收凭证文档（存档为产物），登记人工审核并重算验收状态。
+
+    凭证文档只作为验收存档；review 仍绑定当前报告 docx/pdf 产物哈希——
+    审核对象始终是报告本身，凭证可追溯但不参与哈希绑定。"""
+    from .config import ARTIFACTS
+    job=store.get(job_id)
+    if job['status'] not in ('SUCCEEDED','DEGRADED'):raise ValueError('REVIEW_TARGET_NOT_FINAL')
+    reviewer=reviewer.strip()
+    if not reviewer:raise ValueError('REVIEWER_REQUIRED')
+    suffix=Path(file.filename or '').suffix.lower()
+    if suffix not in ('.docx','.pdf','.png','.jpg','.jpeg'):raise ValueError('ACCEPTANCE_DOC_TYPE')
+    payload=await file.read()
+    if len(payload)>20*1024*1024:raise ValueError('ACCEPTANCE_DOC_TOO_LARGE')
+    accept_dir=ARTIFACTS/'acceptance';accept_dir.mkdir(parents=True,exist_ok=True)
+    target=accept_dir/f'{job_id}-accept{suffix}'
+    target.write_bytes(payload)
+    sha=hashlib.sha256(payload).hexdigest()
+    doc=store.artifact(job_id,{'path':str(target),'sha256':sha},'accept')
+    dims={'section_completeness':section_completeness,'readability':readability,'visual_quality':visual_quality}
+    for name,v in dims.items():
+        if v not in ('PASS','FAIL'):raise ValueError(f'DIMENSION_{name.upper()}_PASS_OR_FAIL_REQUIRED')
+    req=ReviewRequest(reviewer=reviewer,attribution_score=attribution_score,
+        section_completeness=ReviewDimension(status=dims['section_completeness'],comment='人工验收'),
+        readability=ReviewDimension(status=dims['readability'],comment='人工验收'),
+        visual_quality=ReviewDimension(status=dims['visual_quality'],comment='人工验收'),
+        comment=f'人工验收凭证：{doc["artifact_id"]}（{(file.filename or "")[:120]}）。{(comment or "")[:1500]}')
+    outcome=_submit_review(job_id,req)
+    return {'status':'OK','acceptance_doc':doc,**outcome}
+
 @app.post('/api/reports/{job_id}/reviews',status_code=201)
 def submit_review(job_id:str,req:ReviewRequest):return _submit_review(job_id,req)
 @app.get('/api/reports/{job_id}/reviews')

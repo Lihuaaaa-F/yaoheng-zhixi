@@ -136,10 +136,11 @@ export default function App() {
           <label>产品<select aria-label="产品" value={product} onChange={e => setSelection(s => ({ ...s, product: e.target.value }))}>{catalog.products.map(p => <option key={p}>{p}</option>)}</select></label>
           <label>工厂<select aria-label="工厂" value={factory} onChange={e => setSelection(s => ({ ...s, factory: e.target.value }))}>{catalog.factories.map(f => <option key={f}>{f}</option>)}</select></label>
           <label>{analysis_type === 'quarterly' ? '季度末月' : '月份'}<select aria-label="月份" value={month} onChange={e => setSelection(s => ({ ...s, month: e.target.value }))}>{catalog.months.filter((m: string) => analysis_type !== 'quarterly' || ['03', '06', '09', '12'].includes(m.slice(-2))).map((m: string) => <option key={m}>{m}</option>)}</select></label>
-          <label>报告范围<select aria-label="报告范围" value={analysis_type} onChange={e => changeRange(e.target.value as Selection['analysis_type'])}><option value="monthly">月度分析</option><option value="quarterly" disabled={!catalog.months.some((m: string) => ['03', '06', '09', '12'].includes(m.slice(-2)))}>季度分析</option><option value="special">专题分析</option></select></label>
+          <label>报告范围<select aria-label="报告范围" value={analysis_type} onChange={e => changeRange(e.target.value as Selection['analysis_type'])} title="月度分析：常规月度成本报告；季度分析：季度汇总口径；专题分析：围绕特定主题的专项报告"><option value="monthly">月度分析</option><option value="quarterly" disabled={!catalog.months.some((m: string) => ['03', '06', '09', '12'].includes(m.slice(-2)))}>季度分析</option><option value="special">专题分析（特定主题）</option></select></label>
           <div className="basis"><span>成本口径</span><div role="group" aria-label="成本口径">{(['unit', 'total'] as const).map(b => <button key={b} aria-pressed={basis === b} className={basis === b ? 'selected' : ''} onClick={() => setSelection(s => ({ ...s, basis: b }))}>{b === 'unit' ? '单位' : '总额'}</button>)}</div></div>
         </section>}
         {analysis_type === 'quarterly' && inWorkspace && <p className="notice">季度单位成本 = 季度总成本 ÷ 季度可比产量。缺月不补零；趋势图保留月度口径。</p>}
+        {analysis_type === 'special' && inWorkspace && <p className="notice">专题分析：围绕选定的产品/工厂/月份出具一次专项主题报告（如某原料涨价影响）；报告结构由「数据中心 · 报告模板」中安装的专题模板决定，未安装时沿用月度模板。</p>}
         <Capabilities value={snapshot?.capabilities ?? catalog?.capabilities ?? activeContext?.capabilities} />
         {error && <ErrorBox message={error} onRetry={() => { setError(''); setReload(n => n + 1); }} />}
         {(pageInfo?.item === '跨厂对标' ? benchmarkLoading : analysisLoading) && <div className="loading" role="status">{pageInfo?.item === '跨厂对标' ? `正在对标分析：差异计算、证据检索与原因假设（约 10–60 秒），已等待 ${benchElapsed} 秒…` : '正在读取固定版本数据…'}</div>}
@@ -175,7 +176,11 @@ function ErrorBox({ message, onRetry }: { message: string; onRetry: () => void }
 }
 const capabilityText = (value: string) => String(value).replaceAll('pdf_service', 'PDF 转换服务').replaceAll('model_service', '应用模型服务').replaceAll('rpa_service', '模拟任务服务');
 function Capabilities({ value }: { value: any }) {
-  if (!value) return null;
+  if (value === null || value === undefined) return null;
   const rows = Array.isArray(value) ? value : Object.entries(value).map(([key, v]) => typeof v === 'object' && v !== null ? { key, ...v as any } : { key, status: v === true ? 'AVAILABLE' : 'UNAVAILABLE' });
-  return <details className="capabilities"><summary>当前分析能力与数据缺口</summary><ul>{rows.map((v: any, i: number) => <li key={v.key ?? v.id ?? i}><strong>{v.label ?? v.name ?? v.key ?? v.id}</strong>：{({ AVAILABLE: '可用', PASS: '可用', DEGRADED: '降级', BLOCKED: '不可用', UNAVAILABLE: '不可用', MISSING_DATA: '缺少数据' } as Record<string, string>)[String(v.status).toUpperCase()] ?? v.status ?? '待核验'}{v.reason ? `；${capabilityText(v.reason)}` : ''}{(v.missing_fields ?? v.missing)?.length ? `；需补充 ${(v.missing_fields ?? v.missing).map(capabilityText).join('、')}` : ''}</li>)}</ul></details>;
+  return <details className="capabilities"><summary>当前分析能力与数据缺口</summary>
+    {rows.length
+      ? <ul>{rows.map((v: any, i: number) => <li key={v.key ?? v.id ?? i}><strong>{v.label ?? v.name ?? v.key ?? v.id}</strong>：{({ AVAILABLE: '可用', PASS: '可用', DEGRADED: '降级', BLOCKED: '不可用', UNAVAILABLE: '不可用', MISSING_DATA: '缺少数据' } as Record<string, string>)[String(v.status).toUpperCase()] ?? v.status ?? '待核验'}{v.reason ? `；${capabilityText(v.reason)}` : ''}{(v.missing_fields ?? v.missing)?.length ? `；需补充 ${(v.missing_fields ?? v.missing).map(capabilityText).join('、')}` : ''}</li>)}</ul>
+      : <p className="muted capabilities-empty">当前数据范围未报告能力缺口：成本分析、报告导出与知识检索均可正常使用。</p>}
+  </details>;
 }

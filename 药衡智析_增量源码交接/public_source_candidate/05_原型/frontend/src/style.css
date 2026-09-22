@@ -60,7 +60,7 @@ details.workbench-collapse>summary span{font-size:12px;color:#6b7a77}
 .chip.selected{border-color:var(--accent);background:#eaf2f2}
 .effort-slider{display:flex;flex-direction:column;gap:2px}
 .effort-slider input[type="range"]{width:100%;accent-color:var(--accent)}
-.effort-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);padding-right:52px}
+.effort-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);padding-inline:9px}
 .form-hint{align-self:end;font-size:12px}
 .grow{flex:1}
 .vector-status{margin-top:8px}
@@ -72,3 +72,20 @@ details.workbench-collapse>summary span{font-size:12px;color:#6b7a77}
 .kg-fullscreen .chart-3d{min-height:0}
 .kg-tooltip{position:absolute;z-index:20;pointer-events:none;background:#fff;border:1px solid var(--border);
  border-radius:6px;padding:6px 10px;font-size:12px;color:#28414d;box-shadow:0 4px 14px rgba(20,32,38,.18);white-space:nowrap}
+
+/* ===== 2026-09-23 反馈修复：capabilities 空态 / finding 紧凑化 / 决策依据分层 / 人工验收上传 ===== */
+.capabilities-empty{margin:6px 0 0}
+.finding-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.finding-head>strong{font-size:12px;color:#a57a3c}
+.finding-evidence-btn{padding:2px 10px;font-size:12px;flex-shrink:0;white-space:nowrap}
+.finding-suggestion{margin-bottom:4px}
+.decision-basis dl{display:grid;grid-template-columns:88px 1fr;gap:9px 12px;font-size:13px;margin:8px 0}
+.decision-basis dt{color:var(--muted);font-size:12px;padding-top:2px}
+.decision-basis dd{margin:0}
+.decision-basis dd ul{margin:0;padding-left:16px;display:grid;gap:4px}
+.acceptance-upload{margin-top:10px;border-top:1px solid var(--border);padding-top:10px}
+.acceptance-upload summary{font-size:12px;color:#397487;margin-bottom:8px}
+.acceptance-form{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin:8px 0 4px}
+.acceptance-form label{display:flex;flex-direction:column;gap:5px;font-size:12px;color:#72818a}
+.acceptance-form input,.acceptance-form select{min-width:130px}
+.acceptance-form input[type=file]{padding:6px;background:#f8fafb;min-width:220px}
