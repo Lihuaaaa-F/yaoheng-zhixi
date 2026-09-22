@@ -38,6 +38,7 @@
 | 加分：运行多模型协作 | ModelGateway.for_route 任务路由 | test_decision 路由回退/环境变量/JSON路由表；GLM双模型实调 | 已实现：narrative=glm-5.3-flash，decision=glm-4.5-air 轻量路由实测PASS；未配置时同源回退并如实标注 |
 | 加分：自主Agent任务决策 | decision.py 确定性策略+小模型说明+SQLite台账 | test_decision 9项；实调决策说明glm-4.5-air PASS | 已实现：无报告/数据变化→REPORT_NEEDED，同快照→DASHBOARD_ONLY；可按决策入队报告 |
 | 加分：预测 | forecasting.py Holt双参数指数平滑 | test_forecasting 8项；七场景快照预测PASS（80%区间） | 已有原型：初始化与缺月处理存在当前反例，区间未完成覆盖检验，不作为可靠预测通过 |
+| 加分：预测v3（2026-09-22） | forecasting.py Holt+OLS初始化 | **初始化敏感性已修复**：两点差分→前半段OLS（真实三产品滚动留出MAE 0.250→0.188全改善）；新增滚动原点留出评估（六味0.2824 vs 朴素基线0.53，模型有效性有独立证据）；缺月/缺观测/不足3点仍拒绝不伪造；区间覆盖率未验证（保留告示）。test_forecasting 16项 |
 
 ## 历史开发轮的发现与修复索引（47c/6ff，不是最新5974275实调）
 
