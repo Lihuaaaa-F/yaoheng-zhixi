@@ -63,7 +63,7 @@ class JobStore:
             c.execute('INSERT INTO jobs(id,cache_key,kind,status,stage,input,result,created,updated,progress,detail) '
                       'VALUES(?,?,?,?,?,?,?,?,?,?,?)',
                       (id,cache_key,kind,'QUEUED','VALIDATING',json.dumps(payload,ensure_ascii=False),
-                       json.dumps(initial,ensure_ascii=False),stamp(),stamp(),0,'排队等待处理'))
+                       json.dumps(initial,ensure_ascii=False),stamp(),stamp(),0,None))
         return self.get(id)
     def _decode(self,row):
         if row is None:raise KeyError('JOB_NOT_FOUND')
