@@ -2,6 +2,12 @@
 from pathlib import Path
 from zipfile import ZipFile, ZIP_DEFLATED
 from xml.etree import ElementTree as ET
+# 改写 docx 部件必须用 lxml：标准库 ElementTree 重序列化会把命名空间前缀
+# 统一改成 ns0:/ns1:…，根元素 mc:Ignorable="w14 w15 wp14" 随即引用未声明
+# 前缀，MS Word 判定文件损坏拒开（LibreOffice 宽容，2026-09-22 事故）。
+# ET 仅保留给 verify_docx 等只读解析。
+from lxml import etree as LET
+from .docx_compat import validate_word_compat
 import hashlib, json, os, re, shutil, subprocess, tempfile
 from datetime import datetime
 from decimal import Decimal
@@ -73,15 +79,15 @@ def install_template(source: Path, analysis_type: str) -> dict:
         for info in zin.infolist():
             raw = zin.read(info.filename)
             if info.filename.startswith('word/') and info.filename.endswith('.xml'):
-                xml = ET.fromstring(raw)
+                xml = LET.fromstring(raw)
                 for i, p in enumerate(xml.findall('.//w:p', NS)):
                     nodes = p.findall('.//w:t', NS)
                     text = ''.join(t.text or '' for t in nodes)
                     marker = 'YHU_' + hashlib.sha256((analysis_type + info.filename).encode()).hexdigest()[:8] + '_' + str(i)
                     if PATTERN.search(text):
-                        mark = ET.Element('{' + W + '}bookmarkStart', {'{' + W + '}id': str(20000 + i), '{' + W + '}name': marker})
+                        mark = LET.Element('{' + W + '}bookmarkStart', {'{' + W + '}id': str(20000 + i), '{' + W + '}name': marker})
                         p.insert(0, mark)
-                        p.append(ET.Element('{' + W + '}bookmarkEnd', {'{' + W + '}id': str(20000 + i)}))
+                        p.append(LET.Element('{' + W + '}bookmarkEnd', {'{' + W + '}id': str(20000 + i)}))
                     for match in PATTERN.finditer(text):
                         name = match.group(1)
                         ratio = text[match.end():].lstrip().startswith('%')
@@ -98,10 +104,11 @@ def install_template(source: Path, analysis_type: str) -> dict:
                                         'unit': unit, 'source': semantic,
                                         'missing_policy': 'N/A并说明缺值原因',
                                         'semantic': name + ('变动率' if ratio else '')})
-                raw = ET.tostring(xml, encoding='utf-8', xml_declaration=True)
+                raw = LET.tostring(xml, encoding='utf-8', xml_declaration=True)
             zout.writestr(info, raw)
     # 通用前置区手术：与 compact_working_template 同源逻辑（安全子集）。
     _relayout_front_section(output, entries)
+    validate_word_compat(output)
     result = {'analysis_type': analysis_type, 'source': str(source), 'source_filename': source.name,
               'template_hash': hashlib.sha256(output.read_bytes()).hexdigest(),
               'placeholders': entries, 'placeholder_count': len(entries),
@@ -220,7 +227,7 @@ def normalize_template(output=TEMPLATE, map_path=MAP_PATH):
         for info in zin.infolist():
             raw=zin.read(info.filename)
             if info.filename.startswith('word/') and info.filename.endswith('.xml'):
-                xml=ET.fromstring(raw)
+                xml=LET.fromstring(raw)
                 for i,p in enumerate(xml.findall('.//w:p',NS)):
                     nodes=p.findall('.//w:t',NS);text=''.join(t.text or '' for t in nodes)
                     rename={}
@@ -230,8 +237,8 @@ def normalize_template(output=TEMPLATE, map_path=MAP_PATH):
                         text='{{合计贡献度}}%'
                     marker='YH_'+hashlib.sha256(info.filename.encode()).hexdigest()[:8]+'_'+str(i)
                     if PATTERN.search(text):
-                        mark=ET.Element('{'+W+'}bookmarkStart',{'{'+W+'}id':str(10000+i),'{'+W+'}name':marker});p.insert(0,mark)
-                        p.append(ET.Element('{'+W+'}bookmarkEnd',{'{'+W+'}id':str(10000+i)}))
+                        mark=LET.Element('{'+W+'}bookmarkStart',{'{'+W+'}id':str(10000+i),'{'+W+'}name':marker});p.insert(0,mark)
+                        p.append(LET.Element('{'+W+'}bookmarkEnd',{'{'+W+'}id':str(10000+i)}))
                     for match in PATTERN.finditer(text):
                         name=match.group(1)
                         if name!='合计贡献度':original_names.append(name)
@@ -246,11 +253,12 @@ def normalize_template(output=TEMPLATE, map_path=MAP_PATH):
                 # "药衡智析 · 成本分析"——该改写已删除；②水印仅在 1 页显示——
                 # 旧版 compact 全局删分节把带水印的正文页眉压缩到 1 页，现仅
                 # 前置区解除分节、正文分节原样保留，水印随正文页眉每页正确显示。
-                raw=ET.tostring(xml,encoding='utf-8',xml_declaration=True)
+                raw=LET.tostring(xml,encoding='utf-8',xml_declaration=True)
             zout.writestr(info,raw)
     result={'original_hash':hashlib.sha256(original.read_bytes()).hexdigest(),'template_hash':hashlib.sha256(output.read_bytes()).hexdigest(),'original_unique':len(set(original_names)),'original_occurrences':len(original_names),'placeholders':entries}
     Path(map_path).write_text(json.dumps(result,ensure_ascii=False,indent=2))
     compact_working_template(output, map_path)
+    validate_word_compat(output)
     return json.loads(Path(map_path).read_text())
 
 def number(value, digits=2):
@@ -546,6 +554,7 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
         result=render(snapshot,narrative,evidence,output,benchmark)
         check=verify_docx(output,snapshot,narrative=narrative)
         if check['status']!='PASS':raise ValueError('REPORT_EXPLANATION_BINDING_FAILED')
+        validate_word_compat(output)
         result['verification']=check
         return result
     from docx import Document
@@ -764,6 +773,7 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
     temp=output.with_suffix('.tmp.docx');doc.save(temp)
     check=verify_docx(temp,snapshot,sections,narrative=narrative,placeholders=meta['placeholders'])
     if check['status']!='PASS':raise ValueError('报告验证失败:'+json.dumps(check,ensure_ascii=False))
+    validate_word_compat(temp)
     temp.replace(output)
     return {'status':'PASS','scope':'file_generation','path':str(output),'sha256':hashlib.sha256(output.read_bytes()).hexdigest(),'verification':check,'bindings':values}
 
