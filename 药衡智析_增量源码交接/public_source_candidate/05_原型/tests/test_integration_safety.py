@@ -26,7 +26,11 @@ def test_malformed_remote_does_not_erase_verified_delivery(tmp_path):
     assert result['remote']==remote
     with s.db() as c:assert 'PROTOCOL' in c.execute('select last_error from outbox').fetchone()[0]
 
-def test_degraded_job_reuses_completed_result(tmp_path):
+def test_degraded_job_reuses_completed_result(tmp_path,monkeypatch):
+    # 2026-09-22：jobs.ARTIFACTS 必须隔离到临时根（enqueue 去重按它判产物
+    # 有效性），否则 complete_with_artifacts 护栏拦截或桩落进真实交付目录。
+    from pharma import jobs
+    monkeypatch.setattr(jobs,'ARTIFACTS',tmp_path/'artifacts')
     s=JobStore(tmp_path/'db');j=s.enqueue('report',{},'same-version');__import__('test_report_version_cache').complete_with_artifacts(s,j['id'])
     assert s.enqueue('report',{},'same-version')['id']==j['id']
 

@@ -73,14 +73,19 @@ def test_per_claim_evidence_check_replaces_aggregate_boolean():
     assert '证据不适用' in r['evidence_applicability']['reason'] or '不适用' in r['evidence_applicability']['reason']
 
 
-def test_draft_preview_and_final_download_contract(tmp_path):
+def test_draft_preview_and_final_download_contract(tmp_path, monkeypatch):
     from pharma.jobs import JobStore
-    from pharma.config import ARTIFACTS
+    from pharma import jobs
     import hashlib
+    # 2026-09-22 教训：此处曾用真实 config.ARTIFACTS，桩文件(draft-bytes)随每次
+    # 全量测试落进 07_交付/业务报告，用户按时间排序误当最新报告打开即报损坏。
+    # 产物目录走 tmp_path；store.artifact 的 ARTIFACT_OUTSIDE_ROOT 守卫要求
+    # 同步替换 jobs.ARTIFACTS 根。
+    monkeypatch.setattr(jobs, 'ARTIFACTS', tmp_path / 'artifacts')
     store = JobStore(path=tmp_path / 'jobs.sqlite3')
     job = store.enqueue('report', {})
     store.update(job['id'], 'RENDERING_DOCX')
-    folder = ARTIFACTS / job['id']
+    folder = tmp_path / 'artifacts' / job['id']
     folder.mkdir(parents=True, exist_ok=True)
     f = folder / 'report.docx'
     f.write_bytes(b'draft-bytes')

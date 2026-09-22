@@ -1,4 +1,5 @@
 """Report-level cache contracts, using the public synthetic dataset only."""
+from pathlib import Path
 from types import SimpleNamespace
 import pytest
 from fastapi.testclient import TestClient
@@ -9,6 +10,10 @@ from pharma.jobs import JobStore
 @pytest.fixture
 def service(tmp_path, monkeypatch):
     store=JobStore(tmp_path/'jobs.sqlite3')
+    # 2026-09-22：测试产物根必须隔离——enqueue 去重与 store.artifact 都按
+    # jobs.ARTIFACTS 判根；不隔离时桩文件会落进真实 07_交付/业务报告。
+    from pharma import jobs
+    monkeypatch.setattr(jobs,'ARTIFACTS',tmp_path/'artifacts')
     def forbidden(*args,**kwargs):raise RuntimeError('TEST_DOWNSTREAM_MUST_NOT_RUN')
     monkeypatch.setattr(reports,'render_docx',forbidden)
     monkeypatch.setattr(context_services,'retrieve',forbidden)
@@ -85,8 +90,14 @@ def test_api_can_enqueue_from_archive_without_parent_git_discovery(service,tmp_p
 
 def complete_with_artifacts(store,job_id):
     import hashlib
-    from pharma.jobs import ARTIFACTS
-    folder=ARTIFACTS/job_id;folder.mkdir(parents=True,exist_ok=True)
+    # 2026-09-22 教训：曾用全局 pharma.jobs.ARTIFACTS（真实交付目录），
+    # 'synthetic fixture' 桩文件随每次全量测试落进 07_交付/业务报告，用户按
+    # 时间排序误当最新报告打开即损坏。调用方（service fixture / 测试）必须先
+    # 把 jobs.ARTIFACTS 换成临时根；此护栏确保没人再悄悄写回真实目录。
+    from pharma import jobs, config
+    if Path(jobs.ARTIFACTS).resolve()==Path(config.ARTIFACTS).resolve():
+        raise AssertionError('测试产物根未隔离：complete_with_artifacts 禁止写真实交付目录')
+    folder=Path(jobs.ARTIFACTS)/job_id;folder.mkdir(parents=True,exist_ok=True)
     result={'execution_status':'COMPLETED'}
     for fmt in ('docx','pdf'):
         path=folder/('synthetic.'+fmt);path.write_bytes(b'synthetic fixture '+fmt.encode())
