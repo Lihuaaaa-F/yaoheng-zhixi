@@ -589,11 +589,11 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
                 replace_text_nodes(list(p._p.iter('{'+W+'}t')),values)
             pg=section._sectPr.find(qn('w:pgNumType'))
             if pg is not None:pg.attrib.pop(qn('w:start'),None)
-    def table(anchor,headers,rows):
+    def table(anchor,headers,rows,paragraph=None):
         from docx.oxml import OxmlElement as _OE
         from docx.oxml.ns import qn as _qn
         from docx.enum.text import WD_ALIGN_PARAGRAPH as _TA
-        p=dynamic_anchors.get(anchor)
+        p=paragraph if paragraph is not None else dynamic_anchors.get(anchor)
         if p is None:raise ValueError('模板动态块缺失:'+anchor)
         t=doc.add_table(rows=1,cols=len(headers))
         if doc.tables[0].style:t.style=doc.tables[0].style
@@ -663,6 +663,23 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
         impact=('主要材料，价格变动直接影响单位材料成本' if r['药材名称'] in _ms_names else '行情波动间接影响材料成本')
         _rows_m.append([r['药材名称'],first,cur,chg,str(r.get('趋势分析','—')),impact])
     table('原材料价格跟踪表格',['原材料','年初价','本月价','涨幅','市场趋势','对材料成本影响'],_rows_m)
+    # 根因定位表（2026-09-22 方法论落地）：程序计算的多维归因（EP/JSD/Shapley/DiD），
+    # 数字程序所有；插在 4.2 成本异常点排查标题之后。模板无对应占位符，独立锚定。
+    _attr=snapshot.get('attribution') or {}
+    if _attr.get('status')=='PASS' and (_attr.get('ranking') or []):
+        anchor42=next((p for p in _all_paragraphs(doc) if p.text.strip().startswith('4.2')),None)
+        if anchor42 is not None:
+            cap=doc.add_paragraph()
+            cap.add_run('根因定位（程序计算的多维归因，非模型结论；解释力=该根因解释的总变动占比，DiD为对照厂反事实估计）').font.size=Pt(9)
+            anchor42._p.addnext(cap._p)
+            _rk_rows=[[str(i+1),r['cause'],r['ep_pct'],r['direction'],f"{r['label']}（{r['score']}）",r['basis']]
+                      for i,r in enumerate(_attr['ranking'][:5])]
+            _did=_attr.get('did') or {}
+            if _did.get('status')=='PASS':
+                _rk_rows.append(['附','对照厂反事实（DiD，'+str(_did.get('control'))+'）',str(_did.get('tau'))+' 元/盒',
+                                 '—','平行趋势'+str(_did.get('parallel_trend')),
+                                 '安慰剂τ='+str(_did.get('placebo_tau') or '未检')+'；估计值，'+str(_did.get('assumption',''))[:40]])
+            table(None,['排序','根因集','解释力/估计','方向','可能性(评分)','依据'],_rk_rows,paragraph=cap)
     # 5.1 列结构按模板 md：对比维度/两厂/差异金额/差异率/方向
     _bl,_br,_bd=benchmark_labels(benchmark)
     _rows_b=[[r.get('name','单位成本'),number(r.get('left'),benchmark_precision(snapshot)),number(r.get('right'),benchmark_precision(snapshot)),number(r.get('delta'),benchmark_precision(snapshot)),number(r.get('rate')),
