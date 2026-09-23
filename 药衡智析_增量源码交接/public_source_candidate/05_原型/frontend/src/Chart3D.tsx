@@ -20,7 +20,7 @@ export default function Chart3D({ option, label, height = 720, onClick, onHover 
      * 用 GL 拾取事件 mouseover/mouseout 自渲染浮层：info=null 表示移出。 */
     onHover?: (info: { text: string; x: number; y: number } | null) => void;
 }) {
-    const ref = useRef<HTMLDivElement>(null), instance = useRef<echarts.ECharts | undefined>(undefined);
+    const ref = useRef<HTMLDivElement>(null), instance = useRef<echarts.ECharts | undefined>(undefined), optionSignature = useRef<string>('');
     useEffect(() => {
         if (!ref.current) return;
         const chart = echarts.init(ref.current);
@@ -32,7 +32,15 @@ export default function Chart3D({ option, label, height = 720, onClick, onHover 
         observer.observe(ref.current);
         return () => { observer.disconnect(); chart.dispose(); instance.current = undefined; };
     }, []);
-    useEffect(() => { instance.current?.setOption({ ...option, animation: false, textStyle: { fontFamily: '"Noto Sans CJK SC",sans-serif', fontSize: 12 } }, true); }, [option]);
+    useEffect(() => {
+        const chart = instance.current; if (!chart) return;
+        // 内容未变（如仅悬停浮层 state 变化）时跳过 notMerge 全量 setOption——
+        // 否则每次 mouseover 都重建整个 WebGL 场景（2026-09-23 审查 SSE-13）。
+        const signature = JSON.stringify(option);
+        if (signature === optionSignature.current) return;
+        optionSignature.current = signature;
+        chart.setOption({ ...option, animation: false, textStyle: { fontFamily: '"Noto Sans CJK SC",sans-serif', fontSize: 12 } }, true);
+    }, [option]);
     useEffect(() => { const chart = instance.current; if (!chart || !onClick) return; chart.on('click', onClick); return () => { chart.off('click', onClick); }; }, [onClick]);
     // GL 拾取悬停：echarts 把 GL 系列的 mouseover/mouseout 以 zr 事件抛出，
     // 事件参数带 componentType/seriesIndex/dataIndex/name；坐标取原始事件。
