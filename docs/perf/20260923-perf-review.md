@@ -82,8 +82,13 @@ sourcemap 归因（审查子代理复现构建，产物 hash 与线上一致 `in
 
 - 全套 pytest 三轮门禁（每实施项后）：406 passed / 1 skipped。
 - 真实 uvicorn（8765）+ Playwright：`e2e-knowledge-graph.mjs` **7/7 PASS**（大窗口/放大视图/左键旋转/滚轮缩放/平移/悬停 tooltip"板蓝根（药材）"/无运行时错误）——覆盖 lazy 加载、按需注册、option 短路全部改动面。
+- **全功能冒烟 `e2e-full-smoke.mjs`（2026-09-24 补充）：22/22 PASS**——十个页面（业务数据/数据分析/跨厂对标/报告生成/问题整改/知识库数据/报告模板/三个模型配置页）+ 传输层合同（JS 资产 gzip+immutable、index.html 协商、API JSON gzip 且小载荷正确保持 identity）+ 证据抽屉开关 + 对调基准后图表回挂 + 报告生成完整链路（提交→任务推进→终态"生成流程结束"，叙述 narrative PASS、glm-5.3 身份 VERIFIED、模型实际参与）+ 知识检索 + 3D 图谱 lazy 渲染（1270×720）+ 全程零页面/控制台错误。
 - 真实 HTTP 头验证：`/assets/*.js` 返回 `content-encoding: gzip` + `cache-control: immutable`；`/`（index.html）无 immutable；`/api/industry/catalog` gzip。
 - 基线复测：GZip 后 benchmark JSON 167KB→gzip 传输（TestClient 合同测试锁定）。
+
+### 报告任务终态为 DEGRADED 的甄别（非本次改动引入）
+
+冒烟中发现报告任务终态为 DEGRADED，逐层核查结论：**任务内 narrative 为 PASS、模型身份 VERIFIED、`model_participated=true`、分项校验 PASS**；DEGRADED 来自本机能力缺口（目录 capabilities 开局即标 `pdf_export: degraded 缺少 LibreOffice 转换服务`、`simulated_delivery: degraded 缺少模拟RPA在线验证`）。时间线证据：22:34 与 22:43 的同类 DEGRADED 任务早于本次第一个性能提交（约 23:15）。**属环境事实而非回归**；要拿到全绿终态需本机安装 LibreOffice（soffice）并接入 RPA 在线验证。
 
 ## 五、运维备注（夜间运行事实记录）
 
