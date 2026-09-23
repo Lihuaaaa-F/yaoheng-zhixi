@@ -4,6 +4,7 @@ from pathlib import Path
 import hashlib,json,time,os
 from fastapi import FastAPI,File,Form,HTTPException,Request,Query,UploadFile
 from fastapi.responses import FileResponse,JSONResponse
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel,Field,ConfigDict
 from .config import APP,RUNTIME,ROOT
@@ -13,6 +14,8 @@ from .metrics import benchmark_analysis
 
 store=JobStore();actions=ActionStore()
 app=FastAPI(title='药衡智析',version='0.1.0')
+# 2026-09-23 性能审查：API JSON 与前端资产均无压缩地明文传输（1.46MB JS 实测 gzip 后 471KB）。
+app.add_middleware(GZipMiddleware,minimum_size=1024)
 # 可选 API 鉴权（2026-09-21 修复 #4）：默认（本地演示，端口仅绑 127.0.0.1）
 # 不设置 token、行为不变；部署到局域网/公网时设置 PHARMA_API_TOKEN 环境变量，
 # 所有 /api/* 请求须携带 X-API-Token 头。/health 与静态页面豁免。
@@ -636,4 +639,13 @@ def vector_model_switch(req:VectorSwitchRequest):
     j=store.enqueue('vector_switch',{'path':req.path})
     return {'job_id':j['id'],'status':j['status']}
 
-if (APP/'frontend/dist').is_dir():app.mount('/',StaticFiles(directory=APP/'frontend/dist',html=True),name='ui')
+class _ImmutableAssets(StaticFiles):
+    """指纹文件（assets/*）内容与文件名一一对应，可长缓存 immutable；入口 index.html 保持协商。"""
+    async def get_response(self,path,scope):
+        resp=await super().get_response(path,scope)
+        posix=path.replace('\\','/')  # Windows 下 Mount 传入的子路径带反斜杠
+        if posix.startswith('assets/') and resp.status_code==200:
+            resp.headers['Cache-Control']='public, max-age=31536000, immutable'
+        return resp
+
+if (APP/'frontend/dist').is_dir():app.mount('/',_ImmutableAssets(directory=APP/'frontend/dist',html=True),name='ui')
