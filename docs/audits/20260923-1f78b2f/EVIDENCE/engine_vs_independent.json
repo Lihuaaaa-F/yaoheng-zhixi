@@ -1,0 +1,496 @@
+{
+ "comparisons": [
+  {
+   "case": "银黄口服液:2026-05 unit_cost",
+   "engine": "11.21",
+   "independent": "11.21",
+   "pass": true
+  },
+  {
+   "case": "银黄口服液:2026-05 mom_rate",
+   "engine": "2.844036697247706422018348624",
+   "independent": "2.844036697247706422018348623853211009174",
+   "pass": true
+  },
+  {
+   "case": "银黄口服液:2026-05 yoy_rate",
+   "engine": "4.668534080298786181139122316",
+   "independent": "4.668534080298786181139122315592903828198",
+   "pass": true
+  },
+  {
+   "case": "银黄口服液:2026-05 budget_rate",
+   "engine": "5.754716981132075471698113208",
+   "independent": "5.754716981132075471698113207547169811321",
+   "pass": true
+  },
+  {
+   "case": "银黄口服液:2026-05 mom_unit_cost_delta",
+   "engine": "0.31",
+   "independent": "0.31",
+   "pass": true
+  },
+  {
+   "case": "银黄口服液:2026-05 materials unit",
+   "engine": "7.3",
+   "independent": "7.3",
+   "pass": true
+  },
+  {
+   "case": "银黄口服液:2026-05 materials unit_delta",
+   "engine": "0.22",
+   "independent": "0.22",
+   "pass": true
+  },
+  {
+   "case": "银黄口服液:2026-05 materials unit_rate",
+   "engine": "3.107344632768361581920903955",
+   "independent": "3.107344632768361581920903954802259887006",
+   "pass": true
+  },
+  {
+   "case": "银黄口服液:2026-05 materials unit_contribution",
+   "engine": "70.96774193548387096774193548",
+   "independent": "70.96774193548387096774193548387096774194",
+   "pass": true
+  },
+  {
+   "case": "银黄口服液:2026-05 materials alert_strict>10%",
+   "engine": false,
+   "independent": false,
+   "pass": true
+  },
+  {
+   "case": "银黄口服液:2026-05 labor unit",
+   "engine": "1.53",
+   "independent": "1.53",
+   "pass": true
+  },
+  {
+   "case": "银黄口服液:2026-05 labor unit_delta",
+   "engine": "0.03",
+   "independent": "0.03",
+   "pass": true
+  },
+  {
+   "case": "银黄口服液:2026-05 labor unit_rate",
+   "engine": "2.00",
+   "independent": "2.00",
+   "pass": true
+  },
+  {
+   "case": "银黄口服液:2026-05 labor unit_contribution",
+   "engine": "9.677419354838709677419354839",
+   "independent": "9.677419354838709677419354838709677419355",
+   "pass": true
+  },
+  {
+   "case": "银黄口服液:2026-05 labor alert_strict>10%",
+   "engine": false,
+   "independent": false,
+   "pass": true
+  },
+  {
+   "case": "银黄口服液:2026-05 overhead unit",
+   "engine": "2.38",
+   "independent": "2.38",
+   "pass": true
+  },
+  {
+   "case": "银黄口服液:2026-05 overhead unit_delta",
+   "engine": "0.06",
+   "independent": "0.06",
+   "pass": true
+  },
+  {
+   "case": "银黄口服液:2026-05 overhead unit_rate",
+   "engine": "2.586206896551724137931034483",
+   "independent": "2.586206896551724137931034482758620689655",
+   "pass": true
+  },
+  {
+   "case": "银黄口服液:2026-05 overhead unit_contribution",
+   "engine": "19.35483870967741935483870968",
+   "independent": "19.35483870967741935483870967741935483871",
+   "pass": true
+  },
+  {
+   "case": "银黄口服液:2026-05 overhead alert_strict>10%",
+   "engine": false,
+   "independent": false,
+   "pass": true
+  },
+  {
+   "case": "银黄口服液:2026-05 bridge.quantity_effect",
+   "engine": "84800.0",
+   "independent": "84800.0",
+   "pass": true
+  },
+  {
+   "case": "银黄口服液:2026-05 bridge.unit_cost_effect",
+   "engine": "35380.00",
+   "independent": "35380.00",
+   "pass": true
+  },
+  {
+   "case": "银黄口服液:2026-05 bridge.total_delta",
+   "engine": "120180.0",
+   "independent": "120180.0",
+   "pass": true
+  },
+  {
+   "case": "银黄口服液:2026-05 top_material name",
+   "engine": "金银花",
+   "independent": "金银花",
+   "pass": true
+  },
+  {
+   "case": "银黄口服液:2026-05 top_material delta",
+   "engine": "0.15",
+   "independent": "0.15",
+   "pass": true
+  },
+  {
+   "case": "板蓝根颗粒:2026-05 unit_cost",
+   "engine": "7.47",
+   "independent": "7.47",
+   "pass": true
+  },
+  {
+   "case": "板蓝根颗粒:2026-05 mom_rate",
+   "engine": "3.176795580110497237569060773",
+   "independent": "3.176795580110497237569060773480662983425",
+   "pass": true
+  },
+  {
+   "case": "板蓝根颗粒:2026-05 yoy_rate",
+   "engine": "5.211267605633802816901408451",
+   "independent": "5.211267605633802816901408450704225352113",
+   "pass": true
+  },
+  {
+   "case": "板蓝根颗粒:2026-05 budget_rate",
+   "engine": "6.714285714285714285714285714",
+   "independent": "6.714285714285714285714285714285714285714",
+   "pass": true
+  },
+  {
+   "case": "板蓝根颗粒:2026-05 mom_unit_cost_delta",
+   "engine": "0.23",
+   "independent": "0.23",
+   "pass": true
+  },
+  {
+   "case": "板蓝根颗粒:2026-05 materials unit",
+   "engine": "4.75",
+   "independent": "4.75",
+   "pass": true
+  },
+  {
+   "case": "板蓝根颗粒:2026-05 materials unit_delta",
+   "engine": "0.18",
+   "independent": "0.18",
+   "pass": true
+  },
+  {
+   "case": "板蓝根颗粒:2026-05 materials unit_rate",
+   "engine": "3.938730853391684901531728665",
+   "independent": "3.938730853391684901531728665207877461707",
+   "pass": true
+  },
+  {
+   "case": "板蓝根颗粒:2026-05 materials unit_contribution",
+   "engine": "78.26086956521739130434782609",
+   "independent": "78.26086956521739130434782608695652173913",
+   "pass": true
+  },
+  {
+   "case": "板蓝根颗粒:2026-05 materials alert_strict>10%",
+   "engine": false,
+   "independent": false,
+   "pass": true
+  },
+  {
+   "case": "板蓝根颗粒:2026-05 labor unit",
+   "engine": "1.06",
+   "independent": "1.06",
+   "pass": true
+  },
+  {
+   "case": "板蓝根颗粒:2026-05 labor unit_delta",
+   "engine": "0.02",
+   "independent": "0.02",
+   "pass": true
+  },
+  {
+   "case": "板蓝根颗粒:2026-05 labor unit_rate",
+   "engine": "1.923076923076923076923076923",
+   "independent": "1.923076923076923076923076923076923076923",
+   "pass": true
+  },
+  {
+   "case": "板蓝根颗粒:2026-05 labor unit_contribution",
+   "engine": "8.695652173913043478260869565",
+   "independent": "8.695652173913043478260869565217391304348",
+   "pass": true
+  },
+  {
+   "case": "板蓝根颗粒:2026-05 labor alert_strict>10%",
+   "engine": false,
+   "independent": false,
+   "pass": true
+  },
+  {
+   "case": "板蓝根颗粒:2026-05 overhead unit",
+   "engine": "1.66",
+   "independent": "1.66",
+   "pass": true
+  },
+  {
+   "case": "板蓝根颗粒:2026-05 overhead unit_delta",
+   "engine": "0.03",
+   "independent": "0.03",
+   "pass": true
+  },
+  {
+   "case": "板蓝根颗粒:2026-05 overhead unit_rate",
+   "engine": "1.840490797546012269938650307",
+   "independent": "1.840490797546012269938650306748466257669",
+   "pass": true
+  },
+  {
+   "case": "板蓝根颗粒:2026-05 overhead unit_contribution",
+   "engine": "13.04347826086956521739130435",
+   "independent": "13.04347826086956521739130434782608695652",
+   "pass": true
+  },
+  {
+   "case": "板蓝根颗粒:2026-05 overhead alert_strict>10%",
+   "engine": false,
+   "independent": false,
+   "pass": true
+  },
+  {
+   "case": "板蓝根颗粒:2026-05 bridge.quantity_effect",
+   "engine": "84000.0",
+   "independent": "84000.0",
+   "pass": true
+  },
+  {
+   "case": "板蓝根颗粒:2026-05 bridge.unit_cost_effect",
+   "engine": "47940.00",
+   "independent": "47940.00",
+   "pass": true
+  },
+  {
+   "case": "板蓝根颗粒:2026-05 bridge.total_delta",
+   "engine": "131940.0",
+   "independent": "131940.0",
+   "pass": true
+  },
+  {
+   "case": "板蓝根颗粒:2026-05 top_material name",
+   "engine": "板蓝根",
+   "independent": "板蓝根",
+   "pass": true
+  },
+  {
+   "case": "板蓝根颗粒:2026-05 top_material delta",
+   "engine": "0.15",
+   "independent": "0.15",
+   "pass": true
+  },
+  {
+   "case": "六味地黄胶囊:2026-03 unit_cost",
+   "engine": "17.02",
+   "independent": "17.02",
+   "pass": true
+  },
+  {
+   "case": "六味地黄胶囊:2026-03 mom_rate",
+   "engine": "-3.295454545454545454545454545",
+   "independent": "-3.295454545454545454545454545454545454545",
+   "pass": true
+  },
+  {
+   "case": "六味地黄胶囊:2026-03 yoy_rate",
+   "engine": "0.5910165484633569739952718676",
+   "independent": "0.5910165484633569739952718676122931442080",
+   "pass": true
+  },
+  {
+   "case": "六味地黄胶囊:2026-03 budget_rate",
+   "engine": "-0.4678362573099415204678362573",
+   "independent": "-0.4678362573099415204678362573099415204678",
+   "pass": true
+  },
+  {
+   "case": "六味地黄胶囊:2026-03 mom_unit_cost_delta",
+   "engine": "-0.58",
+   "independent": "-0.58",
+   "pass": true
+  },
+  {
+   "case": "六味地黄胶囊:2026-03 materials unit",
+   "engine": "11.99",
+   "independent": "11.99",
+   "pass": true
+  },
+  {
+   "case": "六味地黄胶囊:2026-03 materials unit_delta",
+   "engine": "-0.36",
+   "independent": "-0.36",
+   "pass": true
+  },
+  {
+   "case": "六味地黄胶囊:2026-03 materials unit_rate",
+   "engine": "-2.914979757085020242914979757",
+   "independent": "-2.914979757085020242914979757085020242915",
+   "pass": true
+  },
+  {
+   "case": "六味地黄胶囊:2026-03 materials unit_contribution",
+   "engine": "62.06896551724137931034482759",
+   "independent": "62.06896551724137931034482758620689655172",
+   "pass": true
+  },
+  {
+   "case": "六味地黄胶囊:2026-03 materials alert_strict>10%",
+   "engine": false,
+   "independent": false,
+   "pass": true
+  },
+  {
+   "case": "六味地黄胶囊:2026-03 labor unit",
+   "engine": "2.05",
+   "independent": "2.05",
+   "pass": true
+  },
+  {
+   "case": "六味地黄胶囊:2026-03 labor unit_delta",
+   "engine": "-0.10",
+   "independent": "-0.10",
+   "pass": true
+  },
+  {
+   "case": "六味地黄胶囊:2026-03 labor unit_rate",
+   "engine": "-4.651162790697674418604651163",
+   "independent": "-4.651162790697674418604651162790697674419",
+   "pass": true
+  },
+  {
+   "case": "六味地黄胶囊:2026-03 labor unit_contribution",
+   "engine": "17.24137931034482758620689655",
+   "independent": "17.24137931034482758620689655172413793103",
+   "pass": true
+  },
+  {
+   "case": "六味地黄胶囊:2026-03 labor alert_strict>10%",
+   "engine": false,
+   "independent": false,
+   "pass": true
+  },
+  {
+   "case": "六味地黄胶囊:2026-03 overhead unit",
+   "engine": "2.98",
+   "independent": "2.98",
+   "pass": true
+  },
+  {
+   "case": "六味地黄胶囊:2026-03 overhead unit_delta",
+   "engine": "-0.12",
+   "independent": "-0.12",
+   "pass": true
+  },
+  {
+   "case": "六味地黄胶囊:2026-03 overhead unit_rate",
+   "engine": "-3.870967741935483870967741935",
+   "independent": "-3.870967741935483870967741935483870967742",
+   "pass": true
+  },
+  {
+   "case": "六味地黄胶囊:2026-03 overhead unit_contribution",
+   "engine": "20.68965517241379310344827586",
+   "independent": "20.68965517241379310344827586206896551724",
+   "pass": true
+  },
+  {
+   "case": "六味地黄胶囊:2026-03 overhead alert_strict>10%",
+   "engine": false,
+   "independent": false,
+   "pass": true
+  },
+  {
+   "case": "六味地黄胶囊:2026-03 bridge.quantity_effect",
+   "engine": "0.0",
+   "independent": "0.0",
+   "pass": true
+  },
+  {
+   "case": "六味地黄胶囊:2026-03 bridge.unit_cost_effect",
+   "engine": "-2800.00",
+   "independent": "-2800.00",
+   "pass": true
+  },
+  {
+   "case": "六味地黄胶囊:2026-03 bridge.total_delta",
+   "engine": "-2800.0",
+   "independent": "-2800.0",
+   "pass": true
+  },
+  {
+   "case": "六味地黄胶囊:2026-03 top_material name",
+   "engine": "山茱萸",
+   "independent": "山茱萸",
+   "pass": true
+  },
+  {
+   "case": "六味地黄胶囊:2026-03 top_material delta",
+   "engine": "-0.10",
+   "independent": "-0.10",
+   "pass": true
+  },
+  {
+   "case": "benchmark 银黄口服液 delta",
+   "engine": "0.39",
+   "independent": "-0.39",
+   "pass": false
+  },
+  {
+   "case": "benchmark 银黄口服液 rate",
+   "engine": "3.479036574487065120428189117",
+   "independent": "-3.362068965517241379310344827586206896552",
+   "pass": false
+  },
+  {
+   "case": "benchmark 银黄口服液 relative_error_pct<=1",
+   "engine": "200",
+   "independent": "0",
+   "pass": false
+  },
+  {
+   "case": "benchmark 板蓝根颗粒 delta",
+   "engine": "0.50",
+   "independent": "-0.50",
+   "pass": false
+  },
+  {
+   "case": "benchmark 板蓝根颗粒 rate",
+   "engine": "6.693440428380187416331994645",
+   "independent": "-6.273525721455457967377666248431618569636",
+   "pass": false
+  },
+  {
+   "case": "benchmark 板蓝根颗粒 relative_error_pct<=1",
+   "engine": "200",
+   "independent": "0",
+   "pass": false
+  }
+ ],
+ "all_pass": false,
+ "snapshots": {
+  "银黄口服液:2026-05": "12f523eb959a6465",
+  "板蓝根颗粒:2026-05": "7190e2a264672677",
+  "六味地黄胶囊:2026-03": "44796c44999937bc"
+ }
+}

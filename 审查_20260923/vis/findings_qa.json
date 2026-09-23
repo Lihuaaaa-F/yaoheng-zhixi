@@ -1,0 +1,139 @@
+{
+  "meta": {
+    "target": "药衡智析 制药成本分析系统 React SPA（自洽 QA：实现内部一致性 + 平台工艺标准，无外部设计稿）",
+    "screenshots": "D:/重庆市AI大赛/审查_20260923/vis/r1/（23 张，1440x900 CSS @1.5x，PNG 宽 2160px）",
+    "style_source": "D:/重庆市AI大赛/药衡智析_增量源码交接/public_source_candidate/05_原型/frontend/src/style.css（L1 为压缩主块）",
+    "method": "逐页 PIL 分段裁剪 1:1 细读 + token 对照 + WCAG 对比度计算",
+    "final_result": "blocked（存在可执行的 P1/P2）"
+  },
+  "findings": [
+    {
+      "id": "Q-01",
+      "severity": "P1",
+      "surface": "交互态",
+      "location": "工作台全部页面 · .drawer-backdrop/.drawer vs .anchor-nav（style.css L1 抽屉块 z-index:10；L22 .anchor-nav z-index:20）",
+      "issue": "锚点导航条 z-index(20) 高于证据抽屉遮罩层 z-index(10)：抽屉打开时，米色导航带与胶囊按钮直接绘制在抽屉面板之上（截图中导航带横穿抽屉白色面板，胶囊轮廓可见）。",
+      "evidence": "s_drawer_证据抽屉.png y≈1075-1170(PNG) 米色带与胶囊片段叠在抽屉上；drawer_backdrop.png 中导航胶囊在遮罩上清晰未变暗。live 视口中 sticky 导航吸顶后同样会压在抽屉头部（关闭按钮区域）。",
+      "impact": "模态抽屉被一条可点击的导航带横切，视觉上打破模态层级，用户可能误点导航而非关闭抽屉。",
+      "fix": ".drawer-backdrop{z-index:50}（高于 20、低于 .kg-fullscreen 80/.preview-backdrop 60 语义不变），或将 .anchor-nav 降为 z-index:5。修复后需在滚动状态下重截抽屉态验证。"
+    },
+    {
+      "id": "Q-02",
+      "severity": "P1",
+      "surface": "颜色",
+      "location": "全站小型/muted 文本：--muted(L1)、.metric em、.snapshot-line、footer、th、.outline-label、.filters label、.metric span、.nav-number、.empty（均在 style.css L1）",
+      "issue": "系统性的小字号文本对比度低于 WCAG AA 4.5:1：.metric em #8797a1(10px)=3.01、.snapshot-line #82939e(10px)=2.95、footer #92a0a9(10px)=2.49、.nav-number #8ba2ae(11px)=2.67、.empty #788b96=3.38、th #71828d=3.77、.outline-label #71828d=3.98、.filters label #72818a=4.02、.metric span #6c808b=4.12、--muted #6d7f8b(12px)=4.15。",
+      "evidence": "对比度实算（本 QA 脚本）；截图见 p3b2_metrics.png 比较期小字、p4a_top.png 表头、p0_sidebar.png 导航序号。徽章/notice/error/increase/主按钮全部达标（4.8-6.7）。",
+      "impact": "表格头、指标注释、页脚等辅助信息在普通屏幕上偏淡，年长/低视力用户不可读；评审演示投影下更明显。",
+      "fix": "token 一处修复：--muted 由 #6d7f8b 改 #5f7280（白底 4.99 / 页面底 4.64 / 表头底 4.73 全达标）；.metric em/.snapshot-line/footer/.nav-number/.empty 统一改用 var(--muted) 或 #5f7280；th 色改 #5f7280；10px 微字建议提至 11px。"
+    },
+    {
+      "id": "Q-03",
+      "severity": "P2",
+      "surface": "颜色",
+      "location": "工作台全部页面 · .anchor-nav 背景（style.css L22：background:var(--bg,#f4f5ed)，--bg 未定义）",
+      "issue": "token 漂移：--bg 从未在 :root 定义，锚点导航回退到暖米色 #f4f5ed，与页面冷灰底 #f4f7f9 形成一条肉眼可见的色带（两个色底仅差 2 个色阶但色温相反）。",
+      "evidence": "p3b2_metrics.png / sb_metrics.png / drawer_main.png 中导航带明显发黄；style.css L22 fallback 与 L1 body background 不一致。",
+      "impact": "整条 sticky 带看起来像渲染残留/脏色，破坏底色体系的一致性。",
+      "fix": ":root 增加 --bg:#f4f7f9，或将 L22 改为 background:#f4f7f9（若刻意做纸感米色条则应同时给胶囊底色联动，见 open_questions）。"
+    },
+    {
+      "id": "Q-04",
+      "severity": "P2",
+      "surface": "文案",
+      "location": "模型配置页 表单占位符：ModelConfigForm.tsx:127、ModelPages.tsx:54",
+      "issue": "JSX 属性字符串里反斜杠不转义：placeholder=\"C:\\\\keys\\\\provider.key\" 与 \"D:\\\\models\\\\bge-small-zh-v1.5\" 在界面上字面显示双反斜杠 C:\\\\keys\\\\provider.key。",
+      "evidence": "p7_R.png 密钥文件路径占位符显示 C:\\\\keys\\\\provider.key；p9 向量模型页占位符同样双反斜杠。",
+      "impact": "路径是 Windows 真实格式，双反斜杠会误导用户照抄输入，显得实现粗糙。",
+      "fix": "改为 placeholder=\"C:\\keys\\provider.key\"、\"D:\\models\\bge-small-zh-v1.5\"（JSX 属性字符串单反斜杠即可），或用 {'C:\\\\keys\\\\provider.key'} JS 字符串。"
+    },
+    {
+      "id": "Q-05",
+      "severity": "P2",
+      "surface": "文案",
+      "location": "解释与建议/对标根因区 · .finding .finding-suggestion（p3_数据分析.png y≈7950、y≈8470；p3_数据分析_展开.png y≈10088；p4 同构）",
+      "issue": "建议句与假设句逐字重复：每个 finding 先输出假设原文一段，紧接着『建议：』前缀再原样重复同一句（≥4 处完全相同）。Benchmark.tsx 渲染 h.hypothesis 后又渲染 建议：{h.suggestion}，上游把同一文本填了两个字段。",
+      "evidence": "『核对当月各工序排班工时与工资分摊表，确认人工下降属于班次缩减还是分摊口径变化。』与其『建议：』副本同屏相邻出现两处；『按折旧、能耗、维修等分项列示…』『调取两厂同期熟地黄与山茱萸采购合同…』同样成对重复。",
+      "impact": "长页面被重复句撑长约一屏，读者会以为是渲染 bug，损害『确定性、可追溯』的产品气质。",
+      "fix": "数据侧去重：suggestion===hypothesis 时不再输出建议行；或前端 h.suggestion?.trim()===h.hypothesis?.trim() && 不渲染 .finding-suggestion。"
+    },
+    {
+      "id": "Q-06",
+      "severity": "P2",
+      "surface": "图像",
+      "location": "知识库数据 · 知识图谱三维视图 节点标签（p1_知识库数据.png 右侧簇，放大裁剪 kg_overlap.png）",
+      "issue": "3D 投影下节点标签二维叠字：『板蓝根颗粒』与相邻产品标签在右侧 teal 节点处完全重叠，笔画互相穿插不可读；『苯甲酸钠』标签也压在节点连线上。",
+      "evidence": "kg_overlap.png（1350,2050-1850,2250 放大 2x）两个标签叠成乱字；p1_band2.png 可见整簇标签拥挤。",
+      "impact": "图谱是知识库页核心可视化，主产品名不可读直接削弱可信度。",
+      "fix": "ECharts GL label 开 overlap 处理或 labelLayout {hideOverlap:true}；或按 zoom 阈值分级显示标签；至少给标签加白底描边（textBorderColor:'#fff',textBorderWidth:3）缓解穿插。"
+    },
+    {
+      "id": "Q-07",
+      "severity": "P2",
+      "surface": "字体",
+      "location": "数值排版：解释与建议正文 / 归因表 / 验收区 vs 指标卡与对标表（style.css L1 table{font-variant-numeric:tabular-nums} 仅覆盖表格）",
+      "issue": "千分位与精度口径不一：指标卡/对标表用 614,950.00（有分隔符），而叙述文本出现 105000.00元、437150.00元、614950.00元、35000.00盒（无分隔符），桥接表出现 16450.0（一位小数）。同屏『123,200 元』与『123200.00元』并存。",
+      "evidence": "p3g_heat.png『本期105000.00元，基期123200.00元』；p3e_trend.png『产量为35000.00盒』；p3_g-bridge_R.png『16450.0』；p3b2_metrics.png『614,950.00』。",
+      "impact": "财务数字的千分位是可读性与专业度的底线；口径漂移让同类数值看起来像两套系统输出。",
+      "fix": "统一走 presentation.tsx 的 fmt()（千分位+固定 2 位小数）渲染所有嵌入文本的金额/数量；纯文本插值处改用 fmt 包裹。"
+    },
+    {
+      "id": "Q-08",
+      "severity": "P2",
+      "surface": "间距",
+      "location": "跨厂对标页顶部 · .filters 卡片内标签 vs .comparison-filters 裸标签（style.css L1 .filters label 11px/#72818a；L8 .comparison-filters label 无字号色定义）",
+      "issue": "同屏两套筛选器样式：全局筛选条（产品/工厂/月份）是白卡+11px 灰标签，紧随其后的 分析工厂/基准工厂 是裸露在页面底色上的 14px 深色标签，无卡片容器、间距节奏也不同。",
+      "evidence": "p4a_top.png 上半（白卡筛选）与下半（裸标签+select）风格断裂；sw_top.png 同。",
+      "impact": "同一功能域（筛选）两种视觉语言，页面显得未完成；裸 select 在灰底上缺少边界。",
+      "fix": "给 .comparison-filters label 补 {font-size:11px;color:#72818a}，或将 分析工厂/基准工厂 并入 .filters 卡片作为一组（推荐后者，语义上同属筛选）。"
+    },
+    {
+      "id": "Q-09",
+      "severity": "P2",
+      "surface": "文案",
+      "location": "三个导入页（业务数据/知识库数据/报告模板）· 原生 file input",
+      "issue": "中文界面中出现浏览器原生英文控件『Choose File  No file chosen』，且未做任何样式定制，与输入框圆角/字号体系脱节。",
+      "evidence": "p0_metrics.png、p1_band0.png、p2_a.png 三处导入表单同款原生控件。",
+      "impact": "评审第一眼即见的『未完成』信号；中英混排且控件字体与全站不一致。",
+      "fix": "隐藏原生 input（appearance:none 或 sr-only），用 label 触发，自绘『选择文件』按钮 + 『未选择文件』占位文本；保留键盘可达（input 聚焦环）。"
+    },
+    {
+      "id": "Q-10",
+      "severity": "P2",
+      "surface": "交互态",
+      "location": "导入页主按钮初始态 · button:disabled{opacity:.5}（style.css L1）作用在 .primary 上",
+      "issue": "页面主 CTA（上传/构建知识索引/解析报告模板）在初始空态整颗按钮以 50% 不透明度渲染，白字对合成底约 2.0:1，看起来像渲染故障而非『等待选择文件』的禁用态。",
+      "evidence": "p0_metrics.png、p1_band1.png 中上传/构建知识索引按钮褪色发灰；p2_a.png 解析报告模板同。",
+      "impact": "首屏主行动点不可用且无解释，用户不知道下一步是先选文件；褪色主按钮削弱品牌色识别。",
+      "fix": "为主按钮定义显式禁用态替代透明度：.primary:disabled{background:#e3eaee;border-color:#d3dee4;color:#8ba0ab;cursor:not-allowed}，并在按钮旁以 .form-hint 提示『请先选择文件』。"
+    }
+  ],
+  "open_questions": [
+    "指标卡语义色：CSS 只定义了 .increase（#ac613b，升=警示橙），环比下降 -2.87% 用中性深色。『成本上升=橙、下降=中性』是否为有意语义（避免暗示『下降=好』）？若希望双向可读，需补 .decrease 并定义正向色。",
+    ".anchor-nav 的米色 #f4f5ed 是否本意是『纸面暖色导航条』设计？若是有意为之，建议同时把胶囊 hover/边框的 rgba(34,124,129,*) 校准到暖底并写入正式 token，而不是走未定义变量的回退。",
+    "抽屉 z-index 问题基于全页截图与 sticky 语义推断，live 视口下导航吸顶与抽屉的精确叠加关系需修复后重截验证。",
+    "图表分类色 #729bc2（蓝，用于环形图直接人工/部分趋势图）不在 UI token 体系内，其余图表色均取自 accent/暖色系——图表色板是否应有独立的正式定义（docs/chart-palette）？",
+    "标题徽章『看板更新即可/建议生成正式报告』为状态标签，但文案是句子片段；是否应改为名词态（如『无需重建』『待生成报告』）以符合标签语感？"
+  ],
+  "checklist": [
+    "1. 修 z-index：.drawer-backdrop 提到 z-index:50（Q-01），滚动态重截抽屉验证。",
+    "2. :root 定义 --bg:#f4f7f9 或改 .anchor-nav 背景，消除米色带（Q-03）。",
+    "3. 对比度包：--muted→#5f7280，micro 文本/表头/占位标签改引 token（Q-02，一处改全局生效）。",
+    "4. 修两处 placeholder 双反斜杠（ModelConfigForm.tsx:127、ModelPages.tsx:54）（Q-04）。",
+    "5. 建议句去重：suggestion===hypothesis 时不渲染建议行（Q-05）。",
+    "6. file input 自绘中文化（Q-09）。",
+    "7. 数值统一走 fmt()（千分位+2 位小数）（Q-07）。",
+    "8. .comparison-filters 标签样式对齐 .filters 或并入筛选卡（Q-08）。",
+    "9. .primary:disabled 显式禁用态（Q-10）。",
+    "10. 知识图谱标签 hideOverlap+白描边（Q-06）。"
+  ],
+  "polish": [
+    "『该工厂/期间无原料、费用和工时明细』用琥珀 .notice 承载无数据态（p4），建议无数据态改用 .empty 灰底，警告色保留给真异常。",
+    "环形图蓝 #729bc2 与 UI 色板无映射，建议在 presentation 层集中定义图表色板并注释用途（直接材料=teal、人工=蓝或改暖灰、制造费用=金）。",
+    "分析决策建议卡中 outline-label『看板更新即可』与下一行正文重复，可去掉角标或正文二选一。",
+    "混排细节：『17.57元/盒』(解释区无空格) vs 指标卡『17.57 元/盒』；『Holt双参数指数平滑(α=0.6,β=0.3，OLS初始化)』半角/全角逗号混用，建议统一盘古之白与全角标点。",
+    "报告下载为下划线文字链接（Word 下载（待审核）），与其余按钮型动作不一致；验收格通过/待评为纯文本，可复用 badge 体系（PASS 绿/待评灰）。",
+    "知识图谱画布 520px 高而图形簇仅占上部 1/3，初始相机可自动 fit 使构图居中。",
+    "禁用主按钮 2.0:1 属可豁免项，但已由 Q-10 的显式禁用态一并解决。"
+  ]
+}

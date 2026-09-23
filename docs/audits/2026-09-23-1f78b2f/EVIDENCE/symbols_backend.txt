@@ -1,0 +1,424 @@
+== backend/pharma\__init__.py ==
+== backend/pharma\actions.py ==
+  def digest L11-11
+  class ExecutableAction L13-50: concrete(L29), assignee_complete(L42), source_complete(L48)
+  def validate_action L52-53
+  def validate_edit_types L55-62
+  def confirmed_payload_matches L64-65
+  def notification_proven L67-75
+  def protocol_data L77-84
+  def action_details L86-88
+  def action_identity L90-91
+  def now L93-93
+  class ActionStore L95-250: __init__(L96), db(L103), _decode(L109), get(L117), list(L119), draft(L121), edit(L139), confirm(L167), acknowledge(L177), pending(L188), _state(L190), _protocol_error(L196), _query_failed(L200), _reconcile(L204), deliver_one(L219), refresh(L244)
+== backend/pharma\api.py ==
+  def optional_token_guard L20-27
+  class AnalysisRequest L28-32: 
+  class ReportRequest L33-35: 
+  class SearchRequest L37-40: 
+  class Assignee L41-42: 
+  class ActionRequest L43-45: 
+  class ConfirmRequest L46-46: 
+  class ReviewDimension L47-49: 
+  class ReviewRequest L50-54: 
+  class ReviewImportEntry L55-57: 
+  class ReviewImport L58-60: 
+  def value_error L63-63
+  def key_error L65-65
+  def health L67-74
+  def selected_context L75-77
+  def scoped_analysis L79-86
+  def resolved_analysis L88-94
+  def industry_catalog L97-99
+  def get_catalog L102-104
+  def analysis L106-121
+  def dashboard_heatmap L124-130
+  def get_analysis L132-132
+  def get_benchmark L134-163
+  def _generation_versions L164-186
+  def _enqueue_report L188-199
+  def report L202-204
+  def jobs L206-208
+  def job L210-210
+  def artifact L212-216
+  def _current_hashes L218-235
+  def _submit_review L237-245
+  def _recalc_acceptance L247-266
+  def submit_review L269-269
+  def list_reviews L271-274
+  def report_acceptance L276-278
+  def import_reviews L280-285
+  def imports L287-287
+  def _reject_active_parse L290-293
+  class DataParseRequest L295-298: 
+  class VectorSwitchRequest L299-301: 
+  def data_parse L304-312
+  def kb_build L315-322
+  def template_parse L325-333
+  def templates L336-338
+  class ImportMappingRequest L341-343: 
+  class ImportValidateRequest L344-345: 
+  class ImportPublishRequest L346-348: 
+  class KnowledgePublishRequest L349-351: 
+  def import_upload L354-357
+  def import_preview L359-362
+  def import_file L364-368
+  def import_list L370-372
+  def import_detail L374-376
+  def import_mapping L378-385
+  def import_validate L387-393
+  def import_publish L395-404
+  def import_template_check L406-410
+  def kb L412-420
+  def kb_search L422-435
+  def draft L437-437
+  def list_actions L439-439
+  def edit_action L441-441
+  def confirm L443-443
+  def refresh L445-445
+  class AcknowledgementRequest L446-448: 
+  def acknowledge L451-452
+  def get_action L455-455
+  def _month_query L460-461
+  def forecast L464-470
+  def attribution L473-484
+  def agent_decision L487-499
+  def apply_decision L502-513
+  def kb_graph L516-523
+  def model_routes L526-529
+  class ModelSettingsPayload L532-534: 
+  def get_model_settings L537-539
+  def put_model_settings L541-543
+  def test_model_settings L545-547
+  def list_model_settings L549-554
+  def model_presets L557-560
+  def vector_model_status L563-565
+  def vector_model_switch L568-572
+== backend/pharma\attribution.py ==
+  def _d L34-39
+  def _shift L42-45
+  def _direction L48-49
+  def _jsd L52-66
+  def _shapley_two_factor L69-73
+  def _cost_data L76-80
+  def _material_units L83-90
+  def _market_change L93-102
+  def _select_attrs L105-121
+  def localize L124-178
+  def _unit_series L181-188
+  def did L191-219
+  def price_signal L222-242
+  def rank L245-269
+  def analyze_attribution L272-294
+== backend/pharma\config.py ==
+== backend/pharma\context_services.py ==
+  class EventPurpose L12-17: 
+  class RetrievalPolicy L20-24: 
+  def retrieval_policy L27-38
+  def _graph_enabled L41-42
+  def _policy_version L45-48
+  def retrieval_policy_version L51-52
+  def _matching_event L55-60
+  def retrieve L63-123
+== backend/pharma\dashboard.py ==
+  def _grid_cache_get L16-18
+  def _grid_cache_put L21-25
+  def _number L28-33
+  def focus_analysis L36-82
+  def product_month_grid L85-132
+== backend/pharma\data_import.py ==
+  def _now L71-72
+  def detect_encoding L75-84
+  def normalize_period L87-97
+  def parse_number L100-108
+  def _connect L111-118
+  def _row L121-128
+  def _save L131-136
+  def _folder L139-142
+  def create_upload L147-182
+  def _read_table L185-200
+  def _build_preview L203-220
+  def suggest_mapping L223-231
+  def save_mapping L234-240
+  def validate_business L245-343
+  def _capabilities L346-362
+  def publish_business L367-467
+  def publish_knowledge L470-505
+  def check_template L508-535
+  def preview_original L540-571
+  def original_path L574-578
+  def waiting_imports L581-583
+  def mark_import_status L586-590
+  def publish_business_batch L593-738
+  def write_knowledge_source L741-752
+  def get_import L755-756
+  def list_imports L759-765
+== backend/pharma\decision.py ==
+  def _matching_report_jobs L23-38
+  def evaluate L41-94
+  def _rationale L97-104
+  def advise L107-147
+  def _default_gateway_factory L150-152
+  class DecisionStore L155-209: __init__(L158), _db(L169), get(L179), append(L184), bind_job(L196), list(L200)
+== backend/pharma\docx_compat.py ==
+  def validate_word_compat L20-60
+== backend/pharma\forecasting.py ==
+  def _next_month L29-33
+  def _ols_init L36-48
+  def _holt L51-68
+  def _rolling_holdout L71-84
+  def forecast_series L87-146
+  def _to_float L149-154
+  def forecast_snapshot L157-186
+== backend/pharma\graph.py ==
+  def normalize_entity L23-24
+  def _is_material L35-37
+  def _clean_step L40-49
+  class KnowledgeGraph L52-216: __init__(L55), version_key(L62), load(L66), _chunks(L90), _build(L96), expansion_terms(L185)
+  def graph_for_context L219-226
+== backend/pharma\import_pipeline.py ==
+  class StepFailure L57-63: __init__(L60)
+  def _parse_json_object L66-77
+  def _fail L80-87
+  def _extraction_mapping L92-127
+  def _mapping_for L130-156
+  def _options_for L159-170
+  def _attribution_overview L173-209
+  def _analysis_hypotheses L212-238
+  def run_data_parse L241-321
+  def run_kb_build L326-383
+  def _template_binding_analysis L388-408
+  def run_template_parse L411-459
+== backend/pharma\industry.py ==
+  def digest L30-31
+  class Contract L34-35: 
+  class AnalysisContext L38-52: context_hash(L51)
+  class FactScope L55-70: 
+  class CostFact L73-85: finite(L83)
+  class QuantityFact L88-96: finite(L94)
+  class OptionalFact L99-112: finite(L110)
+  class NormalizedDataset L115-118: 
+  class PackManifest L121-135: 
+  def _production_key L139-141
+  def _optional_ratio L144-180
+  def _machine_hours L183-186
+  def _energy L189-191
+  def load_pack L198-209
+  def list_packs L212-213
+  class ProductConfig L216-219: 
+  class EnterpriseConfig L222-239: local_file(L237)
+  def _load_enterprise_file L242-247
+  def _registered L250-255
+  def _enterprises L258-267
+  def _enterprise L270-275
+  def _read_dataset L278-291
+  def register_enterprise L294-321
+  def knowledge_entry_for_context L324-328
+  def resolve_context L331-359
+  def generation_key L362-364
+  class UnitConversion L367-373: 
+  def convert_quantity L376-386
+  def _check_scope L389-395
+  def aggregate L398-443
+  class PolicyBridge L446-456: 
+  class ComparisonAlignment L459-461: 
+  def _align_base L464-490
+  def compare L493-510
+  def publish_snapshot L513-529
+  def load_snapshot L532-538
+  def import_csv L541-546
+  def capabilities L549-570
+  def _competition_available L573-580
+  def context_catalog L583-608
+  def catalog L611-621
+  def retrieve_reference L624-627
+  def analyze_reference L630-740
+  def benchmark_reference L743-795
+== backend/pharma\industry_rules.py ==
+  def pharmaceutical_rules L8-15
+== backend/pharma\ingestion.py ==
+  def _competition_configuration L21-23
+  def source_contract L25-56
+  def source_contract_hash L59-60
+  def _hash L68-69
+  def inspect_zip L72-93
+  def _kind L96-102
+  def _read L105-127
+  def audit L130-242
+  def ingest L245-292
+  def load_rows L295-307
+== backend/pharma\jobs.py ==
+  def stamp L10-10
+  class JobStore L12-138: __init__(L13), db(L27), snapshot(L32), get_snapshot(L35), enqueue(L39), _decode(L68), get(L73), list(L75), list_jobs(L77), list_reports(L86), latest_report_for_snapshot(L89), artifacts_healthy(L93), next(L102), update(L106), history(L120), artifact(L122), artifact_path(L127)
+== backend/pharma\knowledge.py ==
+  def _string_list L21-24
+  def pharmaceutical_terminology L27-47
+  def terminology_hash L50-51
+  def _term_tokenizer L55-59
+  def source_snapshot L62-65
+  def reciprocal_rank_fusion L68-73
+  def tokenize L76-78
+  class CpuEmbedding L81-105: __init__(L82), encode(L92)
+  def parse_document L108-140
+  def section_blocks L143-186
+  class Knowledge L189-460: __init__(L190), version(L234), status(L238), _model(L244), build(L249), _build(L254), product_matches(L366), evidence_applicability(L376), search(L397)
+== backend/pharma\local_validation.py ==
+  def require_loopback L7-19
+  class NoRedirect L21-23: redirect_request(L22)
+  def local_opener L25-25
+  def require_simulation L27-30
+== backend/pharma\locks.py ==
+  def exclusive L12-27
+  def try_exclusive L30-45
+== backend/pharma\metric_contract.py ==
+  def validate_snapshot L19-53
+== backend/pharma\metrics.py ==
+  def contribution L19-22
+  def threshold_alert L25-27
+  def _decimal L30-31
+  def _text L34-35
+  def change L38-46
+  def _months L49-60
+  def _shift L63-66
+  def _aggregate L69-78
+  def _metric L81-85
+  def catalog L88-92
+  def analyze L95-289
+  def benchmark_partner L292-321
+  def _benchmark_factories L323-326
+  def benchmark L329-361
+  def benchmark_analysis L364-380
+== backend/pharma\model_registry.py ==
+  def _v L39-43
+  def classify_tier L124-138
+  def tier_error L141-150
+  def effort_body_params L153-180
+  def presets_payload L183-187
+== backend/pharma\model_settings.py ==
+  def canonical_route L36-40
+  def _load L43-50
+  def _migrated L53-62
+  def _loopback_host L65-72
+  def _validate_base_url L75-82
+  def _sanitize_overrides L85-104
+  def _validate_connection L107-125
+  def save_settings L128-161
+  def resolve L164-172
+  def status L175-217
+  def test_connection L220-250
+  def list_remote_models L253-276
+  def embedding_dir L281-290
+  def embedding_fingerprint L293-307
+  def set_vector_model L310-318
+  def clear_vector_model L321-324
+  def _probe_dimension_cached L327-360
+  def vector_status L363-391
+== backend/pharma\narrative.py ==
+  def classify_identity L36-45
+  def _quota_exhausted L48-54
+  def _official_zhipu_endpoint L57-61
+  def _safe_endpoint L64-67
+  def normalize_finding L70-92
+  def required_alerts L95-105
+  def comparable_benchmark L108-112
+  def benchmark_metric_refs L115-124
+  def compile_benchmark_scope L127-131
+  def required_explanation_sections L134-140
+  def _metric_role_validation L143-180
+  def compile_alert_facts L183-200
+  def render_visible_text L203-221
+  def bound_periods L224-246
+  def normalize_bound_dates L249-254
+  class DeadlineProposal L257-261: 
+  def parse_deadline_proposal L264-272
+  def _specific_missing L275-288
+  def _insufficient_contract L291-300
+  class Finding L303-320: 
+  class Generation L323-325: 
+  class ProposedAction L328-336: 
+  class TaskExplanation L339-347: 
+  def explanation_tasks L350-377
+  def compile_task_explanations L380-414
+  def finding_role L417-419
+  def metric_map L423-432
+  def quote_matches_product L435-443
+  def _rounded_metric_bindings L446-509
+  def validate_findings L512-657
+  class ModelGateway L660-878: __init__(L668), _headers(L718), for_route(L722), routes_status(L778), complete(L790), _complete(L797)
+  def rule_findings L881-931
+  def generate L934-1099
+== backend/pharma\reference_report.py ==
+  def comparison_basis L11-14
+  def benchmark_unit_of L16-19
+  def verify L21-113
+  def render L115-184
+== backend/pharma\reports.py ==
+  def working_template L31-41
+  def installed_templates L44-58
+  def install_template L61-117
+  def _relayout_front_section L120-180
+  def replace_text_nodes L182-195
+  def binding_semantics L197-219
+  def normalize_template L221-262
+  def number L264-271
+  def _text L273-280
+  def rewrite_template_prose L282-302
+  def _all_paragraphs L305-307
+  def layout_text L309-311
+  def protect_number_units L314-336
+  def report_period_label L339-342
+  def benchmark_precision L345-346
+  def benchmark_labels L349-362
+  def build_bindings L365-481
+  def sanitize_template_identity L483-507
+  def insert_element_analysis L510-522
+  def explanation_presence L525-548
+  def render_docx L551-790
+  def verify_docx L792-832
+  def convert_pdf L834-923
+  def readable_source L926-930
+  def compact_working_template L933-985
+  def rebuild_report_footer L988-1011
+  def keep_source_block L1014-1024
+  def expand_soft_breaks L1027-1042
+  def style_reader L1045-1066
+  def _body_usable_emu L1072-1076
+  def _fit_table_columns L1078-1159
+  def _beautify_native_tables L1161-1212
+  def _number_and_caption L1214-1275
+  def _key_conclusion_lines L1277-1319
+  def _set_east_asia L1321-1329
+  def _ensure_outline_styles L1331-1358
+  def _heading_level L1360-1364
+  def _apply_outline_styles L1366-1380
+  def _fix_reading_guide L1382-1400
+  def _insert_native_toc L1402-1459
+  def add_reader_summary L1462-1520
+  def add_reader_charts L1523-1597
+  def assess_report L1600-1660
+== backend/pharma\reviews.py ==
+  def now L15-15
+  class ReviewStore L18-78: __init__(L19), db(L29), _decode(L36), submit(L39), get(L59), list_for_job(L65), latest_valid(L70)
+== backend/pharma\revision.py ==
+  def _trusted_git_root L8-16
+  def source_files L19-35
+  def code_revision L38-50
+  def revision_record L53-56
+== backend/pharma\synthetic_rpa.py ==
+  class Task L10-11: 
+  def connect L12-13
+  def health L15-15
+  def create L17-23
+  def get L25-28
+== backend/pharma\vector_switch.py ==
+  class SwitchFailure L24-28: __init__(L25)
+  def _probe_local L31-65
+  def _model_adaptation L68-94
+  def run_vector_switch L97-155
+== backend/pharma\versions.py ==
+  def soft_items L17-23
+  def hard_items L26-34
+== backend/pharma\worker.py ==
+  def process_job L8-123
+  def dispatch_loop L125-135
+  def main L137-149

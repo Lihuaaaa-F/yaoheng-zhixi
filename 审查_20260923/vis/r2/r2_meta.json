@@ -1,0 +1,112 @@
+{
+ "shots": [
+  "r2_A1_trend_tooltip",
+  "r2_A2_drawer_viewport",
+  "r2_A3_after_esc",
+  "r2_A4_focus_ring",
+  "r2_B1_bench_before_swap",
+  "r2_B2_swap_table_el",
+  "r2_B2_swap_viewport",
+  "r2_C_kg",
+  "r2_D1024_数据分析",
+  "r2_D1024_跨厂对标",
+  "r2_D1024_业务数据",
+  "r2_D390_数据分析",
+  "r2_D390_跨厂对标",
+  "r2_D390_业务数据",
+  "r2_E_parse_disabled"
+ ],
+ "console": [
+  "warning: geo3D exists.",
+  "warning: geo3D exists.",
+  "warning: Dom has no width or height",
+  "warning: Dom has no width or height",
+  "warning: Dom has no width or height",
+  "warning: Dom has no width or height",
+  "warning: Dom has no width or height",
+  "warning: Dom has no width or height",
+  "warning: Dom has no width or height",
+  "warning: Dom has no width or height",
+  "warning: [ECharts] Instance ec_1790116126415 has been disposed",
+  "warning: [ECharts] DEPRECATED: textStyle hierarchy in label has been removed since 4.0. All textStyle properties are configured in label directly now.",
+  "warning: [.WebGL-0xd4400a72300]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+  "warning: [.WebGL-0xd4400a72300]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+  "warning: [.WebGL-0xd4400a72300]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+  "warning: [.WebGL-0xd4400a72300]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)",
+  "warning: [ECharts] Instance ec_1790116126430 has been disposed",
+  "warning: [ECharts] Instance ec_1790116126430 has been disposed",
+  "warning: [ECharts] Instance ec_1790116126435 has been disposed",
+  "warning: [ECharts] Instance ec_1790116126446 has been disposed"
+ ],
+ "overflow": {
+  "1024_数据分析": {
+   "vw": 1024,
+   "scrollW": 1024,
+   "overflow": false,
+   "samples": []
+  },
+  "1024_跨厂对标": {
+   "vw": 1024,
+   "scrollW": 1024,
+   "overflow": false,
+   "samples": []
+  },
+  "1024_业务数据": {
+   "vw": 1024,
+   "scrollW": 1024,
+   "overflow": false,
+   "samples": []
+  },
+  "390_数据分析": {
+   "vw": 390,
+   "scrollW": 390,
+   "overflow": false,
+   "samples": []
+  },
+  "390_跨厂对标": {
+   "vw": 390,
+   "scrollW": 850,
+   "overflow": true,
+   "samples": [
+    "DIV. right=850",
+    "H3. right=850",
+    "SECTION.panel right=850",
+    "H2. right=835",
+    "P.notice right=835",
+    "DIV. right=850",
+    "H3. right=850",
+    "SECTION.panel right=850"
+   ]
+  },
+  "390_业务数据": {
+   "vw": 390,
+   "scrollW": 390,
+   "overflow": false,
+   "samples": []
+  }
+ },
+ "dom": {
+  "drawer_roles": {
+   "backdrop": "DIV.drawer-backdrop",
+   "hasDialogRole": true,
+   "asideRole": "dialog"
+  },
+  "esc_closed": true,
+  "quarterly_kpi": "六味地黄胶囊 · 中药一厂 · 2026-04 至 2026-06 · 产量 113,000 盒 || 自动重点分析各要素环比严格超过 ±10% 即显示；单位与总额分别判断，恰好 ±10% 不触发。以下通常显示至四位小数，临界值保留必要精度。直接材料 · 总成本 · +23.7238%直接材料总成本由 1,155,210 元变为 1,429,270 元，环比上升 23.7238%，严格超过 ±10%，列为重点分析。缺少经核实的业务原因与对应原始记录；成本变化仅支持待核查假设，不能认定因果。总成本同时受单位成本与产量影响，需分别核查。直接人工 · 总成本 · +18.825%直接人工总成本由 199,150 元变为 236,640 元，环比上升 18.825%，严格超过 ±10%，列为重点分析。缺少经核实的业务原因与对应原始记录；成本变化仅支持待核查假设，不能认定因果。总成本同时受单位成本与产量影响，需分别核查。制造费用 · 总成本 · +18.7946%制造费用总成本由 288,700 元变",
+  "suggestion_dup": {
+   "total": 8,
+   "unique": 8,
+   "samples": [
+    "建议：按同批次核对采购价、投料与合格产出，分别检查采购变化和生产损耗；工艺调整须经质量部门批准。",
+    "建议：核对人员结构、加班及返工工时，区分每盒工时变化与人工费用结构变化。",
+    "建议：逐项核对费用总额、分配基数和产量影响，仅将本期适用工单用于原因核查，避免重复计入维修费。"
+   ]
+  },
+  "swap_table": {
+   "scrollW": 1110,
+   "clientW": 1110,
+   "clipped": false
+  },
+  "parse_btn_disabled_empty": true
+ }
+}

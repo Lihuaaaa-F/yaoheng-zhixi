@@ -1,0 +1,127 @@
+{
+  "K_verdicts": {
+    "K1": "CONFIRMED — r2_A2 中吸顶锚点胶囊栏压在抽屉(dialog)与遮罩之上：像素采样 x=1700(抽屉区域内) y=512-580 为米色栏 (244,245,237)，而其上下抽屉面板为纯白 (255,255,255)，米色条横穿抽屉白面板；左侧被遮罩压暗的页面为 (189,196,201)，但米色栏全程保持原色未被压暗，证明其 z 序高于遮罩+抽屉。r2b_dom.json 证实抽屉为 role=dialog aria-modal=true。属模态层叠错误，建议修复。",
+    "K2": "PARTIAL — 可见证据反驳截断说法：对调后差异总览表 5 列(指标/中药二厂/中药一厂(基准)/差异额/差异率)全部完整可见，r2_B1 与 r2_B2 列结构一致，数值自洽(18.77-17.57=1.20，+6.83%；-89,390/-14.54%；-7,000/-20.00%)。但两轮 B1/B2 截图均只截到页面顶部，第一轮所指的原料明细表在折叠线以下未被捕获，无法就那张表本身下结论。",
+    "K3": "UNVERIFIED — r2_C_kg.png 显示的是知识库数据页顶部(导入数据/导入列表/数据与知识来源)，整帧内不存在任何图谱节点/标签/画布，标签叠字无从复核。需补一张图谱实际渲染区域的截图。",
+    "K4": "CONFIRMED — r2_E 中禁用的解析数据按钮填充色为 rgb(143,188,191) 灰青色，标签为白字(对比度约1.9:1)，呈半透明褪色观感，并非标准禁用灰；且与旁边上传按钮同色同款，禁用态与可用态几乎无法区分。",
+    "K5": "REFUTED — r2_A1 为页面中部视口截图：左侧栏完整渲染一次(01-10 全部菜单+底部区块)，锚点胶囊栏仅在内容区顶部出现一次，无任何重复绘制。支持第一轮重复系 fullPage 拼接伪影的判断。"
+  },
+  "pages": [
+    {
+      "shot": "r2_A1_trend_tooltip.png",
+      "verdict": "pass",
+      "issues": [
+        {
+          "id": "V4-01",
+          "severity": "P3",
+          "issue": "趋势图 tooltip 缺少悬停月份标签，只有系列值",
+          "evidence": "tooltip 内容仅两行：历史: 17.64 元/盒、预测: — 元/盒，无对应 2026-0X 月份/日期行",
+          "fix": "tooltip 首行补悬停点月份(如 2026-04)。"
+        }
+      ]
+    },
+    {
+      "shot": "r2_A2_drawer_viewport.png",
+      "verdict": "fail",
+      "issues": [
+        {
+          "id": "V4-02",
+          "severity": "P1",
+          "issue": "吸顶锚点导航条压在模态证据抽屉与遮罩之上，米色条横穿抽屉白面板(K1)",
+          "evidence": "r2_A2 中米色栏(y约512-580)从遮罩区一直延伸进抽屉区域；像素采样抽屉区内该条为 (244,245,237)，抽屉面板为 (255,255,255)，遮罩下页面为 (189,196,201)，条本身未被压暗；抽屉 aria 为 role=dialog aria-modal=true",
+          "fix": "降低锚点栏 z-index 或抬高抽屉/遮罩层叠上下文，保证 modal 覆盖全部页面元素。"
+        }
+      ]
+    },
+    {
+      "shot": "r2_A3_after_esc.png",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "shot": "r2_A4_focus_ring.png",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "shot": "r2_B1_bench_before_swap.png",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "shot": "r2_B2_swap_table_el.png",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "shot": "r2_B2_swap_viewport.png",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "shot": "r2_C_kg.png",
+      "verdict": "pass",
+      "issues": [
+        {
+          "id": "V4-05",
+          "severity": "P3",
+          "issue": "原生英文文件控件与中文界面/自绘组件风格不一致(本页及业务数据页 D1024/D390/E 均出现)",
+          "evidence": "Choose File / No file chosen 为浏览器原生控件，未做样式封装，页面其余控件均为自绘风格",
+          "fix": "用自绘上传组件封装 input[type=file]，统一中文文案与样式。"
+        }
+      ]
+    },
+    {
+      "shot": "r2_D1024_数据分析.png",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "shot": "r2_D1024_跨厂对标.png",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "shot": "r2_D1024_业务数据.png",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "shot": "r2_D390_数据分析.png",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "shot": "r2_D390_业务数据.png",
+      "verdict": "pass",
+      "issues": []
+    },
+    {
+      "shot": "r2_D390_跨厂对标.png",
+      "verdict": "fail",
+      "issues": [
+        {
+          "id": "V4-03",
+          "severity": "P1",
+          "issue": "390 宽下跨厂对标页横向溢出(实测 scrollWidth 850 > 390)，整页可左右晃动；可见区域顶部正常，溢出源在折叠线以下(几乎可断定为差异总览 5 列表格未做移动端适配)",
+          "evidence": "视口截图顶部导航/筛选卡片右边缘干净无裁切(右缘扫描均为背景色)，但页面 scrollWidth=850；截图未捕获到表格区域",
+          "fix": "为对标表格在窄屏提供容器内横向滚动(overflow-x:auto)或降列/卡片式重排，消除 body 级横向溢出。"
+        }
+      ]
+    },
+    {
+      "shot": "r2_E_parse_disabled.png",
+      "verdict": "fail",
+      "issues": [
+        {
+          "id": "V4-04",
+          "severity": "P2",
+          "issue": "未选文件时解析数据按钮禁用态为半透明褪色的灰青色白字(K4)，不像标准禁用控件，且与上传按钮同色难辨可用性",
+          "evidence": "按钮填充 rgb(143,188,191)、白色标签，对比度约 1.9:1；与右上上传按钮填充色完全相同",
+          "fix": "禁用态改用中性灰填充+深灰文字(对比度>=4.5:1)，或保留主色但加明显降透明度+not-allowed 光标，并与可用主按钮拉开差距。"
+        }
+      ]
+    }
+  ],
+  "console_观察": "无"
+}

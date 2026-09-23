@@ -1,0 +1,69 @@
+{
+  "audit_date": "2026-09-23",
+  "target_repo": "https://github.com/Lihuaaaa-F/yaoheng-zhixi",
+  "fixed_commit": "1f78b2f",
+  "fixed_commit_branch": "origin/main",
+  "branch_check": "所有 9 个远端特性分支均已 0 提交领先 main（rev-list --count main..origin/<b> 全为 0），main 即最新成果",
+  "worktree": "D:/yaoheng-audit-wt-1f78b2f (detached @1f78b2f)",
+  "audit_dir": "D:/重庆市AI大赛/docs/audits/2026-09-23-1f78b2f",
+  "uncommitted_changes_excluded": [
+    "M 药衡智析_增量源码交接/public_source_candidate/05_原型/backend/pharma/api.py",
+    "M 药衡智析_增量源码交接/public_source_candidate/05_原型/backend/pharma/reports.py",
+    "M 药衡智析_增量源码交接/public_source_candidate/05_原型/frontend/src/Analysis.tsx",
+    "M 药衡智析_增量源码交接/public_source_candidate/05_原型/frontend/src/App.tsx",
+    "M 药衡智析_增量源码交接/public_source_candidate/05_原型/frontend/src/Benchmark.tsx",
+    "M 药衡智析_增量源码交接/public_source_candidate/05_原型/frontend/src/DecisionCard.tsx",
+    "M 药衡智析_增量源码交接/public_source_candidate/05_原型/frontend/src/NarrativePanel.tsx",
+    "M 药衡智析_增量源码交接/public_source_candidate/05_原型/frontend/src/style.css"
+  ],
+  "untracked_excluded": [".zcodeignore", "审查_20260923/", "frontend/_probe*.{mjs,png}", "frontend/shot-final.mjs"],
+  "method": {
+    "mode": "portable/manual（本客户端无 Claude 原生 Workflow 斜杠命令，按任务书第7条文件加载技能文本后人工执行方法）",
+    "main_skills": [
+      {"name": "audit-context-building", "source": "https://github.com/trailofbits/skills", "rev": "32e34f8173796e3566a51aee877dc96bc5191f64",
+       "path_wsl": "~/.cache/yaoheng-audit-skills/trailofbits-32e34f8173796e3566a51aee877dc96bc5191f64/plugins/audit-context-building",
+       "applied_to": "函数级假设/依赖分析（11个子代理+主审亲读）"},
+      {"name": "spec-to-code-compliance", "source": "同上", "rev": "同上",
+       "path_wsl": "~/.cache/yaoheng-audit-skills/trailofbits-32e34f8173796e3566a51aee877dc96bc5191f64/plugins/spec-to-code-compliance",
+       "applied_to": "赛题原文→原子REQ→六值判定+搜索记录"}
+    ],
+    "aux_skill": {"name": "codebase-design (Matt Pocock)", "path": "C:/Users/ShiyuFang/.zcode/skills/codebase-design/SKILL.md",
+                  "applied_to": "改进方案的深模块/接口/接缝比较（仅架构建议用）"},
+    "optional_skills_read": false,
+    "multi_agent": "11 个互不覆盖子代理（general-purpose Agent tool）分模块深读并落盘 EVIDENCE/agent_*_findings.md；P0/P1 级发现由主审亲自复核（含动态复现/哈希重算/CI配方核查），非冒充独立多代理复核：跨发现反证由主审完成",
+    "refuted_findings": [
+      "tests-agent R0『前端单测不在 CI』——被主审核查 .github/workflows/application.yml 推翻（CI 明确运行 node --test frontend/record_demo_20260918.test.mjs）",
+      "industry-agent I-1『空部署 /api/catalog 500』——主审 TestClient 复现返回 200（题包上下文兜底），降级为待验证 P3"
+    ]
+  },
+  "dynamic_verification": {
+    "backend_tests": {"cmd": "PYTHONPATH=backend pytest -q tests（CI 配方: PYTEST_DISABLE_PLUGIN_AUTOLOAD=1, 三密钥环境变量置空）",
+                      "env": "worktree + 主树 .venv（Python 3.12.7）", "result": "387 passed, 1 skipped (LibreOffice unavailable), 33s"},
+    "frontend_build": {"cmd": "npm ci --ignore-scripts && npm run build", "result": "通过（15.4s，仅 chunk>800kB 警告）"},
+    "numeric_recomputation": {"script": "EVIDENCE/repro_numeric_independent.py",
+      "result": "11/11 项零误差（环比/同比/预算偏差/三要素贡献度/对标差异金额+差异率，银黄口服液 2026-06，独立 csv+Decimal 推导 vs 引擎）"},
+    "p0_import_repro": {"script": "EVIDENCE/repro_import_dimension.py",
+      "result": "确认：题包成本汇总 CSV 经 UI 同款链路发布，总成本 10.70 元（真值 481500 元），校验 VALID 零警告"},
+    "p0_delivery_hash": {"result": "确认：manifest(ded9267) 6 哈希与 delivery_20260921 现有 10 文件零匹配，S3 板蓝根不在 manifest"},
+    "openpyxl_lock_gap": {"result": "确认：requirements.lock 0 命中 openpyxl / requirements.txt 1 命中；CI 从 lock 安装；测试无 xlsx 用例"},
+    "not_run_live": ["RPA mock server 端到端实发（单测级故障注入已覆盖，见 test_actions/test_gateway_failover）",
+                     "Docker/compose 实机构建与启动（本机审查不装 Docker；部署发现标注待实测）",
+                     "模型真实外呼（无凭据证据，全部标注待实测）"]
+  },
+  "coverage_summary": {
+    "backend_own_files": "33/33 已读（8 个核心引擎文件主审亲读：metrics/attribution/dashboard/decision/forecasting/metric_contract/config+data_import关键段；其余 25 个子代理全读）",
+    "backend_symbols": "479 函数已枚举（AST），逐函数记录见 EVIDENCE/symbols_backend.txt 与 agent_*_findings.md",
+    "frontend_src": "27/27 已读（子代理）+ e2e/record 脚本 7 个（子代理只读）",
+    "tests": "38+1 文件全读（子代理）；本轮实跑 388 用例",
+    "scripts_deploy_ci": "16+4+2+1(bat)+tools 1 已读（子代理）",
+    "industry_packs": "25/25 已读（子代理）",
+    "data_docs_delivery": "目录级抽样审查（赛题资料关键件全读；交付/验证目录抽样+哈希对拍）；详见 COVERAGE.csv 分组行",
+    "excluded": "node_modules/.venv/构建产物/第三方依赖安装目录（仅查版本与许可证面）、字体二进制、PDF/DOCX 二进制内容（文本/元数据层已提取）"
+  },
+  "remaining_gaps": [
+    "视觉项全部转 VISUAL_HANDOFF.md（报告版式/视频画面/PPT渲染/前端观感/Word实际打开）",
+    "RPA mock 实发、真实模型调用、Docker 实机、净机 Windows 双击流程：待实测",
+    "01_数据/02_知识库 运行时目录仅抽样（与题包一致性由 ingestion 校验链覆盖）"
+  ],
+  "resume_point": "非视觉审查完成；如需续接，从 REVIEW.md 修复跟踪表与 VISUAL_HANDOFF.md 开始"
+}

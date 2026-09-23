@@ -1,0 +1,92 @@
+
+---PART2---
+[
+ {
+  "shot": "s_quarterly_季度分析",
+  "errorBox": null,
+  "console": [
+   "warning: Dom has no width or height",
+   "warning: Dom has no width or height",
+   "warning: Dom has no width or height",
+   "warning: Dom has no width or height",
+   "warning: Dom has no width or height",
+   "warning: Dom has no width or height",
+   "warning: Dom has no width or height"
+  ],
+  "net": [
+   "FAILED http://127.0.0.1:5174/api/agent/decision?context_id=pharmaceutical%3Acompetition&factory=%E4%B8%AD%E8%8D%AF%E4%B8%80%E5%"
+  ]
+ },
+ {
+  "shot": "s_special_专题分析",
+  "errorBox": null,
+  "console": [
+   "warning: Dom has no width or height",
+   "warning: Dom has no width or height",
+   "warning: Dom has no width or height",
+   "warning: Dom has no width or height",
+   "warning: Dom has no width or height",
+   "warning: Dom has no width or height",
+   "warning: Dom has no width or height"
+  ],
+  "net": [
+   "FAILED http://127.0.0.1:5174/api/agent/decision?context_id=pharmaceutical%3Acompetition&factory=%E4%B8%AD%E8%8D%AF%E4%B8%80%E5%"
+  ]
+ },
+ {
+  "shot": "s_basis_total_总额口径",
+  "errorBox": null,
+  "console": [
+   "warning: Dom has no width or height",
+   "warning: Dom has no width or height",
+   "warning: Dom has no width or height",
+   "warning: Dom has no width or height",
+   "warning: [ECharts] Instance ec_1790114762974 has been disposed",
+   "warning: Dom has no width or height",
+   "warning: Dom has no width or height",
+   "warning: Dom has no width or height"
+  ],
+  "net": [
+   "FAILED http://127.0.0.1:5174/api/agent/decision?context_id=pharmaceutical%3Acompetition&factory=%E4%B8%AD%E8%8D%AF%E4%B8%80%E5%",
+   "FAILED http://127.0.0.1:5174/api/agent/decision?context_id=pharmaceutical%3Acompetition&factory=%E4%B8%AD%E8%8D%AF%E4%B8%80%E5%",
+   "FAILED http://127.0.0.1:5174/api/forecast?context_id=pharmaceutical%3Acompetition&factory=%E4%B8%AD%E8%8D%AF%E4%B8%80%E5%8E%82&",
+   "FAILED http://127.0.0.1:5174/api/attribution?context_id=pharmaceutical%3Acompetition&factory=%E4%B8%AD%E8%8D%AF%E4%B8%80%E5%8E%"
+  ]
+ },
+ {
+  "shot": "p4_跨厂对标",
+  "errorBox": null,
+  "console": [
+   "warning: [ECharts] Instance ec_1790114762991 has been disposed",
+   "warning: [ECharts] Instance ec_1790114762996 has been disposed",
+   "warning: Dom has no width or height"
+  ],
+  "net": [
+   "FAILED http://127.0.0.1:5174/api/agent/decision?context_id=pharmaceutical%3Acompetition&factory=%E4%B8%AD%E8%8D%AF%E4%B8%80%E5%",
+   "FAILED http://127.0.0.1:5174/api/forecast?context_id=pharmaceutical%3Acompetition&factory=%E4%B8%AD%E8%8D%AF%E4%B8%80%E5%8E%82&",
+   "FAILED http://127.0.0.1:5174/api/attribution?context_id=pharmaceutical%3Acompetition&factory=%E4%B8%AD%E8%8D%AF%E4%B8%80%E5%8E%",
+   "FAILED http://127.0.0.1:5174/api/agent/decision?context_id=pharmaceutical%3Acompetition&factory=%E4%B8%AD%E8%8D%AF%E4%B8%80%E5%",
+   "FAILED http://127.0.0.1:5174/api/forecast?context_id=pharmaceutical%3Acompetition&factory=%E4%B8%AD%E8%8D%AF%E4%B8%80%E5%8E%82&",
+   "FAILED http://127.0.0.1:5174/api/attribution?context_id=pharmaceutical%3Acompetition&factory=%E4%B8%AD%E8%8D%AF%E4%B8%80%E5%8E%",
+   "FAILED http://127.0.0.1:5174/api/jobs?context_id=pharmaceutical%3Acompetition"
+  ]
+ },
+ {
+  "shot": "s_swap_对调基准",
+  "errorBox": null,
+  "console": [],
+  "net": []
+ },
+ {
+  "shot": "p_报告生成",
+  "errorBox": null,
+  "console": [],
+  "net": []
+ },
+ {
+  "shot": "p_问题整改",
+  "errorBox": null,
+  "console": [],
+  "net": []
+ }
+]

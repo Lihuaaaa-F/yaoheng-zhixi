@@ -1,0 +1,260 @@
+{
+  "status": "VALID",
+  "errors": [],
+  "arithmetic_groups": {
+    "labor_quantity_join": {
+      "observations": 18,
+      "failures": []
+    },
+    "labor_total": {
+      "observations": 18,
+      "failures": []
+    },
+    "expenses_quantity_join": {
+      "observations": 90,
+      "failures": []
+    },
+    "expenses_total": {
+      "observations": 90,
+      "failures": []
+    },
+    "materials_quantity_join": {
+      "observations": 108,
+      "failures": []
+    },
+    "materials_total": {
+      "observations": 108,
+      "failures": []
+    },
+    "materials_share": {
+      "observations": 108,
+      "failures": []
+    },
+    "cost_unit_sum": {
+      "observations": 72,
+      "failures": []
+    },
+    "cost_total": {
+      "observations": 72,
+      "failures": []
+    },
+    "budget_unit_sum": {
+      "observations": 18,
+      "failures": []
+    },
+    "budget_total": {
+      "observations": 18,
+      "failures": []
+    },
+    "materials_share_rollup": {
+      "observations": 18,
+      "failures": []
+    },
+    "materials_unit_rollup": {
+      "observations": 18,
+      "failures": []
+    },
+    "materials_total_rollup": {
+      "observations": 18,
+      "failures": []
+    },
+    "expenses_unit_rollup": {
+      "observations": 18,
+      "failures": []
+    },
+    "expenses_total_rollup": {
+      "observations": 18,
+      "failures": []
+    }
+  },
+  "arithmetic_observations": 810,
+  "continuity_groups": 51,
+  "continuity_failures": [],
+  "notes": [
+    "8小时工时关系仅诊断假设，未作为失败规则",
+    "金额Decimal；比例容差为该行展示最小精度的一半百分点"
+  ],
+  "snapshot_id": "c1aad5085efda76abf45fbb5649be9d30dd5b569d355abe3e7b19ae1a5edde7f",
+  "contract_version": "data-contract-2-finite",
+  "masterdata_hash": "d178a78ce30df774e2878eb0ed5abead7e80852633b82f28f1f28aabaa596011",
+  "row_count": 334,
+  "files": [
+    {
+      "path": "01_成本明细数据\\中药一厂_人工工时明细_2026年1-6月.csv",
+      "sha256": "cb4d519b474fe144dcbba64988039e60d5207c3bc44c5927e903bdf5ba4bf323",
+      "rows": 18,
+      "encoding": "UTF-8 BOM",
+      "fields": [
+        "工厂",
+        "产品名称",
+        "产品规格",
+        "月份",
+        "产量(盒)",
+        "直接人工总额(元)",
+        "总工时(小时)",
+        "生产人数(人)",
+        "工作天数(天)"
+      ]
+    },
+    {
+      "path": "01_成本明细数据\\中药一厂_制造费用明细_2026年1-6月.csv",
+      "sha256": "9fe8245f517e8cd787d58e9113f93d08521043975a4997dead3329e12caee90f",
+      "rows": 90,
+      "encoding": "UTF-8 BOM",
+      "fields": [
+        "工厂",
+        "产品名称",
+        "产品规格",
+        "月份",
+        "产量(盒)",
+        "费用类别",
+        "单位费用(元/盒)",
+        "费用总额(元)"
+      ]
+    },
+    {
+      "path": "01_成本明细数据\\中药一厂_原材料消耗明细_2026年1-6月.csv",
+      "sha256": "911cb2ac45043f027848df6ad7daea55c0f3d6b4d2a2397a783abfb1b71be8d5",
+      "rows": 108,
+      "encoding": "UTF-8 BOM",
+      "fields": [
+        "工厂",
+        "产品名称",
+        "产品规格",
+        "月份",
+        "产量(盒)",
+        "原材料名称",
+        "单位消耗成本(元/盒)",
+        "原材料总成本(元)",
+        "占总材料成本比例"
+      ]
+    },
+    {
+      "path": "01_成本明细数据\\中药一厂_成本汇总_2025年1-6月.csv",
+      "sha256": "a0d573417032d3fa865af82567fc81e1cad151678fe4f4fd77464f259fc3d96b",
+      "rows": 18,
+      "encoding": "UTF-8 BOM",
+      "fields": [
+        "工厂",
+        "产品名称",
+        "产品规格",
+        "月份",
+        "产量(盒)",
+        "直接材料(元/盒)",
+        "直接人工(元/盒)",
+        "制造费用(元/盒)",
+        "单位成本(元/盒)",
+        "总成本(元)"
+      ]
+    },
+    {
+      "path": "01_成本明细数据\\中药一厂_成本汇总_2026年1-6月.csv",
+      "sha256": "08b6be09c9297d8df82b346cfa83507f34a278d7a000187960768d9bb4931c26",
+      "rows": 18,
+      "encoding": "UTF-8 BOM",
+      "fields": [
+        "工厂",
+        "产品名称",
+        "产品规格",
+        "月份",
+        "产量(盒)",
+        "直接材料(元/盒)",
+        "直接人工(元/盒)",
+        "制造费用(元/盒)",
+        "单位成本(元/盒)",
+        "总成本(元)"
+      ]
+    },
+    {
+      "path": "01_成本明细数据\\中药一厂_预算数据_2026年.csv",
+      "sha256": "987526c99f4a98a2775830c110506460a6027eafcf9d6cf7a07a01eb74cef9aa",
+      "rows": 18,
+      "encoding": "UTF-8 BOM",
+      "fields": [
+        "工厂",
+        "产品名称",
+        "产品规格",
+        "月份",
+        "预算产量(盒)",
+        "预算直接材料(元/盒)",
+        "预算直接人工(元/盒)",
+        "预算制造费用(元/盒)",
+        "预算单位成本(元/盒)",
+        "预算总成本(元)"
+      ]
+    },
+    {
+      "path": "01_成本明细数据\\中药二厂_成本汇总_2025年1-6月.csv",
+      "sha256": "37dfacdddb93cda4d1d0df4f42043b48bc27429121d58384dfec51d7bb42eb09",
+      "rows": 18,
+      "encoding": "UTF-8 BOM",
+      "fields": [
+        "工厂",
+        "产品名称",
+        "产品规格",
+        "月份",
+        "产量(盒)",
+        "直接材料(元/盒)",
+        "直接人工(元/盒)",
+        "制造费用(元/盒)",
+        "单位成本(元/盒)",
+        "总成本(元)"
+      ]
+    },
+    {
+      "path": "01_成本明细数据\\中药二厂_成本汇总_2026年1-6月.csv",
+      "sha256": "8cb6f41faaa944f98060b0ae2e3fc989420cad0d0b03227dd160127567f3b240",
+      "rows": 18,
+      "encoding": "UTF-8 BOM",
+      "fields": [
+        "工厂",
+        "产品名称",
+        "产品规格",
+        "月份",
+        "产量(盒)",
+        "直接材料(元/盒)",
+        "直接人工(元/盒)",
+        "制造费用(元/盒)",
+        "单位成本(元/盒)",
+        "总成本(元)"
+      ]
+    },
+    {
+      "path": "02_行业参考数据\\药材市场价格行情_2026年上半年.csv",
+      "sha256": "44210be6e6fdb89e0212e544f63cd5f8cfe72389716019c1ddffcc5032cdf94c",
+      "rows": 13,
+      "encoding": "UTF-8 BOM",
+      "fields": [
+        "药材名称",
+        "规格等级",
+        "单位",
+        "1月价格",
+        "2月价格",
+        "3月价格",
+        "4月价格",
+        "5月价格",
+        "6月价格",
+        "价格来源",
+        "趋势分析"
+      ]
+    },
+    {
+      "path": "02_行业参考数据\\行业成本基准数据_2026.csv",
+      "sha256": "31fa1383e2cf2c9d38da3eee3d5398b207c1806a6b67bb18e222f6eddf4154ed",
+      "rows": 15,
+      "encoding": "UTF-8 BOM",
+      "fields": [
+        "产品类别",
+        "指标",
+        "行业P25",
+        "行业P50",
+        "行业P75",
+        "本厂水平(中药一厂)",
+        "对标评价"
+      ]
+    }
+  ],
+  "created_at": "2026-09-22T19:35:03.982644+00:00",
+  "parquet": "c1aad5085efda76abf45fbb5649be9d30dd5b569d355abe3e7b19ae1a5edde7f.parquet",
+  "parquet_hash": "fa0fe4b41dc6885faee9a76d768ffd8103b13bc97346184e5e3820f6d34efcb1"
+}

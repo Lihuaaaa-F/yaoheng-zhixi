@@ -1,0 +1,56 @@
+{
+  "audit_id": "20260923-1f78b2f",
+  "date": "2026-09-23",
+  "reviewer": "GLM-5.3 (ZCode session, no visual capability)",
+  "target": {
+    "repo": "github.com/Lihuaaaa-F/yaoheng-zhixi",
+    "branch": "main",
+    "commit": "1f78b2f74aadebb8a48d37aa5baab70a71dfc461",
+    "verified_remote_match": true,
+    "worktree": "D:\\tmp\\yaoheng_audit_wt_1f78b2f (detached, clean)",
+    "uncommitted_changes_excluded": "主工作区 8 文件 +217/-31（reports/api/前端5文件）及未跟踪探针文件，未纳入审查"
+  },
+  "method": {
+    "skills": {
+      "trailofbits_skills_rev": "32e34f8173796e3566a51aee877dc96bc5191f64",
+      "mode": "portable/manual（客户端无原生斜杠工作流）",
+      "applied": ["audit-context-building", "spec-to-code-compliance", "agents/function-analyzer.md", "agents/spec-compliance-checker.md"],
+      "auxiliary": "matt-pocock codebase-design v1.2.3（本机安装）",
+      "cache_path": "~/.cache/yaoheng-audit-skills/trailofbits-32e34f8… (WSL Ubuntu-20.04)"
+    },
+    "independent_refutation": "4 项关键发现经独立子任务反证复核（agent_af760f40，非同一推理上下文）",
+    "baselines": {
+      "old_audits_used_as": "回归线索（问题清单_20260921 等），全部逐项重新验证，未沿用旧判定",
+      "requirements_source": "题包 DOCX 原文（160 段+5 表全提取），非项目转写版"
+    }
+  },
+  "verification_runs": {
+    "pytest_isolated": {"result": "387 passed, 1 skipped, exit 0, 28.9s"},
+    "independent_numeric_recalc": {"result": "81/81 一致（含对标显式方向复验）；6 项初判失败系审查脚本方向假设错误，已归档为 AUD-BENCH-02"},
+    "rpa_e2e_original_mock": {"result": "草稿幂等/确认/SENT/SIMULATED_SENT/重复投递不重发/回执回显 全过"},
+    "rag_isolated": {"result": "build PASS 180 chunks/11 sources/0 failures；hybrid+bm25+vector+范围过滤+诚实降级 全过"},
+    "model_test": {"result": "PASS glm-5.3 VERIFIED_EXACT 结构化 1.45s（1 次短调用）"},
+    "report_e2e": {"result": "DEGRADED(人工待评)｜narrative PASS model_live VERIFIED 3 calls｜docx PASS pdf PASS 13页｜机器可证五维 PASS"}
+  },
+  "findings_summary": {
+    "P0": 0, "P1": 0,
+    "P2": ["AUD-DATA-01", "AUD-DATA-02"],
+    "P3": ["AUD-BENCH-01", "AUD-BENCH-02", "AUD-TPL-01", "AUD-MODEL-01", "AUD-KB-01", "AUD-M2-10"],
+    "shared_root_causes": {"FIX-DATA-01": ["AUD-DATA-01", "AUD-DATA-02"]},
+    "old_risks_reverified": "8 项历史风险全部本版已修（单位标注/检索范围/验收协议/模型路由/降级重试/损坏产物/分页/worker就绪）"
+  },
+  "coverage": {
+    "own_source_files": {"total": 91, "full": 74, "partial": 17, "excluded": "依赖/锁文件/运行时/大二进制（原因见 COVERAGE.csv）"},
+    "backend_symbols": "471/471 经文件通读覆盖（symbols_backend.tsv）",
+    "requirements": "65 条原子要求全部有状态（REQUIREMENTS.csv，66 行含表头）",
+    "dynamic": "后端链路+RAG+RPA+模型+报告端到端；前端浏览器端与 Docker 净机构建未运行（缺口已列明）"
+  },
+  "deliverables": ["REVIEW.md", "COVERAGE.csv", "REQUIREMENTS.csv", "SOURCES.md", "VISUAL_HANDOFF.md", "STATE.json", "EVIDENCE/*"],
+  "evidence_dir": "docs/audits/20260923-1f78b2f/EVIDENCE/",
+  "remaining_work": {
+    "visual_or_human": ["V-01 报告逐页视觉", "V-02 三场景真人0-5评分", "V-03 界面视觉交互", "V-04 演示视频画面", "V-05 PPT核对", "V-06 净机Docker演练", "V-07 公开可见性最终确认", "V-08 数据公开边界官方确认"],
+    "code_fixes_recommended_order": ["FIX-DATA-01(P2×2)", "AUD-TPL-01+AUD-BENCH-02", "AUD-MODEL-01/DEP-03/M2-10(可选)"]
+  },
+  "final_statement": "非视觉审查完成；比赛整体验收仍有列明的待验证项。",
+  "integrity_note": "本轮未修改任何被审查业务代码/正式数据/现有测试；仅写入 docs/audits/20260923-1f78b2f/ 与临时目录 D:\\tmp\\*"
+}
