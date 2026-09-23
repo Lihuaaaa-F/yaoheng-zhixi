@@ -18,6 +18,7 @@ import json
 import re
 import shutil
 import sqlite3
+import threading
 import time
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
@@ -109,13 +110,35 @@ def parse_number(value: str) -> Decimal | None:
     return number if number.is_finite() else None
 
 
+_imports_db_lock = threading.Lock()
+_imports_db_ready = False
+
+
+def _init_imports_db() -> None:
+    """建表 DDL 每进程只执行一次（2026-09-23 审查 SSE-18：原先 _connect 每次连接都跑一遍）。
+
+    模块级旗标随 importlib.reload 重置（测试 isolated_runtime 换运行时目录时重建），生命周期一致。
+    """
+    global _imports_db_ready
+    with _imports_db_lock:
+        if _imports_db_ready:
+            return
+        IMPORTS_ROOT.mkdir(parents=True, exist_ok=True)
+        db = sqlite3.connect(IMPORT_DB)
+        try:
+            db.execute('CREATE TABLE IF NOT EXISTS imports(id TEXT PRIMARY KEY,kind TEXT,status TEXT,'
+                       'filename TEXT,encoding TEXT,size INTEGER,sha256 TEXT,created TEXT,updated TEXT,'
+                       'meta TEXT NOT NULL)')
+            db.commit()
+        finally:
+            db.close()
+        _imports_db_ready = True
+
+
 def _connect():
-    IMPORTS_ROOT.mkdir(parents=True, exist_ok=True)
+    _init_imports_db()
     db = sqlite3.connect(IMPORT_DB)
     db.row_factory = sqlite3.Row
-    db.execute('CREATE TABLE IF NOT EXISTS imports(id TEXT PRIMARY KEY,kind TEXT,status TEXT,'
-               'filename TEXT,encoding TEXT,size INTEGER,sha256 TEXT,created TEXT,updated TEXT,'
-               'meta TEXT NOT NULL)')
     return db
 
 
