@@ -23,6 +23,11 @@ try {
   await panel.waitFor({ state: 'visible', timeout: 20000 });
   await panel.scrollIntoViewIfNeeded();
   await page.waitForTimeout(4000);
+  // 2026-09-23：Chart3D 改为 React.lazy 动态块（审查 SSE-16），canvas 出现晚于面板可见，
+  // 且挂载会把内容撑出视口——测量/截图前必须等 canvas 并重新滚动到可视区，否则 clip 越界。
+  await panel.locator('canvas').first().waitFor({ state: 'visible', timeout: 20000 });
+  await panel.locator('canvas').first().scrollIntoViewIfNeeded();
+  await page.waitForTimeout(300);
 
   // 1) 大窗口
   const box = await panel.locator('canvas').first().boundingBox();
@@ -37,6 +42,8 @@ try {
     fsBox ? `${Math.round(fsBox.width)}x${Math.round(fsBox.height)}` : 'no canvas');
   await panel.getByRole('button', { name: '退出全屏' }).click();
   await page.waitForTimeout(900);
+  await panel.locator('canvas').first().scrollIntoViewIfNeeded();
+  await page.waitForTimeout(300);
 
   // canvas 中心；注意 OrbitControl 在 e.target 非空（点在节点/边符号上）时
   // 不启动旋转——交互手势必须从空白区域开始。
