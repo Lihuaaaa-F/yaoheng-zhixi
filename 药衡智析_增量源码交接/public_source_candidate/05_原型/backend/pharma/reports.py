@@ -1099,31 +1099,14 @@ def convert_pdf(docx_path,timeout=90,converter='libreoffice',_toc_pass=0):
                     if candidate._p.xpath('.//w:drawing'):break
                     if candidate.text.strip() and not re.match(r'^[一二三四五六七八九十]+、|^[1-9]\.\d+(?:\.\d+)?\s+',candidate.text.strip()):break
                     start=candidate;previous=previous.getprevious()
-                # 孤儿标题补救：keep-with-next（2026-09-21 五轮：page_break_before
-                # 会把标题强推新页、在上一页留下大片空白；keepNext 只把标题与后续
-                # 首段绑在一起移动，空白上界为后续首段高度）。
-                # 例外（2026-09-23 视觉验收）：标题后（可隔题注等空段）紧跟表
-                # 格时 LibreOffice 不跨块 honoring keepNext（3.1.1 悬在页底而
-                # 表在下页）——此时改用 page_break_before，标题带着它的表格
-                # 整体到新页，上一页空出的本来就是标题孤行所占的行。
-                _nxt=start._p.getnext();_leads_tbl=False
-                while _nxt is not None and _nxt.tag==qn('w:p'):
-                    if _nxt.findall('.//'+qn('w:drawing')):break
-                    _nxt=_nxt.getnext()
-                if _nxt is not None and _nxt.tag==qn('w:tbl'):_leads_tbl=True
-                if _leads_tbl or _toc_pass>=2:
-                    # 首轮用 keep-with-next 温和补救；第2轮仍孤行说明
-                    # LibreOffice 对长 keepNext 链（标题+空段+图+题注）不生效
-                    # （5.1 实测），强制分页——上一页空出的本就是孤行所占行。
-                    if not start.paragraph_format.page_break_before:
-                        start.paragraph_format.page_break_before=True;layout_changed=True
-                else:
-                    if not start.paragraph_format.keep_with_next:
-                        start.paragraph_format.keep_with_next=True;layout_changed=True
-                    # 回溯可能越过孤儿标题本身（空段+上级章标题），孤儿段必须
-                    # 自身也绑定下一段，否则 keepNext 设在了别处（5.1 悬页底实测）
-                    if not paragraph.paragraph_format.keep_with_next:
-                        paragraph.paragraph_format.keep_with_next=True;layout_changed=True
+                # 孤儿标题补救（2026-09-24 统一为 page_break_before）：旧方案首轮
+                # keep-with-next 温和补救、无效再升级 PBB——但 keepNext 会以 Word
+                # 页边黑色小方块编辑标记的形式残留在成品里（用户裁定视为项目
+                # 符号，一律不得出现），且 LibreOffice 对长 keepNext 链本就不
+                # 生效（5.1 实测）故经常白设。现直接 PBB：标题带其后内容整体
+                # 到新页，上一页空出的本就是孤行所占的行。
+                if not start.paragraph_format.page_break_before:
+                    start.paragraph_format.page_break_before=True;layout_changed=True
         # 原生目录域缓存条目回填实际页码（2026-09-22）：条目文本与页码都在
         # w:hyperlink 内，Paragraph.text 取不到，按 XML 定位；页码为条目段
         # 最后一个 w:t。条目文本匹配优先子标题页码表，回退六章页码表。
@@ -1145,6 +1128,8 @@ def convert_pdf(docx_path,timeout=90,converter='libreoffice',_toc_pass=0):
         if _toc_pass<5 and (layout_changed or toc_updated):
             d.save(path)
             return convert_pdf(path,timeout,converter,_toc_pass+1)
+        _strip_keep_with_next(d)  # 兜底：多轮修复中任何残存的 keepNext/keepLines 一并摘除
+        d.save(path)
         return {'status':'PASS','scope':'file_conversion','toc_updated':bool(toc_verified) and len(toc_verified)>=len(toc_entry_paras) and not toc_updated,'orphan_headings':orphan_headings,'toc_pages':page_map,'path':str(pdf),'pages':pages,'sha256':hashlib.sha256(pdf.read_bytes()).hexdigest()}
     except (OSError,subprocess.TimeoutExpired) as exc:return {'status':'FAILED','reason':type(exc).__name__}
 

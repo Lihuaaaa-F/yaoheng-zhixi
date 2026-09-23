@@ -154,6 +154,9 @@ def render(snapshot,narrative,evidence,output,benchmark=None):
                 image=Path(output).with_suffix('.png');image.parent.mkdir(parents=True,exist_ok=True);fig.savefig(image,dpi=150);plt.close(fig)
                 from docx.shared import Cm
                 doc.add_picture(str(image),width=Cm(17))
+                # 2026-09-24 用户要求：每张图必须有标题——"图｜"前缀供
+                # _number_and_caption 改写为"图几-几 标题"。
+                paragraph('图｜单位成本趋势')
         elif index==3:
             for key in pack.strategies:paragraph({'machine_hours_per_piece':'单位产品机时','energy_per_kg':'单位合格产出能耗'}.get(key,key)+'：'+number(m[key])+' '+m[key]['unit'])
             paragraph('专用指标以明确驱动事实计算，数值和阈值均为合成假定，不是行业基准。')
@@ -178,7 +181,12 @@ def render(snapshot,narrative,evidence,output,benchmark=None):
                 if c['status']!='available':paragraph(c['name']+'：'+str(c.get('reason')))
     paragraph('证据来源')
     for e in evidence.get('evidence',[]):paragraph((e.get('title') or '合成知识条目')+' · '+e.get('location','独立模拟条目'))
-    style_reader(doc);output=Path(output);output.parent.mkdir(parents=True,exist_ok=True);doc.save(output)
+    # 2026-09-24 与主报告路径同版式合同：全表/全图题注 + 存盘前摘除
+    # keepNext/keepLines（Word 页边黑色小方块编辑标记，用户不接受）。
+    from .reports import _number_and_caption,_strip_keep_with_next
+    _number_and_caption(doc)
+    style_reader(doc);_strip_keep_with_next(doc)
+    output=Path(output);output.parent.mkdir(parents=True,exist_ok=True);doc.save(output)
     check=verify(output,snapshot,benchmark)
     if check['status']!='PASS':raise ValueError('REPORT_CONTRACT_FAILED')
     return {'status':'PASS','scope':'file_generation','path':str(output),'sha256':hashlib.sha256(output.read_bytes()).hexdigest(),'verification':check}
