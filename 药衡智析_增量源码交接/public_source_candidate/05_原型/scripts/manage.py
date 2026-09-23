@@ -87,11 +87,28 @@ def main():
     api_port=int(os.getenv('PHARMA_API_PORT','8765'));rpa_port=int(os.getenv('PHARMA_RPA_PORT','8090'))
     env['RPA_BASE_URL']=f'http://127.0.0.1:{rpa_port}'
     env['PHARMA_RPA_SIMULATION']='1'
+    # uvicorn 默认日志不带时间戳——2026-09-24 凌晨 api 进程对无痕消失时
+    # （无错误日志、无 WER 崩溃事件、机器未重启）完全无法定位死亡时刻。
+    # 统一注入带 asctime 的日志配置，此后服务日志逐行可对时间线。
+    logcfg=RUN/'uvicorn_log.json'
+    logcfg.write_text(json.dumps({
+        'version':1,'disable_existing_loggers':False,
+        'formatters':{
+            'default':{'()':'uvicorn.logging.DefaultFormatter','fmt':'%(asctime)s %(levelprefix)s %(message)s','datefmt':'%Y-%m-%d %H:%M:%S'},
+            'access':{'()':'uvicorn.logging.AccessFormatter','fmt':'%(asctime)s %(levelprefix)s %(client_addr)s - "%(request_line)s" %(status_code)s','datefmt':'%Y-%m-%d %H:%M:%S'}},
+        'handlers':{
+            'default':{'formatter':'default','class':'logging.StreamHandler','stream':'ext://sys.stderr'},
+            'access':{'formatter':'access','class':'logging.StreamHandler','stream':'ext://sys.stdout'}},
+        'loggers':{
+            'uvicorn':{'handlers':['default'],'level':'INFO','propagate':False},
+            'uvicorn.error':{'level':'INFO'},
+            'uvicorn.access':{'handlers':['access'],'level':'INFO','propagate':False}}},indent=1))
+    uvicorn_args=['--log-config',str(logcfg)]
     # 冷启动顺序：rpa → api → worker。worker 的就绪判据是 api /health 的
     # 心跳，api 必须先于 worker 启动（此前 rpa→worker→api 的顺序在冷启动时
     # 必然"心跳超时"中断——历史上被手工预起的 api 掩盖，2026-09-22 暴露）。
-    commands={'rpa':([str(SERVICE_PYTHON),'-m','uvicorn',rpa_module,'--app-dir',rpa_dir,'--host','127.0.0.1','--port',str(rpa_port)],rpa_port),
-              'api':([str(SERVICE_PYTHON),'-m','uvicorn','pharma.api:app','--host','127.0.0.1','--port',str(api_port)],api_port),
+    commands={'rpa':([str(SERVICE_PYTHON),'-m','uvicorn',rpa_module,'--app-dir',rpa_dir,'--host','127.0.0.1','--port',str(rpa_port)]+uvicorn_args,rpa_port),
+              'api':([str(SERVICE_PYTHON),'-m','uvicorn','pharma.api:app','--host','127.0.0.1','--port',str(api_port)]+uvicorn_args,api_port),
               'worker':([str(SERVICE_PYTHON),'-m','pharma.worker'],None)}
     for name,(cmd,port) in commands.items():
         if name in state and alive(state[name]):continue
