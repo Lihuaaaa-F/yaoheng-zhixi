@@ -11,6 +11,18 @@ def _default_python():
         if candidate.exists():return str(candidate)
     return sys.executable
 PYTHON=Path(os.environ.get('PHARMA_PYTHON') or _default_python());STATE=RUN/'processes.json'
+def _windowless_python():
+    # Windows 的 venv python.exe 只是启动器：它重新派生真正的控制台解释器时
+    # 不继承 DETACHED/CREATE_NO_WINDOW 标志（2026-09-23 探针实测两者均穿透
+    # 失败，GetConsoleWindow()!=0），于是每个服务分配到新控制台，被系统默认
+    # 终端（Windows Terminal）宿主为常驻窗口——"每次运行完终端不自动关闭"，
+    # 且手关窗口会连带杀死服务。pythonw.exe 全链路 GUI 子系统，无控制台；
+    # 服务的 stdout/stderr 本就重定向进 .runtime/*.log，不依赖控制台。
+    if os.name=='nt' and PYTHON.name.lower().endswith('.exe'):
+        pw=PYTHON.with_name('pythonw.exe')
+        if pw.exists():return pw
+    return PYTHON
+SERVICE_PYTHON=_windowless_python()
 
 def token(pid):
     try:
@@ -55,7 +67,14 @@ def main():
     state=json.loads(STATE.read_text()) if STATE.exists() else {}
     if sys.argv[1]=='stop':
         for name,info in state.items():
-            if alive(info):os.kill(info['pid'],signal.SIGTERM)
+            if not alive(info):continue
+            if os.name=='nt':
+                # Windows 记录的是启动器 PID，真实解释器（占端口/干活的那
+                # 个）是其子进程；TerminateProcess 不回收子树，只杀启动器
+                # 会孤儿化真身——上一轮"6 个游离 python、监听 PID 与记录
+                # 不一致"即源于此。树杀一并回收。
+                subprocess.run(['taskkill','/F','/T','/PID',str(info['pid'])],capture_output=True)
+            else:os.kill(info['pid'],signal.SIGTERM)
         for _ in range(100):
             if not any(alive(info) for info in state.values()):break
             time.sleep(.1)
@@ -71,9 +90,9 @@ def main():
     # 冷启动顺序：rpa → api → worker。worker 的就绪判据是 api /health 的
     # 心跳，api 必须先于 worker 启动（此前 rpa→worker→api 的顺序在冷启动时
     # 必然"心跳超时"中断——历史上被手工预起的 api 掩盖，2026-09-22 暴露）。
-    commands={'rpa':([str(PYTHON),'-m','uvicorn',rpa_module,'--app-dir',rpa_dir,'--host','127.0.0.1','--port',str(rpa_port)],rpa_port),
-              'api':([str(PYTHON),'-m','uvicorn','pharma.api:app','--host','127.0.0.1','--port',str(api_port)],api_port),
-              'worker':([str(PYTHON),'-m','pharma.worker'],None)}
+    commands={'rpa':([str(SERVICE_PYTHON),'-m','uvicorn',rpa_module,'--app-dir',rpa_dir,'--host','127.0.0.1','--port',str(rpa_port)],rpa_port),
+              'api':([str(SERVICE_PYTHON),'-m','uvicorn','pharma.api:app','--host','127.0.0.1','--port',str(api_port)],api_port),
+              'worker':([str(SERVICE_PYTHON),'-m','pharma.worker'],None)}
     for name,(cmd,port) in commands.items():
         if name in state and alive(state[name]):continue
         if port and occupied(port):raise SystemExit(f'端口{port}被非本项目受管进程占用；未终止其他服务')
