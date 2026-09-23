@@ -293,3 +293,43 @@ def test_benchmark_async_default_queues_report_and_returns_rules_immediately(tmp
     result3 = api.get_benchmark('P', '2026-05', 'A', 'B', context_id='pharmaceutical:competition')
     assert result3['narrative']['model_status'] == 'ENQUEUE_FAILED'
     assert result3['narrative']['generation_mode'] == 'rules'
+
+
+# ---------- AUD-KB-01：knowledge.search 分块/适用性缓存与副本隔离 ----------
+
+def test_knowledge_search_caches_chunks_and_applicability_with_isolation(tmp_path, monkeypatch):
+    import pharma.knowledge as km
+    monkeypatch.setattr(km, '_CHUNK_CACHE', {})
+    monkeypatch.setattr(km, '_APPLICABILITY_CACHE', {})
+    src = tmp_path / 'k.json'
+    src.write_text(json.dumps([
+        {'id': 'a', 'products': ['P1'], 'text': '银黄口服液配方含金银花与黄芩提取物，需核对用量与批次记录。'},
+        {'id': 'b', 'products': ['P2'], 'text': '另一产品工艺说明：浓缩与制粒工序的温度控制要求完整记录。'},
+    ], ensure_ascii=False))
+    knowledge = km.Knowledge(root=tmp_path, source_files=(src,), vector_enabled=False)
+    first = knowledge.search('配方 金银花', product='P1', mode='bm25')
+    second = knowledge.search('配方 金银花', product='P1', mode='bm25')
+    assert first['status'] == second['status'] == 'PASS'
+    assert [e['evidence_id'] for e in first['evidence']] == [e['evidence_id'] for e in second['evidence']]
+    # 命中路径：分块与适用性进入进程内缓存
+    assert km._CHUNK_CACHE and km._APPLICABILITY_CACHE
+    # 副本隔离：调用方修改返回的 evidence 内层结构不污染缓存
+    if first['evidence'][0].get('products'):
+        first['evidence'][0]['products'].append('POLLUTED')
+    first['evidence'][0]['applicability']['reasons'].append('POLLUTED')
+    third = knowledge.search('配方 金银花', product='P1', mode='bm25')
+    assert all('POLLUTED' not in (e.get('products') or []) for e in third['evidence'])
+    assert all('POLLUTED' not in e['applicability']['reasons'] for e in third['evidence'])
+    # 不同过滤参数不串缓存：P2 只命中 b 分块
+    other = knowledge.search('工艺 制粒', product='P2', mode='bm25')
+    assert other['evidence'] and all('浓缩' in e['text'] for e in other['evidence'])
+    # 索引重建（源变化→新版本指纹）后缓存自然失效出新结果
+    src.write_text(json.dumps([
+        {'id': 'a', 'products': ['P1'], 'text': '银黄口服液配方含金银花与黄芩提取物，需核对用量与批次记录。'},
+        {'id': 'b', 'products': ['P2'], 'text': '另一产品工艺说明：浓缩与制粒工序的温度控制要求完整记录。'},
+        {'id': 'c', 'products': ['P1'], 'text': '新增分块：金银花市场行情上涨说明与采购核查要求逐条记录。'},
+    ], ensure_ascii=False))
+    knowledge2 = km.Knowledge(root=tmp_path, source_files=(src,), vector_enabled=False)
+    knowledge2.build()  # 真实链路（worker）检索前总是幂等 build；search 仅在术语变化时自动重建
+    refreshed = knowledge2.search('行情 上涨', product='P1', mode='bm25')
+    assert any('行情' in e['text'] for e in refreshed['evidence'])

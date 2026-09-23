@@ -12,12 +12,51 @@ import json
 import os
 import re
 import sqlite3
+import threading
 import time
 from .config import ROOT, PACKAGE, RUNTIME
 
 EMBEDDING_SHA = 'a48549b3259a6165364f226599cd91f39923d5d5'
 PARSER_VERSION = 'scope-prefilter-v7-private-terminology'
-RETRIEVER_VERSION = 'bm25-chroma-prefilter-rrf-v5-keyword-expansion'
+RETRIEVER_VERSION = 'bm25-chroma-prefilter-rrf-v6-chunk-cache'
+# 分块解析与适用性进程内有界缓存（2026-09-23 审计 AUD-KB-01）：此前每次
+# search 全量 SELECT+反序列化所有 chunk 并逐个重算 evidence_applicability
+# （含产品子串匹配），知识库增长后线性劣化。键含知识版本指纹——增删文档、
+# 换词表/向量模型后指纹变化自动失效；进程内有界（最近 2 个索引路径），
+# 与 dashboard._GRID_CACHE 同策略。返回的 evidence 条目做副本隔离，
+# 调用方修改不会写回缓存。
+_CHUNK_CACHE = {}
+_APPLICABILITY_CACHE = {}
+_CACHE_LOCK = threading.Lock()
+_CACHE_MAX_ENTRIES = 4
+
+
+def _cache_get(key, store):
+    with _CACHE_LOCK:
+        return store.get(key)
+
+
+def _cache_put(key, value, store):
+    with _CACHE_LOCK:
+        if len(store) >= _CACHE_MAX_ENTRIES:
+            store.clear()
+        store[key] = value
+
+
+def _scope_cache_key(index_key, product, factory, period, specification, document_version, context):
+    """适用性过滤参数的可哈希化（dict → 规范 JSON）。"""
+    def freeze(value):
+        if value is None:
+            return None
+        return json.dumps(value, sort_keys=True, ensure_ascii=False, default=str)
+    return (index_key, product, factory, freeze(period), specification, document_version, freeze(context))
+
+
+def _copy_applicability(value):
+    """缓存条目的浅层副本（内层列表复制），外部修改不污染缓存。"""
+    return {'applicable': value['applicable'], 'reasons': list(value.get('reasons', [])),
+            'limits': list(value.get('limits', [])), 'scope': value.get('scope', 'unknown')}
+
 def _string_list(value, label):
     if not isinstance(value,list) or any(not isinstance(x,str) or not x.strip() or len(x)>200 for x in value) or len(value)!=len(set(value)):
         raise ValueError('INVALID_TERMINOLOGY_'+label)
@@ -406,10 +445,22 @@ class Knowledge:
         if self.status().get('terminology_hash')!=terminology_hash():raise ValueError('TERMINOLOGY_REBUILD_FAILED')
         version = (self.path/'CURRENT').read_text().strip()
         target = self.path/version
+        index_key = (str(target), version)
         db = sqlite3.connect(target/'fts.sqlite')
         try:
-            chunks = {row[0]:json.loads(row[1]) for row in db.execute('SELECT id,body FROM chunks')}
-            applicability = {k:self.evidence_applicability(v,product,factory,period,specification,document_version,context=self.context) for k,v in chunks.items()}
+            # 分块全量载入按索引版本缓存（AUD-KB-01）：同版本重复检索不再
+            # 重复 SELECT+JSON 反序列化；缓存未命中才读库。
+            chunks = _cache_get(index_key, _CHUNK_CACHE)
+            if chunks is None:
+                chunks = {row[0]:json.loads(row[1]) for row in db.execute('SELECT id,body FROM chunks')}
+                _cache_put(index_key, chunks, _CHUNK_CACHE)
+            # 适用性判定按 (索引版本, 过滤参数) 缓存：含产品子串匹配等逐块
+            # 计算，同一分析范围内反复检索（报告链路/页面轮询）直接复用。
+            scope_key = _scope_cache_key(index_key, product, factory, period, specification, document_version, self.context)
+            applicability = _cache_get(scope_key, _APPLICABILITY_CACHE)
+            if applicability is None:
+                applicability = {k:self.evidence_applicability(v,product,factory,period,specification,document_version,context=self.context) for k,v in chunks.items()}
+                _cache_put(scope_key, applicability, _APPLICABILITY_CACHE)
             eligible = {k for k,v in applicability.items() if v['applicable']}
             if event_only:
                 # Purpose retrieval still applies all normal scope checks, then
@@ -456,5 +507,9 @@ class Knowledge:
             def _retrieve(self, query_bundle):
                 return [NodeWithScore(node=TextNode(id_=k,text=chunks[k]['text'],metadata={'source':chunks[k]['source'],'location':chunks[k]['location']}),score=1/(60+i)) for i,k in enumerate(ids,1)]
         nodes = RankedRetriever().retrieve(query)
-        evidence = [dict(chunks[n.node.node_id],score=n.score,applicability=applicability[n.node.node_id]) for n in nodes]
+        # 副本隔离：chunk 本体与适用性结果深/浅拷贝后再返回——调用方对
+        # evidence 条目的任何修改都不会写回进程内缓存（AUD-KB-01）。
+        import copy as _copy
+        evidence = [dict(_copy.deepcopy(chunks[n.node.node_id]),score=n.score,
+                         applicability=_copy_applicability(applicability[n.node.node_id])) for n in nodes]
         return {'status':status,'knowledge_version':version,'mode':mode,'evidence':evidence,'reason':error,'reranker_error':reranker_error,'fusion_weights':weights if mode=='hybrid' else None,'framework':'llama-index-core BaseRetriever/TextNode','retrieval_status':'EXECUTED' if not error else 'DEGRADED','recall_status':'RECALLED' if evidence else 'NO_MATCH' if eligible else 'NO_APPLICABLE_CANDIDATES','eligible_count':len(eligible),'retriever_version':RETRIEVER_VERSION,'reranker_version':self.reranker_version,'embedding_version':EMBEDDING_SHA,'analysis_context':self.context}
