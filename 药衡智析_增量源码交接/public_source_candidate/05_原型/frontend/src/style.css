@@ -49,6 +49,10 @@ details.workbench-collapse>summary span{font-size:12px;color:#6b7a77}
 .preview-text{white-space:pre-wrap;font-size:13px;line-height:1.7;background:#f6f8f9;border:1px solid var(--border);border-radius:6px;padding:12px;max-height:60vh;overflow:auto}
 .import-filters{align-items:end}
 .import-filters .muted{font-size:12px}
+/* 2026-09-24 用户反馈：导入区 数据类型框/选择文件框/上传按钮 未水平对齐
+   ——file 控件被内嵌按钮撑高，底对齐后文字行错位；统一三控件高度 */
+.import-filters select,.import-filters input[type=file],.import-filters>button{height:38px;box-sizing:border-box}
+.import-filters input[type=file]{padding:2px 6px;line-height:normal}
 .error-inline{font-size:11px;color:#8f4632;margin:2px 0 0}
 .badge[data-status="PARSED"],.badge[data-status="SUCCEEDED"]{background:#e3efe9;color:#1f6d55}
 .badge[data-status="PARSE_FAILED"]{background:#f6e4dd;color:#8f4632}

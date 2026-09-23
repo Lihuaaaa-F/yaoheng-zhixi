@@ -188,7 +188,10 @@ def create_upload(kind: str, filename: str, payload: bytes, data_type: str = '')
     folder = _folder(import_id)
     original = folder / ('original' + suffix)
     if original.exists():  # 同内容重复上传：幂等返回已有记录
-        return _row(import_id)
+        # dedup 标记（2026-09-24 用户反馈"上传后没进待解析而是直接解析了"）：
+        # 返回的是已有记录——若它早已解析完，记录会直接出现在"已处理记录"
+        # 而不是"待解析"。前端据此给出明确提示，避免像被悄悄解析了一样。
+        return {**_row(import_id), 'dedup': True}
     original.write_bytes(payload)  # 原始字节保留
     meta: dict[str, Any] = {'filename': filename, 'suffix': suffix, 'data_type': data_type}
     if suffix in ('.csv', '.txt'):
@@ -204,6 +207,22 @@ def create_upload(kind: str, filename: str, payload: bytes, data_type: str = '')
                     record['size'], record['sha256'], record['created'], record['created'],
                     json.dumps(meta, ensure_ascii=False)))
     return _row(import_id)
+
+
+DELETABLE_IMPORT_STATUSES = ('UPLOADED', 'PARSE_FAILED')
+
+
+def delete_import(import_id: str) -> None:
+    """删除尚未被解析流水线消费的导入记录（2026-09-24 用户要求：传错了
+    数据要能从待解析列表删掉）。PARSING/PARSED/PUBLISHED 一律拒绝——记录
+    已被解析任务消费或已发布为数据集/知识/模板，删除会留下悬空引用；
+    要替换已解析的数据请上传内容不同的修正文件，而不是删除记录。"""
+    record = _row(import_id)  # KeyError → 404
+    if record['status'] not in DELETABLE_IMPORT_STATUSES:
+        raise ValueError('IMPORT_NOT_DELETABLE:' + record['status'])
+    shutil.rmtree(IMPORTS_ROOT / import_id, ignore_errors=True)
+    with _connect() as db:
+        db.execute('DELETE FROM imports WHERE id=?', (import_id,))
 
 
 def _read_table(suffix: str, payload: bytes, encoding: str, sheet: str | None) -> tuple[list[str], list[list[str]]]:

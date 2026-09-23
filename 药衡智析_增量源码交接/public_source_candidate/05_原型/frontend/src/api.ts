@@ -2,7 +2,8 @@ export async function api<T = any>(path: string, body?: unknown, signal?: AbortS
     const response = await fetch(`/api${path}`, { method: method ?? (body === undefined ? 'GET' : 'POST'), headers: body === undefined ? undefined : { 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body), signal });
     const text = await response.text();
     let data: any;
-    try { data = JSON.parse(text); }
+    // 204 No Content 等空响应体合法（如 DELETE 删除导入记录），不得当解析失败
+    try { data = text ? JSON.parse(text) : null; }
     catch { throw new Error(response.ok ? '服务响应不完整，请重试并保留本次记录。' : `服务请求未完成（HTTP ${response.status}），请稍后重试并保留本次记录。`); }
     if (!response.ok)
         throw new Error(typeof data.detail === 'string' ? data.detail : data.error?.message ?? JSON.stringify(data.detail ?? data));

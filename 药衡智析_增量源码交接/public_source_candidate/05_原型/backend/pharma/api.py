@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from typing import Any, Literal
 from pathlib import Path
 import hashlib,json,re,time,os
-from fastapi import FastAPI,File,Form,HTTPException,Request,Query,UploadFile
+from fastapi import FastAPI,File,Form,HTTPException,Request,Response,Query,UploadFile
 from fastapi.responses import FileResponse,JSONResponse
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -436,6 +436,12 @@ async def import_upload(kind:str=Form(...),data_type:str=Form(''),file:UploadFil
     from . import data_import
     payload=await file.read()
     return data_import.create_upload(kind,file.filename or 'upload.bin',payload,data_type)
+@app.delete('/api/imports/{import_id}',status_code=204)
+def import_delete(import_id:str):
+    """删除未进入解析的导入记录（UPLOADED/PARSE_FAILED）；已解析记录拒绝删除。"""
+    from . import data_import
+    data_import.delete_import(import_id)
+    return Response(status_code=204)
 @app.get('/api/imports/{import_id}/preview')
 def import_preview(import_id:str):
     """预览上传的原始文件（表格/文本/内嵌PDF），只读无副作用。"""

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api } from './api';
 
 /** 原始文件预览弹窗：实时预览上传的原始文件；一次只预览一份（打开新文件
@@ -6,16 +6,21 @@ import { api } from './api';
 export default function FilePreview({ importId, onClose }: { importId: string; onClose: () => void }) {
   const [data, setData] = useState<any>(null);
   const [error, setError] = useState('');
+  // onClose 用 ref 转接、不进 effect 依赖：父组件每次重渲染传入的都是新的
+  // 函数引用，此前会让本 effect 反复重跑（清空→重新拉取→闪烁，表现为预览
+  // 框周期性闪动）。只有切换 importId 才应重新读取。
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
   useEffect(() => {
     const controller = new AbortController();
     setData(null); setError('');
     api(`/imports/${encodeURIComponent(importId)}/preview`, undefined, controller.signal)
       .then(x => { if (!controller.signal.aborted) setData(x); })
       .catch(e => { if (!controller.signal.aborted) setError(e instanceof Error ? e.message : String(e)); });
-    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); };
+    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') onCloseRef.current(); };
     window.addEventListener('keydown', onKey);
     return () => { controller.abort(); window.removeEventListener('keydown', onKey); };
-  }, [importId, onClose]);
+  }, [importId]);
   return <div className="drawer-backdrop preview-backdrop" onClick={onClose} role="dialog" aria-modal="true" aria-label="原始文件预览">
     <div className="drawer preview-panel" onClick={e => e.stopPropagation()}>
       <div className="panel-heading">

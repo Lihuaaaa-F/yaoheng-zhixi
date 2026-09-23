@@ -23,6 +23,17 @@ function KnowledgeGraphPanel({contextId}:{contextId:string}) {
  const [fullscreen,setFullscreen]=useState(false);
  const [hoverInfo,setHoverInfo]=useState<{text:string;x:number;y:number}|null>(null);
  const chartDomRef=useRef<HTMLDivElement|null>(null);
+ const sectionRef=useRef<HTMLElement|null>(null);
+ // 真·全屏（Fullscreen API）：双击图谱或右上角按钮进入/退出，Esc 原生可退
+ // （2026-09-24 用户要求全屏交互；此前是 CSS 仿全屏，会被页头遮挡且不遮挡
+ // 页面其余内容）。fullscreenchange 统一回写状态——按钮、高度都跟随。
+ useEffect(()=>{const onFs=()=>setFullscreen(Boolean(document.fullscreenElement));
+  document.addEventListener('fullscreenchange',onFs);return()=>document.removeEventListener('fullscreenchange',onFs)},[]);
+ const toggleFullscreen=()=>{
+  const el=sectionRef.current;if(!el)return;
+  if(document.fullscreenElement){document.exitFullscreen().catch(()=>{})}
+  else if(el.requestFullscreen){el.requestFullscreen().catch(()=>{})}
+ };
  useEffect(()=>{const c=new AbortController();setGraph(null);api(`/kb/graph?${contextQuery(contextId)}`,undefined,c.signal).then(x=>{if(!c.signal.aborted)setGraph(x)}).catch(()=>{if(!c.signal.aborted)setGraph(null)});return()=>c.abort()},[contextId]);
  if(!graph)return null;
  if(graph.status!=='PASS')return <section className="panel"><h2>知识图谱</h2><p className="notice">{graph.reason??'当前知识源未解析出配方或工艺结构，图谱为空。'}</p></section>;
@@ -83,15 +94,15 @@ function KnowledgeGraphPanel({contextId}:{contextId:string}) {
  const edgeSeriesOption={type:'scatter3D',coordinateSystem:'cartesian3D',
    data:edgePoints,symbolSize:1.8,
    itemStyle:{color:'#7d97a6',opacity:.45}};
- return <section className={`panel${fullscreen?' kg-fullscreen':''}`}>
+ return <section ref={sectionRef} className={`panel${fullscreen?' kg-fullscreen':''}`}>
   <div className="panel-heading"><h2>知识图谱 · 配方与工艺（三维）</h2>
    <div className="button-row"><span>{graph.stats?.products??0} 产品 · {graph.stats?.materials??0} 药材 · {graph.stats?.process_steps??0} 工序</span>
-    <button onClick={()=>setFullscreen(f=>!f)}>{fullscreen?'退出全屏':'放大视图'}</button></div></div>
+    <button onClick={toggleFullscreen}>{fullscreen?'退出全屏':'全屏'}</button></div></div>
   <div className="kg-legend" role="list" aria-label="节点类型图例">
     {[['产品','#227c81'],['药材','#c08a3e'],['工序','#8f5b7a']].map(([t,c])=><span key={t} role="listitem"><i style={{background:c}}/>{t}</span>)}
     <span className="muted">连线为配方/工艺关系</span>
   </div>
-  <div ref={chartDomRef} style={{position:'relative'}}>
+  <div ref={chartDomRef} style={{position:'relative'}} onDoubleClick={toggleFullscreen}>
   <Suspense fallback={<p className="muted" role="status">三维图谱组件加载中…</p>}>
   <Chart3D label="知识图谱三维视图" height={height}
    onHover={(info:any)=>setHoverInfo(info)} option={{
@@ -113,10 +124,15 @@ function KnowledgeGraphPanel({contextId}:{contextId:string}) {
     ],
     xAxis3D:{show:false},yAxis3D:{show:false},zAxis3D:{show:false},
     grid3D:{
-      width:900,height:520,depth:900,
-      show:false,boxWidth:200,
-      viewControl:{alpha:22,beta:20,distance:260,minDistance:60,maxDistance:620,
-        rotateSensitivity:1,zoomSensitivity:1,panSensitivity:1,damping:.85,
+      // 盒体三向等比（2026-09-24 用户反馈"图谱显示区域远小于外框"）：
+      // 此前只给了 boxWidth=200，boxHeight/boxDepth 落默认 100——布局是
+      // x/z ±570 的平铺三角，z 被压扁一半，整团图缩在画布一角。现在
+      // x/z 等比、y 压扁（贴合扁平布局），相机距离 260→150 填满可视区。
+      show:false,boxWidth:200,boxHeight:60,boxDepth:200,
+      viewControl:{alpha:22,beta:20,distance:150,minDistance:40,maxDistance:900,
+        // 灵敏度（2026-09-24 用户反馈旋转太钝）：rotateSensitivity 默认 1
+        // 太低，提到 2.4；zoomSensitivity 同步放大滚轮缩放步长。
+        rotateSensitivity:2.4,zoomSensitivity:1.4,panSensitivity:1,damping:.85,
         autoRotate:false,autoRotateAfterStill:4,autoRotateSpeed:8},
       light:{main:{intensity:1.1,shadow:false},ambient:{intensity:.5}},
       axisLine:{show:false},axisLabel:{show:false},splitLine:{show:false},
@@ -125,7 +141,7 @@ function KnowledgeGraphPanel({contextId}:{contextId:string}) {
     </Suspense>
     {hoverInfo && <div className="kg-tooltip" style={{left:hoverInfo.x, top:hoverInfo.y}}>{hoverInfo.text}</div>}
   </div>
-  <p className="muted">三维操作：左键拖拽<b>旋转</b> · 滚轮<b>缩放</b> · 右键拖拽<b>平移</b> · 静止 4 秒后<b>自动缓旋</b> · 悬停节点/连线<b>查看说明</b>。图谱由当前知识库版本确定性抽取（规则 {graph.rules_version}），检索时自动把所选产品的药材与工序补充进关键词检索。图中关系不构成成本归因结论。</p></section>;
+  <p className="muted">三维操作：左键拖拽<b>旋转</b> · 滚轮<b>缩放</b>（区域内滚轮不再滚动页面）· 右键拖拽<b>平移</b> · <b>双击</b>或右上角按钮<b>进入/退出全屏</b> · 静止 4 秒后<b>自动缓旋</b> · 悬停节点/连线<b>查看说明</b>。图谱由当前知识库版本确定性抽取（规则 {graph.rules_version}），检索时自动把所选产品的药材与工序补充进关键词检索。图中关系不构成成本归因结论。</p></section>;
 }
 export function EvidenceDrawer({value,onClose}:{value:any;onClose:()=>void}) {
  useEffect(()=>{const fn=(e:KeyboardEvent)=>{if(e.key==='Escape')onClose()};document.addEventListener('keydown',fn);return()=>document.removeEventListener('keydown',fn)},[onClose]);

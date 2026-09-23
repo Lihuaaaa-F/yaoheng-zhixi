@@ -43,9 +43,14 @@ export function ImportUploadPanel({ kind, types, onUploaded, hint }: {
   const doUpload = async () => {
     if (!file) { setError('请先选择文件'); return; }
     setBusy(true); setError(''); setMessage('');
+    const chosen = file;
     try {
-      await uploadTypedFile(kind, dataType, file);
-      setMessage(`已上传：${file.name}（${active?.label}），进入下方列表等待解析。`);
+      const saved = await uploadTypedFile(kind, dataType, chosen);
+      // 同内容重复上传是幂等的：返回已有记录（可能早已解析完，直接躺在
+      // "已处理记录"里）。必须说明白，否则用户会以为被悄悄解析了。
+      setMessage(saved.dedup
+        ? `「${chosen.name}」的内容此前已上传过（当前状态：${IMPORT_STATUS_LABELS[saved.status] ?? saved.status}），本次未重复导入。${saved.status === 'UPLOADED' || saved.status === 'PARSE_FAILED' ? '它就在下方待解析列表中。' : '如需更换数据，请上传内容不同的修正文件。'}`
+        : `已上传：${chosen.name}（${active?.label}），进入下方列表等待解析。`);
       setFile(null);
       onUploaded();
     } catch (e: any) { setError(e.message ?? String(e)); }
@@ -75,8 +80,10 @@ export const DATA_TYPE_LABELS: Record<string, string> = {
   monthly: '月度成本分析', quarterly: '季度成本分析', special: '专题分析',
 };
 
-export function ImportListTable({ imports, onPreview, emptyText }: {
-  imports: any[]; onPreview: (id: string) => void; emptyText: string;
+const DELETABLE_IMPORT_STATUSES = ['UPLOADED', 'PARSE_FAILED'];
+
+export function ImportListTable({ imports, onPreview, onDelete, emptyText }: {
+  imports: any[]; onPreview: (id: string) => void; onDelete?: (record: any) => void; emptyText: string;
 }) {
   const typeLabel = (record: any) => record.meta?.data_type_label
     ?? DATA_TYPE_LABELS[record.meta?.data_type] ?? KIND_LABELS[record.kind] ?? record.kind;
@@ -91,7 +98,8 @@ export function ImportListTable({ imports, onPreview, emptyText }: {
       <td><span className="badge" data-status={r.status}>{IMPORT_STATUS_LABELS[r.status] ?? r.status}</span>
         {r.status === 'PARSE_FAILED' && <p className="muted error-inline">{(r.meta?.parse_error ?? '').slice(0, 120)}</p>}</td>
       <td className="muted">{(r.created ?? '').slice(0, 19).replace('T', ' ')}</td>
-      <td><button onClick={() => onPreview(r.id)}>预览</button></td>
+      <td><button onClick={() => onPreview(r.id)}>预览</button>
+        {onDelete && DELETABLE_IMPORT_STATUSES.includes(r.status) && <button className="danger" onClick={() => onDelete(r)}>删除</button>}</td>
     </tr>)}</tbody>
   </table></div>;
 }
@@ -121,6 +129,15 @@ export default function ImportWorkflow({ kind, types, parsePath, parseLabel, suc
     } catch (e: any) { setError(e.message ?? String(e)); }
     finally { setBusy(false); }
   };
+  const removeImport = async (record: any) => {
+    if (!window.confirm(`确认删除导入记录「${record.filename}」？删除后如需重新导入请再次上传。`)) return;
+    setError('');
+    try {
+      await api(`/imports/${encodeURIComponent(record.id)}`, undefined, undefined, 'DELETE');
+      if (previewId === record.id) setPreviewId('');
+      void refresh();
+    } catch (e: any) { setError(e.message ?? String(e)); }
+  };
   return <div>
     <ImportUploadPanel kind={kind} types={types} onUploaded={refresh} hint={hint} />
     <section className="panel">
@@ -132,7 +149,7 @@ export default function ImportWorkflow({ kind, types, parsePath, parseLabel, suc
       {importsError && <div className="error" role="alert">列表读取失败：{importsError}</div>}
       {error && <div className="error" role="alert">{error}</div>}
       <h3>待解析（{waiting.length}）</h3>
-      <ImportListTable imports={waiting} onPreview={setPreviewId} emptyText={emptyText ?? '暂无待解析数据，请先在上方导入。'} />
+      <ImportListTable imports={waiting} onPreview={setPreviewId} onDelete={removeImport} emptyText={emptyText ?? '暂无待解析数据，请先在上方导入。'} />
       {jobId && <JobProgress jobId={jobId} onDone={job => {
         setResult(job); setJobId(''); refresh();
         if (job.status === 'SUCCEEDED' || job.status === 'DEGRADED') {

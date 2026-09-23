@@ -23,14 +23,25 @@ export default function Chart3D({ option, label, height = 720, onClick, onHover 
     const ref = useRef<HTMLDivElement>(null), instance = useRef<echarts.ECharts | undefined>(undefined), optionSignature = useRef<string>('');
     useEffect(() => {
         if (!ref.current) return;
-        const chart = echarts.init(ref.current);
+        const dom = ref.current;
+        const chart = echarts.init(dom);
         instance.current = chart;
         // 测试/调试验证钩子：Playwright 可读取相机参数与 convertToPixel
         (window as any).__chart3d = (window as any).__chart3d ?? new Map();
-        (window as any).__chart3d.set(ref.current, chart);
+        (window as any).__chart3d.set(dom, chart);
         const observer = new ResizeObserver(() => chart.resize());
-        observer.observe(ref.current);
-        return () => { observer.disconnect(); chart.dispose(); instance.current = undefined; };
+        observer.observe(dom);
+        // 光标在图谱区域内时，滚轮只缩放图谱、不再滚动页面（2026-09-24
+        // 用户要求）。echarts-gl 的 wheel 处理不总是 preventDefault，
+        // 这里在容器上原生兜底（必须 non-passive 才能 preventDefault）。
+        const wheelGuard = (event: WheelEvent) => event.preventDefault();
+        dom.addEventListener('wheel', wheelGuard, { passive: false });
+        return () => {
+            observer.disconnect();
+            dom.removeEventListener('wheel', wheelGuard);
+            (window as any).__chart3d?.delete(dom);
+            chart.dispose(); instance.current = undefined;
+        };
     }, []);
     useEffect(() => {
         const chart = instance.current; if (!chart) return;
