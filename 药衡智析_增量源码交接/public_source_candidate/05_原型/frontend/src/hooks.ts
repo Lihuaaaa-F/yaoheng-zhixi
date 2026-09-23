@@ -10,14 +10,24 @@ export function useJobsActions(tab: number, contextId: string) {
   const [error, setError] = useState('');
   const currentContext = useRef(contextId);
   currentContext.current = contextId;
+  // 轮询/刷新拿到相同内容时跳过 setState：jobs 自带完整 result 大 JSON，
+  // 每 2s 无条件换新数组身份会引发整棵 App 树重渲染（2026-09-23 审查 SSE-14）。
+  const lastSnapshot = useRef<string>('');
+  const apply = useCallback((j: unknown, a: unknown) => {
+    const nextJobs = Array.isArray(j) ? j : [], nextActions = Array.isArray(a) ? a : [];
+    const signature = JSON.stringify([nextJobs, nextActions]);
+    if (signature === lastSnapshot.current) return;
+    lastSnapshot.current = signature;
+    setJobs(nextJobs);
+    setActions(nextActions);
+  }, []);
   const refresh = useCallback(async () => {
     const id = contextId;
     if (!id) return;
     const [j, a] = await Promise.all([api(`/jobs?${contextQuery(id)}`), api(`/actions?${contextQuery(id)}`)]);
     if (currentContext.current !== id) return;
-    setJobs(Array.isArray(j) ? j : []);
-    setActions(Array.isArray(a) ? a : []);
-  }, [contextId]);
+    apply(j, a);
+  }, [contextId, apply]);
   useEffect(() => {
     if (tab !== 2 || !contextId) return;
     const c = new AbortController();
@@ -25,7 +35,7 @@ export function useJobsActions(tab: number, contextId: string) {
     const poll = async () => {
       try {
         const [j, a] = await Promise.all([api(`/jobs?${contextQuery(contextId)}`, undefined, c.signal), api(`/actions?${contextQuery(contextId)}`, undefined, c.signal)]);
-        if (!c.signal.aborted) { setJobs(Array.isArray(j) ? j : []); setActions(Array.isArray(a) ? a : []); }
+        if (!c.signal.aborted) apply(j, a);
       } catch (e) {
         if (!c.signal.aborted) setError(e instanceof Error ? e.message : String(e));
       } finally {
