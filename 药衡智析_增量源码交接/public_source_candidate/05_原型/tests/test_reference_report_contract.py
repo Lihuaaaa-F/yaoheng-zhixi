@@ -133,7 +133,7 @@ def test_report_uses_frozen_template_without_loading_live_template(tmp_path, mon
     assert verify(output,snapshot)['status']=='PASS'
 
 
-def test_task_blocks_and_source_heading_keep_with_next(tmp_path):
+def test_task_blocks_complete_and_keepnext_stripped_on_save(tmp_path):
     snapshot=analyze_reference('mechanical_demo:synthetic-mechanical',month='2026-06');snapshot['trend']=[]
     finding={'rendered_text':'缺少经签署的机时记录，不能归因。','suggestion':'核对机时记录',
              'verification_target':'机时记录','responsible_role':'生产主管','deadline_basis':'月结前',
@@ -141,7 +141,12 @@ def test_task_blocks_and_source_heading_keep_with_next(tmp_path):
     output=tmp_path/'tasks.docx'
     render(snapshot,{'findings':[finding]},{'evidence':[{'source':'合成来源','location':'记录1'}]},output)
     doc=Document(output)
+    # 五段任务块结构必须完整；keep_with_next 在存盘前被 _strip_keep_with_next
+    # 统一摘除——用户不接受 Word 中的黑色小方块编辑标记（2026-09-24 裁定），
+    # 此处验证存盘产物里不再残留任何 keepNext。
     for prefix in ('核查对象：','核查行动：','责任岗位：','期限依据：','证据来源'):
-        assert next(p for p in doc.paragraphs if p.text.startswith(prefix)).paragraph_format.keep_with_next
-    # 四轮E项：keep_together 不再全局设置（长段允许自然跨页）；证据链前四段 keep_with_next 已在上断言
+        block=next(p for p in doc.paragraphs if p.text.startswith(prefix))
+        assert block is not None
+        assert block.paragraph_format.keep_with_next is not True
+    # 四轮E项：keep_together 不再全局设置（长段允许自然跨页）
     assert next(p for p in doc.paragraphs if p.text.startswith('预期证据：')) is not None

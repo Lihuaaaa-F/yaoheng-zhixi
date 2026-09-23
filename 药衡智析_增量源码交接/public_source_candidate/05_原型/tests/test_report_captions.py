@@ -24,23 +24,25 @@ def _marked_table(doc, marker_index):
     return t
 
 
-def test_number_and_caption_marks_figures_and_dynamic_tables_only():
+def test_number_and_caption_covers_native_and_dynamic_tables():
     doc = Document()
     doc.add_paragraph('一、封面与基本信息')
-    # 模板原生表（无 YHU_TBL 书签）：不加题注（用户裁定）
+    # 模板原生表（无 YHU_TBL 书签）：按所在小节标题命名——2026-09-24 用户
+    # 要求"每张表都必须有标题"，推翻此前"原生表不加题注"的裁定
     native = doc.add_table(rows=1, cols=2)
     native.rows[0].cells[0].text = '指标'; native.rows[0].cells[1].text = '本月实际'
-    # 动态表（书签标记）→ 表1-1 题注
+    # 动态表（书签标记）→ 用锚点语义名命名
     _marked_table(doc, 0)
     # 图：裸 drawing 元素 + 旧格式图题（编号逻辑只看元素存在）
     pic = doc.add_paragraph(); pic._p.append(OxmlElement('w:drawing'))
     doc.add_paragraph('图｜副题｜趋势图示意')
     reports._number_and_caption(doc, ['趋势图示意'])
     texts = [p.text for p in doc.paragraphs]
-    assert '表1-1 趋势图示意' in texts
+    assert '表1-1 封面与基本信息' in texts
+    assert '表1-2 趋势图示意' in texts
     assert '图1-1 趋势图示意' in texts
     captioned = [t for t in texts if re.match(r'^表\d+-\d+', t)]
-    assert captioned == ['表1-1 趋势图示意']  # 原生表未获题注
+    assert captioned == ['表1-1 封面与基本信息', '表1-2 趋势图示意']
 
 
 def test_fit_table_columns_protects_numeric_width():
