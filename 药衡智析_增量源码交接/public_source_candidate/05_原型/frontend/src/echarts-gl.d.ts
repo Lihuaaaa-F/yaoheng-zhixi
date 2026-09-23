@@ -11,3 +11,6 @@ declare module 'echarts-gl/charts' {
   export const ScatterGLChart: any;
   export const FlowGLChart: any;
 }
+declare module 'echarts-gl/components' {
+  export const Grid3DComponent: any;
+}

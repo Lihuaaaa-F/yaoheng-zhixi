@@ -1,11 +1,13 @@
 import { useEffect, useRef } from 'react';
 import * as echarts from 'echarts/core';
-import { Bar3DChart, Scatter3DChart } from 'echarts-gl/charts';
+import { Bar3DChart, Lines3DChart, Scatter3DChart } from 'echarts-gl/charts';
+import { Grid3DComponent } from 'echarts-gl/components';
 import { GridComponent, TooltipComponent, LegendComponent, VisualMapComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
-import 'echarts-gl';
 
-echarts.use([Bar3DChart, Scatter3DChart, GridComponent, TooltipComponent, LegendComponent, VisualMapComponent, CanvasRenderer]);
+// 按需注册（2026-09-23 审查 SSE-2：全量 `import 'echarts-gl'` 把 globe/graphGL/flowGL
+// 等未用图表全部打进首屏，GL 栈合计约 497KB）。
+echarts.use([Bar3DChart, Scatter3DChart, Lines3DChart, Grid3DComponent, GridComponent, TooltipComponent, LegendComponent, VisualMapComponent, CanvasRenderer]);
 
 /** WebGL 三维图表容器（scatter3D+lines3D/grid3D 用）：与 Chart 同生命周期语义，
  * 但对容器显式给高（3D 画布不会随内容自适应），并在卸载时释放 GL 资源。 */

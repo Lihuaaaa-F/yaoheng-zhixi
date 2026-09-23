@@ -1,7 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { Suspense, lazy, useState, useEffect, useRef } from 'react';
 import { api, contextQuery } from './api';
 import { cleanText, sourceLabel, DeveloperDetails, MetricDetails } from './presentation';
-import Chart3D from './Chart3D';
+// 2026-09-23 审查 SSE-2：Chart3D（echarts-gl 栈）改为动态加载——知识图谱仅在
+// 证据抽屉渲染时才需要，静态引入会把约 497KB GL 依赖拖进首屏。
+const Chart3D = lazy(() => import('./Chart3D'));
 export default function Evidence({ contextId, product, month, factory, onOpen }: {contextId:string;product:string; month?:string; factory?:string; onOpen:(v:any)=>void}) {
  const searchController=useRef<AbortController|undefined>(undefined);
  const [query,setQuery]=useState('设备停机记录'),[mode,setMode]=useState('hybrid'),[results,setResults]=useState<any>(null),[status,setStatus]=useState<any>(null),[error,setError]=useState(''),[busy,setBusy]=useState(false);
@@ -90,6 +92,7 @@ function KnowledgeGraphPanel({contextId}:{contextId:string}) {
     <span className="muted">连线为配方/工艺关系</span>
   </div>
   <div ref={chartDomRef} style={{position:'relative'}}>
+  <Suspense fallback={<p className="muted" role="status">三维图谱组件加载中…</p>}>
   <Chart3D label="知识图谱三维视图" height={height}
    onHover={(info:any)=>setHoverInfo(info)} option={{
     tooltip:{formatter:(p:any)=>{
@@ -119,6 +122,7 @@ function KnowledgeGraphPanel({contextId}:{contextId:string}) {
       axisLine:{show:false},axisLabel:{show:false},splitLine:{show:false},
       axisPointer:{show:false},
     }}}/>
+    </Suspense>
     {hoverInfo && <div className="kg-tooltip" style={{left:hoverInfo.x, top:hoverInfo.y}}>{hoverInfo.text}</div>}
   </div>
   <p className="muted">三维操作：左键拖拽<b>旋转</b> · 滚轮<b>缩放</b> · 右键拖拽<b>平移</b> · 静止 4 秒后<b>自动缓旋</b> · 悬停节点/连线<b>查看说明</b>。图谱由当前知识库版本确定性抽取（规则 {graph.rules_version}），检索时自动把所选产品的药材与工序补充进关键词检索。图中关系不构成成本归因结论。</p></section>;
