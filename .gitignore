@@ -120,3 +120,5 @@ governance_handoff_20260919/
 视觉审查_20260923/charts/
 视觉审查_20260923/gui-test-screenshots/
 视觉审查_20260923/meta/
+审查_20260923/vis/collect.mjs
+视觉审查_20260923/prep_render.py
