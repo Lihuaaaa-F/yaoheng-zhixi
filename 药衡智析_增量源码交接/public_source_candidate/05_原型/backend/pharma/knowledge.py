@@ -17,7 +17,7 @@ import time
 from .config import ROOT, PACKAGE, RUNTIME
 
 EMBEDDING_SHA = 'a48549b3259a6165364f226599cd91f39923d5d5'
-PARSER_VERSION = 'scope-prefilter-v8-scoped-source-locations'
+PARSER_VERSION = 'scope-prefilter-v9-workspace-source-provenance'
 RETRIEVER_VERSION = 'bm25-chroma-prefilter-rrf-v6-chunk-cache'
 # 分块解析与适用性进程内有界缓存（2026-09-23 审计 AUD-KB-01）：此前每次
 # search 全量 SELECT+反序列化所有 chunk 并逐个重算 evidence_applicability
@@ -160,18 +160,70 @@ def knowledge_registry(context=None):
     return record
 
 
-def uploaded_knowledge_sources(context=None, registry=None):
-    registry = registry if registry is not None else knowledge_registry(context)
-    folder = knowledge_scope_dir(context)
-    sources = []
-    for source_id in sorted(set(registry['active'].values())):
-        if not re.fullmatch(r'src-[a-f0-9]{24}', source_id) or source_id not in registry['versions']:
-            raise ValueError('INVALID_KNOWLEDGE_SOURCE_ID')
-        path = folder / (source_id + '.json')
-        if not path.is_file():
-            raise ValueError('KNOWLEDGE_SOURCE_MISSING')
-        sources.append(path)
+def knowledge_scope_ids(context=None):
+    """Inherit only the active workspace's verified former enterprise scopes.
+
+    The immutable workspace manifest is the migration authority. Reading it
+    directly avoids recursion through workspace_state -> resolve_context. An
+    explicitly requested former scope never gains access to its siblings.
+    """
+    context_id = knowledge_context_id(context)
+    if context_id == DEFAULT_KNOWLEDGE_CONTEXT:
+        return [context_id]
+    from .data_import import _workspace_manifest
+    manifest = _workspace_manifest()
+    if not manifest or manifest.get('context_id') != context_id:
+        return [context_id]
+    industry_id = context_id.partition(':')[0]
+    result = [context_id]
+    for legacy in manifest.get('legacy_context_ids', []):
+        legacy = knowledge_context_id(legacy)
+        if legacy == DEFAULT_KNOWLEDGE_CONTEXT or legacy.partition(':')[0] != industry_id:
+            raise ValueError('INVALID_WORKSPACE_KNOWLEDGE_BINDING')
+        if legacy not in result:
+            result.append(legacy)
+    return result
+
+
+def registered_knowledge_source(source_id, context=None):
+    """Resolve immutable source metadata within the same verified enterprise."""
+    for scope_id in knowledge_scope_ids(context):
+        source = knowledge_registry(scope_id)['versions'].get(source_id)
+        if source is not None:
+            return {**source, 'source_context_id': scope_id}
+    return None
+
+
+def uploaded_knowledge_source_bindings(context=None, registry=None):
+    """Map active source files to their original scopes without rewriting them.
+
+    A new version explicitly published in the unified scope supersedes the
+    same logical document inherited from a former batch. Different inherited
+    sources stay visible together; their original source IDs remain resolvable.
+    """
+    context_id = knowledge_context_id(context)
+    own_registry = registry if registry is not None else knowledge_registry(context_id)
+    if own_registry.get('context_id') != context_id:
+        raise ValueError('INVALID_KNOWLEDGE_REGISTRY')
+    overridden = set(own_registry['active'])
+    sources = {}
+    for scope_id in knowledge_scope_ids(context_id):
+        current = own_registry if scope_id == context_id else knowledge_registry(scope_id)
+        active = {source_id for logical, source_id in current['active'].items()
+                  if scope_id == context_id or logical not in overridden}
+        folder = knowledge_scope_dir(scope_id)
+        for source_id in sorted(active):
+            if not re.fullmatch(r'src-[a-f0-9]{24}', source_id) or source_id not in current['versions']:
+                raise ValueError('INVALID_KNOWLEDGE_SOURCE_ID')
+            path = folder / (source_id + '.json')
+            if not path.is_file():
+                raise ValueError('KNOWLEDGE_SOURCE_MISSING')
+            sources[path.resolve()] = scope_id
     return sources
+
+
+def uploaded_knowledge_sources(context=None, registry=None):
+    return list(uploaded_knowledge_source_bindings(context, registry))
 
 
 def competition_extra_sources():
@@ -424,6 +476,8 @@ class Knowledge:
         # An explicit enterprise entry is an allowlist, never a hint to scan its
         # parent. Directory mode remains for the private competition document set.
         sources = self._sources()
+        source_scopes = (uploaded_knowledge_source_bindings(self.context, self.uploaded_registry)
+                         if self.include_uploads else {})
         embedding_sha = embedding_fingerprint_cached(self.model_dir)
         _report(5, f'读取知识源（{len(sources)} 份）…')
         fingerprints = {p.name: file_fingerprint(p) for p in sources}
@@ -444,10 +498,15 @@ class Knowledge:
             _report(8 + 20 * index / max(len(sources), 1), f'解析文档 {index + 1}/{len(sources)}：{source.name}')
             try:
                 source_id = source_identifier(source, self.context)
+                source_scope_id = source_scopes.get(source.resolve(), knowledge_context_id(self.context))
+                source_industry, source_enterprise = source_scope_id.split(':', 1)
                 source_pages = set()
                 for block in section_blocks(source,self.context.get('industry_id')):
-                    if self.context and any(block.get(k) and block[k] != self.context.get(k) for k in ('enterprise_id','industry_id')):
+                    expected_scope = {'industry_id': source_industry, 'enterprise_id': source_enterprise}
+                    if self.context and any(block.get(k) and block[k] != expected_scope[k] for k in expected_scope):
                         continue
+                    if source.resolve() in source_scopes and block.get('context_id') != source_scope_id:
+                        raise ValueError('KNOWLEDGE_SOURCE_SCOPE_MISMATCH')
                     if block['page'] is not None: source_pages.add(block['page'])
                     clean = re.sub(r'[ \t]+', ' ', block['original_text']).strip()
                     # Product headings and document-control cover blocks carry
@@ -476,6 +535,7 @@ class Knowledge:
                         ident = hashlib.sha256(f'{fingerprints[source.name]}:{block["location"]}:{block.get("heading")}:{block.get("event_period")}:{index}:{text}'.encode()).hexdigest()[:24]
                         chunks.append(dict(block, evidence_id=ident, source=block.get('source') or source.name,
                                            source_id=block.get('source_id') or source_id,
+                                           source_context_id=source_scope_id,
                                            title=block.get('title') or block.get('source') or source.name,
                                            hash=block.get('sha256') or fingerprints[source.name], text=text, chunk=index,
                                            knowledge_version=version, analysis_context=self.context))

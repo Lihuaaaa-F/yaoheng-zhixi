@@ -92,11 +92,23 @@ def health():
     return {'rpa_mode':'local_simulator' if simulation else 'unverified','rpa_base_url':RPA_BASE_URL,'status':'ok','service':'药衡智析','worker':{'alive':age is not None and age<180,'heartbeat_age_seconds':age},'simulation':simulation}
 def selected_context(context_id=None):
     from .industry import context_catalog
-    return context_id or context_catalog()['default_context_id']
+    value=context_id or context_catalog()['default_context_id']
+    if not value:raise ValueError('请先在业务数据中完成上传文件的解析与校验。')
+    return value
+
+def require_workspace_ready(context_id):
+    """Legacy explicit snapshots stay readable; fresh workspace results use all files."""
+    from .industry import workspace_state
+    state=workspace_state()
+    if state.get('has_uploads') and context_id==state.get('context_id') and state['status']!='READY':
+        issues=state.get('issues') or []
+        detail=issues[0].get('message') if issues else '还有上传文件尚未完成解析与校验。'
+        raise ValueError('工作区数据尚未就绪：'+str(detail)+' 请在业务数据中处理后重试。')
 
 def scoped_analysis(req):
     from .industry import analyze_reference, catalog as scoped_catalog
     cid=selected_context(req.context_id)
+    require_workspace_ready(cid)
     options=scoped_catalog(cid)
     params=req.model_dump(exclude={'context_id','run_id','retry','topic','benchmark_right'})
     params['factory']=params['factory'] or options['factories'][0]
@@ -123,6 +135,7 @@ def resolved_analysis(context_id,factory,product,month,analysis_type='monthly',b
     """GET 型端点的选择解析：缺省值取当前上下文目录，与 POST 口径一致。"""
     from .industry import analyze_reference, catalog as scoped_catalog
     cid=selected_context(context_id)
+    require_workspace_ready(cid)
     options=scoped_catalog(cid)
     return analyze_reference(cid,factory=factory or options['factories'][0],product=product or options['products'][0],
         month=month or options['months'][-1],analysis_type=analysis_type,basis=basis)
@@ -131,6 +144,13 @@ def resolved_analysis(context_id,factory,product,month,analysis_type='monthly',b
 def industry_catalog():
     from .industry import context_catalog
     return context_catalog()
+
+@app.get('/api/workspace')
+def workspace():
+    from .industry import workspace_state,context_catalog
+    state=workspace_state()
+    context=next((item for item in context_catalog()['contexts'] if item['context_id']==state.get('context_id')),None)
+    return {**state,'context':context}
 
 @app.get('/api/catalog')
 def get_catalog(context_id:str|None=None):
@@ -170,6 +190,7 @@ def dashboard_heatmap(context_id:str|None=None,factory:str|None=None,
     from .dashboard import product_month_grid
     from .industry import catalog as scoped_catalog
     cid=selected_context(context_id)
+    require_workspace_ready(cid)
     options=scoped_catalog(cid)
     return product_month_grid(cid,factory or options['factories'][0],month,basis,options=options)
 @app.get('/api/analyses/{id}')
@@ -188,6 +209,7 @@ def get_benchmark(product:str,month:str,left:str,right:str,analysis_type:Literal
     from .knowledge import Knowledge
     from .narrative import generate, cached_generation
     cid=selected_context(context_id)
+    require_workspace_ready(cid)
     if not re.fullmatch(r'20\d{2}-(0[1-9]|1[0-2])',str(month)):raise ValueError('INVALID_MONTH')
     if left==right:raise ValueError('COMPARISON_REQUIRES_TWO_FACTORIES')
     if cid=='pharmaceutical:competition':
@@ -418,7 +440,8 @@ class DataParseRequest(BaseModel):
     model_config=ConfigDict(extra='forbid')
     enterprise_name:str=Field(default='',max_length=80)
     quantity_unit:str=Field(default='',max_length=12)
-    industry_id:str=Field(default='generic_manufacturing',max_length=60,pattern=r'^[a-z][a-z0-9_]*$')
+    industry_id:str=Field(default='',max_length=60,pattern=r'^(?:[a-z][a-z0-9_]*)?$')
+    replacements:dict[str,str]=Field(default_factory=dict,max_length=100)
 class KnowledgeBuildRequest(BaseModel):
     model_config=ConfigDict(extra='forbid')
     context_id:str|None=None
@@ -477,7 +500,7 @@ class ImportValidateRequest(ImportMappingRequest):
     options:dict[str,Any]={}
 class ImportPublishRequest(ImportValidateRequest):
     enterprise_name:str=Field(default='',max_length=80);pack_id:str=Field(default='',max_length=40)
-    quantity_unit:str=Field(default='件',max_length=12)
+    quantity_unit:str=Field(default='',max_length=12)
 class KnowledgePublishRequest(BaseModel):
     model_config=ConfigDict(extra='forbid')
     options:dict[str,Any]={}
@@ -534,12 +557,13 @@ def import_publish(import_id:str,req:ImportPublishRequest):
     from . import data_import
     record=data_import.get_import(import_id)
     if record['kind']=='business':
-        result=data_import.publish_business(record,req.mapping,req.options,req.enterprise_name,req.pack_id,req.quantity_unit)
+        result=data_import.publish_workspace([(record,req.mapping,req.options)],req.enterprise_name,req.pack_id,req.quantity_unit)
     elif record['kind']=='knowledge':
         result=data_import.publish_knowledge(record,req.options)
     else:
         raise ValueError('TEMPLATE_USES_CHECK_ENDPOINT')
-    return data_import._save(record,{**record['meta'],'published':result})
+    fresh=data_import.get_import(import_id)
+    return data_import._save(fresh,{**fresh['meta'],'published':result})
 @app.post('/api/imports/{import_id}/template-check')
 def import_template_check(import_id:str):
     from . import data_import
@@ -717,6 +741,10 @@ class AssistantConversationRequest(BaseModel):
     model_config=ConfigDict(extra='forbid')
     selection:AnalysisRequest|None=None
 
+class AssistantConversationUpdate(BaseModel):
+    model_config=ConfigDict(extra='forbid')
+    action:Literal['open','close','pin','unpin','archive','unarchive']
+
 class AssistantModelOverrides(BaseModel):
     model_config=ConfigDict(extra='forbid')
     model:str|None=Field(default=None,min_length=1,max_length=160)
@@ -751,8 +779,8 @@ def _assistant_selection(selection):
     return value
 
 @app.get('/api/assistant/conversations')
-def assistant_conversations(context_id:str|None=None):
-    return {'conversations':assistant_store.list(context_id)}
+def assistant_conversations(context_id:str|None=None,state:Literal['open','history','archived']|None=None):
+    return {'conversations':assistant_store.list(context_id,state)}
 
 @app.post('/api/assistant/conversations',status_code=201)
 def assistant_conversation_create(req:AssistantConversationRequest|None=None):
@@ -761,6 +789,14 @@ def assistant_conversation_create(req:AssistantConversationRequest|None=None):
 @app.get('/api/assistant/conversations/{conversation_id}')
 def assistant_conversation(conversation_id:str):
     return assistant_store.conversation(conversation_id)
+
+@app.patch('/api/assistant/conversations/{conversation_id}')
+def assistant_conversation_update(conversation_id:str,req:AssistantConversationUpdate):
+    return assistant_store.update(conversation_id,req.action)
+
+@app.delete('/api/assistant/conversations/{conversation_id}')
+def assistant_conversation_delete(conversation_id:str):
+    return assistant_store.delete(conversation_id)
 
 @app.post('/api/assistant/conversations/{conversation_id}/messages',status_code=202)
 def assistant_message(conversation_id:str,req:AssistantMessageRequest):

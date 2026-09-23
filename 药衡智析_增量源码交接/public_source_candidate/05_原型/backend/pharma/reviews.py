@@ -28,8 +28,9 @@ class ReviewStore:
     @contextmanager
     def db(self):
         c = sqlite3.connect(self.path, timeout=10); c.row_factory = sqlite3.Row
-        c.execute('PRAGMA journal_mode=WAL')
         try:
+            from .sqlite_utils import enable_wal
+            enable_wal(c)
             with c: yield c
         finally: c.close()
 

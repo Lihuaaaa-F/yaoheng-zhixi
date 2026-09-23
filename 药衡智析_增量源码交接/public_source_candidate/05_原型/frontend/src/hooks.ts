@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, contextQuery } from './api';
 import { Job, RpaAction } from './types';
 
-export function useJobsActions(tab: number, contextId: string) {
+export function useJobsActions(tab: number, contextId: string, pollInterval = 2000) {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [actions, setActions] = useState<RpaAction[]>([]);
   const [error, setError] = useState('');
@@ -40,11 +40,11 @@ export function useJobsActions(tab: number, contextId: string) {
       } catch (e) {
         if (!c.signal.aborted) setError(e instanceof Error ? e.message : String(e));
       } finally {
-        if (!c.signal.aborted) timer = setTimeout(poll, 2000);
+        if (!c.signal.aborted) timer = setTimeout(poll, pollInterval);
       }
     };
     void poll();
     return () => { c.abort(); clearTimeout(timer); };
-  }, [tab, contextId]);
+  }, [tab, contextId, pollInterval]);
   return { jobs, setJobs, actions, setActions, jobsError: error, refresh };
 }

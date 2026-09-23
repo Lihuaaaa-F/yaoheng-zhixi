@@ -24,7 +24,7 @@ assert.ok(!base.username && !base.password, '访问令牌请通过 PHARMA_API_TO
 const out = path.resolve(process.env.PHARMA_E2E_OUT ?? path.join(os.tmpdir(), 'yaoheng-workbench-ui'));
 const pages = [
   ['analysis', '成本分析'], ['benchmark', '跨厂对标'], ['reports', '分析报告'], ['actions', '问题整改'],
-  ['business', '业务数据'], ['knowledge', '知识库'], ['templates', '报告模板'], ['models', '模型连接'],
+  ['business', '业务数据'], ['knowledge', '知识库'], ['templates', '报告模板'], ['models', '模型连接'], ['settings', '系统设置'],
 ];
 const checks = [], errors = [], blockedWrites = [];
 await mkdir(out, { recursive: true });
@@ -55,14 +55,23 @@ try {
     for (const [key, heading] of pages) {
       const url = new URL(base); url.searchParams.set('page', key);
       await page.goto(url.href, { waitUntil: 'domcontentloaded' });
-      await page.getByRole('heading', { level: 1, name: heading, exact: true }).waitFor();
+      await page.getByRole('main', { name: `${heading}工作区`, exact: true }).waitFor();
       // Wait for the shell's read requests, not animations or arbitrary long sleeps.
       await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
       await page.locator('.business-loading').waitFor({ state: 'hidden', timeout: 60000 });
       assert.equal(await page.locator('vite-error-overlay').count(), 0, `${heading}: Vite 错误遮罩`);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), true, `${heading}: 页面横向溢出`);
       assert.equal(await page.locator('.workbench-content').evaluate(node => node.scrollWidth <= node.clientWidth + 1), true, `${heading}: 业务区横向溢出`);
-      if (key === 'analysis' && viewport.width === 390) await page.locator('.workbench-header').getByRole('button', { name: /AI 助手/ }).click();
+      assert.equal(await page.getByRole('combobox', { name: '数据范围', exact: true }).count(), 0, '不应出现数据范围选择器');
+      if (key === 'analysis') {
+        assert.equal(await page.getByRole('heading', { level: 1, name: '成本分析', exact: true }).count(), 0, '不应保留多余的成本分析标题');
+        const tabs = page.getByRole('navigation', { name: '工作台分区导航', exact: true });
+        const before = (await tabs.boundingBox()).y;
+        await page.locator('.workspace-scroll').evaluate(node => { node.scrollTop = 500; });
+        assert.ok(Math.abs((await tabs.boundingBox()).y - before) < 1, '工作区分区导航应保持固定');
+        await page.locator('.workspace-scroll').evaluate(node => { node.scrollTop = 0; });
+      }
+      if (key === 'analysis' && viewport.width === 390) await page.getByRole('button', { name: '打开对话', exact: true }).click();
       if (viewport.width === 1366 || key === 'analysis') {
         const composer = page.locator('.assistant-composer:visible');
         await composer.waitFor();
@@ -72,7 +81,7 @@ try {
         assert.doesNotMatch(await composer.innerText(), /模型连接在左侧设置|数字来自分析引擎|数字由分析引擎提供|外部操作需确认/);
         await composer.getByRole('button', { name: /选择助手模型与推理强度/ }).waitFor();
         await composer.getByRole('textbox', { name: '向 AI 助手提问' }).waitFor();
-        if (viewport.width === 390) await page.getByRole('button', { name: '收起 AI 助手', exact: true }).click();
+        if (viewport.width === 390) await page.locator('.ant-drawer:visible .ant-drawer-close').click();
       }
       await page.screenshot({ path: path.join(out, `${key}-${viewport.width}.png`) });
       checks.push({ page: key, viewport, heading, no_horizontal_overflow: true });

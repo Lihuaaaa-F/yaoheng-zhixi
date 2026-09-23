@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Button, Select } from 'antd';
+import { Button, Modal, Select } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import FilePicker from './FilePicker';
 import { api, apiHeaders } from './api';
@@ -30,6 +30,7 @@ export async function uploadTypedFile(kind: string, dataType: string, file: File
   const response = await fetch('/api/imports/uploads', { method: 'POST', body: form, headers: apiHeaders() });
   const data = await response.json().catch(() => null);
   if (!response.ok) throw new Error(data?.error?.message ?? data?.detail ?? `上传失败（HTTP ${response.status}）`);
+  if (kind === 'business') window.dispatchEvent(new Event('pharma:data-changed'));
   return data;
 }
 
@@ -120,28 +121,46 @@ export default function ImportWorkflow({ kind, types, parsePath, parseLabel, suc
   const [result, setResult] = useState<any>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [replacements, setReplacements] = useState<Record<string, string>>({});
+  const [acceptedIds, setAcceptedIds] = useState<string[]>([]);
+  const [modal, modalHolder] = Modal.useModal();
+  useEffect(() => {
+    if (kind !== 'business') return;
+    const controller = new AbortController();
+    api('/workspace', undefined, controller.signal).then(value => {
+      if (!controller.signal.aborted) setAcceptedIds((value.imported_files ?? []).map((item: any) => item.import_id));
+    }).catch(() => { if (!controller.signal.aborted) setAcceptedIds([]); });
+    return () => controller.abort();
+  }, [kind, imports]);
   useEffect(()=>{if(jobId)return;const active=imports.find(record=>record.status==='PARSING'&&record.meta?.parse_job);if(active){setJobId(active.meta.parse_job);sessionStorage.setItem(`pharma-import-${kind}`,active.meta.parse_job)}},[imports,jobId,kind]);
   const waiting = imports.filter(r => r.status === 'UPLOADED' || r.status === 'PARSE_FAILED');
   const parsed = imports.filter(r => !['UPLOADED','PARSE_FAILED'].includes(r.status));
   const startParse = async () => {
+    const changes = Object.fromEntries(Object.entries(replacements).filter(([id, previous]) => waiting.some(item => item.id === id) && acceptedIds.includes(previous)));
+    if (Object.keys(changes).length && !await modal.confirm({ title: '更新已接入的数据版本？',
+      content: <><p>以下新文件将替代对应文件参与分析。旧原件及历史结果仍保留，全部文件校验成功后才会更新工作区。</p><ul>{Object.entries(changes).map(([id, previous]) => <li key={id}>{imports.find(item => item.id === previous)?.filename} → {imports.find(item => item.id === id)?.filename}</li>)}</ul></>,
+      okText: '确认更新并解析', cancelText: '返回检查' })) return;
     setBusy(true); setError(''); setResult(null);
     try {
-      const response = await api(parsePath, parseBody ? parseBody() : {});
+      const response = await api(parsePath, { ...(parseBody ? parseBody() : {}), ...(kind === 'business' ? { replacements: changes } : {}) });
       setJobId(response.job_id); sessionStorage.setItem(`pharma-import-${kind}`, response.job_id);
+      if (kind === 'business') window.dispatchEvent(new Event('pharma:data-changed'));
       void refresh(); // 列表即时切到“解析中”
     } catch (e: any) { setError(e.message ?? String(e)); }
     finally { setBusy(false); }
   };
   const removeImport = async (record: any) => {
-    if (!window.confirm(`确认删除导入记录「${record.filename}」？删除后如需重新导入请再次上传。`)) return;
+    if (!await modal.confirm({ title: `删除待解析文件“${record.filename}”？`, content: '删除后如需重新导入，请再次上传。已接入数据不受影响。', okText: '删除文件', okButtonProps: { danger: true }, cancelText: '保留' })) return;
     setError('');
     try {
       await api(`/imports/${encodeURIComponent(record.id)}`, undefined, undefined, 'DELETE');
+      if (kind === 'business') window.dispatchEvent(new Event('pharma:data-changed'));
       if (previewId === record.id) setPreviewId('');
       void refresh();
     } catch (e: any) { setError(e.message ?? String(e)); }
   };
   return <div>
+    {modalHolder}
     <ImportUploadPanel kind={kind} types={types} onUploaded={refresh} hint={hint} processingNotes={processingNotes} />
     <section className="panel">
       <div className="panel-heading"><h2>{listTitle}</h2>
@@ -153,8 +172,10 @@ export default function ImportWorkflow({ kind, types, parsePath, parseLabel, suc
       {error && <div className="error" role="alert">{error}</div>}
       <h3>待解析（{waiting.length}）</h3>
       <ImportListTable imports={waiting} onPreview={setPreviewId} onDelete={removeImport} emptyText={emptyText ?? '暂无待解析数据，请先在上方导入。'} />
+      {kind === 'business' && waiting.length > 0 && acceptedIds.length > 0 && <details className="import-version-options"><summary>更新已接入文件（可选）</summary><p className="muted">补充新期间或新产品时保留“新增文件”。修正旧表时，选择由新文件替代的旧版本；原件会保留。</p>{waiting.map(record => <label className="import-version-row" key={record.id}><span>{record.filename}</span><Select aria-label={`为 ${record.filename} 选择替代文件`} value={replacements[record.id] || ''} disabled={busy || !!jobId} options={[{ value: '', label: '新增文件' }, ...imports.filter(item => acceptedIds.includes(item.id) && item.meta?.data_type === record.meta?.data_type).map(item => ({ value: item.id, label: item.filename }))]} onChange={value => setReplacements(current => ({ ...current, [record.id]: value }))} /></label>)}</details>}
       {jobId && <JobProgress jobId={jobId} onDone={job => {
         setResult(job); setJobId(''); sessionStorage.removeItem(`pharma-import-${kind}`); refresh();
+        if (kind === 'business') window.dispatchEvent(new Event('pharma:data-changed'));
         if (job.status === 'SUCCEEDED' || job.status === 'DEGRADED') {
           onPublished?.(job.result);
         }

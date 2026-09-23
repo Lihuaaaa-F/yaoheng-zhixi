@@ -73,13 +73,25 @@ class AssistantStore:
                     id TEXT PRIMARY KEY,turn_id TEXT,body TEXT,status TEXT,result TEXT);
                 CREATE INDEX IF NOT EXISTS messages_conversation ON messages(conversation_id,created_at);
             ''')
+            # Additive migration: keep every historical message and pending turn.
+            db.execute('BEGIN IMMEDIATE')
+            columns = {row['name'] for row in db.execute('PRAGMA table_info(conversations)')}
+            for name, definition in (('is_open', 'INTEGER NOT NULL DEFAULT 0'),
+                                     ('pinned', 'INTEGER NOT NULL DEFAULT 0'),
+                                     ('archived', 'INTEGER NOT NULL DEFAULT 0'),
+                                     ('opened_at', "TEXT NOT NULL DEFAULT ''")):
+                if name not in columns:
+                    db.execute(f'ALTER TABLE conversations ADD COLUMN {name} {definition}')
+            if 'is_open' not in columns:
+                db.execute('UPDATE conversations SET is_open=1,opened_at=updated_at WHERE id=(SELECT id FROM conversations ORDER BY updated_at DESC LIMIT 1)')
 
     @contextmanager
     def db(self):
         db = sqlite3.connect(self.path, timeout=15)
         db.row_factory = sqlite3.Row
-        db.execute('PRAGMA journal_mode=WAL')
         try:
+            from .sqlite_utils import enable_wal
+            enable_wal(db)
             with db:
                 yield db
         finally:
@@ -88,15 +100,62 @@ class AssistantStore:
     def create(self, selection=None):
         cid, at = uuid4().hex, now()
         with self.db() as db:
-            db.execute('INSERT INTO conversations VALUES(?,?,?,?,?)',
-                       (cid, '新对话', encoded(selection or {}), at, at))
+            db.execute('INSERT INTO conversations(id,title,context,created_at,updated_at,is_open,opened_at) VALUES(?,?,?,?,?,1,?)',
+                       (cid, '新对话', encoded(selection or {}), at, at, at))
         return self.conversation(cid)
 
-    def list(self, context_id=None):
+    @staticmethod
+    def metadata(row):
+        value = dict(row)
+        value['context'] = json.loads(value['context'])
+        for key in ('is_open', 'pinned', 'archived'):
+            value[key] = bool(value[key])
+        return value
+
+    def list(self, context_id=None, state=None):
+        filters = {None: '1=1', 'open': 'is_open=1 AND archived=0',
+                   'history': 'archived=0', 'archived': 'archived=1'}
+        if state not in filters:
+            raise ValueError('未知的对话列表类型。')
         with self.db() as db:
-            rows = db.execute('SELECT * FROM conversations ORDER BY updated_at DESC LIMIT 100').fetchall()
-        return [{**dict(row), 'context': json.loads(row['context'])} for row in rows
+            # No arbitrary 100-conversation truncation; the UI scrolls its full title list.
+            rows = db.execute(f'SELECT * FROM conversations WHERE {filters[state]} ORDER BY pinned DESC,opened_at DESC,updated_at DESC,id').fetchall()
+        return [self.metadata(row) for row in rows
                 if context_id is None or json.loads(row['context']).get('context_id') == context_id]
+
+    def update(self, cid, action):
+        with self.db() as db:
+            db.execute('BEGIN IMMEDIATE')
+            row = db.execute('SELECT * FROM conversations WHERE id=?', (cid,)).fetchone()
+            if not row:
+                raise KeyError('ASSISTANT_CONVERSATION_NOT_FOUND')
+            if action in ('open', 'pin', 'unpin') and row['archived']:
+                raise ValueError('请先从历史记录恢复已归档的对话。')
+            if action == 'open':
+                db.execute('UPDATE conversations SET is_open=1,opened_at=? WHERE id=?', (now(), cid))
+            elif action == 'close':
+                db.execute('UPDATE conversations SET is_open=0 WHERE id=?', (cid,))
+            elif action in ('pin', 'unpin'):
+                db.execute('UPDATE conversations SET pinned=? WHERE id=?', (int(action == 'pin'), cid))
+            elif action == 'archive':
+                db.execute('UPDATE conversations SET is_open=0,archived=1 WHERE id=?', (cid,))
+                db.execute("UPDATE turns SET status='cancelled',stage='cancelled',updated_at=? WHERE conversation_id=? AND status IN ('queued','running')", (now(), cid))
+            elif action == 'unarchive':
+                # Restoring an archive makes it available in history; opening is explicit.
+                db.execute('UPDATE conversations SET archived=0,is_open=0 WHERE id=?', (cid,))
+            else:
+                raise ValueError('未知的对话操作。')
+        return self.conversation(cid)
+
+    def delete(self, cid):
+        """Explicitly delete this chat only; generated reports/tasks remain independent."""
+        with self.db() as db:
+            db.execute('BEGIN IMMEDIATE')
+            db.execute('DELETE FROM proposals WHERE turn_id IN (SELECT id FROM turns WHERE conversation_id=?)', (cid,))
+            db.execute('DELETE FROM messages WHERE conversation_id=?', (cid,))
+            db.execute('DELETE FROM turns WHERE conversation_id=?', (cid,))
+            db.execute('DELETE FROM conversations WHERE id=?', (cid,))
+        return {'id': cid, 'deleted': True}
 
     def conversation(self, cid):
         with self.db() as db:
@@ -111,7 +170,7 @@ class AssistantStore:
                     if current:
                         proposal.update(status=current['status'],result=json.loads(current['result']) if current['result'] else None)
             active = db.execute("SELECT id FROM turns WHERE conversation_id=? AND status IN ('queued','running') ORDER BY created_at LIMIT 1", (cid,)).fetchone()
-        return {**dict(row), 'context': json.loads(row['context']), 'messages': messages,
+        return {**self.metadata(row), 'messages': messages,
                 'active_turn_id': active['id'] if active else None}
 
     def enqueue(self, cid, text, selection, request_id, snapshot_id=None, overrides=None):
@@ -121,6 +180,11 @@ class AssistantStore:
         tid, at = uuid4().hex, now()
         with self.db() as db:
             db.execute('BEGIN IMMEDIATE')
+            conversation = db.execute('SELECT is_open,archived FROM conversations WHERE id=?', (cid,)).fetchone()
+            if not conversation:
+                raise KeyError('ASSISTANT_CONVERSATION_NOT_FOUND')
+            if conversation['archived'] or not conversation['is_open']:
+                raise ValueError('请从历史记录打开对话后再发送。')
             old = db.execute('SELECT id,input_hash FROM turns WHERE conversation_id=? AND request_id=?', (cid, request_id)).fetchone()
             if old:
                 if old['input_hash'] != fingerprint:
@@ -168,7 +232,10 @@ class AssistantStore:
             row = db.execute("SELECT id FROM turns WHERE status='queued' ORDER BY created_at LIMIT 1").fetchone()
             if row:
                 db.execute("UPDATE turns SET status='running',stage='reading',updated_at=? WHERE id=?", (now(), row['id']))
-        return self.turn(row['id']) if row else None
+        try:
+            return self.turn(row['id']) if row else None
+        except KeyError:
+            return None  # A user may delete a queued chat while the worker claims it.
 
     def recover(self):
         # Only called while holding the single assistant worker lock. A crash never retries a paid call.
@@ -177,13 +244,17 @@ class AssistantStore:
                        ('服务重启中断了本轮回答；已保留提问，请重新发送。', now()))
 
     def finish(self, tid, message, proposals=()):
-        turn = self.turn(tid)
+        try:
+            turn = self.turn(tid)
+        except KeyError:
+            return False
         at = now()
         message = {'id': uuid4().hex, 'role': 'assistant', 'created_at': at,'turn_id':tid,
                    'context': turn['input']['selection'], **message}
         with self.db() as db:
             db.execute('BEGIN IMMEDIATE')
-            if db.execute('SELECT status FROM turns WHERE id=?', (tid,)).fetchone()['status'] != 'running':
+            current = db.execute('SELECT status FROM turns WHERE id=?', (tid,)).fetchone()
+            if not current or current['status'] != 'running':
                 return False  # Never publish a late response after cancellation.
             for proposal in proposals:
                 db.execute('INSERT INTO proposals VALUES(?,?,?,?,?)', (proposal['id'], tid, encoded(proposal), 'pending', None))
@@ -212,6 +283,9 @@ class AssistantStore:
                 raise KeyError('ASSISTANT_PROPOSAL_NOT_FOUND')
             if row['status'] == 'confirmed':
                 return json.loads(row['result'])
+            conversation = db.execute('SELECT c.archived FROM conversations c JOIN turns t ON t.conversation_id=c.id WHERE t.id=?', (row['turn_id'],)).fetchone()
+            if not conversation or conversation['archived']:
+                raise ValueError('已归档的对话不能执行新操作，请先恢复并核对数据。')
             result = executor(json.loads(row['body']))
             db.execute("UPDATE proposals SET status='confirmed',result=? WHERE id=?", (encoded(result), pid))
         return result

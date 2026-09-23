@@ -324,7 +324,7 @@ def _read_dataset_uncached(pack, enterprise):
     return dataset
 
 
-def register_enterprise(pack_id, configuration_path):
+def register_enterprise(pack_id, configuration_path, *, advance_workspace=False):
     """Register a trusted local config; no uploads, imports, eval or networking.
 
     The caller owns authorization to install local enterprise configuration.
@@ -348,7 +348,14 @@ def register_enterprise(pack_id, configuration_path):
     ENTERPRISE_REGISTRY.parent.mkdir(parents=True,exist_ok=True)
     with exclusive(ENTERPRISE_REGISTRY.with_suffix('.lock')):
         entries=_registered();path=str(enterprise['_config_file'])
-        if key in entries and entries[key]!=path:raise ValueError('ENTERPRISE_REGISTRATION_CONFLICT')
+        if key in entries and entries[key]!=path and not advance_workspace:
+            raise ValueError('ENTERPRISE_REGISTRATION_CONFLICT')
+        if advance_workspace:
+            # Only the trusted importer can advance this one local workspace.
+            # Arbitrary enterprise registrations still cannot replace one another.
+            from .data_import import IMPORTS_ROOT
+            try: Path(path).resolve().relative_to((IMPORTS_ROOT / 'workspace' / 'versions').resolve())
+            except ValueError: raise ValueError('INVALID_WORKSPACE_VERSION_PATH')
         entries[key]=path
         with tempfile.TemporaryDirectory(dir=ENTERPRISE_REGISTRY.parent,prefix='enterprise-') as temporary:
             candidate=Path(temporary)/'registry.json';candidate.write_text(json.dumps(entries,ensure_ascii=False,sort_keys=True))
@@ -655,7 +662,33 @@ def context_catalog():
         default='pharmaceutical:competition'
     elif contexts:
         default=contexts[0]['context_id']
+    # Automatic local workspace supersedes the demo; pending/invalid uploads
+    # must never make the interface quietly display competition figures.
+    from .data_import import workspace_state
+    workspace = workspace_state()
+    if workspace.get('has_uploads'):
+        default = workspace.get('context_id')
+        # A first-run migration can have published its registry while this
+        # catalogue was being assembled. Add the resulting context once.
+        if default and not any(item['context_id'] == default for item in contexts):
+            pack = load_pack(default.split(':')[0]); enterprise = _enterprise(pack, default.partition(':')[2])
+            contexts.append({'id':default,'context_id':default,'industry_id':pack.id,'industry_name':pack.name,
+                'company_id':enterprise['id'],'company_name':enterprise['name'],
+                'capabilities':capabilities(pack,_read_dataset(pack,enterprise)), 'data_label':'用户上传的业务数据'})
     return {'contexts':contexts,'default_context_id':default}
+
+
+def workspace_state():
+    """Public integration contract for the scope-free local workbench."""
+    from .data_import import workspace_state as state
+    return state()
+
+
+def workspace_context_id():
+    state = workspace_state()
+    if not state.get('context_id'):
+        raise ValueError('WORKSPACE_DATA_NOT_READY: 请先在业务数据中完成数据解析')
+    return state['context_id']
 
 
 def catalog(context_id):
@@ -668,7 +701,7 @@ def catalog(context_id):
     return {'factories':sorted({x.factory_id for x in dataset.costs}), 'products':sorted({x.product_id for x in dataset.costs}),
         'months':sorted({x.period for x in dataset.costs if x.scenario=='actual'}),'context_id':context_id,
         'snapshot_id':digest(dataset.model_dump(mode='json')),'quantity_unit':enterprise['quantity_unit'],
-        'currency':enterprise['currency'],'capabilities':capabilities(pack,dataset),'data_label':pack.data_label}
+        'currency':enterprise['currency'],'capabilities':capabilities(pack,dataset),'data_label':_import_or_pack_label(enterprise,pack)}
 
 
 def retrieve_reference(context, query, *, product=None, limit=8):
@@ -700,7 +733,10 @@ def analyze_reference(context_id, factory=None, product=None, month=None, analys
     if sha256(template_bytes).hexdigest()!=context.template_version:raise ValueError('TEMPLATE_SNAPSHOT_CHANGED')
     report_template=json.loads(template_bytes)
     if basis not in ('unit','total'): raise ValueError('INVALID_BASIS')
-    ds=_read_dataset(pack,enterprise);factory=factory or sorted({x.factory_id for x in ds.costs})[0];product=product or sorted({x.product_id for x in ds.costs})[0]
+    ds=_read_dataset(pack,enterprise)
+    if digest(ds.model_dump(mode='json')) != context.data_snapshot:
+        raise ValueError('DATA_SNAPSHOT_CHANGED: 工作区数据刚完成更新，请重新载入分析')
+    factory=factory or sorted({x.factory_id for x in ds.costs})[0];product=product or sorted({x.product_id for x in ds.costs})[0]
     month=month or max(x.period for x in ds.costs if x.scenario=='actual')
     ds=NormalizedDataset(costs=tuple(x for x in ds.costs if x.enterprise_id==context.enterprise_id and x.factory_id==factory and x.product_id==product),
         quantities=tuple(x for x in ds.quantities if x.enterprise_id==context.enterprise_id and x.factory_id==factory and x.product_id==product),

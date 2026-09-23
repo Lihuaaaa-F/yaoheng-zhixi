@@ -23,8 +23,8 @@ export default function KnowledgeData({ contextId, product, month, factory, onOp
       successPrefix="知识库构建成功"
       failPrefix="构建知识库失败"
       listTitle="知识库数据导入列表"
-      hint="上传当前数据范围的产品、工艺、规范或内部资料，解析后可在下方检索，并用于分析中的证据引用。"
-      processingNotes="系统通过关键词与语义混合检索查找资料（BM25 与向量召回、RRF 融合），并保留来源、页码和位置。文件解析与索引仅绑定当前数据范围。扫描件若无法提取文字会提示失败，请补充带文本的文档后重试。"
+      hint="上传企业的产品、工艺、规范或内部资料，解析后可在下方检索，并用于分析中的证据引用。"
+      processingNotes="系统通过关键词与语义混合检索查找资料（BM25 与向量召回、RRF 融合），并保留来源、页码和位置。知识绑定本工作区，不与其他企业混合。扫描件若无法提取文字会提示失败，请补充带文本的文档后重试。"
       emptyText="暂无待构建的知识文档，请先在上方上传。"
     />
     <Evidence key={`${contextId}:${revision}`} contextId={contextId} product={product} month={month} factory={factory} onOpen={onOpen} />

@@ -258,6 +258,8 @@ def run_data_parse(store, job):
             if not headers:
                 raise StepFailure('预处理', f'{record["filename"]} 无法读取表头（文件为空或格式不支持）')
             options = _options_for(record)
+            replacement=(payload.get('replacements') or {}).get(record['id'])
+            if replacement:options['replace_import_id']=replacement
             if not quantity_hint and options.get('quantity_unit_hint'):
                 quantity_hint = options['quantity_unit_hint']
             stats = (record['meta'].get('preview') or {}).get('row_count')
@@ -288,15 +290,16 @@ def run_data_parse(store, job):
                     factories_seen.append(factory)
             validated.append((record, mapping, options, validation))
         step(55, '指标计算与能力评估（合并多文件口径，防双计）…', 'COMPUTE')
-        if not enterprise_name:
-            enterprise_name = '、'.join(factories_seen[:2]) or Path(records[0]['filename']).stem
-            enterprise_name = f'{enterprise_name}（导入）'
+        workspace = data_import._workspace_manifest()
+        if not enterprise_name and workspace:
+            enterprise_name = workspace['enterprise_name']
         if not quantity_hint:
-            quantity_hint = '件'
+            quantity_hint = workspace['quantity_unit'] if workspace else ''
         step(70, '归因分析：告警提取 + 数据分析模型归因推测…', 'ATTRIBUTION')
         publish_entries = [(record, mapping, options) for record, mapping, options, _v in validated]
-        published = data_import.publish_business_batch(publish_entries, enterprise_name,
-                                                       payload.get('industry_id') or 'generic_manufacturing', quantity_hint)
+        published = data_import.publish_workspace(publish_entries, enterprise_name,
+                                                       payload.get('industry_id') or '', quantity_hint)
+        enterprise_name = published['enterprise_name']
         context_id = published['context_id']
         try:
             overview = _attribution_overview(context_id)
@@ -313,7 +316,7 @@ def run_data_parse(store, job):
         result['published'] = published
         result['attribution'] = overview
         result['message'] = '数据处理成功'
-        result['message_detail'] = (f'新数据集 {context_id}：{len(published["factories"])} 工厂 · '
+        result['message_detail'] = (f'工作区已整合 {published["accepted_imports"]} 份业务文件：{len(published["factories"])} 工厂 · '
                                     f'{len(published["products"])} 产品 · {len(published["periods"])} 期间；'
                                     f'告警 {overview["alert_count"]} 条，归因推测 {len(overview["hypotheses"])} 条'
                                     f'（{ "数据分析模型" if overview["attribution_mode"] == "analysis_model" else "确定性规则" }）。'

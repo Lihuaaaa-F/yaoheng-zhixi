@@ -1,4 +1,4 @@
-"""顶栏状态的真实来源：部署配置、无凭据网络探测、已发布数据时间。"""
+"""侧栏状态的真实来源：部署配置、无凭据网络探测、已发布数据时间。"""
 from datetime import datetime, timezone
 import json
 import os
@@ -57,6 +57,12 @@ def data_status(context_id):
     try:
         options = catalog(context_id)
         result['latest_period'] = (options.get('months') or [None])[-1]
+        from .data_import import workspace_state
+        workspace = workspace_state()
+        if workspace.get('context_id') == context_id and workspace.get('updated_at'):
+            result.update(updated_at=workspace['updated_at'], basis='全部已接入文件通过校验后的数据发布时间',
+                          workspace_status=workspace['status'])
+            return result
         if context_id == 'pharmaceutical:competition':
             current = SNAPSHOTS/'current.json'
             if current.is_file():

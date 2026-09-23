@@ -157,3 +157,62 @@ def test_mixed_scanned_pdf_is_not_silently_published_as_complete(runtime):
         data_import.publish_knowledge(record, {'context_id': 'generic_manufacturing:enterprise-a'})
     assert data_import.original_path(record).read_bytes() == payload
     assert knowledge.knowledge_registry('generic_manufacturing:enterprise-a')['active'] == {}
+
+
+def test_workspace_inherits_verified_knowledge_without_retagging_or_cross_enterprise_reads(runtime, monkeypatch):
+    current = 'generic_manufacturing:imp-workspace'
+    former = ['generic_manufacturing:batch-a', 'generic_manufacturing:batch-b']
+    first, first_meta, first_path = _publish('设备规程.txt', ('设备维护核查需要同时确认维修工单、生产工时与成本归集记录。' * 3).encode(), former[0])
+    second, second_meta, second_path = _publish('采购规程.txt', ('采购价格核查需要同时确认采购订单、验收入库与付款凭证。' * 3).encode(), former[1])
+    _, private_meta, private_path = _publish('其他企业.txt', ('其他企业机密规程不得进入当前企业的知识检索和报告内容。' * 3).encode(), 'generic_manufacturing:unrelated')
+    _publish('比赛资料.txt', ('比赛资料与新企业不是同一个主体，不得自动混入新企业证据。' * 3).encode(), 'pharmaceutical:competition')
+    originals = {p: p.read_bytes() for p in (first_path, second_path, private_path)}
+    before = knowledge.scoped_knowledge_snapshot(current, 'base')
+    monkeypatch.setattr(data_import, '_workspace_manifest', lambda: {
+        'context_id': current, 'industry_id': 'generic_manufacturing', 'legacy_context_ids': former})
+    assert set(knowledge.uploaded_knowledge_sources(current)) == {first_path, second_path}
+    assert knowledge.scoped_knowledge_snapshot(current, 'base') != before
+    assert knowledge.uploaded_knowledge_sources(former[0]) == [first_path]
+    assert knowledge.registered_knowledge_source(second_meta['source_id'], former[0]) is None
+    assert knowledge.registered_knowledge_source(private_meta['source_id'], current) is None
+    assert knowledge.registered_knowledge_source(first_meta['source_id'], current)['source_context_id'] == former[0]
+    resolved = data_import.resolve_knowledge_source(first_meta['source_id'], current)
+    assert resolved['filename'] == first['filename']
+    assert resolved['path'].read_bytes() == data_import.original_path(first).read_bytes()
+
+    empty_base = runtime / 'workspace_knowledge.json'
+    empty_base.write_text('[]')
+    kb = knowledge.Knowledge(context={'industry_id': 'generic_manufacturing', 'enterprise_id': 'imp-workspace'},
+                             source_files=[empty_base], vector_enabled=False)
+    result = kb.search('设备维护 采购价格', mode='bm25')
+    assert {row['source_id'] for row in result['evidence']} == {first_meta['source_id'], second_meta['source_id']}
+    assert {row['source_context_id'] for row in result['evidence']} == set(former)
+    assert all(row['analysis_context']['enterprise_id'] == 'imp-workspace' for row in result['evidence'])
+    assert {p: p.read_bytes() for p in originals} == originals
+
+
+def test_workspace_new_document_version_supersedes_inherited_active_but_retains_old_link(runtime, monkeypatch):
+    current = 'generic_manufacturing:imp-workspace'
+    former = 'generic_manufacturing:batch-a'
+    _, old_meta, old_path = _publish('设备规程.txt', ('旧设备规程需要核对设备台账与历次检修工单。' * 3).encode(), former)
+    monkeypatch.setattr(data_import, '_workspace_manifest', lambda: {
+        'context_id': current, 'industry_id': 'generic_manufacturing', 'legacy_context_ids': [former]})
+    before = knowledge.scoped_knowledge_snapshot(current, 'base')
+    _, new_meta, new_path = _publish('设备规程.txt', ('更新的设备规程需要核对设备能耗、检修工单及产量记录。' * 3).encode(), current)
+    assert knowledge.scoped_knowledge_snapshot(current, 'base') != before
+    assert knowledge.uploaded_knowledge_sources(current) == [new_path]
+    assert knowledge.uploaded_knowledge_sources(former) == [old_path]
+    assert knowledge.registered_knowledge_source(old_meta['source_id'], current)['source_context_id'] == former
+    assert knowledge.registered_knowledge_source(new_meta['source_id'], current)['source_context_id'] == current
+    assert '旧设备规程' in data_import.resolve_knowledge_source(old_meta['source_id'], current)['path'].read_text()
+    assert old_path.exists()
+
+
+@pytest.mark.parametrize('foreign_scope', ['pharmaceutical:competition', 'mechanical_demo:enterprise-a'])
+def test_workspace_manifest_cannot_extend_knowledge_to_contest_or_other_industry(runtime, monkeypatch, foreign_scope):
+    current = 'generic_manufacturing:imp-workspace'
+    monkeypatch.setattr(data_import, '_workspace_manifest', lambda: {
+        'context_id': current, 'industry_id': 'generic_manufacturing', 'legacy_context_ids': [foreign_scope]})
+    with pytest.raises(ValueError, match='INVALID_WORKSPACE_KNOWLEDGE_BINDING'):
+        knowledge.uploaded_knowledge_sources(current)
+    assert knowledge.knowledge_scope_ids('generic_manufacturing:unrelated') == ['generic_manufacturing:unrelated']
