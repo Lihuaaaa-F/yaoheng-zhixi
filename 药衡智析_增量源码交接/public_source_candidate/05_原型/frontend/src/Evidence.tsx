@@ -85,6 +85,10 @@ function KnowledgeGraphPanel({contextId}:{contextId:string}) {
   <div className="panel-heading"><h2>知识图谱 · 配方与工艺（三维）</h2>
    <div className="button-row"><span>{graph.stats?.products??0} 产品 · {graph.stats?.materials??0} 药材 · {graph.stats?.process_steps??0} 工序</span>
     <button onClick={()=>setFullscreen(f=>!f)}>{fullscreen?'退出全屏':'放大视图'}</button></div></div>
+  <div className="kg-legend" role="list" aria-label="节点类型图例">
+    {[['产品','#227c81'],['药材','#c08a3e'],['工序','#8f5b7a']].map(([t,c])=><span key={t} role="listitem"><i style={{background:c}}/>{t}</span>)}
+    <span className="muted">连线为配方/工艺关系</span>
+  </div>
   <div ref={chartDomRef} style={{position:'relative'}}>
   <Chart3D label="知识图谱三维视图" height={height}
    onHover={(info:any)=>setHoverInfo(info)} option={{
@@ -99,8 +103,10 @@ function KnowledgeGraphPanel({contextId}:{contextId:string}) {
       {type:'scatter3D',coordinateSystem:'cartesian3D',data:nodeData,
        tooltip:{show:true,formatter:(p:any)=>`${p.name}（${p.data?.tooltip_kind??''}）`},
        label:{show:true,formatter:(p:any)=>p.name,position:'right',distance:1,
-         textStyle:{fontSize:13,color:'#28414d',fontWeight:400}},
-       emphasis:{label:{show:true,fontSize:15,fontWeight:600}}},
+         textStyle:{fontSize:12,color:'#28414d',fontWeight:400,
+           textBorderColor:'#ffffff',textBorderWidth:3,textBorderType:'solid'}},
+       emphasis:{label:{show:true,fontSize:15,fontWeight:600,
+         textBorderColor:'#ffffff',textBorderWidth:3}}},
     ],
     xAxis3D:{show:false},yAxis3D:{show:false},zAxis3D:{show:false},
     grid3D:{

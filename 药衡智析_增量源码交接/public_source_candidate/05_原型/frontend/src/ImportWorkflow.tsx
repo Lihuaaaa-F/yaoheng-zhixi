@@ -98,10 +98,11 @@ export function ImportListTable({ imports, onPreview, emptyText }: {
 
 /** 单页导入工作流：上传面板 + 待解析列表 + 解析按钮 + 进度 + 终态提示。 */
 export default function ImportWorkflow({ kind, types, parsePath, parseLabel, successPrefix, failPrefix,
-  parseBody, hint, listTitle, extra }: {
+  parseBody, hint, listTitle, extra, emptyText }: {
   kind: string; types: { id: string; label: string; accept: string; note?: string }[];
   parsePath: string; parseLabel: string; successPrefix: string; failPrefix: string;
   parseBody?: () => any; hint: string; listTitle: string; extra?: (record: any) => any;
+  emptyText?: string;
 }) {
   const { imports, importsError, refresh } = useImports(kind);
   const [previewId, setPreviewId] = useState('');
@@ -131,7 +132,7 @@ export default function ImportWorkflow({ kind, types, parsePath, parseLabel, suc
       {importsError && <div className="error" role="alert">列表读取失败：{importsError}</div>}
       {error && <div className="error" role="alert">{error}</div>}
       <h3>待解析（{waiting.length}）</h3>
-      <ImportListTable imports={waiting} onPreview={setPreviewId} emptyText="暂无待解析数据，请先在上方导入。" />
+      <ImportListTable imports={waiting} onPreview={setPreviewId} emptyText={emptyText ?? '暂无待解析数据，请先在上方导入。'} />
       {jobId && <JobProgress jobId={jobId} onDone={job => {
         setResult(job); setJobId(''); refresh();
         if (job.status === 'SUCCEEDED' || job.status === 'DEGRADED') {

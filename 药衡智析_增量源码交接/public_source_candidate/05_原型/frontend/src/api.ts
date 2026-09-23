@@ -16,7 +16,14 @@ export type Selection = {
     analysis_type: 'monthly' | 'quarterly' | 'special';
     basis: 'unit' | 'total';
 };
-export const fmt = (value: unknown, digits = 2): string => value === null || value === undefined || value === '' ? 'N/A' : Number.isFinite(Number(value)) ? Number(value).toLocaleString('zh-CN', { minimumFractionDigits: digits, maximumFractionDigits: digits }) : String(value);
+export const fmt = (value: unknown, digits = 2): string => {
+    if (value === null || value === undefined || value === '') return 'N/A';
+    const n = Number(value);
+    if (!Number.isFinite(n)) return String(value);
+    // 消除 -0/-0.00 类负零显示（四舍五入到 0 的极小负值按 0 呈现）
+    const normalized = Object.is(n, -0) || (n !== 0 && Math.abs(n) < Math.pow(10, -digits) / 2 && n.toFixed(digits) === `-${(0).toFixed(digits)}`) ? 0 : n;
+    return normalized.toLocaleString('zh-CN', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+};
 export const pct = (value: unknown) => value === null || value === undefined ? 'N/A' : `${Number(value) > 0 ? '+' : ''}${fmt(value)}%`;
 
 export const contextQuery = (contextId: string) => `context_id=${encodeURIComponent(contextId)}`;

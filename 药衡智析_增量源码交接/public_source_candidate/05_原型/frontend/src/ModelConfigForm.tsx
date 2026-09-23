@@ -124,7 +124,7 @@ export default function ModelConfigForm({ route }: { route: 'extraction' | 'anal
         <datalist id={`models-${route}`}>{tierOptions.map((m: any) => <option key={m.id} value={m.id}>{m.note}</option>)}</datalist></label>
       <label>API 根地址（Base URL）<input aria-label="Base URL" value={form.base_url} onChange={e => set('base_url', e.target.value)} placeholder={mode === 'local' ? 'http://127.0.0.1:11434/v1' : 'https://…/v4'} /></label>
       {mode === 'api' && !manual && <label>API 密钥<input aria-label="API 密钥" type="password" value={form.api_key} onChange={e => set('api_key', e.target.value)} placeholder={current?.key_set ? '已配置（留空保持不变）' : '仅写入本机受限文件，不回显'} /></label>}
-      {mode === 'api' && !manual && <label>密钥文件路径（可选）<input aria-label="密钥文件路径" value={form.key_file} onChange={e => set('key_file', e.target.value)} placeholder="C:\\keys\\provider.key" /></label>}
+      {mode === 'api' && !manual && <label>密钥文件路径（可选）<input aria-label="密钥文件路径" value={form.key_file} onChange={e => set('key_file', e.target.value)} placeholder="C:\keys\provider.key" /></label>}
       {mode === 'local' && !manual && <p className="muted form-hint">{presets?.local_key_hint ?? '本地服务通常无需密钥。'}</p>}
       <label>协议<select aria-label="协议" value={form.protocol} onChange={e => set('protocol', e.target.value)}><option value="openai">openai（兼容）</option><option value="anthropic">anthropic</option></select></label>
       <label className="effort-slider">推理强度

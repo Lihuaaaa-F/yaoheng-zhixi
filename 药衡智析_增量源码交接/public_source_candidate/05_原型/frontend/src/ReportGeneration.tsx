@@ -38,7 +38,7 @@ export default function ReportGeneration({ selection, snapshot, jobs, refresh, o
     {!visibleJobs.length
       ? <p className="empty">{snapshot ? '尚无报告。生成后分别核验文件、业务内容与人工评审。' : '请先在左侧选择有效的分析对象（数据范围/产品/工厂/月份）。'}</p>
       : <div className="job-list">{visibleJobs.map(j => <article className="job" key={j.id}>
-        <strong>{j.result?.snapshot?.product ?? '报告'} · {j.result?.snapshot?.factory ?? ''} · {j.result?.snapshot?.period?.start ?? j.input?.month ?? ''}{j.result?.snapshot?.period?.end !== j.result?.snapshot?.period?.start ? ` 至 ${j.result?.snapshot?.period?.end ?? ''}` : ''}</strong>
+        <strong>{j.result?.snapshot?.product ?? '报告'} · {j.result?.snapshot?.factory ?? ''} · {j.result?.snapshot?.period?.start ?? j.input?.month ?? ''}{j.result?.snapshot?.period?.end !== j.result?.snapshot?.period?.start ? ` 至 ${j.result?.snapshot?.period?.end ?? ''}` : ''}{j.created ? <span className="muted" style={{ fontWeight: 400 }}>（生成于 {(j.created ?? '').slice(5, 16).replace('T', ' ')}）</span> : null}</strong>
         <p>执行状态：{jobLabel(j.status)}{j.detail && j.detail !== '排队等待处理' ? ` · ${j.detail}` : ''}{typeof j.progress === 'number' && !['SUCCEEDED', 'DEGRADED', 'FAILED'].includes(j.status) ? `（${j.progress}%）` : ''}</p>
         {j.result?.narrative && <AnalysisStatus narrative={j.result.narrative} review={j.result.acceptance} />}
         <Acceptance result={j.result} />

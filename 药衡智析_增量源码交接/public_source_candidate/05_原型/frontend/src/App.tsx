@@ -52,7 +52,7 @@ export default function App() {
   const currentContext = useRef(contextId); currentContext.current = contextId;
   const pageInfo = PAGES[page];
   const inWorkspace = pageInfo?.module === '工作台';
-  const { jobs, actions, refresh } = useJobsActions(inWorkspace && (pageInfo?.item === '报告生成' || pageInfo?.item === '问题整改') ? 2 : -1, contextId);
+  const { jobs, actions, refresh, jobsError } = useJobsActions(inWorkspace && (pageInfo?.item === '报告生成' || pageInfo?.item === '问题整改') ? 2 : -1, contextId);
   // reload 计数：任一数据请求失败后“重试”按钮递增，触发对应 effect 重取
   useEffect(() => {
     const c = new AbortController();
@@ -90,7 +90,9 @@ export default function App() {
     if (pageInfo?.item !== '跨厂对标' || !catalog || selection.context_id !== contextId || !left || !right || left === right) return;
     const c = new AbortController();
     setBenchmarkLoading(true); setError(''); setBenchmark(null); setBenchElapsed(0);
-    const params = new URLSearchParams({ context_id: contextId, product, month, left, right, analysis_type, basis });
+    // explain=async（2026-09-23）：差异数值/证据即时返回，模型解释后台补全
+    // （Benchmark 内进度条轮询）；冷请求不再同步等待模型 1-4 分钟。
+    const params = new URLSearchParams({ context_id: contextId, product, month, left, right, analysis_type, basis, explain: 'async' });
     api(`/benchmarks?${params}`, undefined, c.signal).then(x => { if (!c.signal.aborted) setBenchmark(x); })
       .catch(e => { if (!c.signal.aborted) setError(e.message); })
       .finally(() => { if (!c.signal.aborted) setBenchmarkLoading(false); });
@@ -143,7 +145,8 @@ export default function App() {
         {analysis_type === 'special' && inWorkspace && <p className="notice">专题分析：围绕选定的产品/工厂/月份出具一次专项主题报告（如某原料涨价影响）；报告结构由「数据中心 · 报告模板」中安装的专题模板决定，未安装时沿用月度模板。</p>}
         <Capabilities value={snapshot?.capabilities ?? catalog?.capabilities ?? activeContext?.capabilities} />
         {error && <ErrorBox message={error} onRetry={() => { setError(''); setReload(n => n + 1); }} />}
-        {(pageInfo?.item === '跨厂对标' ? benchmarkLoading : analysisLoading) && <div className="loading" role="status">{pageInfo?.item === '跨厂对标' ? `正在对标分析：差异计算、证据检索与原因假设（约 10–60 秒），已等待 ${benchElapsed} 秒…` : '正在读取固定版本数据…'}</div>}
+        {!error && jobsError && (pageInfo?.item === '报告生成' || pageInfo?.item === '问题整改') && <ErrorBox message={`任务列表刷新失败：${jobsError}`} onRetry={() => { refresh(); }} />}
+        {(pageInfo?.item === '跨厂对标' ? benchmarkLoading : analysisLoading) && <div className="loading" role="status">{pageInfo?.item === '跨厂对标' ? `正在计算跨厂差异与检索证据（通常数秒；模型解释在页面内以进度条后台生成），已等待 ${benchElapsed} 秒…` : '正在读取固定版本数据…'}</div>}
 
         {pageInfo?.item === '业务数据' && <BusinessData />}
         {pageInfo?.item === '知识库数据' && <KnowledgeData contextId={contextId} product={product} month={month} factory={factory} onOpen={setDrawer} />}

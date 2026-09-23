@@ -107,14 +107,71 @@ def install_template(source: Path, analysis_type: str) -> dict:
                 raw = LET.tostring(xml, encoding='utf-8', xml_declaration=True)
             zout.writestr(info, raw)
     # 通用前置区手术：与 compact_working_template 同源逻辑（安全子集）。
-    _relayout_front_section(output, entries)
+    yoy_note = _relayout_front_section(output, entries)
     validate_word_compat(output)
     result = {'analysis_type': analysis_type, 'source': str(source), 'source_filename': source.name,
               'template_hash': hashlib.sha256(output.read_bytes()).hexdigest(),
               'placeholders': entries, 'placeholder_count': len(entries),
+              'yoy_binding_note': yoy_note,
               'installed_at': datetime.now().isoformat(), 'reader_template_version': 'installed-v1'}
     map_path.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding='utf-8')
     return result
+
+
+# 同比补绑定的行/列语义锚点（2026-09-23 审计 AUD-TPL-01：此前按 rows[4:7]/列4-5
+# 硬编码，用户模板行序不同会写错单元格）。按表头与首列文字定位，找不到即跳过。
+_YOY_ELEMENT_ROW_KEYS = (('材料', ('直接材料', '材料')), ('人工', ('直接人工',)), ('制造费用', ('制造费用',)))
+
+
+def _locate_overview_yoy_cells(overview):
+    """在"总成本概览"表中按文字定位 去年同月列/同比列/三要素行。
+
+    返回 (yoy_col, rate_col, {要素名: 行}, 跳过原因列表)；列或某行未命中时
+    对应项为 None 并记录原因，调用方只补绑成功命中的单元格。
+    """
+    header = [c.text.strip() for c in overview.rows[0].cells]
+    yoy_col = next((i for i, h in enumerate(header) if '去年同月' in h), None)
+    rate_col = next((i for i, h in enumerate(header) if '同比' in h and ('变动' in h or '率' in h)), None)
+    skipped = []
+    if yoy_col is None:
+        skipped.append('表头未找到“去年同月”列')
+    if rate_col is None:
+        skipped.append('表头未找到“同比”列')
+    rows = {}
+    for row in overview.rows[1:]:
+        first = row.cells[0].text.strip() if row.cells else ''
+        if not first:
+            continue
+        for cn, keys in _YOY_ELEMENT_ROW_KEYS:
+            if any(k in first for k in keys) and cn not in rows:
+                rows[cn] = row
+                break
+    for cn, _keys in _YOY_ELEMENT_ROW_KEYS:
+        if cn not in rows:
+            skipped.append(f'未找到“{cn}”数据行')
+    return yoy_col, rate_col, rows, skipped
+
+
+def _bind_overview_yoy_cell(row, col, field, ratio, entries, book_id_base):
+    """在指定行/列写同比占位符并加书签；返回占位符条目。"""
+    from docx.oxml import OxmlElement
+    from docx.oxml.ns import qn
+    p = row.cells[col].paragraphs[0]
+    p.text = '{{' + field + '}}' + ('%' if ratio else '')
+    marker = 'YH_reader_' + field
+    mark = OxmlElement('w:bookmarkStart')
+    mark.set(qn('w:id'), str(book_id_base + len(entries)))
+    mark.set(qn('w:name'), marker)
+    p._p.insert(0, mark)
+    end = OxmlElement('w:bookmarkEnd')
+    end.set(qn('w:id'), mark.get(qn('w:id')))
+    p._p.append(end)
+    entry = {'original': field, 'field': field, 'context': p.text,
+             'marker': marker, 'xml_part': 'word/document.xml',
+             'source': 'period_values.yoy.elements_unit / elements.comparisons.yoy.unit.rate',
+             'unit': '%' if ratio else '元/盒'}
+    entries.append(entry)
+    return entry
 
 
 def _relayout_front_section(path, entries):
@@ -124,7 +181,10 @@ def _relayout_front_section(path, entries):
     目录域字符与“更新域”提示行；正文首章强制新起一页。章节缺失（不会发生：
     安装前 check_template 已要求六章节）时跳过分页调整。
     ② 总成本概览表“去年同月/同比”空白单元格补占位符绑定（题包原件的这些
-    单元格是遗漏而非缺数）；模板无该表时安全跳过。
+    单元格是遗漏而非缺数）；按表头文字定位（2026-09-23 修复：不再按行/列
+    索引硬编码），模板无该表或行/列未命中时安全跳过并在返回值标注。
+
+    返回补绑定说明（str）：全部命中返回绑定数量；有跳过返回跳过原因。
     """
     from docx import Document
     from docx.oxml import OxmlElement
@@ -155,29 +215,24 @@ def _relayout_front_section(path, entries):
             pp._p.getparent().remove(pp._p)
     if body_start is not None:
         body_start.paragraph_format.page_break_before = True
-    try:
-        overview = next(t for t in d.tables if any('去年同月' in c.text for c in t.rows[0].cells))
-    except StopIteration:
-        overview = None
-    if overview is not None and len(overview.rows) >= 7:
-        for row, cn in zip(overview.rows[4:7], ['材料', '人工', '制造费用']):
-            for index, field, ratio in [(4, '去年' + cn + '成本' if cn != '制造费用' else '去年制造费用', False),
-                                        (5, cn + '成本同比', True)]:
-                p = row.cells[index].paragraphs[0]
-                p.text = '{{' + field + '}}' + ('%' if ratio else '')
-                marker = 'YH_reader_' + field
-                mark = OxmlElement('w:bookmarkStart')
-                mark.set(qn('w:id'), str(23000 + len(entries)))
-                mark.set(qn('w:name'), marker)
-                p._p.insert(0, mark)
-                end = OxmlElement('w:bookmarkEnd')
-                end.set(qn('w:id'), mark.get(qn('w:id')))
-                p._p.append(end)
-                entries.append({'original': field, 'field': field, 'context': p.text,
-                                'marker': marker, 'xml_part': 'word/document.xml',
-                                'source': 'period_values.yoy.elements_unit / elements.comparisons.yoy.unit.rate',
-                                'unit': '%' if ratio else '元/盒'})
+    overview = next((t for t in d.tables if any('去年同月' in c.text for c in t.rows[0].cells)), None)
+    if overview is None:
+        d.save(path)
+        return '未找到“总成本概览”表，跳过同比补绑定（渲染时对应占位符按缺值 N/A 处理）'
+    yoy_col, rate_col, element_rows, skipped = _locate_overview_yoy_cells(overview)
+    bound = 0
+    for cn in ('材料', '人工', '制造费用'):
+        row = element_rows.get(cn)
+        if row is None or yoy_col is None or rate_col is None:
+            continue
+        field_amount = '去年' + cn + '成本' if cn != '制造费用' else '去年制造费用'
+        _bind_overview_yoy_cell(row, yoy_col, field_amount, False, entries, 23000)
+        _bind_overview_yoy_cell(row, rate_col, cn + '成本同比', True, entries, 23000)
+        bound += 2
     d.save(path)
+    if bound:
+        return f'同比补绑定 {bound} 个单元格' if not skipped else f'同比补绑定 {bound} 个单元格；跳过：{"；".join(skipped)}'
+    return '同比补绑定全部跳过：' + '；'.join(skipped)
 
 def replace_text_nodes(nodes, mapping):
     """Replace split-run tokens without assigning paragraph.text or removing runs."""
@@ -464,15 +519,23 @@ def build_bindings(snapshot,narrative,benchmark=None):
         best=min(improving,key=lambda e:Decimal(str(e['unit_mom'])))
         highlights.append('改善最大的成本要素：'+best['name']+'（单位环比 '+number(str(best['unit_mom']))+'%）')
     for row in ((snapshot.get('industry') or {}).get('rows') or []) if snapshot.get('factory')=='中药一厂' else []:
-        if str(row.get('指标',''))=='人工成本占比' and row.get('本厂水平(中药一厂)') and row.get('行业P50'):
+        # P2-10（2026-09-23 视觉审查）：亮点数字此前直引题包静态行（11.9%/0.29），
+        # 与报告自身表格（按本月数据计算 11.78%/0.2963→0.30）矛盾；统一改用
+        # 本报告同源计算值，方向判断仍对照行业 P50。
+        if str(row.get('指标',''))=='人工成本占比' and row.get('行业P50'):
             try:
-                if Decimal(str(row['本厂水平(中药一厂)']).rstrip('%'))<Decimal(str(row['行业P50']).rstrip('%')):
-                    highlights.append('人工成本占比 '+str(row['本厂水平(中药一厂)'])+' 低于行业中位 '+str(row['行业P50'])+'（题包静态参考）')
+                _share=Decimal(str(els['labor']['unit']))/Decimal(str(m['unit_cost']))*100
+                if _share<Decimal(str(row['行业P50']).rstrip('%')):
+                    highlights.append('人工成本占比 '+f'{_share:.2f}%'+' 低于行业中位 '+str(row['行业P50'])+'（题包静态参考）')
             except Exception:pass
-        if str(row.get('指标',''))=='单位成本(元/粒)' and row.get('本厂水平(中药一厂)') and row.get('行业P50'):
+        if str(row.get('指标',''))=='单位成本(元/粒)' and row.get('行业P50'):
             try:
-                if Decimal(str(row['本厂水平(中药一厂)']))<=Decimal(str(row['行业P50'])):
-                    highlights.append('单位成本 '+str(row['本厂水平(中药一厂)'])+' 元/粒 不高于行业中位 '+str(row['行业P50'])+'（题包静态参考）')
+                _dv=(snapshot.get('industry') or {}).get('divisor')
+                _per=_per=None
+                if _dv: _per=Decimal(str(m['unit_cost']))/Decimal(str(_dv))
+                _shown=(f'{_per:.2f}' if _per is not None else str(row.get('本厂水平(中药一厂)')))
+                if _per is None or _per<=Decimal(str(row['行业P50'])):
+                    highlights.append('单位成本 '+_shown+' 元/粒 不高于行业中位 '+str(row['行业P50'])+'（题包静态参考）')
             except Exception:pass
     values['本月亮点']=('；'.join(highlights)+'。') if highlights else ('本期单位成本 '+number(m['unit_cost'])+' 元/盒，产量 '+number(m['quantity'],0)+' 盒；本期无显著优于基期或行业中位的确定性亮点。')
     values['需关注问题']='原料成本上涨不能直接等同采购价上涨。平均小时工资为题包折算口径，不能据此认定基础薪率上调。跨厂原料差异需核对二厂明细（当前为按汇总校准的合成明细）。'
@@ -585,13 +648,48 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
         # 2026-09-21 真人评审三轮：模板已显示的文字一律原样保留（整体解决方案/
         # ERP系统成本模块/财务总监等不再改写）；仅保留跨厂厂名的动态替换与
         # 季度口径词替换（模板未覆盖的场合）。
-        replacements=[]  # 模板文字一律原样；跨厂方向已在 5.2/5.3 与图表说明中呈现
+        replacements=[
+            # P2-6（2026-09-23 视觉审查）：题包提案模板残留清理——封面副标题
+            # "整体解决方案"与《季度成本分析报告》语义冲突；阅读指南"可选
+            # 组件/并非一次性全部实施"是解决方案提案语言。
+            ('整体解决方案','产品成本智能分析报告'),
+            ('均为可选组件，并非一次性全部实施','按报告使用方的权限与场景按需提供'),
+            ('明确技术架构、实施计划、系统配置','维护系统配置与账号权限'),
+        ]
         if snapshot['analysis_type']=='quarterly':
-            replacements += [('本月','本季度'),('上月','上季度'),('去年同月','去年同期季度'),('分析月份','分析期间')]
+            replacements += [('本月','本季度'),('上月','上季度'),('去年同月','去年同季'),('分析月份','分析期间')]
         rewrite_template_prose(p,replacements)
         replace_text_nodes(list(p._p.iter('{'+W+'}t')),values)
+        # P2-5（2026-09-23 视觉审查）：封面副标题原段落自带深色底纹/边框，
+        # 在白底封面上呈"悬浮黑条"。副标题语义已替换，装饰性底纹一并清除。
+        if '产品成本智能分析报告' in p.text and ('整体解决方案' in before):
+            ppr=p._p.find(qn('w:pPr'))
+            if ppr is not None:
+                for tag in ('w:shd','w:pBdr'):
+                    for x in list(ppr.findall(qn(tag))):ppr.remove(x)
         if 'N/A' in p.text:_text(p,'）%','）')
         if before.startswith(('一、','二、','三、','四、','五、','六、')):sections.append(p.text)
+    # P2-5（2026-09-23 视觉审查）：封面黑条根因是题包模板"Title Bar"段落
+    # 样式自带 w:val="solid" 实心底纹，封面上的空样式段落整段渲染为横贯
+    # 黑条。把该样式的底纹改为 clear（保留其余版式定义），全局生效。
+    for _st in doc.styles.element.findall(qn('w:style')):
+        _nm=_st.find(qn('w:name'))
+        if _nm is None or _nm.get(qn('w:val'))!='Title Bar':continue
+        _ppr=_st.find(qn('w:pPr'))
+        if _ppr is None:continue
+        _shd=_ppr.find(qn('w:shd'))
+        if _shd is not None:
+            _shd.set(qn('w:val'),'clear');_shd.set(qn('w:color'),'auto');_shd.set(qn('w:fill'),'auto')
+    # P3（视觉审查）：封面落款三行（文件版本/编制日期/编制单位）首行缩进
+    # 不一致导致左缘参差——统一清除缩进并对齐到同一起点。
+    for p in _all_paragraphs(doc):
+        if any(k in p.text for k in ('文件版本','编制日期','编制单位')) and len(p.text.strip())<40:
+            ppr=p._p.find(qn('w:pPr'))
+            if ppr is None:continue
+            ind=ppr.find(qn('w:ind'))
+            if ind is not None:
+                for attr in ('w:firstLine','w:left','w:hanging'):
+                    if ind.get(qn(attr)) is not None:ind.set(qn(attr),'0')
     for section in doc.sections:
         for part in [section.header,section.footer]:
             for p in part.paragraphs:
@@ -632,7 +730,9 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
         for i,row in enumerate(t.rows):
             trpr=row._tr.get_or_add_trPr()
             if i==0 and trpr.find(_qn('w:tblHeader')) is None:trpr.append(_OE('w:tblHeader'))
-            if not allow_split and trpr.find(_qn('w:cantSplit')) is None:trpr.append(_OE('w:cantSplit'))
+            # cantSplit 无条件启用：长表仍可跨页（tblHeader 重复表头），但单个
+            # 行不被从中间劈开——视觉审查 P1-1 伴生（序号14 行跨 p8/p9 断裂）。
+            if trpr.find(_qn('w:cantSplit')) is None:trpr.append(_OE('w:cantSplit'))
             for cell in row.cells:
                 cell.vertical_alignment=1
                 if i==0:
@@ -667,10 +767,24 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
         except (TypeError,ValueError):return '—'
     def _reason(name):
         c=_ms_map.get(name,{}).get('contribution')
-        return ('贡献材料变动 '+str(c)+'%，优先核查' if c is not None else '待核查（见4.2方向评估）')
-    table('原材料成本明细表格',['序号','原材料名称','本月单价(元/盒)','上月单价(元/盒)','环比变动','变动原因初步判断'],[[
+        # P1-1（2026-09-23 视觉审查）：contribution 是 Decimal 聚合值，str() 直出
+        # 20+ 位原始浮点（"31.201353702460167…%"），统一走 number() 两位小数。
+        return ('贡献材料变动 '+number(c)+'%（品种级），优先核查' if c is not None else '待核查（见4.2方向评估）')
+    _mat_note_tbl=table('原材料成本明细表格',['序号','原材料名称','本月单价(元/盒)','上月单价(元/盒)','环比变动（品种级）','变动原因初步判断'],[[
         str(i+1),r['原材料名称'],r['单位消耗成本(元/盒)'],_prev(r['原材料名称']),_delta_pct(r['原材料名称']),_reason(r['原材料名称'])]
         for i,r in enumerate(details.get('materials',[]))])
+    # P2-1（视觉审查）：每味药材分批多行、单价逐行不同，环比与贡献列是品种级
+    # 聚合口径——表下补口径说明，避免按行核对时"单价与百分比矛盾"的误读。
+    if _mat_note_tbl is not None:
+        from docx.oxml import OxmlElement as _OE2
+        from docx.oxml.ns import qn as _qn2
+        _np=_OE2('w:p');_pPr=_OE2('w:pPr')
+        _st=_OE2('w:rPr');_sz=_OE2('w:sz');_sz.set(_qn2('w:val'),'15');_st.append(_sz)
+        _pPr.append(_st);_np.append(_pPr)
+        _r=_OE2('w:r');_rt=_OE2('w:t');_rt.set(_qn2('xml:space'),'preserve')
+        _rt.text='注：环比变动与贡献占比为品种级聚合口径（该品种各批次均价环比）；同品种不同批次单价存在差异属正常，行级批次价以原始明细为准。'
+        _r.append(_rt);_np.append(_r)
+        _mat_note_tbl._tbl.addnext(_np)
     # 4.1 列结构按模板 md：月份/产量/三要素单位/单位成本/环比变动
     from decimal import Decimal as _Dec
     _trend=snapshot['trend'];_rows_t=[]
@@ -693,7 +807,7 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
         except Exception:chg='—'
         impact=('主要材料，价格变动直接影响单位材料成本' if r['药材名称'] in _ms_names else '行情波动间接影响材料成本')
         _rows_m.append([r['药材名称'],first,cur,chg,str(r.get('趋势分析','—')),impact])
-    _price_tbl=table('原材料价格跟踪表格',['原材料','年初价','本月价','涨幅','市场趋势','对材料成本影响'],_rows_m)
+    _price_tbl=table('原材料价格跟踪表格',['原材料','年初价(元/kg)','本月价(元/kg)','涨幅','市场趋势','对材料成本影响'],_rows_m)
     # 药材涨跌排行图（2026-09-23 用户反馈 #11）：材料明细表旁用横向条形图
     # 直观呈现涨跌幅前 8 的药材（涨红跌绿），回答"哪些药材在拉动成本"。
     # 2026-09-23 修正：按真实环比百分比绘制（delta 是元/盒绝对额，此前轴标
@@ -716,7 +830,7 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
         if Path(cjk).is_file():font_manager.fontManager.addfont(cjk);_fam=font_manager.FontProperties(fname=cjk).get_name()
         else:_fam='sans-serif'
         plt.rcParams.update({'font.family':_fam,'font.size':9,'axes.unicode_minus':False,'axes.spines.top':False,'axes.spines.right':False})
-        _mv=sorted(_movers,key=lambda t:t[1])  # 涨幅升序绘制（顶部最大涨幅）
+        _mv=sorted(_movers,key=lambda t:t[1],reverse=True)  # 降序+倒y轴：最大涨幅在顶（审查P3：此前+4.8%沉底）
         vals=[v for _,v in _mv]
         fig,ax=plt.subplots(figsize=(6.8,max(2.2,0.38*len(_mv)+0.9)))
         ys=list(range(len(_mv)))
@@ -751,7 +865,7 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
             cap=doc.add_paragraph()
             cap.add_run('根因定位（程序计算的多维归因，非模型结论；解释力=该根因解释的总变动占比，DiD为对照厂反事实估计）').font.size=Pt(9)
             anchor42._p.addnext(cap._p)
-            _rk_rows=[[str(i+1),r['cause'],r['ep_pct'],r['direction'],f"{r['label']}（{r['score']}）",r['basis']]
+            _rk_rows=[[str(i+1),r['cause'],r['ep_pct'],r['direction'],f"{r['label']}（{float(r['score']):.2f}）" if str(r.get('score','')).replace('.','',1).replace('-','',1).isdigit() else f"{r['label']}（{r['score']}）",r['basis']]
                       for i,r in enumerate(_attr['ranking'][:5])]
             _did=_attr.get('did') or {}
             if _did.get('status')=='PASS':
@@ -806,10 +920,10 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
     # 2026-09-23 用户反馈：编制说明/知识库引用要成为小标题（进导航与目录）；
     # 人工归因评分要有可填写的区域（表单）而非一行文字。内容先建齐，再统一
     # 走美化/编号/字体管线。
-    doc.add_paragraph('编制说明').style=doc.styles['Heading 2']
+    doc.add_paragraph('七、编制说明').style=doc.styles['Heading 2']
     doc.add_paragraph('本报告由成本智能分析系统自动生成，数据来源于ERP系统，分析文本由AI大模型结合行业知识库自动撰写。如有疑问请联系财务部。')
     doc.add_paragraph('数据说明：本报告使用比赛模拟数据。事实、原因假设与缺失证据分别标注；整改任务确认后仅模拟发送。')
-    doc.add_paragraph('知识库引用').style=doc.styles['Heading 2']
+    doc.add_paragraph('八、知识库引用').style=doc.styles['Heading 2']
     def _kb_ref(keyword,default_doc):
         for e in evidence.get('evidence',[]):
             src=str(e.get('source') or e.get('source_file') or '')
@@ -821,7 +935,7 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
     doc.add_paragraph('工艺路线：'+_kb_ref('工艺','生产工艺文档_中药一厂.pdf'))
     doc.add_paragraph('GMP要求：'+_kb_ref('GMP','药品生产质量管理规范GMP.pdf / GMP法规核心摘要'))
     doc.add_paragraph('行业基准：'+_kb_ref('基准','行业成本基准数据_2026（题包02_行业参考数据）'))
-    doc.add_paragraph('来源与审核说明').style=doc.styles['Heading 2']
+    doc.add_paragraph('九、来源与审核说明').style=doc.styles['Heading 2']
     doc.add_paragraph('数据来源：成本汇总表、原材料明细表、人工与制造费用表 · '+snapshot['product']+' · '+snapshot['factory']+' · '+report_period_label(snapshot)+'。金额以元、单位成本以元/盒计；季度按产量加权。')
     source_map={e['evidence_id']:e for e in evidence.get('evidence',[])}
     used=set()
@@ -841,7 +955,7 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
             doc.add_paragraph('· ……其余 '+str(len(uncovered)-12)+' 条见机器审计附件。')
     # 人工归因评分（2026-09-23 用户反馈 #8）：赛题要求真人 0—5 分评分，此前
     # 只有一行文字无处可填——改为评分表单，空格留待真人署名填写，系统不代填。
-    doc.add_paragraph('人工归因评分').style=doc.styles['Heading 2']
+    doc.add_paragraph('十、人工归因评分').style=doc.styles['Heading 2']
     doc.add_paragraph('以下评分由真人评审填写（系统与模型不代填），0—5 分，5 为最好。引用只说明依据来源，不等于已证实因果。')
     _score=doc.add_table(rows=1,cols=4)
     for c,h in zip(_score.rows[0].cells,['评审维度','评分（0—5）','评审人（署名）','评审说明']):c.text=h
@@ -1067,14 +1181,22 @@ def compact_working_template(output=TEMPLATE,map_path=MAP_PATH):
             pp_._p.getparent().remove(pp_._p)
     if body_start is not None:body_start.paragraph_format.page_break_before=True
     # Existing blank同比 cells are omissions, not missing data.
-    overview=next(t for t in d.tables if any('去年同月' in c.text for c in t.rows[0].cells))
-    for row,cn in zip(overview.rows[4:7],['材料','人工','制造费用']):
-        for index,field,ratio in [(4,'去年'+cn+'成本' if cn!='制造费用' else '去年制造费用',False),(5,cn+'成本同比',True)]:
-            p=row.cells[index].paragraphs[0];p.text='{{'+field+'}}'+('%' if ratio else '')
-            marker='YH_reader_'+field
-            mark=OxmlElement('w:bookmarkStart');mark.set(qn('w:id'),str(22000+len(meta['placeholders'])));mark.set(qn('w:name'),marker);p._p.insert(0,mark)
-            end=OxmlElement('w:bookmarkEnd');end.set(qn('w:id'),mark.get(qn('w:id')));p._p.append(end)
-            meta['placeholders'].append({'original':field,'field':field,'context':p.text,'marker':marker,'xml_part':'word/document.xml','source':'period_values.yoy.elements_unit / elements.comparisons.yoy.unit.rate','unit':'%' if ratio else '元/盒'})
+    # 2026-09-23 修复（审计 AUD-TPL-01）：与 install_template 同源按表头文字
+    # 定位，不再按 rows[4:7]/列4-5 硬编码；未命中跳过并写入 working_changes。
+    overview=next((t for t in d.tables if any('去年同月' in c.text for c in t.rows[0].cells)),None)
+    yoy_note=None
+    if overview is not None:
+        yoy_col,rate_col,element_rows,skipped=_locate_overview_yoy_cells(overview)
+        bound=0
+        for cn in ('材料','人工','制造费用'):
+            row=element_rows.get(cn)
+            if row is None or yoy_col is None or rate_col is None:continue
+            field_amount='去年'+cn+'成本' if cn!='制造费用' else '去年制造费用'
+            _bind_overview_yoy_cell(row,yoy_col,field_amount,False,meta['placeholders'],22000)
+            _bind_overview_yoy_cell(row,rate_col,cn+'成本同比',True,meta['placeholders'],22000)
+            bound+=2
+        yoy_note=(f'同比补绑定 {bound} 个单元格' if bound else '同比补绑定全部跳过：'+'；'.join(skipped)) if (bound or skipped) else None
+        if skipped and bound:yoy_note+='；跳过：'+'；'.join(skipped)
     # 2026-09-21 真人评审四轮（B 项）：模板原生分页（封面/文档控制/阅读指南/目录
     # 各归各页）完整保留，不再剥离 w:br page 与 pageBreakBefore。
     style_reader(d)
@@ -1082,6 +1204,7 @@ def compact_working_template(output=TEMPLATE,map_path=MAP_PATH):
     meta['reader_template_version']='reader-v5'
     meta['template_hash']=hashlib.sha256(Path(output).read_bytes()).hexdigest()
     meta['working_changes']=['前置章节与原生分页完整保留（模板为准）','六个赛题固定章节保留','同比三要素单独绑定','动态表格按模板md列结构']
+    if yoy_note:meta['working_changes'].append(yoy_note)
     Path(map_path).write_text(json.dumps(meta,ensure_ascii=False,indent=2))
 
 
@@ -1682,7 +1805,11 @@ def add_reader_summary(doc,snapshot,narrative,output,benchmark=None):
     if anchor is None:return
     label=snapshot['period']['start'] if snapshot['period']['start']==snapshot['period']['end'] else snapshot['period']['start']+' 至 '+snapshot['period']['end']
     report_no='YH-'+hashlib.sha256((snapshot['snapshot_id']) .encode()).hexdigest()[:8].upper()
-    anchor.insert_paragraph_before('报告编号：'+report_no+'（分析周期 '+label+'）')
+    _head=anchor.insert_paragraph_before('报告编号：'+report_no+'（分析周期 '+label+'）')
+    # P2-2/P2-3（2026-09-23 视觉审查）：核心结论块插在正文首章锚点之前，
+    # 不在“正文首章新起一页”的覆盖范围内——显式从新页开始，消除“目录与
+    # 正文同页 + 随后近空白页”的连锁。
+    _head.paragraph_format.page_break_before=True
     mode='本次采用基础分析，原因解释待复核。' if not narrative.get('model_live') or narrative.get('status')!='PASS' else '本次采用模型辅助解释；因果归因仍待人工复核。'
     anchor.insert_paragraph_before('人工审核：待审核。'+mode)
     # 核心结论（2026-09-23 用户反馈"核心结论太少太简陋"）：单段改为结构化
@@ -1692,7 +1819,9 @@ def add_reader_summary(doc,snapshot,narrative,output,benchmark=None):
         head=anchor.insert_paragraph_before('核心结论（'+str(len(conclusions))+' 项）')
         for r in head.runs:r.font.bold=True;r.font.size=Pt(12)
         for i,line in enumerate(conclusions,1):
-            p=anchor.insert_paragraph_before(str(i)+'. '+line)
+            # P2-8（视觉审查）：负值数值的 '-' 允许 Word 在其后断行，曾出现
+            # 行尾"直接人工 -"+下行"0.0022 元/盒"被误读为破折号；换 U+2011。
+            p=anchor.insert_paragraph_before(str(i)+'. '+re.sub(r'(?<![0-9])-(?=\d)','‑',line))
             for r in p.runs:r.font.size=Pt(10.5)
     # 目录（真人评审二轮）：完整子目录；条目插在模板目录域提示行之后（保留域可更新），
     # 一级行保持全角空格前缀以兼容 convert_pdf 的页码回写。
@@ -1790,35 +1919,32 @@ def add_reader_charts(doc,snapshot,benchmark,anchors,output):
         insert(fig,'budget',_cap22._p,subtitle+'｜三要素实际与预算对比（柱上为预算偏差）')
     base=snapshot.get('comparison',{}).get('mom',{}).get('base');current=snapshot['metrics']['unit_cost']['value']
     if base is not None:
-        # 瀑布图（2026-09-21 真人评审反馈修复）：纵轴缩放至变动区间而非从零起——
-        # 此前负变动柱挤在本期值附近不可辨，被误读为"负值画在第一象限"。
-        # 瀑布图（2026-09-21 真人评审二轮反馈）：零线双区画法——左/右总量柱自 0
-        # 向上；各要素变动柱按自身数值绘制，负向落在零线下方（第四象限），
-        # 量级在负区独立可辨；零线加粗，全图加高容纳正负两方向。
+        # P2-9（2026-09-23 视觉审查）：改为真瀑布桥接——各要素变动柱自"累计
+        # 基线"浮动绘制（上期→逐要素→本期），恢复瀑布的桥接语义；纵轴紧包
+        # 数据区间（不从 0 起），微小的负向柱（-0.0022）在桥接位置上也可见。
         deltas=[float(e.get('unit_delta') or 0) for e in els]
-        total_top=max(float(base),float(current),0)
-        neg_bottom=min(deltas+[0]);pos_top=max(deltas+[0])
-        neg_span=max(abs(neg_bottom),total_top*0.05,0.05);pos_span=max(pos_top,total_top*0.05,0.05)
-        # 标签两行折叠 + 图宽按柱数自适应（2026-09-23 用户反馈 #9：复数部分
-        # 图形挤在一起）——长 CJK 标签（"上期单位成本"6字×5组）在 8 英寸内
-        # 必然重叠，折叠为"上期\n单位成本"两行并加宽画布。
         fig,ax=plt.subplots(figsize=(max(8.6,1.9*(len(els)+2)),3.4))
         xs=['上期\n单位成本']+[e['name'].replace('直接','直接\n').replace('制造费用','制造\n费用')+'\n变动' for e in els]+['本期\n单位成本']
-        ax.bar(0,float(base),width=.58,color='#82939F',zorder=3);ax.text(0,float(base)+total_top*0.015,f'{float(base):.2f}',ha='center',va='bottom',fontsize=9)
-        run_note=float(base)
+        # 左右总量柱仍自 0 画（语义=水平总量），但被紧缩 y 轴截断可见部分一致。
+        ax.bar(0,float(base),width=.58,color='#82939F',zorder=3);ax.text(0,float(base)+abs(float(base))*0.012+0.02,f'{float(base):.2f}',ha='center',va='bottom',fontsize=9,zorder=6)
+        run=float(base);levels=[run]
         for i,e in enumerate(els,1):
             v=deltas[i-1]
-            ax.bar(i,v,width=.58,color='#A56B3D' if v>=0 else '#1F6E5E',zorder=3)
-            # 负值标注放零线下方更深并加白底衬（2026-09-23 视觉验收：
-            # 标注曾被柱体与零线穿过遮挡）
+            b=min(run,run+v)
+            ax.bar(i,abs(v) if abs(v)>0 else 1e-6,bottom=b,width=.58,color='#A56B3D' if v>=0 else '#1F6E5E',zorder=3)
             _bbox=dict(boxstyle='round,pad=0.15',facecolor='white',edgecolor='none',alpha=0.85)
-            ax.text(i,v+(pos_span*0.10 if v>=0 else -neg_span*0.24),(('+' if v>=0 else '−')+number(e.get('unit_delta') or 0).lstrip('-')),ha='center',va='bottom' if v>=0 else 'top',fontsize=9,color='#5A3B28' if v>=0 else '#1F6E5E',zorder=6,bbox=_bbox if v<0 else None)
-            run_note+=v
-        ax.bar(len(els)+1,float(current),width=.58,color='#176C8C',zorder=3);ax.text(len(els)+1,float(current)+total_top*0.015,f'{float(current):.2f}',ha='center',va='bottom',fontsize=9)
-        ax.axhline(0,color='#3A3A3A',lw=1.2,zorder=1)
-        ax.set_ylim(neg_bottom-neg_span*0.55,total_top*1.14)
-        ax.set_xticks(range(len(els)+2),xs,fontsize=8.5);ax.set_ylabel('元/盒（零线以上=单位成本，零线以下=各要素变动额）');ax.grid(axis='y',alpha=.22)
-        insert(fig,'waterfall',anchor,subtitle+'｜上期至本期单位成本变动（零线双区：负向柱在零线下）')
+            ax.text(i,run+v+((run+v)*0.012+0.02)*(1 if v>=0 else -1),(('+' if v>=0 else '−')+number(e.get('unit_delta') or 0).lstrip('-')),ha='center',va='bottom' if v>=0 else 'top',fontsize=9,color='#5A3B28' if v>=0 else '#1F6E5E',zorder=6,bbox=_bbox)
+            run+=v;levels.append(run)
+        ax.bar(len(els)+1,float(current),width=.58,color='#176C8C',zorder=3);ax.text(len(els)+1,float(current)+abs(float(current))*0.012+0.02,f'{float(current):.2f}',ha='center',va='bottom',fontsize=9,zorder=6)
+        # 桥接虚线：上一柱顶到下一柱浮动的视觉连续性
+        for i in range(len(els)+1):
+            y=levels[i] if i<len(levels) else run
+            ax.plot([i+0.29,i+0.71],[levels[i],levels[i]],ls='--',lw=.8,color='#8A97A0',zorder=2)
+        lo=min(levels+[float(current)]);hi=max(levels+[float(current)])
+        pad=(hi-lo)*0.28 or 0.5
+        ax.set_ylim(max(0,lo-pad),hi+pad*1.6)
+        ax.set_xticks(range(len(els)+2),xs,fontsize=8.5);ax.set_ylabel('元/盒（浮动柱=该要素对单位成本的变动桥接）');ax.grid(axis='y',alpha=.22)
+        insert(fig,'waterfall',anchor,subtitle+'｜上期至本期单位成本桥接（浮动柱=要素变动，橙涨绿跌）')
 
     be=(benchmark or {}).get('elements',[])
     if be:

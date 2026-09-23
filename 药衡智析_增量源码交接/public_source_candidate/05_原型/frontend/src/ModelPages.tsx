@@ -44,14 +44,14 @@ export function VectorModel() {
     {info && <div className="vector-status">
       <dl className="task-details">
         <dt>当前模型</dt><dd>{info.name}{info.is_default ? '（内置默认）' : ''}</dd>
-        <dt>模型目录</dt><dd>{info.path}</dd>
+        <dt>模型目录</dt><dd title={info.path}>{String(info.path ?? '').split(/[\\/]/).filter(Boolean).at(-1) ?? info.path}{info.is_default ? '' : ''}</dd>
         <dt>资产状态</dt><dd>ONNX {info.onnx_present ? '✓' : '缺失'} · 分词器 {info.tokenizer_present ? '✓' : '缺失'}{info.dimension ? ` · 维度 ${info.dimension}` : ''}</dd>
         <dt>资产指纹</dt><dd>{String(info.fingerprint ?? '').slice(0, 16)}…（进入知识版本，切换自动重建）</dd>
       </dl>
     </div>}
     <div className="filters" style={{ marginTop: 12 }}>
       <label className="grow">本地模型目录（Xenova/transformers.js 布局：model_quantized.onnx + tokenizer.json）
-        <input aria-label="本地模型目录" value={path} onChange={e => setPath(e.target.value)} placeholder="D:\\models\\bge-small-zh-v1.5" /></label>
+        <input aria-label="本地模型目录" value={path} onChange={e => setPath(e.target.value)} placeholder="D:\models\bge-small-zh-v1.5" /></label>
       <button className="primary" disabled={busy || !path.trim() || !!jobId} onClick={confirm}>{busy ? '提交中…' : '确认'}</button>
     </div>
     {jobId && <JobProgress jobId={jobId} label="向量模型切换" onDone={job => {

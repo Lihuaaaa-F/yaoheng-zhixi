@@ -24,6 +24,7 @@ export default function TemplateCenter() {
       failPrefix="报告模板解析失败"
       listTitle="报告模板导入列表"
       hint="报告模板决定 Word/PDF 报告的章节结构与数据占位符。解析将执行模板结构检查（六章节契约）、占位符语义绑定分析（数据分析模型辅助）并安装为对应类型的当前模板。"
+      emptyText="暂无待解析的报告模板，请先在上方上传 Word 模板文件。"
       extra={() => <section className="panel" style={{ marginTop: 16 }}>
         <h2>已安装模板</h2>
         {error && <div className="error" role="alert">读取失败：{error}</div>}
