@@ -104,3 +104,19 @@ frontend/dist/
 **/_reading_preview/
 governance_handoff_20260919/
 *:Zone.Identifier
+
+# ==== 审查证据截图（报告 md/JSON 已入库，大体积页面截图不入库）====
+审查_20260923/vis/r1/
+审查_20260923/vis/r2/
+审查_20260923/vis/_qa/
+审查_20260923/pages_docx/
+审查_20260923/pages_pdf/
+审查_20260923/pages_pdf_hi/
+审查_20260923/prep_render.py
+视觉审查_20260923/pages_docx/
+视觉审查_20260923/pages_docx_hi/
+视觉审查_20260923/pages_pdf/
+视觉审查_20260923/pages_pdf_hi/
+视觉审查_20260923/charts/
+视觉审查_20260923/gui-test-screenshots/
+视觉审查_20260923/meta/
