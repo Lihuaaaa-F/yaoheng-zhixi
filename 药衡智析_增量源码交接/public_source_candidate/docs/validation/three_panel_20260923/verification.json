@@ -1,0 +1,373 @@
+{
+  "run_id": "three_panel_20260923",
+  "commit": "7624a19afa6c4a18e0d820eb9c4959c9c6207524",
+  "required_scenarios": [
+    "S1",
+    "S2",
+    "S3"
+  ],
+  "scenarios": [
+    {
+      "id": "S1",
+      "context_id": "pharmaceutical:competition",
+      "product": "银黄口服液",
+      "month": "2026-05",
+      "analysis_type": "monthly",
+      "job_id": null,
+      "status": "PENDING_CURRENT_BUILD",
+      "human_review": "PENDING"
+    },
+    {
+      "id": "S2",
+      "context_id": "pharmaceutical:competition",
+      "product": "板蓝根颗粒",
+      "month": "2026-05",
+      "analysis_type": "special",
+      "job_id": null,
+      "status": "PENDING_CURRENT_BUILD",
+      "human_review": "PENDING"
+    },
+    {
+      "id": "S3",
+      "context_id": "pharmaceutical:competition",
+      "product": "六味地黄胶囊",
+      "month": "2026-03",
+      "analysis_type": "monthly",
+      "job_id": null,
+      "status": "PENDING_CURRENT_BUILD",
+      "human_review": "PENDING"
+    }
+  ],
+  "status": "PARTIAL_VALIDATION",
+  "regression_status": "PASS",
+  "competition_ready": false,
+  "human_review": "PENDING",
+  "validation": {
+    "python": {
+      "passed": 530,
+      "skipped": 1,
+      "status": "PASS",
+      "duration_seconds": 16.28,
+      "skipped_reason": "No catalogue context with capability list in isolated capability-gate fixture; actual PDF conversion tests passed",
+      "warnings": "Two existing Starlette/httpx and AnyIO deprecations"
+    },
+    "post_label_adjustment": {
+      "tests": [
+        "test_industry.py",
+        "test_unified_workspace.py"
+      ],
+      "passed": 66,
+      "status": "PASS"
+    },
+    "frontend_build": "PASS",
+    "browser": {
+      "status": "PASS",
+      "viewports": [
+        [
+          1600,
+          1000
+        ],
+        [
+          1366,
+          768
+        ],
+        [
+          1585,
+          992
+        ],
+        [
+          390,
+          844
+        ]
+      ],
+      "provider": "offline deterministic rules; no cloud/model provider requests",
+      "pages": 9,
+      "read_only_page_viewport_checks": 18,
+      "console_errors": 0,
+      "flows": [
+        "three surfaces",
+        "sidebar runtime",
+        "no title/scope selector",
+        "fixed toolbar and independent scroll",
+        "five distinct new chats",
+        "three visible tabs",
+        "pin/close/history/archive/restore/delete",
+        "message-turn jump",
+        "refresh persistence",
+        "24-title scrollable dropdown",
+        "nine pages",
+        "desktop/mobile overflow"
+      ],
+      "upload_and_mobile_checks": [
+        "mobile drawer after animation within viewport",
+        "UI upload blocks stale competition display",
+        "two successive UI imports cumulative",
+        "explicit UI version replacement and confirmation",
+        "updated analysis from 12.00 to 13.00",
+        "original superseded source retained"
+      ]
+    },
+    "sqlite_startup": {
+      "status": "PASS",
+      "tests": 2,
+      "scope": "Real exclusive lock recovery and eight simultaneous store initializations"
+    },
+    "model_live": "NOT_RUN",
+    "docker_clean_start": "NOT_RUN",
+    "human": "PENDING",
+    "remote_delivery": "NOT_PUSHED: existing GitHub integration write restriction"
+  },
+  "commands": {
+    "backend": "PYTHONPATH=05_原型/backend pytest 05_原型/tests -q -rs (isolated runtime and credentials removed)",
+    "frontend": "npm run build",
+    "navigation": "PHARMA_E2E_URL=<local URL> node e2e-workbench.mjs",
+    "repository": "python tools/verify_repository.py"
+  },
+  "visual_review": [
+    {
+      "item": "Panel structure",
+      "result": "Exactly three rounded floating panels; runtime status moved left"
+    },
+    {
+      "item": "Reading area",
+      "result": "Redundant title/scope removed; filters and tabs fixed; body scroll isolated"
+    },
+    {
+      "item": "Conversation navigation",
+      "result": "Three visible tabs, active chat retained, 24-title scrolling menu; history/archive/delete/pin/close exercised"
+    },
+    {
+      "item": "Geometry and typography",
+      "result": "Unified font fallback, light borders, deep teal selected and pale teal hover; report icon remains visible at 1366"
+    },
+    {
+      "item": "Mobile",
+      "result": "390px drawer inspected after transition; full viewport width without clipping"
+    },
+    {
+      "item": "Honest states",
+      "result": "No configured provider appears as model selection and unknown gray context ring; network probe disabled during QA stays pending"
+    }
+  ],
+  "browser_receipts": {
+    "flow": {
+      "status": "PASS",
+      "checks": [
+        "three surfaces",
+        "sidebar runtime",
+        "no title/scope selector",
+        "fixed toolbar and independent scroll",
+        "five distinct new chats",
+        "three visible tabs",
+        "pin/close/history/archive/restore/delete",
+        "message-turn jump",
+        "refresh persistence",
+        "24-title scrollable dropdown",
+        "nine pages",
+        "desktop/mobile overflow"
+      ],
+      "viewports": [
+        [
+          1600,
+          1000
+        ],
+        [
+          1366,
+          768
+        ],
+        [
+          1585,
+          992
+        ],
+        [
+          390,
+          844
+        ]
+      ],
+      "errors": []
+    },
+    "readonly": {
+      "status": "PASS",
+      "scope": "只读工作台导航与浏览器合同；不包含模型、报告、RPA或真人验收",
+      "checks": [
+        {
+          "page": "analysis",
+          "viewport": {
+            "width": 1366,
+            "height": 768
+          },
+          "heading": "成本分析",
+          "no_horizontal_overflow": true
+        },
+        {
+          "page": "benchmark",
+          "viewport": {
+            "width": 1366,
+            "height": 768
+          },
+          "heading": "跨厂对标",
+          "no_horizontal_overflow": true
+        },
+        {
+          "page": "reports",
+          "viewport": {
+            "width": 1366,
+            "height": 768
+          },
+          "heading": "分析报告",
+          "no_horizontal_overflow": true
+        },
+        {
+          "page": "actions",
+          "viewport": {
+            "width": 1366,
+            "height": 768
+          },
+          "heading": "问题整改",
+          "no_horizontal_overflow": true
+        },
+        {
+          "page": "business",
+          "viewport": {
+            "width": 1366,
+            "height": 768
+          },
+          "heading": "业务数据",
+          "no_horizontal_overflow": true
+        },
+        {
+          "page": "knowledge",
+          "viewport": {
+            "width": 1366,
+            "height": 768
+          },
+          "heading": "知识库",
+          "no_horizontal_overflow": true
+        },
+        {
+          "page": "templates",
+          "viewport": {
+            "width": 1366,
+            "height": 768
+          },
+          "heading": "报告模板",
+          "no_horizontal_overflow": true
+        },
+        {
+          "page": "models",
+          "viewport": {
+            "width": 1366,
+            "height": 768
+          },
+          "heading": "模型连接",
+          "no_horizontal_overflow": true
+        },
+        {
+          "page": "settings",
+          "viewport": {
+            "width": 1366,
+            "height": 768
+          },
+          "heading": "系统设置",
+          "no_horizontal_overflow": true
+        },
+        {
+          "page": "analysis",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "heading": "成本分析",
+          "no_horizontal_overflow": true
+        },
+        {
+          "page": "benchmark",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "heading": "跨厂对标",
+          "no_horizontal_overflow": true
+        },
+        {
+          "page": "reports",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "heading": "分析报告",
+          "no_horizontal_overflow": true
+        },
+        {
+          "page": "actions",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "heading": "问题整改",
+          "no_horizontal_overflow": true
+        },
+        {
+          "page": "business",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "heading": "业务数据",
+          "no_horizontal_overflow": true
+        },
+        {
+          "page": "knowledge",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "heading": "知识库",
+          "no_horizontal_overflow": true
+        },
+        {
+          "page": "templates",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "heading": "报告模板",
+          "no_horizontal_overflow": true
+        },
+        {
+          "page": "models",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "heading": "模型连接",
+          "no_horizontal_overflow": true
+        },
+        {
+          "page": "settings",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "heading": "系统设置",
+          "no_horizontal_overflow": true
+        }
+      ],
+      "errors": [],
+      "blockedWrites": []
+    },
+    "upload": {
+      "status": "PASS",
+      "checks": [
+        "mobile drawer after animation within viewport",
+        "UI upload blocks stale competition display",
+        "two successive UI imports cumulative",
+        "explicit UI version replacement and confirmation",
+        "updated analysis from 12.00 to 13.00",
+        "original superseded source retained"
+      ],
+      "data": "isolated controlled fixture, not competition dataset",
+      "errors": []
+    }
+  }
+}

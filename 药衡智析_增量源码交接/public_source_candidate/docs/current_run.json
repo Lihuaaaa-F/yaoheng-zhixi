@@ -1,8 +1,8 @@
 {
-  "run_id": "workspace_20260923",
+  "run_id": "three_panel_20260923",
   "revision_kind": "git",
-  "commit": "40e8d5b372304c54a423f6b9c83b1e0d9566b6cc",
-  "tested_changes": "feat/analysis-workspace-assistant; implementation and test code at recorded commit; subsequent receipt commit only updates documentation",
+  "commit": "7624a19afa6c4a18e0d820eb9c4959c9c6207524",
+  "tested_changes": "Three-panel UI, cumulative uploads, knowledge inheritance, chat lifecycle, SQLite cold-start lock recovery; following commit contains receipts only",
   "required_scenarios": [
     "S1",
     "S2",
@@ -44,15 +44,25 @@
   "competition_ready": false,
   "automatic_status": "PARTIAL_VALIDATION",
   "verification_exit_code": 2,
-  "public_manifest": "validation/workspace_20260923/manifest.json",
-  "verification_receipt": "validation/workspace_20260923/verification.json",
+  "public_manifest": "validation/three_panel_20260923/manifest.json",
+  "verification_receipt": "validation/three_panel_20260923/verification.json",
   "implementation_record": "workspace_upgrade_20260923.md",
   "validation": {
     "python": {
-      "passed": 495,
+      "passed": 530,
       "skipped": 1,
       "status": "PASS",
-      "skipped_reason": "No catalogue context with capability list in isolated capability-gate fixture; actual PDF conversion tests passed"
+      "duration_seconds": 16.28,
+      "skipped_reason": "No catalogue context with capability list in isolated capability-gate fixture; actual PDF conversion tests passed",
+      "warnings": "Two existing Starlette/httpx and AnyIO deprecations"
+    },
+    "post_label_adjustment": {
+      "tests": [
+        "test_industry.py",
+        "test_unified_workspace.py"
+      ],
+      "passed": 66,
+      "status": "PASS"
     },
     "frontend_build": "PASS",
     "browser": {
@@ -67,32 +77,50 @@
           768
         ],
         [
+          1585,
+          992
+        ],
+        [
           390,
           844
         ]
       ],
-      "provider": "loopback HTTP mock only",
-      "pages": 8,
-      "read_only_page_viewport_checks": 16,
+      "provider": "offline deterministic rules; no cloud/model provider requests",
+      "pages": 9,
+      "read_only_page_viewport_checks": 18,
       "console_errors": 0,
       "flows": [
-        "independent local connection saved and tested",
-        "model and high reasoning reach HTTP mock",
-        "conversation history restored",
-        "proposal confirmation creates DRAFT only",
-        "context ring four colors, ratio and aligned controls",
-        "chart tooltip",
-        "responsive navigation"
+        "three surfaces",
+        "sidebar runtime",
+        "no title/scope selector",
+        "fixed toolbar and independent scroll",
+        "five distinct new chats",
+        "three visible tabs",
+        "pin/close/history/archive/restore/delete",
+        "message-turn jump",
+        "refresh persistence",
+        "24-title scrollable dropdown",
+        "nine pages",
+        "desktop/mobile overflow"
       ],
-      "reference_size_visual_check": [
-        1585,
-        992
+      "upload_and_mobile_checks": [
+        "mobile drawer after animation within viewport",
+        "UI upload blocks stale competition display",
+        "two successive UI imports cumulative",
+        "explicit UI version replacement and confirmation",
+        "updated analysis from 12.00 to 13.00",
+        "original superseded source retained"
       ]
+    },
+    "sqlite_startup": {
+      "status": "PASS",
+      "tests": 2,
+      "scope": "Real exclusive lock recovery and eight simultaneous store initializations"
     },
     "model_live": "NOT_RUN",
     "docker_clean_start": "NOT_RUN",
     "human": "PENDING",
-    "frontend_legacy_recording_contract_tests": 2
+    "remote_delivery": "NOT_PUSHED: existing GitHub integration write restriction"
   },
   "previous_run": {
     "run_id": "delivery_20260921",
@@ -232,9 +260,15 @@
     }
   },
   "external_pending": [
-    "Three official scenarios on current code with real model outputs and named human scores",
-    "Docker clean install and Windows desktop launcher on target machine",
-    "New UI demonstration video",
-    "Measured forecast, graph and model-routing gains"
-  ]
+    "Target-machine Docker and desktop launcher verification",
+    "Real model responses and human S1/S2/S3 review on current build",
+    "Human review of new layout and renewed demonstration recording",
+    "GitHub synchronization via an authorized write connection"
+  ],
+  "previous_workspace_run": {
+    "run_id": "workspace_20260923",
+    "commit": "40e8d5b372304c54a423f6b9c83b1e0d9566b6cc",
+    "manifest": "validation/workspace_20260923/manifest.json",
+    "verification": "validation/workspace_20260923/verification.json"
+  }
 }
