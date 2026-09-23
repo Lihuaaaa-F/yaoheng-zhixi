@@ -347,14 +347,8 @@ def _benchmark_factories(left, right, factory=None, product=None):
     return partner, right
 
 
-def benchmark(product, month, left=None, right=None, analysis_type='monthly', factory=None):
-    """跨厂对标：方向为 left−right，以 right 为分母。
-
-    缺省（left/right 未传）时按"factory（本单位）− benchmark_partner（对标厂）"
-    配对，与报告/worker 路径同向；见 _benchmark_factories。
-    """
-    left,right=_benchmark_factories(left,right,factory,product)
-    a,b=analyze(left,product,month,analysis_type),analyze(right,product,month,analysis_type)
+def _benchmark_payload(product,month,left,right,analysis_type,a,b):
+    """对标合同体的纯组装段：给定两厂 analyze 结果拼装，不做计算（2026-09-23 审查 SSE-5）。"""
     summary=[]
     for key,name,unit in [('unit_cost','单位成本','元/盒'),('total_cost','总成本','元'),('quantity','产量','盒')]:
         x,y=a['metrics'][key]['value'],b['metrics'][key]['value']
@@ -387,12 +381,23 @@ def benchmark(product, month, left=None, right=None, analysis_type='monthly', fa
             'limits':['总成本对比受产量影响，不能作为单位效率结论','文档原因证据由报告检索流程补充；仅表内数值不能证明因果']}
 
 
+def benchmark(product, month, left=None, right=None, analysis_type='monthly', factory=None):
+    """跨厂对标：方向为 left−right，以 right 为分母。
+
+    缺省（left/right 未传）时按"factory（本单位）− benchmark_partner（对标厂）"
+    配对，与报告/worker 路径同向；见 _benchmark_factories。
+    """
+    left,right=_benchmark_factories(left,right,factory,product)
+    a,b=analyze(left,product,month,analysis_type),analyze(right,product,month,analysis_type)
+    return _benchmark_payload(product,month,left,right,analysis_type,a,b)
+
+
 def benchmark_analysis(product,month,left=None,right=None,analysis_type='monthly'):
     """Package already-calculated cross-factory metrics for constrained generation."""
     left,right=_benchmark_factories(left,right)
-    comparison=benchmark(product,month,left,right,analysis_type)
     snapshot=analyze(left,product,month,analysis_type)
     right_snapshot=analyze(right,product,month,analysis_type)
+    comparison=_benchmark_payload(product,month,left,right,analysis_type,snapshot,right_snapshot)
     for row in comparison['summary']+comparison['elements']:
         key=row['key'];base=snapshot['metrics'][key]
         row['metric_refs'] = {}
