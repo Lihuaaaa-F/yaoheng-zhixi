@@ -8,7 +8,7 @@ from xml.etree import ElementTree as ET
 # ET 仅保留给 verify_docx 等只读解析。
 from lxml import etree as LET
 from .docx_compat import validate_word_compat
-import hashlib, json, os, re, shutil, subprocess, tempfile
+import hashlib, json, os, re, shutil, subprocess, tempfile, threading
 from datetime import datetime
 from decimal import Decimal
 from .config import ROOT, PACKAGE, ARTIFACTS, RUNTIME
@@ -1035,6 +1035,10 @@ def soffice_exe(converter='libreoffice'):
     return exe
 
 
+# soffice 的 UserInstallation profile 不可并发共用（LibreOffice 自带目录锁会直接失败）
+_LO_CONVERT_LOCK = threading.Lock()
+
+
 def convert_pdf(docx_path,timeout=90,converter='libreoffice',_toc_pass=0):
     import os
     path=Path(docx_path)
@@ -1043,24 +1047,35 @@ def convert_pdf(docx_path,timeout=90,converter='libreoffice',_toc_pass=0):
     try:
         temp_root = '/tmp' if os.name != 'nt' else tempfile.gettempdir()
         with tempfile.TemporaryDirectory(prefix='pharma-lo-',dir=temp_root) as work:
-            folder=Path(work);profile=folder/'profile';target=folder/path.with_suffix('.pdf').name
+            folder=Path(work)
+            # SSE-9（2026-09-24 评审）：profile 与 fontconfig 字体缓存持久化到 RUNTIME。
+            # 原实现每次转换新建空 profile/空缓存=恒定冷启（实测 6.5s/次，三次无热身）。
+            # 失败即清 profile 供下次重建；_LO_CONVERT_LOCK 保证不并发共用。
+            persist=RUNTIME/'soffice'
+            try:persist.mkdir(parents=True,exist_ok=True)
+            except OSError:persist=None
+            profile=(persist or folder)/'profile';fontcache=(persist or folder)/'font-cache'
+            target=folder/path.with_suffix('.pdf').name
             from xml.sax.saxutils import escape
             font_config=folder/'fonts.conf'
-            font_config.write_text('<?xml version="1.0"?><!DOCTYPE fontconfig SYSTEM "fonts.dtd"><fontconfig><include ignore_missing="yes">/etc/fonts/fonts.conf</include><dir>'+escape(str(ROOT/'05_原型/assets/fonts'))+'</dir><cachedir>'+escape(str(folder/'font-cache'))+'</cachedir></fontconfig>')
+            font_config.write_text('<?xml version="1.0"?><!DOCTYPE fontconfig SYSTEM "fonts.dtd"><fontconfig><include ignore_missing="yes">/etc/fonts/fonts.conf</include><dir>'+escape(str(ROOT/'05_原型/assets/fonts'))+'</dir><cachedir>'+escape(str(fontcache))+'</cachedir></fontconfig>')
             env={**os.environ,'TMPDIR':'/tmp','XDG_RUNTIME_DIR':work,'FONTCONFIG_FILE':str(font_config)}
-            proc=subprocess.Popen([exe,f'-env:UserInstallation={profile.as_uri()}','--headless','--convert-to','pdf','--outdir',work,str(path)],stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,env=env)
-            try:
-                out,err=proc.communicate(timeout=timeout)
-            except subprocess.TimeoutExpired:
-                # soffice.exe 与 venv python.exe 同为"启动器"型：真身 soffice.bin
-                # 是其子进程，超时只 TerminateProcess 直接子进程会孤儿化 bin——
-                # 残留进程还锁死临时 profile 目录（Windows 上 TemporaryDirectory
-                # 清理会因此报错）。树杀一并回收（2026-09-23 同族排查 manage.py）。
-                if os.name=='nt':subprocess.run(['taskkill','/F','/T','/PID',str(proc.pid)],capture_output=True)
-                else:proc.kill()
-                proc.communicate()
-                return {'status':'FAILED','reason':'CONVERT_TIMEOUT'}
-            if proc.returncode or not target.exists():return {'status':'FAILED','reason':'CONVERSION_FAILED','log':err[-1000:]}
+            with _LO_CONVERT_LOCK:
+                proc=subprocess.Popen([exe,f'-env:UserInstallation={profile.as_uri()}','--headless','--convert-to','pdf','--outdir',work,str(path)],stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,env=env)
+                try:
+                    out,err=proc.communicate(timeout=timeout)
+                except subprocess.TimeoutExpired:
+                    # soffice.exe 与 venv python.exe 同为"启动器"型：真身 soffice.bin
+                    # 是其子进程，超时只 TerminateProcess 直接子进程会孤儿化 bin——
+                    # 残留进程还锁死临时 profile 目录（Windows 上 TemporaryDirectory
+                    # 清理会因此报错）。树杀一并回收（2026-09-23 同族排查 manage.py）。
+                    if os.name=='nt':subprocess.run(['taskkill','/F','/T','/PID',str(proc.pid)],capture_output=True)
+                    else:proc.kill()
+                    proc.communicate()
+                    return {'status':'FAILED','reason':'CONVERT_TIMEOUT'}
+            if proc.returncode or not target.exists():
+                if persist is not None:shutil.rmtree(profile,ignore_errors=True)
+                return {'status':'FAILED','reason':'CONVERSION_FAILED','log':err[-1000:]}
             import fitz
             with fitz.open(target) as doc:
                 text=''.join(p.get_text() for p in doc);pages=len(doc)

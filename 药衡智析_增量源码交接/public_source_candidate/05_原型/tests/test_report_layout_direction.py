@@ -191,8 +191,8 @@ def test_quarterly_benchmark_preserves_small_difference(tmp_path):
 def test_actual_pdf_number_unit_groups_and_footer_clearance(tmp_path):
     import shutil,re
     import pymupdf
-    from pharma.reports import convert_pdf
-    if not shutil.which('libreoffice'):pytest.skip('LibreOffice unavailable')
+    from pharma.reports import convert_pdf, soffice_exe
+    if soffice_exe() is None:pytest.skip('LibreOffice unavailable')
     doc=Document()
     # Independent synthetic fixture moves the same amount across line ends.
     for n in range(31,43):
