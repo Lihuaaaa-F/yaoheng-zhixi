@@ -1,6 +1,6 @@
 {
   "run_id": "workspace_20260923",
-  "commit": "3c5083ba7a3e2bfcf272ca10a9061700bfac8ef3",
+  "commit": "40e8d5b372304c54a423f6b9c83b1e0d9566b6cc",
   "required_scenarios": [
     "S1",
     "S2",
@@ -75,6 +75,10 @@
         "context ring four colors, ratio and aligned controls",
         "chart tooltip",
         "responsive navigation"
+      ],
+      "reference_size_visual_check": [
+        1585,
+        992
       ]
     },
     "model_live": "NOT_RUN",

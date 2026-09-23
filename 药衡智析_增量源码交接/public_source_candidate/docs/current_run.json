@@ -1,8 +1,8 @@
 {
   "run_id": "workspace_20260923",
-  "revision_kind": "working_tree_on_base",
-  "commit": "3c5083ba7a3e2bfcf272ca10a9061700bfac8ef3",
-  "tested_changes": "feat/analysis-workspace-assistant; final tested code commit recorded after commit",
+  "revision_kind": "git",
+  "commit": "40e8d5b372304c54a423f6b9c83b1e0d9566b6cc",
+  "tested_changes": "feat/analysis-workspace-assistant; implementation and test code at recorded commit; subsequent receipt commit only updates documentation",
   "required_scenarios": [
     "S1",
     "S2",
@@ -83,6 +83,10 @@
         "context ring four colors, ratio and aligned controls",
         "chart tooltip",
         "responsive navigation"
+      ],
+      "reference_size_visual_check": [
+        1585,
+        992
       ]
     },
     "model_live": "NOT_RUN",
