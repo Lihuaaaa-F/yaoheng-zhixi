@@ -546,6 +546,13 @@ def import_csv(cost_path, quantity_path, destination):
     return publish_snapshot(NormalizedDataset(costs=read(cost_path,CostFact),quantities=read(quantity_path,QuantityFact)),destination)
 
 
+def _soffice_available() -> bool:
+    """与 reports.convert_pdf 共用同一探测（Windows soffice.exe 不在 PATH 时 which('libreoffice') 恒假，
+    曾致 PDF 能力永久误报 degraded）。函数级导入避免 reports→config 加载顺序问题。"""
+    from .reports import soffice_exe
+    return soffice_exe() is not None
+
+
 def capabilities(pack, dataset=None, services=None):
     if services is None:
         import importlib.util
@@ -554,7 +561,7 @@ def capabilities(pack, dataset=None, services=None):
         configured=bool(any(os.getenv(k) for k in ('PHARMA_API_KEY','GLM_API_KEY','ZHIPU_API_KEY')) or
                         (key_path and Path(key_path).is_file() and Path(key_path).stat().st_size))
         services={'word_service':importlib.util.find_spec('docx') is not None,
-                  'pdf_service':shutil.which('libreoffice') is not None,
+                  'pdf_service':_soffice_available(),
                   'model_service':configured,'rpa_service':False}
     present={'costs','quantities'} if dataset and dataset.costs and dataset.quantities else set()
     if dataset: present.update(x.kind for x in dataset.optional)

@@ -1024,16 +1024,23 @@ def verify_docx(path,snapshot,sections=None,narrative=None,placeholders=None):
         images=len([n for n in z.namelist() if n.startswith('word/media/')])
     return {'status':'PASS' if not explanation_check['explanation_binding_failures'] and not residual and len(headings)==6 and numeric and tables>=11 and images>0 and not failures and checked>=70 and not duplicated_units else 'FAIL',**explanation_check,'numeric_bindings_checked':checked,'numeric_binding_failures':failures,'duplicated_units':duplicated_units,'residual_placeholders':residual,'headings':headings,'core_numbers':numeric,'tables':tables,'images':images,'semantic_bindings':'XML位置区分金额与比例','human_layout':'待全部页人工审核','scope':'文件结构与指标绑定；不是报告验收'}
 
+def soffice_exe(converter='libreoffice'):
+    """定位 LibreOffice 可执行文件；能力预览（industry.capabilities）必须与转换器共用此探测，
+    否则 Windows 安装（soffice.exe，通常不在 PATH）会被误报为缺服务（2026-09-24）。"""
+    exe = shutil.which(converter)
+    if exe is None and converter == 'libreoffice' and os.name == 'nt':
+        for candidate in ('soffice', r'C:\Program Files\LibreOffice\program\soffice.exe', r'C:\Program Files (x86)\LibreOffice\program\soffice.exe'):
+            found = shutil.which(candidate) if not candidate.startswith('C:') else (candidate if Path(candidate).exists() else None)
+            if found: return found
+    return exe
+
+
 def convert_pdf(docx_path,timeout=90,converter='libreoffice',_toc_pass=0):
     import os
     path=Path(docx_path)
+    exe = soffice_exe(converter)
+    if exe is None: return {'status': 'FAILED', 'reason': 'CONVERTER_NOT_FOUND: ' + converter}
     try:
-        exe = shutil.which(converter)
-        if exe is None and converter == 'libreoffice' and os.name == 'nt':
-            for candidate in ('soffice', r'C:\Program Files\LibreOffice\program\soffice.exe', r'C:\Program Files (x86)\LibreOffice\program\soffice.exe'):
-                found = shutil.which(candidate) if not candidate.startswith('C:') else (candidate if Path(candidate).exists() else None)
-                if found: exe = found; break
-        if exe is None: return {'status': 'FAILED', 'reason': 'CONVERTER_NOT_FOUND: ' + converter}
         temp_root = '/tmp' if os.name != 'nt' else tempfile.gettempdir()
         with tempfile.TemporaryDirectory(prefix='pharma-lo-',dir=temp_root) as work:
             folder=Path(work);profile=folder/'profile';target=folder/path.with_suffix('.pdf').name
