@@ -275,8 +275,38 @@ def _enterprise(pack, company=None):
     raise ValueError('UNKNOWN_ENTERPRISE_CONTEXT')
 
 
+def _fp(path) -> tuple:
+    """文件指纹：内容未变（mtime_ns+size）即视为未变。缓存键的一部分。"""
+    st = Path(path).stat()
+    return (st.st_mtime_ns, st.st_size)
+
+
+_DATASET_CACHE: dict = {}
+
+
 def _read_dataset(pack, enterprise=None):
-    enterprise=enterprise or _enterprise(pack)
+    """按（企业配置文件, facts 文件指纹 + 校验消费的 enterprise 语义字段）缓存校验结果
+    ——catalog/对标/分析每请求都走到这里，实测未缓存 45-61ms/次，pydantic 全量校验占大头
+    （2026-09-24 审查 SSE-11）。语义字段进键：单测会传改写 unit/currency 的 enterprise
+    变体并期望校验错误，键不全会把错误命中成假通过。缓存共享实例只读：全仓无就地修改。"""
+    enterprise = enterprise or _enterprise(pack)
+    facts = Path(enterprise['_base_dir']) / enterprise['facts_entry']
+    semantic = {k: enterprise.get(k) for k in ('id', 'quantity_unit', 'currency', 'products', 'policy_version')}
+    key = ('dataset', str(enterprise['_config_file']), *_fp(enterprise['_config_file']),
+           str(facts), *_fp(facts), _canon(semantic))
+    hit = _DATASET_CACHE.get(key)
+    if hit is None:
+        hit = _read_dataset_uncached(pack, enterprise)
+        _DATASET_CACHE[key] = hit
+    return hit
+
+
+def _canon(value) -> str:
+    return json.dumps(value, sort_keys=True, ensure_ascii=False, default=str)
+
+
+def _read_dataset_uncached(pack, enterprise):
+    enterprise = enterprise or _enterprise(pack)
     raw = json.loads((enterprise['_base_dir'] / enterprise['facts_entry']).read_text())
     dataset=NormalizedDataset.model_validate(raw)
     if any(x.quantity_unit!=enterprise['quantity_unit'] for x in dataset.costs) or any(x.unit!=enterprise['quantity_unit'] for x in dataset.quantities):
@@ -546,11 +576,17 @@ def import_csv(cost_path, quantity_path, destination):
     return publish_snapshot(NormalizedDataset(costs=read(cost_path,CostFact),quantities=read(quantity_path,QuantityFact)),destination)
 
 
+_SOFFICE_AVAILABLE = None
+
+
 def _soffice_available() -> bool:
     """与 reports.convert_pdf 共用同一探测（Windows soffice.exe 不在 PATH 时 which('libreoffice') 恒假，
-    曾致 PDF 能力永久误报 degraded）。函数级导入避免 reports→config 加载顺序问题。"""
-    from .reports import soffice_exe
-    return soffice_exe() is not None
+    曾致 PDF 能力永久误报 degraded）。进程级 memo：安装状态运行期不变，PATH 扫描不必每请求做。"""
+    global _SOFFICE_AVAILABLE
+    if _SOFFICE_AVAILABLE is None:
+        from .reports import soffice_exe
+        _SOFFICE_AVAILABLE = soffice_exe() is not None
+    return _SOFFICE_AVAILABLE
 
 
 def capabilities(pack, dataset=None, services=None):
