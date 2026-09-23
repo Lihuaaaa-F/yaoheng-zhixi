@@ -267,7 +267,8 @@ def test_benchmark_async_default_queues_report_and_returns_rules_immediately(tmp
     monkeypatch.setattr(knowledge, 'Knowledge', lambda *a, **k: SimpleNamespace(search=None))
     monkeypatch.setattr(api, 'store', JobStore(tmp_path / 'db'))
     enqueued = []
-    def fake_enqueue(req):
+    def fake_enqueue(req,prepared_snapshot=None):
+        assert prepared_snapshot is not None  # 后台解释必须绑定本次对标快照。
         job = {'id': 'job-async-1', 'status': 'QUEUED', 'result': {}}
         enqueued.append(req.model_dump())
         return job, {}
@@ -280,15 +281,19 @@ def test_benchmark_async_default_queues_report_and_returns_rules_immediately(tmp
     assert result['narrative']['model_status'] == 'QUEUED' and result['narrative']['job_id'] == 'job-async-1'
     assert result['narrative']['generation_mode'] == 'rules'
     assert enqueued and enqueued[0]['factory'] == 'A'
+    # 显式只读基础分析不因冷缓存触发后台写入或付费请求。
+    enqueued.clear()
+    plain=api.get_benchmark('P','2026-05','A','B',context_id='pharmaceutical:competition',explain='none')
+    assert plain['narrative']['generation_mode']=='rules' and not enqueued
     # 已完成任务 → 直接复用其 narrative，不再入队新任务
     enqueued.clear()
     monkeypatch.setattr(api, '_enqueue_report',
-                        lambda req: ({'id': 'job-done', 'status': 'SUCCEEDED',
+                        lambda req,prepared_snapshot=None: ({'id': 'job-done', 'status': 'SUCCEEDED',
                                       'result': {'narrative': {'status': 'PASS', 'generation_mode': 'llm', 'findings': []}}}, {}))
     result2 = api.get_benchmark('P', '2026-05', 'A', 'B', context_id='pharmaceutical:competition')
     assert result2['narrative']['generation_mode'] == 'llm' and 'model_status' not in result2['narrative']
     # 入队失败：响应保留规则解释并标注，不抛错
-    def boom(req):
+    def boom(req,prepared_snapshot=None):
         raise ValueError('NO_COMPLETE_PERIOD_DATA')
     monkeypatch.setattr(api, '_enqueue_report', boom)
     result3 = api.get_benchmark('P', '2026-05', 'A', 'B', context_id='pharmaceutical:competition')

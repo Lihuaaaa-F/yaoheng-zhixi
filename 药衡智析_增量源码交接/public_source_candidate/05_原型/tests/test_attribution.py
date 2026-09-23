@@ -95,8 +95,10 @@ def test_did_recovers_known_effect_and_placebo_clean():
     # 处理厂 6月较前置均值 +1.00，对照厂 0 → τ̂ = +1.0000
     assert D(result['tau']) == D('1.0000')
     assert result['placebo_tau'] is not None and abs(D(result['placebo_tau'])) < D('0.05')
-    assert result['parallel_trend'] == '稳健'
-    assert '平行趋势' in result['assumption']
+    assert result['parallel_trend'] == '未验证'
+    assert result['causal_identification'] == 'NOT_ESTABLISHED'
+    assert '不能证明平行趋势' in result['assumption']
+    assert '未超过' in result['diagnostic']
 
 
 def test_did_unavailable_without_control():
@@ -125,14 +127,25 @@ def test_ranking_orders_and_labels():
     assert all(r['label'] in ('高', '中', '低') for r in ranking)
     # 带行情同向支持的药材根因应排在无行情支持的同等 EP 根因之前
     top_basis = ranking[0]['basis']
-    assert '解释力' in top_basis
+    assert '占同口径变动' in top_basis
+    assert all(row['score_kind'] == 'review_priority_heuristic' for row in ranking)
 
 
 def test_analyze_deterministic_and_shape(monkeypatch):
     rows = _series()
-    monkeypatch.setattr(A, 'load_rows', lambda *a, **k: rows)
+    monkeypatch.setattr(A, 'load_rows', lambda *a, **k: (_ for _ in ()).throw(AssertionError('unbound data read')))
     import pharma.metrics as _m
-    monkeypatch.setattr(_m, 'benchmark_partner', lambda factory=None, product=None: '乙厂')
+    bound = {'snapshot_id': 'independent-fixture', 'factory': '甲厂', 'product': '品A',
+             'month': '2026-06', 'analysis_type': 'monthly', 'basis': 'unit',
+             'period': {'start': '2026-06', 'end': '2026-06'},
+             'comparison': {'mom': {'delta': '1.00'}}, 'metrics': {'unit_cost': {'unit': '元/盒'},
+             'mom': {'comparison_period': ['2026-05']}},
+             'elements': [{'key': name, 'name': name,
+                           'comparisons': {'mom': {'unit': {'current': current, 'base': previous}}}}
+                          for name, current, previous in [('材料', '5.00', '4.00'), ('人工', '1.00', '1.00'), ('制造费用', '1.00', '1.00')]],
+             'materials_summary': [{'name': '草一', 'current': '3.40', 'previous': '2.40'}],
+             'attribution_support': A.support_for_rows(rows, '甲厂', '品A', '2026-06')}
+    monkeypatch.setattr(_m, 'analyze', lambda *a, **k: bound)
     first = A.analyze_attribution('甲厂', '品A', '2026-06')
     second = A.analyze_attribution('甲厂', '品A', '2026-06')
     assert json.dumps(first, sort_keys=True, default=str) == json.dumps(second, sort_keys=True, default=str)

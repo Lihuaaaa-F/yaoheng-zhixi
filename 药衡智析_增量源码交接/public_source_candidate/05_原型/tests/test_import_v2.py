@@ -93,7 +93,7 @@ def test_data_parse_pipeline_publishes_and_reports_progress(isolated_runtime, tm
     summary_after = data_import.get_import(summary['id'])
     material_after = data_import.get_import(material['id'])
     assert summary_after['status'] == 'PARSED' and material_after['status'] == 'PARSED'
-    assert summary_after['meta']['parsed']['context_id'].startswith('pharmaceutical:imp-')
+    assert summary_after['meta']['parsed']['context_id'].startswith('generic_manufacturing:imp-')
     events = [e for e in store.history(job['id']) if e.get('detail')]
     assert any('预处理' in e['detail'] for e in events)
     assert any('归因分析' in e['detail'] for e in events)
@@ -174,9 +174,12 @@ def test_kb_build_pipeline_message_contract(isolated_runtime, tmp_path, monkeypa
     assert finished['status'] == 'SUCCEEDED'
     assert finished['result']['message'].startswith('知识库构建成功')
     assert data_import.get_import(doc['id'])['status'] == 'PARSED'
-    source_dir = data_import.KNOWLEDGE_INGEST_DIR
-    written = list(Path(source_dir).glob('*.txt'))
-    assert any('企业内部知识' in p.name for p in written)
+    from pharma.knowledge import knowledge_registry, uploaded_knowledge_sources
+    registry = knowledge_registry('pharmaceutical:competition')
+    assert 'enterprise:设备清单.txt' in registry['active']
+    written = uploaded_knowledge_sources('pharmaceutical:competition')
+    assert written and all(p.suffix == '.json' for p in written)
+    assert '设备清单' in json.loads(written[0].read_text(encoding='utf-8'))[0]['source']
 
 
 def test_kb_build_empty_document_fails_with_step(isolated_runtime, tmp_path, monkeypatch):
@@ -256,28 +259,30 @@ def test_presets_payload_and_tiers():
 
 
 def test_tier_error_rules():
-    assert model_registry.tier_error('extraction', 'glm-5.3') is not None
+    assert model_registry.tier_error('extraction', 'glm-5.3') is None
+    assert model_registry.tier_advice('extraction', 'glm-5.3') is not None
     assert model_registry.tier_error('extraction', 'glm-4.5-air') is None
-    assert model_registry.tier_error('analysis', 'glm-4.5-air') is not None
+    assert model_registry.tier_error('analysis', 'glm-4.5-air') is None
+    assert model_registry.tier_advice('analysis', 'glm-4.5-air') is not None
     assert model_registry.tier_error('analysis', 'glm-5.3') is None
     assert model_registry.tier_error('extraction', 'totally-unknown-model') is None  # 未收录可手填
 
 
 def test_effort_mapping_by_vendor():
     assert model_registry.effort_body_params('glm-5.3', 'https://open.bigmodel.cn/api/paas/v4', 'medium') == {'reasoning_effort': 'high'}
-    assert model_registry.effort_body_params('glm-5.3', 'x', 'high') == {'reasoning_effort': 'max'}
-    assert model_registry.effort_body_params('deepseek-chat', 'https://api.deepseek.com', 'low') == {'thinking': {'type': 'disabled'}}
-    assert model_registry.effort_body_params('deepseek-chat', 'https://api.deepseek.com', 'high') == {'thinking': {'type': 'enabled'}}
+    assert model_registry.effort_body_params('glm-5.3', 'x', 'high') == {'reasoning_effort': 'high'}
+    assert model_registry.effort_body_params('deepseek-chat', 'https://api.deepseek.com', 'low') == {'thinking': {'type': 'enabled'}, 'reasoning_effort': 'low'}
+    assert model_registry.effort_body_params('deepseek-chat', 'https://api.deepseek.com', 'high') == {'thinking': {'type': 'enabled'}, 'reasoning_effort': 'high'}
     assert model_registry.effort_body_params('qwen3.8-max', 'https://dashscope.aliyuncs.com/compatible-mode/v1', 'high') == {'enable_thinking': True}
 
 
-def test_save_settings_rejects_wrong_tier(isolated_runtime):
-    with pytest.raises(ValueError):
-        model_settings.save_settings({'connections': {
-            'extraction': {'model': 'glm-5.3', 'base_url': 'https://open.bigmodel.cn/api/paas/v4'}}})
-    with pytest.raises(ValueError):
-        model_settings.save_settings({'connections': {
-            'analysis': {'model': 'glm-4.5-air', 'base_url': 'https://open.bigmodel.cn/api/paas/v4'}}})
+def test_save_settings_tier_is_advice_not_restriction(isolated_runtime):
+    model_settings.save_settings({'connections': {
+        'extraction': {'model': 'glm-5.3', 'base_url': 'https://open.bigmodel.cn/api/paas/v4'}}})
+    model_settings.save_settings({'connections': {
+        'analysis': {'model': 'glm-4.5-air', 'base_url': 'https://open.bigmodel.cn/api/paas/v4'}}})
+    assert model_settings.resolve('analysis')['model'] == 'glm-4.5-air'
+    assert model_settings.resolve('extraction')['model'] == 'glm-5.3'
 
 
 # ---------- 向量模型切换 ----------
@@ -375,7 +380,7 @@ def test_settings_route_key_survives_cross_host(monkeypatch, tmp_path):
         key_file.write_text('deepseek-route-key', encoding='utf-8')
         ms.save_settings({'connections': {'extraction': {
             'model': 'deepseek-flash', 'base_url': 'https://api.deepseek.com',
-            'protocol': 'openai', 'key_file': str(key_file)}}})
+            'protocol': 'openai', 'key_file': key_file.name}}})
         gw = narrative.ModelGateway.for_route('extraction')
         assert gw.key == 'deepseek-route-key'
         assert gw.base_url == 'https://api.deepseek.com'

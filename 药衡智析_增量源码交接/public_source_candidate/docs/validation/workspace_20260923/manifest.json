@@ -1,0 +1,85 @@
+{
+  "run_id": "workspace_20260923",
+  "commit": "3c5083ba7a3e2bfcf272ca10a9061700bfac8ef3",
+  "required_scenarios": [
+    "S1",
+    "S2",
+    "S3"
+  ],
+  "scenarios": [
+    {
+      "id": "S1",
+      "context_id": "pharmaceutical:competition",
+      "product": "银黄口服液",
+      "month": "2026-05",
+      "analysis_type": "monthly",
+      "job_id": null,
+      "status": "PENDING_CURRENT_BUILD",
+      "human_review": "PENDING"
+    },
+    {
+      "id": "S2",
+      "context_id": "pharmaceutical:competition",
+      "product": "板蓝根颗粒",
+      "month": "2026-05",
+      "analysis_type": "special",
+      "job_id": null,
+      "status": "PENDING_CURRENT_BUILD",
+      "human_review": "PENDING"
+    },
+    {
+      "id": "S3",
+      "context_id": "pharmaceutical:competition",
+      "product": "六味地黄胶囊",
+      "month": "2026-03",
+      "analysis_type": "monthly",
+      "job_id": null,
+      "status": "PENDING_CURRENT_BUILD",
+      "human_review": "PENDING"
+    }
+  ],
+  "scope": "Workspace regression; official scenario jobs not rerun",
+  "validation": {
+    "python": {
+      "passed": 495,
+      "skipped": 1,
+      "status": "PASS",
+      "skipped_reason": "No catalogue context with capability list in isolated capability-gate fixture; actual PDF conversion tests passed"
+    },
+    "frontend_build": "PASS",
+    "browser": {
+      "status": "PASS",
+      "viewports": [
+        [
+          1600,
+          1000
+        ],
+        [
+          1366,
+          768
+        ],
+        [
+          390,
+          844
+        ]
+      ],
+      "provider": "loopback HTTP mock only",
+      "pages": 8,
+      "read_only_page_viewport_checks": 16,
+      "console_errors": 0,
+      "flows": [
+        "independent local connection saved and tested",
+        "model and high reasoning reach HTTP mock",
+        "conversation history restored",
+        "proposal confirmation creates DRAFT only",
+        "context ring four colors, ratio and aligned controls",
+        "chart tooltip",
+        "responsive navigation"
+      ]
+    },
+    "model_live": "NOT_RUN",
+    "docker_clean_start": "NOT_RUN",
+    "human": "PENDING",
+    "frontend_legacy_recording_contract_tests": 2
+  }
+}

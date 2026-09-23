@@ -8,6 +8,13 @@ from .reports import style_reader,number,RESIDUAL,layout_text,benchmark_labels,b
 
 HEADINGS=['一、封面与基本信息','二、总成本概览','三、成本要素明细分析','四、重点产品专项分析','五、对标分析','六、总结与建议']
 
+def synthetic_source(snapshot):
+    return snapshot.get('data_provenance')=='synthetic_fixture' or (
+        not snapshot.get('data_provenance') and '合成' in snapshot.get('data_label',''))
+
+def alert_note(snapshot):
+    return '超过合成演示阈值。' if synthetic_source(snapshot) else '超过当前配置的重点核查阈值。'
+
 def comparison_basis(comparison, snapshot):
     """对标口径以比较对象自带声明为准，缺失时回退报告口径。"""
     basis = (comparison or {}).get('basis') or snapshot.get('basis') or 'unit'
@@ -85,7 +92,7 @@ def verify(path, snapshot, benchmark=None):
     for alert in snapshot['alerts']:
         prefix = alert['element'] + ' · ' + ('单位成本' if alert['basis'] == 'unit' else '总成本') + '环比 '
         bind('alert:' + alert['alert_id'], paragraph_value(2, prefix),
-             prefix + number(alert['rate']) + '%，超过合成演示阈值。')
+             prefix + number(alert['rate']) + '%，'+alert_note(snapshot))
     for key in pack.strategies:
         label = {'machine_hours_per_piece': '单位产品机时', 'energy_per_kg': '单位合格产出能耗'}.get(key, key)
         bind('specialized:' + key, paragraph_value(3, label + '：'),
@@ -128,12 +135,13 @@ def render(snapshot,narrative,evidence,output,benchmark=None):
         for row in rows:
             for c,x in zip(t.add_row().cells,row):c.text=str(x)
     doc.add_heading(pack.name+' · '+snapshot['product']+'成本分析报告',0)
-    paragraph(template['required_notice'])
+    paragraph(template['required_notice'] if synthetic_source(snapshot) else '本报告依据用户导入数据及当前知识版本生成。缺失字段不推算为真实数据，原因判断须结合业务资料核实。')
     for index,heading in enumerate(headings):
         doc.add_heading(heading,1)
         if index==0:
             period_label=report_period_label(snapshot)
             paragraph(snapshot['factory']+' · '+period_label)
+            if snapshot.get('analysis_type')=='special' and snapshot.get('topic'):paragraph('专题：'+snapshot['topic'])
             paragraph('规格：'+snapshot['specification']+'；币种：'+snapshot['currency']+'；口径：完工产出。')
         elif index==1:
             table(['指标','确定性结果'],[['总成本',number(m['total_cost'])+' '+m['total_cost']['unit']],['合格产出',number(m['quantity'])+' '+quantity_unit],['单位成本',number(m['unit_cost'])+' '+unit]])
@@ -142,7 +150,7 @@ def render(snapshot,narrative,evidence,output,benchmark=None):
             paragraph('季度采用期间成本总和除以独立产量总和；缺失基期或零分母保持无定义。')
         elif index==2:
             table(['要素','总成本','单位成本','单位环比（%）'],[[e['name'],number(e['total']),number(e['unit']),number(e.get('unit_mom'))] for e in snapshot['elements']])
-            for alert in snapshot['alerts']:paragraph(alert['element']+' · '+('单位成本' if alert['basis']=='unit' else '总成本')+'环比 '+number(alert['rate'])+'%，超过合成演示阈值。')
+            for alert in snapshot['alerts']:paragraph(alert['element']+' · '+('单位成本' if alert['basis']=='unit' else '总成本')+'环比 '+number(alert['rate'])+'%，'+alert_note(snapshot))
             if snapshot['trend']:
                 import matplotlib
                 matplotlib.use('Agg')
@@ -150,7 +158,7 @@ def render(snapshot,narrative,evidence,output,benchmark=None):
                 from matplotlib.font_manager import FontProperties
                 from .config import APP
                 font=FontProperties(fname=str(APP/'assets/fonts/NotoSansSC-Regular.ttf'))
-                fig,ax=plt.subplots(figsize=(7,2.3));ax.plot([r['month'] for r in snapshot['trend']],[float(r['unit_cost']) if r['unit_cost'] is not None else float('nan') for r in snapshot['trend']],marker='o',color='#246479');ax.set_ylabel(unit,fontproperties=font);ax.set_title('合成演示 · 单位成本趋势',fontproperties=font);fig.tight_layout()
+                fig,ax=plt.subplots(figsize=(7,2.3));ax.plot([r['month'] for r in snapshot['trend']],[float(r['unit_cost']) if r['unit_cost'] is not None else float('nan') for r in snapshot['trend']],marker='o',color='#246479');ax.set_ylabel(unit,fontproperties=font);ax.set_title(('合成演示 · ' if synthetic_source(snapshot) else '')+'单位成本趋势',fontproperties=font);fig.tight_layout()
                 image=Path(output).with_suffix('.png');image.parent.mkdir(parents=True,exist_ok=True);fig.savefig(image,dpi=150);plt.close(fig)
                 from docx.shared import Cm
                 doc.add_picture(str(image),width=Cm(17))
@@ -159,7 +167,7 @@ def render(snapshot,narrative,evidence,output,benchmark=None):
                 paragraph('图｜单位成本趋势')
         elif index==3:
             for key in pack.strategies:paragraph({'machine_hours_per_piece':'单位产品机时','energy_per_kg':'单位合格产出能耗'}.get(key,key)+'：'+number(m[key])+' '+m[key]['unit'])
-            paragraph('专用指标以明确驱动事实计算，数值和阈值均为合成假定，不是行业基准。')
+            paragraph('专用指标以明确驱动事实计算，数值和阈值均为合成假定，不是行业基准。' if synthetic_source(snapshot) else '专用指标仅在企业提供对应计量和口径后计算，不能用缺失数据推断经营原因。')
             for finding in narrative.get('findings',[]):
                 paragraph(render_visible_text(finding.get('rendered_text') or finding.get('text_template',''),snapshot,evidence.get('evidence',[]),finding.get('metric_refs',[])))
         elif index==4:

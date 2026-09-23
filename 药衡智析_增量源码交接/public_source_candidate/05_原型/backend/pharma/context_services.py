@@ -4,7 +4,7 @@ import json
 import os
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
-from .knowledge import Knowledge, source_snapshot
+from .knowledge import Knowledge, source_snapshot, scoped_knowledge_snapshot, knowledge_context_id
 
 PURPOSE_STRATEGY_VERSION='current-period-event-reservation-graph-v3-keyword-only'
 
@@ -60,22 +60,30 @@ def _matching_event(row,snapshot,purpose):
         period=period,specification=snapshot.get('specification'),context=snapshot.get('analysis_context'))['applicable']
 
 
-def retrieve(snapshot, query, *, mode='hybrid', limit=8, graph_enabled=None):
-    if not isinstance(limit,int) or isinstance(limit,bool) or not 1<=limit<=100:raise ValueError('INVALID_RETRIEVAL_LIMIT')
-    context = snapshot.get('analysis_context') or {}
-    policy=retrieval_policy(context)
+def knowledge_for_context(context=None):
+    """Resolve exactly one enterprise's sources for HTTP, reports and assistants."""
+    context = context.model_dump() if hasattr(context, 'model_dump') else dict(context or {})
     if not context:
-        knowledge = Knowledge()
-    elif context.get('industry_id') == 'pharmaceutical' and context.get('enterprise_id') == 'competition':
+        return Knowledge()
+    context_id = knowledge_context_id(context)
+    if context_id == 'pharmaceutical:competition':
         knowledge = Knowledge(context=context)
-        if source_snapshot(knowledge.source_dir) != context.get('knowledge_snapshot'):
+        if scoped_knowledge_snapshot(context_id, source_snapshot(knowledge.source_dir)) != context.get('knowledge_snapshot'):
             raise ValueError('KNOWLEDGE_SNAPSHOT_CHANGED')
     else:
         from .industry import knowledge_entry_for_context, AnalysisContext
         entry = knowledge_entry_for_context(AnalysisContext.model_validate(context))
-        if sha256(entry.read_bytes()).hexdigest() != context.get('knowledge_snapshot'):
+        if scoped_knowledge_snapshot(context_id, sha256(entry.read_bytes()).hexdigest()) != context.get('knowledge_snapshot'):
             raise ValueError('KNOWLEDGE_SNAPSHOT_CHANGED')
         knowledge = Knowledge(context=context, source_files=(entry,))
+    return knowledge
+
+
+def retrieve(snapshot, query, *, mode='hybrid', limit=8, graph_enabled=None):
+    if not isinstance(limit,int) or isinstance(limit,bool) or not 1<=limit<=100:raise ValueError('INVALID_RETRIEVAL_LIMIT')
+    context = snapshot.get('analysis_context') or {}
+    policy=retrieval_policy(context)
+    knowledge = knowledge_for_context(context)
     scope={'product':snapshot.get('product'),'factory':snapshot.get('factory'),
            'period':snapshot.get('period'),'specification':snapshot.get('specification'),'mode':mode,'limit':limit}
     # 知识图谱增强（赛题加分项）：制药上下文且图谱存在时，把该产品的

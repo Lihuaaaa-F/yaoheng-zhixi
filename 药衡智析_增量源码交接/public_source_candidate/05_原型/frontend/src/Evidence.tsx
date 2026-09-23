@@ -1,17 +1,20 @@
 import { Suspense, lazy, useState, useEffect, useRef } from 'react';
-import { api, contextQuery } from './api';
+import { api, contextQuery, openApiFile } from './api';
+import { Drawer, Button, Alert, Empty } from 'antd';
+import { FileTextOutlined, LinkOutlined } from '@ant-design/icons';
 import { cleanText, sourceLabel, DeveloperDetails, MetricDetails } from './presentation';
 // 2026-09-23 审查 SSE-2：Chart3D（echarts-gl 栈）改为动态加载——知识图谱仅在
 // 证据抽屉渲染时才需要，静态引入会把约 497KB GL 依赖拖进首屏。
 const Chart3D = lazy(() => import('./Chart3D'));
 export default function Evidence({ contextId, product, month, factory, onOpen }: {contextId:string;product:string; month?:string; factory?:string; onOpen:(v:any)=>void}) {
  const searchController=useRef<AbortController|undefined>(undefined);
+ const [graphOpen,setGraphOpen]=useState(false);
  const [query,setQuery]=useState('设备停机记录'),[mode,setMode]=useState('hybrid'),[results,setResults]=useState<any>(null),[status,setStatus]=useState<any>(null),[error,setError]=useState(''),[busy,setBusy]=useState(false);
  useEffect(()=>{const c=new AbortController();api(`/kb?${contextQuery(contextId)}`,undefined,c.signal).then(x=>{if(!c.signal.aborted)setStatus(x)}).catch(e=>{if(!c.signal.aborted)setError(e.message)});return()=>c.abort()},[contextId]);
  useEffect(()=>{searchController.current?.abort();setResults(null);setBusy(false);return()=>searchController.current?.abort()},[contextId,product,month,factory]);
  async function search(){searchController.current?.abort();const c=new AbortController();searchController.current=c;setBusy(true);setError('');try{const response=await api('/kb/search',{query,product,month,factory,mode,context_id:contextId},c.signal);if(!c.signal.aborted)setResults(response)}catch(e){if(!c.signal.aborted)setError(e instanceof Error?e.message:String(e))}finally{if(!c.signal.aborted)setBusy(false)}}
  const hits=Array.isArray(results)?results:results?.evidence??results?.results??results?.hits??[];
- return <><section className="panel"><h2>数据与知识来源</h2><p className="muted">按文档名、章节和真实页码核查。文档有记录不等于已证实本期成本原因。</p>{status&&<><p>{(status.sources&&Object.keys(status.sources).length)?<>已登记来源 {Object.keys(status.sources??{}).length} 份；索引{status.status==='PASS'?'可用':'需要复核'}。</>:<>该数据范围使用独立知识条目（无 PDF 源清单）；索引{status.status==='PASS'||status.status==='READY'?'可用':'需要复核'}。</>}</p><DeveloperDetails value={status}/></>}</section><section className="panel"><h2>适用证据检索</h2><form className="search-row" onSubmit={e=>{e.preventDefault();void search()}}><input aria-label="知识检索问题" value={query} onChange={e=>setQuery(e.target.value)} placeholder="输入工艺、物料或设备问题"/><select aria-label="检索方式" value={mode} onChange={e=>setMode(e.target.value)}><option value="hybrid">语义与关键词混合</option><option value="bm25">关键词 BM25</option><option value="vector">语义向量</option></select><button className="primary" disabled={busy||!query.trim()}>{busy?'检索中…':'检索证据'}</button></form><p className="muted">核查范围：{product} · {factory} · {month}。通用知识仅解释机制；本期归因还须核对规格、期间和文档版本。</p>{error&&<p role="alert" className="error">{error}</p>}{results&&<p role="status">找到 {hits.length} 条候选依据{results.degraded_reason?'；部分检索能力未通过，请复核证据覆盖。':''}</p>}{results&&!hits.length&&<p className="empty">证据不足：没有适用记录，请补充相关产品和期间的原始资料。</p>}{hits.map((h:any,i:number)=><article className="evidence-result" key={h.evidence_id??i}><strong>{sourceLabel(h)}</strong><p>适用范围：{h.products?.join('、')||h.scope_label||'产品适用性待核对'}。{h.applicability?.reason??'引用前请核对该记录是否支持当前问题。'}</p><button onClick={()=>onOpen(h)}>查看来源与适用性</button></article>)}{results&&<DeveloperDetails value={results}/>}</section><KnowledgeGraphPanel contextId={contextId}/></>
+ return <><section className="panel"><h2>数据与知识来源</h2><p className="muted">按文档名、章节和真实页码核查。文档有记录不等于已证实本期成本原因。</p>{status&&<><p>{(status.sources&&Object.keys(status.sources).length)?<>已登记来源 {Object.keys(status.sources??{}).length} 份；索引{status.status==='PASS'?'可用':'需要复核'}。</>:<>该数据范围使用独立知识条目（无 PDF 源清单）；索引{status.status==='PASS'||status.status==='READY'?'可用':'需要复核'}。</>}</p><DeveloperDetails value={status}/></>}</section><section className="panel"><h2>适用证据检索</h2><form className="search-row" onSubmit={e=>{e.preventDefault();void search()}}><input aria-label="知识检索问题" value={query} onChange={e=>setQuery(e.target.value)} placeholder="输入工艺、物料或设备问题"/><select aria-label="检索方式" value={mode} onChange={e=>setMode(e.target.value)}><option value="hybrid">语义与关键词混合</option><option value="bm25">关键词 BM25</option><option value="vector">语义向量</option></select><button className="primary" disabled={busy||!query.trim()}>{busy?'检索中…':'检索证据'}</button></form><p className="muted">核查范围：{product} · {factory} · {month}。通用知识仅解释机制；本期归因还须核对规格、期间和文档版本。</p>{error&&<p role="alert" className="error">{error}</p>}{results&&<p role="status">找到 {hits.length} 条候选依据{results.degraded_reason?'；部分检索能力未通过，请复核证据覆盖。':''}</p>}{results&&!hits.length&&<p className="empty">证据不足：没有适用记录，请补充相关产品和期间的原始资料。</p>}{hits.map((h:any,i:number)=><article className="evidence-result" key={h.evidence_id??i}><strong>{sourceLabel(h)}</strong><p>适用范围：{h.products?.join('、')||h.scope_label||'产品适用性待核对'}。{h.applicability?.reason??'引用前请核对该记录是否支持当前问题。'}</p><button onClick={()=>onOpen(h)}>查看来源与适用性</button></article>)}{results&&<DeveloperDetails value={results}/>}</section><details className="panel kg-disclosure" onToggle={e=>setGraphOpen(e.currentTarget.open)}><summary>配方与工艺关系图谱（可选视图）</summary>{graphOpen&&<KnowledgeGraphPanel contextId={contextId}/>}</details></>
 }
 
 // 知识图谱面板（赛题加分项）：产品-药材-工序关系三维可视化。
@@ -40,7 +43,7 @@ function KnowledgeGraphPanel({contextId}:{contextId:string}) {
  const colors=['#227c81','#c08a3e','#8f5b7a'];
  const typeIndex=(t:string)=>({product:0,material:1,process:2})[t]??0;
  const typeLabel=(t:string)=>({product:'产品',material:'药材',process:'工序'})[t]??t;
- const height=fullscreen?Math.round(window.innerHeight*0.88):720;
+ const height=fullscreen?Math.round(window.innerHeight*0.88):440;
  // 确定性三维布局：产品按等边三角分布，各产品的药材与工序绕本产品在
  // 倾斜环上按索引均匀转角；关系完全来自后端确定性抽取，坐标只影响展示。
  const productNodes=graph.nodes.filter((n:any)=>n.type==='product');
@@ -106,7 +109,7 @@ function KnowledgeGraphPanel({contextId}:{contextId:string}) {
   <Suspense fallback={<p className="muted" role="status">三维图谱组件加载中…</p>}>
   <Chart3D label="知识图谱三维视图" height={height}
    onHover={(info:any)=>setHoverInfo(info)} option={{
-    tooltip:{formatter:(p:any)=>{
+    tooltip:{renderMode:'richText',formatter:(p:any)=>{
       const label=p.data?.name||p.name||'';
       if(p.data?.tooltip_kind==='边')return label;
       return `${label}（${p.data?.tooltip_kind??''}）`;
@@ -115,7 +118,7 @@ function KnowledgeGraphPanel({contextId}:{contextId:string}) {
     series:[
       edgeSeriesOption,
       {type:'scatter3D',coordinateSystem:'cartesian3D',data:nodeData,
-       tooltip:{show:true,formatter:(p:any)=>`${p.name}（${p.data?.tooltip_kind??''}）`},
+       tooltip:{show:true,renderMode:'richText',formatter:(p:any)=>`${p.name}（${p.data?.tooltip_kind??''}）`},
        label:{show:true,formatter:(p:any)=>p.name,position:'right',distance:1,
          textStyle:{fontSize:12,color:'#28414d',fontWeight:400,
            textBorderColor:'#ffffff',textBorderWidth:3,textBorderType:'solid'}},
@@ -141,10 +144,33 @@ function KnowledgeGraphPanel({contextId}:{contextId:string}) {
     </Suspense>
     {hoverInfo && <div className="kg-tooltip" style={{left:hoverInfo.x, top:hoverInfo.y}}>{hoverInfo.text}</div>}
   </div>
-  <p className="muted">三维操作：左键拖拽<b>旋转</b> · 滚轮<b>缩放</b>（区域内滚轮不再滚动页面）· 右键拖拽<b>平移</b> · <b>双击</b>或右上角按钮<b>进入/退出全屏</b> · 静止 4 秒后<b>自动缓旋</b> · 悬停节点/连线<b>查看说明</b>。图谱由当前知识库版本确定性抽取（规则 {graph.rules_version}），检索时自动把所选产品的药材与工序补充进关键词检索。图中关系不构成成本归因结论。</p></section>;
+  <p className="muted">三维操作：左键拖拽<b>旋转</b> · 滚轮<b>缩放</b>（区域内滚轮不再滚动页面）· 右键拖拽<b>平移</b> · <b>双击</b>或右上角按钮<b>进入/退出全屏</b> · 悬停节点/连线<b>查看说明</b>。图谱由当前知识库版本确定性抽取（规则 {graph.rules_version}），检索时自动把所选产品的药材与工序补充进关键词检索。图中关系不构成成本归因结论。</p></section>;
 }
 export function EvidenceDrawer({value,onClose}:{value:any;onClose:()=>void}) {
- useEffect(()=>{const fn=(e:KeyboardEvent)=>{if(e.key==='Escape')onClose()};document.addEventListener('keydown',fn);return()=>document.removeEventListener('keydown',fn)},[onClose]);
- const sources=value.evidence??(value.source||value.source_file?[value]:[]);
- return <div className="drawer-backdrop" onClick={onClose}><aside className="drawer" role="dialog" aria-modal="true" aria-label="证据与计算口径" onClick={e=>e.stopPropagation()}><div className="panel-heading"><h2>证据与计算口径</h2><button onClick={onClose} autoFocus>关闭</button></div>{value.rendered_text&&<p>{cleanText(value.rendered_text)}</p>}<MetricDetails value={value}/>{value.reason&&<p className="notice">{cleanText(value.reason)}</p>}{value.missing_evidence?.length>0&&<p>待补充：{value.missing_evidence.join('；')}</p>}{sources.map((s:any,i:number)=><div className="evidence-result" key={i}><strong>{sourceLabel(s)}</strong><p>适用产品：{s.products?.join('、')||'待核对'}；{s.applicability?.reason??'需按规格、工厂、期间和文档版本进一步核验。'}</p>{s.supporting_excerpt&&<blockquote>{cleanText(s.supporting_excerpt)}</blockquote>}</div>)}<p className="muted">原始文档与完整检索内容留在机器审计详情中。引用位置存在不等于原因已被证实。</p><DeveloperDetails value={value}/></aside></div>
+ const [error,setError]=useState('');
+ const sources=Array.isArray(value.evidence)?value.evidence:Array.isArray(value.sources)?value.sources:value.evidence?.evidence??(value.source||value.source_file||value.title||value.text?[value]:[]);
+ const quotes=value.evidence_quotes??{};
+ const openSource=async(source:any)=>{setError('');try{await openApiFile(`/api/kb/sources/${encodeURIComponent(source.source_id)}?context_id=${encodeURIComponent(value.context_id??source.context_id??'')}`,undefined,source.page)}catch(e:any){setError(e.message)}};
+ return <Drawer className="evidence-drawer" title={<><FileTextOutlined /> 证据与计算口径</>} open onClose={onClose} size={560}>
+  {value.rendered_text&&<p className="evidence-heading">{cleanText(value.rendered_text)}</p>}
+  <MetricDetails value={value}/>
+  {value.reason&&<Alert type="info" showIcon title={cleanText(value.reason)}/>}
+  {value.missing_evidence?.length>0&&<Alert type="warning" showIcon title="仍需补充的证据" description={Array.isArray(value.missing_evidence)?value.missing_evidence.join('；'):value.missing_evidence}/>}
+  {error&&<Alert type="error" showIcon title={error}/>}
+  {!sources.length&&value.value===undefined&&<Empty description="当前结论没有可展示的文档证据，请补充资料后核查。"/>}
+  {sources.map((source:any,index:number)=>{
+   const quote=quotes[source.evidence_id]??source.supporting_excerpt;
+   const excerpt=source.text??source.excerpt??source.content;
+   return <article className="evidence-result" key={source.evidence_id??source.source_id??index}>
+    <strong>{sourceLabel(source)}</strong>
+    <p className="evidence-location">适用范围：{source.products?.join('、')||source.product||source.scope_label||'需结合当前产品核对'}{source.factory?` · ${source.factory}`:''}{source.document_version?` · 版本 ${source.document_version}`:''}</p>
+    {quote&&<><span className="muted">结论引用</span><blockquote>{cleanText(quote)}</blockquote></>}
+    {excerpt&&(!quote||cleanText(quote)!==cleanText(excerpt))&&<><span className="muted">来源摘录</span><blockquote>{cleanText(excerpt)}</blockquote></>}
+    {!quote&&!excerpt&&<p className="notice">本条记录缺少可读摘录，请打开原件核查。</p>}
+    {source.applicability?.reason&&<p className="muted">{source.applicability.reason}</p>}
+    {source.source_id&&<Button size="small" icon={<LinkOutlined/>} className="source-actions" onClick={()=>openSource(source)}>打开原始文档{source.page?`（第 ${source.page} 页）`:''}</Button>}
+   </article>;
+  })}
+  <p className="muted">文档记录可以支持原因假设。是否适用于本期成本变化，还需核对产品、工厂、期间和生产记录。</p>
+ </Drawer>;
 }

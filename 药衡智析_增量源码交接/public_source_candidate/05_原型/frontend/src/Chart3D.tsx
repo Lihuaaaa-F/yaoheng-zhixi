@@ -50,7 +50,8 @@ export default function Chart3D({ option, label, height = 720, onClick, onHover 
         const signature = JSON.stringify(option);
         if (signature === optionSignature.current) return;
         optionSignature.current = signature;
-        chart.setOption({ ...option, animation: false, textStyle: { fontFamily: '"Noto Sans CJK SC",sans-serif', fontSize: 12 } }, true);
+        // Imported labels are untrusted text; never render chart tooltips as HTML.
+        chart.setOption({ ...option, tooltip: { ...(option.tooltip as object), renderMode: 'richText', confine: true }, animation: false, textStyle: { fontFamily: '"Noto Sans CJK SC",sans-serif', fontSize: 12 } }, true);
     }, [option]);
     useEffect(() => { const chart = instance.current; if (!chart || !onClick) return; chart.on('click', onClick); return () => { chart.off('click', onClick); }; }, [onClick]);
     // GL 拾取悬停：echarts 把 GL 系列的 mouseover/mouseout 以 zr 事件抛出，

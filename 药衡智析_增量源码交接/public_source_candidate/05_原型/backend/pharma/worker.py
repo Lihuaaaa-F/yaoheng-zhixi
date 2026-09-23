@@ -55,7 +55,8 @@ def process_job(store,job):
             # 知识源幂等校验（2026-09-21 修复）：build() 内部按源文件指纹判断，
             # 源未变化时秒级返回；补充知识目录增删改后报告链路自动纳入新版本，
             # 不再依赖手动触发构建（实测旧版本会在检索侧静默沿用）。
-            built = Knowledge().build()
+            from .context_services import knowledge_for_context
+            built = knowledge_for_context(snapshot.get('analysis_context')).build()
             # 2026-09-24 修复（审计 AUD-RAG-02）：此前 build() 返回值被丢弃——
             # 源变更+部分解析失败时索引静默陈旧。DEGRADED（failures 非空、
             # CURRENT 未切换）现在透出到任务结果供前端/评测可见。
@@ -66,14 +67,14 @@ def process_job(store,job):
                     'chunks_current': built.get('chunks'),
                 }
             from .context_services import retrieve
-            result['evidence']=retrieve(snapshot,snapshot['product']+' 工序 批次 成本 维修 单耗 核查')
+            result['evidence']=retrieve(snapshot,snapshot['product']+' 工序 批次 成本 维修 单耗 核查 '+snapshot.get('topic',''))
         store.update(id,'GENERATING',result,progress=45,detail='模型生成解释（首次约 1-2 分钟；失败自动降级规则解释）')
         if 'benchmark' not in result:
             if synthetic:
                 from .industry import catalog as scoped_catalog,benchmark_reference
                 factories=scoped_catalog(snapshot['context_id'])['factories']
                 from .metrics import benchmark_partner
-                other=benchmark_partner(snapshot['factory'], snapshot['product'])
+                other=payload.get('benchmark_right') or benchmark_partner(snapshot['factory'], snapshot['product'])
                 if other not in factories: other=next((x for x in factories if x!=snapshot['factory']),None)
                 if other:
                     cross_snapshot,result['benchmark']=benchmark_reference(snapshot['context_id'],snapshot['product'],snapshot['month'],snapshot['factory'],other,snapshot['analysis_type'],snapshot['basis'])
@@ -83,9 +84,9 @@ def process_job(store,job):
             else:
                 if ingest()['snapshot_id']!=snapshot.get('data_version'):raise ValueError('DATA_VERSION_CHANGED_RESUBMIT')
                 from .metrics import catalog,benchmark_partner
-                factories=catalog()['factories'];other=benchmark_partner(snapshot['factory'], snapshot['product'])
+                factories=catalog()['factories'];other=payload.get('benchmark_right') or benchmark_partner(snapshot['factory'], snapshot['product'])
                 if other:
-                    cross_snapshot,result['benchmark']=benchmark_analysis(snapshot['product'],snapshot['month'],snapshot['factory'],other,analysis_type=snapshot['analysis_type'])
+                    cross_snapshot,result['benchmark']=benchmark_analysis(snapshot['product'],snapshot['month'],snapshot['factory'],other,analysis_type=snapshot['analysis_type'],basis=snapshot['basis'])
                     snapshot['benchmark_context']=cross_snapshot['benchmark_context']
                     snapshot['metrics'].update({k:v for k,v in cross_snapshot['metrics'].items() if k.startswith('benchmark:')})
                 else:result['benchmark']={'status':'UNAVAILABLE','reason':'缺少第二工厂'}
@@ -93,9 +94,8 @@ def process_job(store,job):
         # 程序计算供叙事与报告引用；失败降级为 UNAVAILABLE，不阻断报告生成。
         if 'attribution' not in snapshot:
             try:
-                from .attribution import analyze_attribution
-                snapshot['attribution']=analyze_attribution(snapshot['factory'],snapshot['product'],
-                    snapshot['month'],basis=snapshot.get('basis','unit'))
+                from .attribution import analyze_attribution_snapshot
+                snapshot['attribution']=analyze_attribution_snapshot(snapshot)
             except Exception as exc:  # noqa: BLE001
                 snapshot['attribution']={'status':'UNAVAILABLE','reason':type(exc).__name__+': '+str(exc)[:120]}
         if 'narrative' not in result:result['narrative']=generate(snapshot,result['evidence'])

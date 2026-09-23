@@ -7,11 +7,16 @@
     "dev": "vite --host 127.0.0.1",
     "build": "tsc -b && vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "e2e": "node e2e-context.mjs",
-    "e2e:live": "node e2e-live.mjs",
-    "demo:record": "node record-demo.mjs"
+    "e2e": "node e2e-workbench.mjs",
+    "e2e:live": "node e2e-workbench.mjs",
+    "demo:record": "node -e \"console.error('当前演示录制流程待更新。历史流程仅供溯源：npm run demo:record:legacy'); process.exit(2)\"",
+    "e2e:legacy": "node e2e-context.mjs",
+    "e2e:live:legacy": "node e2e-live.mjs",
+    "demo:record:legacy": "node record-demo.mjs"
   },
   "dependencies": {
+    "@ant-design/icons": "6.3.4",
+    "antd": "6.6.5",
     "echarts": "5.6.0",
     "echarts-gl": "^2.0.9",
     "react": "19.1.1",

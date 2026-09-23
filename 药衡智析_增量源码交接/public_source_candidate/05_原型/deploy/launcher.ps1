@@ -2,7 +2,7 @@
 # 职责：定位 Docker（Windows CLI 优先，WSL 集成回退）→ 启动/停止/状态/日志。
 # 只管理本项目的 compose 服务（项目名 yaoheng），不终止任何未知进程。
 param(
-    [Parameter(Position = 0)][ValidateSet('menu', 'start', 'stop', 'status', 'logs', 'open')]
+    [Parameter(Position = 0)][ValidateSet('menu', 'start', 'update', 'stop', 'status', 'logs', 'open')]
     [string]$Action = 'menu',
     [switch]$NoBrowser
 )
@@ -42,7 +42,16 @@ function Resolve-Docker {
         wsl -d $distro -e sh -c 'command -v docker >/dev/null 2>&1' 2>$null
         if ($LASTEXITCODE -eq 0) {
             $wslFile = $ComposeFile -replace '\\', '/'
-            if ($wslFile -match '^([A-Za-z]):/(.*)$') { $wslFile = '/mnt/' + $Matches[1].ToLower() + '/' + $Matches[2] }
+            if ($wslFile -match '^//wsl(?:\.localhost|\$)/([^/]+)/(.*)$') {
+                if ($Matches[1] -ne $distro) { continue }
+                $wslFile = '/' + $Matches[2]
+            } elseif ($wslFile -match '^([A-Za-z]):/(.*)$') {
+                $wslFile = '/mnt/' + $Matches[1].ToLower() + '/' + $Matches[2]
+            } else {
+                $converted = & wsl -d $distro -- wslpath -u $ComposeFile 2>$null
+                if ($LASTEXITCODE -ne 0 -or -not $converted) { continue }
+                $wslFile = $converted.Trim()
+            }
             return @{ Docker = @('wsl', '-d', $distro, 'docker')
                       Compose = @('wsl', '-d', $distro, 'docker', 'compose', '-f', $wslFile) }
         }
@@ -89,20 +98,22 @@ function Resolve-OrAdvise {
     try { Resolve-Docker } catch {
         switch ($_) {
             'DOCKER_NOT_INSTALLED' { Write-Err2 '未检测到 Docker。请先安装 Docker Desktop（WSL2 后端），安装说明见仓库 README「部署」一节。' }
-            'DOCKER_WSL_INTEGRATION_OFF' { Write-Err2 '检测到 Ubuntu-20.04，但 WSL Docker 集成未开启。请打开 Docker Desktop → Settings → Resources → WSL Integration，启用 Ubuntu-20.04 后重试。' }
+            'DOCKER_WSL_INTEGRATION_OFF' { Write-Err2 '检测到 WSL 发行版，但未找到可用的 Docker 集成。请打开 Docker Desktop → Settings → Resources → WSL Integration，启用项目所在的发行版（例如 Ubuntu-24.04）后重试。' }
         }
         Pause-Exit
     }
 }
 
 # ---------- 动作 ----------
-function Action-Start {
+function Action-Start([switch]$Rebuild) {
     $resolved = Resolve-OrAdvise
     Ensure-Engine $resolved
 
     Write-Info '启动本项目服务（已运行则直接复用，不会重复启动一套）…'
     # 已有镜像直接复用；缺失时 compose 自动构建（首次准备与日常启动同一入口）
-    $null = Invoke-Compose $resolved @('up', '-d')
+    $composeArgs = @('up', '-d')
+    if ($Rebuild) { $composeArgs += '--build'; Write-Info '按当前源码更新镜像，复用构建缓存并保留数据卷。' }
+    $null = Invoke-Compose $resolved $composeArgs
     if ($LASTEXITCODE -ne 0) {
         Write-Err2 '服务启动失败。正在查看最近日志以定位原因：'
         $null = Invoke-Compose $resolved @('logs', '--tail', '40', 'web', 'worker', 'rpa') | Select-Object -Last 40 | ForEach-Object { Write-Host "  $_" -ForegroundColor DarkGray }
@@ -129,8 +140,8 @@ function Action-Start {
     # 区分“核心就绪”与“完整比赛能力就绪”：无密钥时明确降级提示
     try {
         $routes = Invoke-RestMethod -Uri "$Url/api/model/routes" -TimeoutSec 3
-        if ($routes.routes.narrative.key_set) { Write-Ok '模型能力：已配置（完整分析可用）' }
-        else { Write-Warn2 '模型能力：未配置密钥——确定性分析与基础报告可用，模型归因显示降级；如需完整能力，设置环境变量 PHARMA_MODEL_KEY_FILE 后重新启动' }
+        if ($routes.routes.analysis.available) { Write-Ok '分析模型已配置；请在模型连接中测试实际服务可用性。' }
+        else { Write-Warn2 '分析模型尚未配置——确定性分析与基础报告可用；请在网页“模型与设置 → 模型连接”配置。助手密钥单独配置。' }
     } catch { Write-Warn2 '未能读取模型配置状态（不影响核心分析）' }
 
     if (-not $NoBrowser) { Start-Process $Url }
@@ -166,6 +177,7 @@ function Show-Menu {
     Write-Host '  3. 查看状态'
     Write-Host '  4. 查看日志'
     Write-Host '  5. 打开页面（服务已启动时）'
+    Write-Host '  6. 更新源码后的镜像并启动（保留数据）'
     Write-Host '  0. 退出'
     $choice = Read-Host '请选择'
     switch ($choice) {
@@ -174,12 +186,14 @@ function Show-Menu {
         '3' { Action-Status }
         '4' { Action-Logs }
         '5' { Start-Process $Url }
+        '6' { Action-Start -Rebuild }
         default { exit 0 }
     }
 }
 
 switch ($Action) {
     'start'  { Action-Start }
+    'update' { Action-Start -Rebuild }
     'stop'   { Action-Stop }
     'status' { Action-Status }
     'logs'   { Action-Logs }

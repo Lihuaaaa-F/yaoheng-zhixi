@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import { api } from './api';
+import { Button, Select } from 'antd';
+import { UploadOutlined } from '@ant-design/icons';
+import FilePicker from './FilePicker';
+import { api, apiHeaders } from './api';
 import FilePreview from './FilePreview';
 import JobProgress from './JobProgress';
 
@@ -24,15 +27,15 @@ export async function uploadTypedFile(kind: string, dataType: string, file: File
   form.append('kind', kind);
   form.append('data_type', dataType);
   form.append('file', file);
-  const response = await fetch('/api/imports/uploads', { method: 'POST', body: form });
+  const response = await fetch('/api/imports/uploads', { method: 'POST', body: form, headers: apiHeaders() });
   const data = await response.json().catch(() => null);
   if (!response.ok) throw new Error(data?.error?.message ?? data?.detail ?? `上传失败（HTTP ${response.status}）`);
   return data;
 }
 
-export function ImportUploadPanel({ kind, types, onUploaded, hint }: {
+export function ImportUploadPanel({ kind, types, onUploaded, hint, processingNotes }: {
   kind: string; types: { id: string; label: string; accept: string; note?: string }[];
-  onUploaded: () => void; hint: string;
+  onUploaded: () => void; hint: string; processingNotes?: string;
 }) {
   const [dataType, setDataType] = useState(types[0]?.id ?? '');
   const [file, setFile] = useState<File | null>(null);
@@ -60,13 +63,12 @@ export function ImportUploadPanel({ kind, types, onUploaded, hint }: {
     <h2>导入数据</h2>
     <p className="muted">{hint}</p>
     <div className="filters import-filters">
-      <label>数据类型<select aria-label="数据类型" value={dataType} onChange={e => setDataType(e.target.value)}>
-        {types.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
-      </select></label>
-      <label>选择文件<input type="file" accept={active?.accept ?? '*'} onChange={e => setFile(e.target.files?.[0] ?? null)} /></label>
-      <button className="primary" disabled={busy || !file} onClick={doUpload}>{busy ? '上传中…' : '上传'}</button>
+      <label>数据类型<Select aria-label="数据类型" value={dataType} options={types.map(t => ({ value: t.id, label: t.label }))} onChange={setDataType} disabled={busy} /></label>
+      <div className="upload-field"><span>文件</span><FilePicker file={file} onChange={setFile} accept={active?.accept ?? '*'} disabled={busy} /></div>
+      <Button type="primary" icon={<UploadOutlined />} disabled={!file} loading={busy} onClick={doUpload}>上传</Button>
     </div>
     {active?.note && <p className="muted" style={{ whiteSpace: 'normal' }}>{active.note}</p>}
+    {processingNotes && <details className="processing-notes"><summary>处理说明</summary><p className="muted">{processingNotes}</p></details>}
     {error && <div className="error" role="alert">{error}</div>}
     {message && <div className="notice" role="status">{message}</div>}
   </section>;
@@ -106,25 +108,26 @@ export function ImportListTable({ imports, onPreview, onDelete, emptyText }: {
 
 /** 单页导入工作流：上传面板 + 待解析列表 + 解析按钮 + 进度 + 终态提示。 */
 export default function ImportWorkflow({ kind, types, parsePath, parseLabel, successPrefix, failPrefix,
-  parseBody, hint, listTitle, extra, emptyText }: {
+  parseBody, hint, processingNotes, listTitle, extra, emptyText, onPublished }: {
   kind: string; types: { id: string; label: string; accept: string; note?: string }[];
   parsePath: string; parseLabel: string; successPrefix: string; failPrefix: string;
-  parseBody?: () => any; hint: string; listTitle: string; extra?: (record: any) => any;
-  emptyText?: string;
+  parseBody?: () => any; hint: string; processingNotes?: string; listTitle: string; extra?: (record: any) => any;
+  emptyText?: string; onPublished?: (value: any) => void;
 }) {
   const { imports, importsError, refresh } = useImports(kind);
   const [previewId, setPreviewId] = useState('');
-  const [jobId, setJobId] = useState('');
+  const [jobId, setJobId] = useState(() => sessionStorage.getItem(`pharma-import-${kind}`) ?? '');
   const [result, setResult] = useState<any>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  useEffect(()=>{if(jobId)return;const active=imports.find(record=>record.status==='PARSING'&&record.meta?.parse_job);if(active){setJobId(active.meta.parse_job);sessionStorage.setItem(`pharma-import-${kind}`,active.meta.parse_job)}},[imports,jobId,kind]);
   const waiting = imports.filter(r => r.status === 'UPLOADED' || r.status === 'PARSE_FAILED');
-  const parsed = imports.filter(r => r.status !== 'UPLOADED');
+  const parsed = imports.filter(r => !['UPLOADED','PARSE_FAILED'].includes(r.status));
   const startParse = async () => {
     setBusy(true); setError(''); setResult(null);
     try {
       const response = await api(parsePath, parseBody ? parseBody() : {});
-      setJobId(response.job_id);
+      setJobId(response.job_id); sessionStorage.setItem(`pharma-import-${kind}`, response.job_id);
       void refresh(); // 列表即时切到“解析中”
     } catch (e: any) { setError(e.message ?? String(e)); }
     finally { setBusy(false); }
@@ -139,21 +142,21 @@ export default function ImportWorkflow({ kind, types, parsePath, parseLabel, suc
     } catch (e: any) { setError(e.message ?? String(e)); }
   };
   return <div>
-    <ImportUploadPanel kind={kind} types={types} onUploaded={refresh} hint={hint} />
+    <ImportUploadPanel kind={kind} types={types} onUploaded={refresh} hint={hint} processingNotes={processingNotes} />
     <section className="panel">
       <div className="panel-heading"><h2>{listTitle}</h2>
-        <button className="primary" disabled={busy || !!jobId || !waiting.length} onClick={startParse}>
-          {busy ? '提交中…' : parseLabel}
-        </button></div>
-      <p className="muted">已导入但未解析的数据先进入列表等待；点击「{parseLabel}」开始全流程（含数据预处理→分析等步骤，进度实时显示）。</p>
+        <Button type="primary" disabled={!!jobId || !waiting.length} loading={busy} onClick={startParse}>
+          {parseLabel}
+        </Button></div>
+      <p className="muted">检查下方文件后，点击「{parseLabel}」。处理进度和结果将在本页显示。</p>
       {importsError && <div className="error" role="alert">列表读取失败：{importsError}</div>}
       {error && <div className="error" role="alert">{error}</div>}
       <h3>待解析（{waiting.length}）</h3>
       <ImportListTable imports={waiting} onPreview={setPreviewId} onDelete={removeImport} emptyText={emptyText ?? '暂无待解析数据，请先在上方导入。'} />
       {jobId && <JobProgress jobId={jobId} onDone={job => {
-        setResult(job); setJobId(''); refresh();
+        setResult(job); setJobId(''); sessionStorage.removeItem(`pharma-import-${kind}`); refresh();
         if (job.status === 'SUCCEEDED' || job.status === 'DEGRADED') {
-          setTimeout(() => setResult(null), 15000);
+          onPublished?.(job.result);
         }
       }} />}
       {result && (result.status === 'FAILED'

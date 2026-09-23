@@ -6,6 +6,9 @@ from fastapi.testclient import TestClient
 
 from pharma import api, config, reviews
 
+REVIEW_FIELDS = {'reviewer': '测试审核员（虚构夹具）', 'attribution_score': '4',
+                 'section_completeness': 'PASS', 'readability': 'PASS', 'visual_quality': 'PASS'}
+
 
 def _fake_store(monkeypatch, status='SUCCEEDED'):
     captured = {}
@@ -47,7 +50,7 @@ def test_acceptance_doc_rejects_unknown_type(tmp_path, monkeypatch):
     _fake_store(monkeypatch); _fake_review_store(monkeypatch)
     client = TestClient(api.app)
     r = client.post('/api/reports/j1/acceptance-doc',
-                    files={'file': ('virus.exe', b'xx')}, data={'reviewer': '林工'})
+                    files={'file': ('virus.exe', b'xx')}, data=REVIEW_FIELDS)
     assert r.status_code == 422 and 'ACCEPTANCE_DOC_TYPE' in r.text
 
 
@@ -56,7 +59,7 @@ def test_acceptance_doc_rejects_non_final_job(tmp_path, monkeypatch):
     _fake_store(monkeypatch, status='RUNNING'); _fake_review_store(monkeypatch)
     client = TestClient(api.app)
     r = client.post('/api/reports/j1/acceptance-doc',
-                    files={'file': ('a.pdf', b'x')}, data={'reviewer': '林工'})
+                    files={'file': ('a.pdf', b'x')}, data=REVIEW_FIELDS)
     assert r.status_code == 422 and 'REVIEW_TARGET_NOT_FINAL' in r.text
 
 
@@ -66,12 +69,12 @@ def test_acceptance_doc_registers_review_and_recomputes(tmp_path, monkeypatch):
     client = TestClient(api.app)
     r = client.post('/api/reports/j1/acceptance-doc',
                     files={'file': ('验收记录.docx', b'docx-bytes')},
-                    data={'reviewer': '林工（质量部）', 'attribution_score': '5'})
+                    data={**REVIEW_FIELDS, 'reviewer': '测试审核员（虚构夹具）', 'attribution_score': '5'})
     assert r.status_code == 201, r.text
     body = r.json()
     assert body['status'] == 'OK'
     assert body['acceptance_doc']['artifact_id'] == 'j1-accept'
-    assert captured['reviewer'] == '林工（质量部）' and captured['score'] == 5
+    assert captured['reviewer'] == '测试审核员（虚构夹具）' and captured['score'] == 5
     assert captured['job_id'] == 'j1'
     assert all(captured['dims'][k]['status'] == 'PASS' for k in ('section_completeness', 'readability', 'visual_quality'))
     assert '人工验收凭证' in captured['comment'] and 'j1-accept' in captured['comment']
@@ -81,3 +84,13 @@ def test_acceptance_doc_registers_review_and_recomputes(tmp_path, monkeypatch):
     acceptance = body['acceptance']['acceptance'] if 'acceptance' in body['acceptance'] else body['acceptance']
     for k in ('section_completeness', 'readability', 'visual_quality'):
         assert acceptance[k]['status'] == 'PASS', acceptance[k]
+
+
+def test_acceptance_doc_never_supplies_implicit_human_pass(tmp_path, monkeypatch):
+    monkeypatch.setattr(config, 'ARTIFACTS', tmp_path)
+    _fake_store(monkeypatch)
+    captured = _fake_review_store(monkeypatch)
+    response = TestClient(api.app).post('/api/reports/j1/acceptance-doc',
+        files={'file': ('a.pdf', b'fixture')}, data={'reviewer': '测试审核员（虚构夹具）'})
+    assert response.status_code == 422
+    assert not captured

@@ -6,14 +6,27 @@ from fastapi import FastAPI,File,Form,HTTPException,Request,Response,Query,Uploa
 from fastapi.responses import FileResponse,JSONResponse
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel,Field,ConfigDict
+from pydantic import BaseModel,Field,ConfigDict,field_validator
 from .config import APP,RUNTIME,ROOT
 from .jobs import JobStore
 from .actions import ActionStore
 from .metrics import benchmark_analysis
 
 store=JobStore();actions=ActionStore()
-app=FastAPI(title='药衡智析',version='0.1.0')
+from .assistant import AssistantStore
+assistant_store=AssistantStore()
+
+@asynccontextmanager
+async def lifespan(application):
+    from .assistant import start_worker
+    stop,thread=start_worker(assistant_store,lambda selection:scoped_analysis(AnalysisRequest(**selection)),store,actions)
+    try:yield
+    finally:
+        stop.set()
+        # In-flight provider requests are bounded by their configured timeout; no late answer after cancellation.
+        thread.join(timeout=1)
+
+app=FastAPI(title='药衡智析',version='0.2.0',lifespan=lifespan)
 # 2026-09-23 性能审查：API JSON 与前端资产均无压缩地明文传输（1.46MB JS 实测 gzip 后 471KB）。
 app.add_middleware(GZipMiddleware,minimum_size=1024)
 # 可选 API 鉴权（2026-09-21 修复 #4）：默认（本地演示，端口仅绑 127.0.0.1）
@@ -33,6 +46,8 @@ class AnalysisRequest(BaseModel):
     context_id:str|None=None
     factory:str|None=None;product:str|None=None;month:str=Field(default='2026-05',pattern=r'^20\d{2}-(0[1-9]|1[0-2])$')
     analysis_type:Literal['monthly','quarterly','special']='monthly';basis:Literal['unit','total']='unit'
+    topic:str|None=Field(default=None,max_length=120)
+    benchmark_right:str|None=Field(default=None,min_length=1,max_length=120)
 class ReportRequest(AnalysisRequest):
     run_id:str|None=Field(default=None,pattern=r'^[A-Za-z0-9_-]{1,80}$')
     retry:bool=False  # 对 DEGRADED 报告明确重试：旧任务保留，新任务复用可用计算结果
@@ -83,10 +98,26 @@ def scoped_analysis(req):
     from .industry import analyze_reference, catalog as scoped_catalog
     cid=selected_context(req.context_id)
     options=scoped_catalog(cid)
-    params=req.model_dump(exclude={'context_id','run_id','retry'})
+    params=req.model_dump(exclude={'context_id','run_id','retry','topic','benchmark_right'})
     params['factory']=params['factory'] or options['factories'][0]
     params['product']=params['product'] or options['products'][0]
-    return analyze_reference(cid,**params)
+    if req.benchmark_right:
+        if params['factory']==req.benchmark_right:raise ValueError('COMPARISON_REQUIRES_TWO_FACTORIES')
+        if cid=='pharmaceutical:competition':
+            snapshot,_=benchmark_analysis(params['product'],params['month'],params['factory'],req.benchmark_right,
+                                          analysis_type=params['analysis_type'],basis=params['basis'])
+            from .industry import resolve_context
+            context=resolve_context(cid)
+            snapshot.update(context_id=cid,analysis_context=context.model_dump(),context_hash=context.context_hash)
+        else:
+            from .industry import benchmark_reference
+            snapshot,_=benchmark_reference(cid,params['product'],params['month'],params['factory'],req.benchmark_right,
+                                           params['analysis_type'],params['basis'])
+    else:snapshot=analyze_reference(cid,**params)
+    if req.analysis_type=='special':
+        snapshot={**snapshot,'topic':(req.topic or '成本变化与证据核查').strip()}
+        snapshot['snapshot_id']=hashlib.sha256(json.dumps(snapshot,sort_keys=True,ensure_ascii=False).encode()).hexdigest()
+    return snapshot
 
 def resolved_analysis(context_id,factory,product,month,analysis_type='monthly',basis='unit'):
     """GET 型端点的选择解析：缺省值取当前上下文目录，与 POST 口径一致。"""
@@ -105,6 +136,13 @@ def industry_catalog():
 def get_catalog(context_id:str|None=None):
     from .industry import catalog as scoped_catalog
     return {**scoped_catalog(selected_context(context_id)),'demo_assignee':{'name':'待分配','department':'成本管理部'}}
+
+@app.get('/api/system/status')
+def system_status(context_id:str|None=None):
+    from .system_status import status
+    try:cid=selected_context(context_id)
+    except ValueError:cid=None
+    return status(cid)
 @app.post('/api/analyses')
 def analysis(req:AnalysisRequest):
     from .dashboard import focus_analysis
@@ -120,7 +158,7 @@ def analysis(req:AnalysisRequest):
         # 2026-09-24 修复（审计 AUD-NAR-04）：探测与生成同用 for_route('analysis')
         # ——路由 env 指向别家时不再出现"探测可用、实跑无钥降级"的误导。
         probe = ModelGateway.for_route('analysis') if hasattr(ModelGateway, 'for_route') else ModelGateway()
-        available=bool(probe.key)
+        available=getattr(probe,'available',bool(probe.key))
     focus=focus_analysis(snapshot,enabled=enabled,model_available=available,
         latest_job=store.latest_report_for_snapshot(snapshot['snapshot_id']) if enabled else None,
         enqueue=lambda:_enqueue_report(ReportRequest(**req.model_dump()))[0])
@@ -137,7 +175,7 @@ def dashboard_heatmap(context_id:str|None=None,factory:str|None=None,
 @app.get('/api/analyses/{id}')
 def get_analysis(id:str):return store.get_snapshot(id)
 @app.get('/api/benchmarks')
-def get_benchmark(product:str,month:str,left:str,right:str,analysis_type:Literal['monthly','quarterly','special']='monthly',basis:Literal['unit','total']='unit',context_id:str|None=None,explain:Literal['async','sync']='async'):
+def get_benchmark(product:str,month:str,left:str,right:str,analysis_type:Literal['monthly','quarterly','special']='monthly',basis:Literal['unit','total']='unit',context_id:str|None=None,explain:Literal['async','sync','none']='async'):
     """跨厂对标。explain 默认 async（2026-09-23 审计 AUD-BENCH-01 修复）：
 
     - async：数值/检索证据即时返回；解释优先命中既有生成缓存（零模型调用），
@@ -145,6 +183,7 @@ def get_benchmark(product:str,month:str,left:str,right:str,analysis_type:Literal
       写缓存，前端进度条轮询，完成后对标章节解释自动更新）。首次冷请求不再
       阻塞数分钟。
     - sync：旧行为，请求内同步完整模型生成（冷请求可等待 1-4 分钟）。
+    - none：仅返回确定性解释，不入队、不请求模型，供只读检查和基础分析使用。
     """
     from .knowledge import Knowledge
     from .narrative import generate, cached_generation
@@ -152,7 +191,7 @@ def get_benchmark(product:str,month:str,left:str,right:str,analysis_type:Literal
     if not re.fullmatch(r'20\d{2}-(0[1-9]|1[0-2])',str(month)):raise ValueError('INVALID_MONTH')
     if left==right:raise ValueError('COMPARISON_REQUIRES_TWO_FACTORIES')
     if cid=='pharmaceutical:competition':
-        snapshot,result=benchmark_analysis(product,month,left,right,analysis_type=analysis_type)
+        snapshot,result=benchmark_analysis(product,month,left,right,analysis_type=analysis_type,basis=basis)
         from .industry import resolve_context
         context=resolve_context(cid)
         snapshot.update(context_id=cid,analysis_context=context.model_dump(),context_hash=context.context_hash)
@@ -173,7 +212,9 @@ def get_benchmark(product:str,month:str,left:str,right:str,analysis_type:Literal
         seen.add(key);unique.append(e)
     retrieved['evidence']=unique
     result['evidence']=retrieved
-    if explain=='sync':
+    if explain=='none':
+        result['narrative']=generate(snapshot,result['evidence'],allow_model=False)
+    elif explain=='sync':
         result['narrative']=generate(snapshot,result['evidence'])
     else:
         cached=cached_generation(snapshot,result['evidence'])
@@ -186,7 +227,7 @@ def get_benchmark(product:str,month:str,left:str,right:str,analysis_type:Literal
             # 入队失败不阻断对标主响应（数值/证据/确定性解释仍然完整可用）。
             try:
                 j,_=_enqueue_report(ReportRequest(context_id=cid,factory=left,product=product,month=month,
-                                                  analysis_type=analysis_type,basis=basis))
+                                                  analysis_type=analysis_type,basis=basis),prepared_snapshot=snapshot)
             except Exception as exc:
                 result['narrative']=generate(snapshot,result['evidence'],allow_model=False)
                 result['narrative']={**result['narrative'],'model_status':'ENQUEUE_FAILED',
@@ -217,23 +258,23 @@ def _generation_versions(snapshot,req):
     gateway=ModelGateway.for_route('analysis')  # 与 generate() 实际网关同源（fix4）
     versions={**dict(soft_items(gateway)),**dict(hard_items(snapshot)),
         'snapshot':snapshot['snapshot_id'],'knowledge':snapshot['analysis_context']['knowledge_snapshot'],
-        'template':template_version,'context':snapshot['analysis_context'],'model_available':bool(gateway.key),
-        'generation_parameters':{'max_tokens':os.getenv('PHARMA_MODEL_MAX_TOKENS','8192'),
-            'reasoning_effort':os.getenv('PHARMA_MODEL_REASONING_EFFORT','low'),'max_repairs':gateway.max_repairs},
+        'template':template_version,'context':snapshot['analysis_context'],'model_available':getattr(gateway,'available',bool(gateway.key)),
+        'generation_parameters':{**getattr(gateway,'generation_parameters',{}),'max_repairs':gateway.max_repairs},
         'retrieval_parameters':{'mode':'hybrid','weight_policy':'lexical-anchor:0.75/0.25;otherwise:0.5/0.5','reranker':'none','limit':8},
         'run_id':req.run_id}
     return versions
 
-def _enqueue_report(req:ReportRequest):
+def _enqueue_report(req:ReportRequest,prepared_snapshot=None):
     """报告任务入队：POST /api/reports 与 Agent 决策执行共用同一路径。"""
-    snapshot=store.snapshot(scoped_analysis(req))
+    snapshot=store.snapshot(prepared_snapshot if prepared_snapshot is not None else scoped_analysis(req))
     versions=_generation_versions(snapshot,req)
     key=hashlib.sha256(json.dumps(versions,sort_keys=True).encode()).hexdigest()
     from .revision import revision_record
     revision=revision_record(ROOT)
     j=store.enqueue('report',{'snapshot_id':snapshot['snapshot_id'],'context_id':snapshot['context_id'],
         'factory':snapshot.get('factory'),'product':snapshot.get('product'),'month':snapshot.get('month'),
-        'analysis_type':snapshot.get('analysis_type'),'basis':snapshot.get('basis'),
+        'analysis_type':snapshot.get('analysis_type'),'basis':snapshot.get('basis'),'topic':snapshot.get('topic'),
+        'benchmark_right':snapshot.get('benchmark_context',{}).get('right'),
         'versions':versions,'run_id':req.run_id,**revision},key,retry=bool(getattr(req,'retry',False)))
     return j,snapshot
 
@@ -306,8 +347,8 @@ def _recalc_acceptance(job_id):
 
 @app.post('/api/reports/{job_id}/acceptance-doc',status_code=201)
 async def upload_acceptance_doc(job_id:str,file:UploadFile=File(...),reviewer:str=Form(...),
-    attribution_score:int=Form(5),section_completeness:str=Form('PASS'),readability:str=Form('PASS'),
-    visual_quality:str=Form('PASS'),comment:str=Form('')):
+    attribution_score:int=Form(...),section_completeness:str=Form(...),readability:str=Form(...),
+    visual_quality:str=Form(...),comment:str=Form('')):
     """人工验收：上传验收凭证文档（存档为产物），登记人工审核并重算验收状态。
 
     凭证文档只作为验收存档；review 仍绑定当前报告 docx/pdf 产物哈希——
@@ -377,6 +418,14 @@ class DataParseRequest(BaseModel):
     model_config=ConfigDict(extra='forbid')
     enterprise_name:str=Field(default='',max_length=80)
     quantity_unit:str=Field(default='',max_length=12)
+    industry_id:str=Field(default='generic_manufacturing',max_length=60,pattern=r'^[a-z][a-z0-9_]*$')
+class KnowledgeBuildRequest(BaseModel):
+    model_config=ConfigDict(extra='forbid')
+    context_id:str|None=None
+    products:list[str]=Field(default_factory=list,max_length=100)
+    factory:str|None=None
+    specification:str|None=None
+    document_version:str|None=Field(default=None,max_length=80)
 class VectorSwitchRequest(BaseModel):
     model_config=ConfigDict(extra='forbid')
     path:str=Field(min_length=2,max_length=400)
@@ -393,12 +442,14 @@ def data_parse(req:DataParseRequest):
     return {'job_id':j['id'],'status':j['status'],'import_count':len(waiting)}
 
 @app.post('/api/kb/build',status_code=202)
-def kb_build():
+def kb_build(req:KnowledgeBuildRequest|None=None):
     """构建知识索引：解析全部待解析知识文档并入向量知识库全流程。"""
     from . import data_import
     waiting=data_import.waiting_imports('knowledge')
     _reject_active_parse('kb')
-    j=store.enqueue('kb',{'import_ids':[r['id'] for r in waiting],'rebuild':True})
+    scope=(req or KnowledgeBuildRequest()).model_dump(exclude_none=True)
+    scope['context_id']=selected_context(scope.get('context_id'))
+    j=store.enqueue('kb',{'import_ids':[r['id'] for r in waiting],'rebuild':True,**scope})
     for record in waiting:data_import.mark_import_status(record,'PARSING',{'parse_job':j['id']})
     return {'job_id':j['id'],'status':j['status'],'import_count':len(waiting)}
 
@@ -498,13 +549,16 @@ def import_template_check(import_id:str):
 @app.get('/api/kb')
 def kb(context_id:str|None=None):
     cid=selected_context(context_id)
-    if cid!='pharmaceutical:competition':
-        from .industry import resolve_context,retrieve_reference
-        docs=retrieve_reference(resolve_context(cid),'')
-        return {'status':'READY','context_id':cid,'documents':docs,'notice':'独立合成知识，非行业基准'}
-    from .knowledge import Knowledge
-    k=Knowledge()
-    return k.status() if hasattr(k,'status') else {'status':'READY','notice':'本地页码证据；查询结果含版本','documents':[]}
+    from .industry import resolve_context
+    from .context_services import knowledge_for_context
+    k=knowledge_for_context(resolve_context(cid))
+    return {**k.status(),'context_id':cid}
+
+@app.get('/api/kb/sources/{source_id}')
+def kb_source(source_id:str,context_id:str|None=None):
+    from .data_import import resolve_knowledge_source
+    source=resolve_knowledge_source(source_id,selected_context(context_id))
+    return FileResponse(source['path'],filename=source['filename'],content_disposition_type='inline')
 @app.post('/api/kb/search')
 def kb_search(req:SearchRequest):
     from .knowledge import Knowledge
@@ -558,17 +612,12 @@ def forecast(context_id:str|None=None,factory:str|None=None,product:str|None=Non
 
 @app.get('/api/attribution')
 def attribution(context_id:str|None=None,factory:str|None=None,product:str|None=None,month:str|None=_month_query(),
-               basis:Literal['unit','total']='unit',compare:Literal['mom','yoy']='mom'):
+               basis:Literal['unit','total']='unit',compare:Literal['mom','yoy']='mom',analysis_type:Literal['monthly','quarterly','special']='monthly'):
     """确定性归因（2026-09-22 方法论落地）：多维根因定位(EP+JSD)+对照厂DiD+价格信号+假设排序。
     全部程序计算，不调用模型；数据不满足的部件返回 UNAVAILABLE+原因。"""
-    from .attribution import analyze_attribution
-    cid=selected_context(context_id)
-    if cid!='pharmaceutical:competition':
-        return {'status':'UNAVAILABLE','reason':'多维根因定位需要摄取型成本数据（当前数据范围未接入）'}
-    from .industry import catalog as scoped_catalog
-    options=scoped_catalog(cid)
-    return analyze_attribution(factory or options['factories'][0],product or options['products'][0],
-        month or options['months'][-1],basis,compare)
+    from .attribution import analyze_attribution_snapshot
+    snapshot=resolved_analysis(context_id,factory,product,month,analysis_type,basis)
+    return analyze_attribution_snapshot(snapshot,compare=compare)
 
 @app.get('/api/agent/decision')
 def agent_decision(context_id:str|None=None,factory:str|None=None,product:str|None=None,month:str|None=_month_query(),
@@ -640,6 +689,11 @@ def list_model_settings(route:str='analysis',base_url:str|None=None,key_file:str
     overrides={k:v for k,v in (('base_url',base_url),('key_file',key_file)) if v}
     return model_settings.list_remote_models(route,overrides or None)
 
+@app.post('/api/settings/models/list')
+def list_models_with_candidate(route:str='analysis',overrides:dict[str,Any]|None=None):
+    from . import model_settings
+    return model_settings.list_remote_models(route,overrides)
+
 @app.get('/api/settings/models/presets')
 def model_presets():
     """厂商预填充：API/本地厂商清单、模型档位与角色限制规则（前端关联选项数据源）。"""
@@ -657,6 +711,103 @@ def vector_model_switch(req:VectorSwitchRequest):
     _reject_active_parse('vector_switch')
     j=store.enqueue('vector_switch',{'path':req.path})
     return {'job_id':j['id'],'status':j['status']}
+
+# 助手是工作台的有界辅助入口；读取工具和操作确认分离。
+class AssistantConversationRequest(BaseModel):
+    model_config=ConfigDict(extra='forbid')
+    selection:AnalysisRequest|None=None
+
+class AssistantModelOverrides(BaseModel):
+    model_config=ConfigDict(extra='forbid')
+    model:str|None=Field(default=None,min_length=1,max_length=160)
+    reasoning_effort:Literal['','none','minimal','low','medium','high','max','xhigh']|None=None
+
+    @field_validator('model',mode='before')
+    @classmethod
+    def blank_model_is_unset(cls,value):
+        return None if isinstance(value,str) and not value.strip() else value
+
+class AssistantMessageRequest(BaseModel):
+    model_config=ConfigDict(extra='forbid')
+    text:str=Field(min_length=1,max_length=6000)
+    selection:AnalysisRequest
+    client_request_id:str=Field(min_length=1,max_length=80,pattern=r'^[A-Za-z0-9_-]+$')
+    overrides:AssistantModelOverrides=Field(default_factory=AssistantModelOverrides)
+
+class AssistantContextRequest(BaseModel):
+    model_config=ConfigDict(extra='forbid')
+    conversation_id:str|None=None
+    selection:AnalysisRequest
+    text:str=Field(default='',max_length=6000)
+    overrides:AssistantModelOverrides=Field(default_factory=AssistantModelOverrides)
+
+def _assistant_selection(selection):
+    from .industry import catalog as scoped_catalog
+    value=selection.model_dump()
+    value['context_id']=selected_context(value.get('context_id'))
+    options=scoped_catalog(value['context_id'])
+    value['factory']=value['factory'] or options['factories'][0]
+    value['product']=value['product'] or options['products'][0]
+    return value
+
+@app.get('/api/assistant/conversations')
+def assistant_conversations(context_id:str|None=None):
+    return {'conversations':assistant_store.list(context_id)}
+
+@app.post('/api/assistant/conversations',status_code=201)
+def assistant_conversation_create(req:AssistantConversationRequest|None=None):
+    return assistant_store.create(_assistant_selection(req.selection) if req and req.selection else {})
+
+@app.get('/api/assistant/conversations/{conversation_id}')
+def assistant_conversation(conversation_id:str):
+    return assistant_store.conversation(conversation_id)
+
+@app.post('/api/assistant/conversations/{conversation_id}/messages',status_code=202)
+def assistant_message(conversation_id:str,req:AssistantMessageRequest):
+    if not req.text.strip():raise ValueError('请输入问题。')
+    selection=_assistant_selection(req.selection)
+    snapshot=store.snapshot(scoped_analysis(AnalysisRequest(**selection)))
+    turn=assistant_store.enqueue(conversation_id,req.text.strip(),selection,req.client_request_id,snapshot['snapshot_id'],req.overrides.model_dump(exclude_none=True))
+    return {'turn_id':turn['id'],'status':turn['status'],'stage':turn['stage'],'stage_label':turn['stage_label']}
+
+@app.post('/api/assistant/context')
+def assistant_context(req:AssistantContextRequest):
+    from .assistant import context_preview
+    return context_preview(assistant_store,req.conversation_id,_assistant_selection(req.selection),req.text,
+                           req.overrides.model_dump(exclude_none=True),lambda selection:scoped_analysis(AnalysisRequest(**selection)))
+
+@app.get('/api/assistant/turns/{turn_id}')
+def assistant_turn(turn_id:str):
+    turn=assistant_store.turn(turn_id)
+    return {k:v for k,v in turn.items() if k not in ('input_hash','request_id','input')}
+
+@app.post('/api/assistant/turns/{turn_id}/cancel')
+def assistant_turn_cancel(turn_id:str):
+    assistant_store.cancel(turn_id)
+    return assistant_turn(turn_id)
+
+def _confirm_assistant_proposal(proposal):
+    req=ReportRequest(**proposal['selection'])
+    snapshot=scoped_analysis(req)
+    if snapshot['snapshot_id']!=proposal['snapshot_id'] or snapshot.get('analysis_context')!=proposal.get('context'):
+        raise ValueError('数据或知识版本已变化，请重新提问并确认新的操作建议。')
+    if proposal['kind']=='generate_report':
+        job,_snapshot=_enqueue_report(req,prepared_snapshot=snapshot)
+        return {'status':'confirmed','kind':'generate_report','job_id':job['id'],
+                'message':'报告已加入生成队列，可在分析报告中查看进度。'}
+    if proposal['kind']=='draft_task':
+        store.snapshot(snapshot)
+        task=actions.draft(snapshot,proposal['finding'],{'name':'待分配','department':'成本管理部'},
+                           proposal['suggestion'],verification_target='当前期间的成本归集和生产计量记录',
+                           expected_evidence=['成本归集明细','生产计量记录'],responsible_role='待分配',
+                           deadline_basis='草稿建议在成本复核前核实；请由责任部门确认实际期限')
+        return {'status':'confirmed','kind':'draft_task','action_id':task['id'],
+                'message':'已创建待编辑草稿。请在问题整改中设置负责人和期限，再确认发送。'}
+    raise ValueError('不支持的助手操作。')
+
+@app.post('/api/assistant/proposals/{proposal_id}/confirm')
+def assistant_proposal_confirm(proposal_id:str):
+    return assistant_store.confirm(proposal_id,_confirm_assistant_proposal)
 
 class _ImmutableAssets(StaticFiles):
     """指纹文件（assets/*）内容与文件名一一对应，可长缓存 immutable；入口 index.html 保持协商。"""

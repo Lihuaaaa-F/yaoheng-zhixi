@@ -15,6 +15,7 @@ import csv
 import hashlib
 import io
 import json
+import os
 import re
 import shutil
 import sqlite3
@@ -220,6 +221,14 @@ def delete_import(import_id: str) -> None:
     record = _row(import_id)  # KeyError → 404
     if record['status'] not in DELETABLE_IMPORT_STATUSES:
         raise ValueError('IMPORT_NOT_DELETABLE:' + record['status'])
+    if record['meta'].get('parsed') or record['meta'].get('published'):
+        raise ValueError('IMPORT_ALREADY_REFERENCED')
+    if record['kind'] == 'knowledge':
+        # A failed retry must not make an earlier published original deletable.
+        for path in (IMPORTS_ROOT / 'knowledge' / 'scopes').glob('*/registry.json'):
+            registry = json.loads(path.read_text(encoding='utf-8'))
+            if any(item.get('import_id') == import_id for item in registry.get('versions', {}).values()):
+                raise ValueError('IMPORT_ALREADY_REFERENCED')
     shutil.rmtree(IMPORTS_ROOT / import_id, ignore_errors=True)
     with _connect() as db:
         db.execute('DELETE FROM imports WHERE id=?', (import_id,))
@@ -624,7 +633,8 @@ def publish_business(record: dict[str, Any], mapping: dict[str, str], options: d
     existed_before = enterprise_dir.exists()  # 重复发布同企业时不得删除既有有效目录
     enterprise_dir.mkdir(parents=True, exist_ok=True)
     (enterprise_dir / 'facts.json').write_text(json.dumps(dataset, ensure_ascii=False), encoding='utf-8')
-    (enterprise_dir / 'knowledge.json').write_text('[]', encoding='utf-8')
+    if not (enterprise_dir / 'knowledge.json').exists():
+        (enterprise_dir / 'knowledge.json').write_text('[]', encoding='utf-8')
     specification = options.get('specification') or '导入数据未声明规格'
     config = {'id': enterprise_id, 'name': enterprise_name, 'dataset_id': record['sha256'][:16],
               'policy_version': 'imported-v1', 'quantity_unit': quantity_unit, 'currency': 'CNY',
@@ -646,45 +656,61 @@ def publish_business(record: dict[str, Any], mapping: dict[str, str], options: d
 
 
 def publish_knowledge(record: dict[str, Any], options: dict[str, Any]) -> dict[str, Any]:
-    """知识资料解析：文本直接抽取；解析失败必须显式失败，不得标成功。"""
+    """Parse without flattening genuine page/paragraph locations or publishing yet."""
+    from .knowledge import knowledge_context_id, parse_document
+    record = get_import(record['id'])
     folder = IMPORTS_ROOT / record['id']
-    path = folder / ('original' + record['meta']['suffix'])
+    path = original_path(record)
     suffix = record['meta']['suffix']
-    title = options.get('title') or record['filename']
-    pages: list[str] = []
-    if suffix == '.pdf':
-        import fitz
-        doc = fitz.open(path)
-        pages = [page.get_text() for page in doc]
-        doc.close()
-    elif suffix == '.docx':
-        from docx import Document
-        document = Document(path)
-        # 审计 AUD-IMP-07：此前只取段落，表格内容静默缺失（check_template 都专门扫表格）
-        parts = [p.text for p in document.paragraphs]
-        for table in document.tables:
-            parts.append('\n'.join(' | '.join(cell.text for cell in row.cells) for row in table.rows))
-        pages = ['\n'.join(parts)]
+    context_id = knowledge_context_id(options.get('context_id') or
+                                    ({'industry_id': options['industry_id'], 'enterprise_id': options['enterprise_id']}
+                                     if options.get('industry_id') and options.get('enterprise_id') else None))
+    industry_id, enterprise_id = context_id.split(':', 1)
+    title = str(options.get('title') or record['filename'])[:200]
+    products = options.get('products') or []
+    if not isinstance(products, list) or any(not isinstance(p, str) or not p.strip() or len(p) > 200 for p in products):
+        raise ValueError('INVALID_KNOWLEDGE_PRODUCTS')
+    version = str(options.get('document_version') or options.get('version') or '1')[:100]
+    metadata = {'context_id': context_id, 'title': title, 'products': products,
+                'source_format': suffix.lstrip('.'),
+                'factory': str(options.get('factory') or '')[:200],
+                'specification': str(options.get('specification') or '')[:200],
+                'document_version': version, 'effective_date': str(options.get('effective_date') or '')[:10],
+                'data_type': record['meta'].get('data_type', 'enterprise')}
+    source_seed = json.dumps([record['sha256'], record['filename'], metadata], ensure_ascii=False, sort_keys=True)
+    source_id = 'src-' + hashlib.sha256(source_seed.encode()).hexdigest()[:24]
+    blocks = []
+    if suffix in ('.pdf', '.docx'):
+        blocks = list(parse_document(path))
+        ocr_pages = [b['page'] for b in blocks if b.get('requires_ocr')]
+        if ocr_pages:
+            raise ValueError('KNOWLEDGE_OCR_REQUIRED: 第' + '、'.join(map(str, ocr_pages)) + '页含图片但缺少可检索文字，请先OCR后重新上传；原件已保留')
     elif suffix == '.csv':
-        # 行情/基准等表格类知识：按行转文本入库（保留列名行）。
         headers, rows = _read_table(suffix, path.read_bytes(), record['encoding'] or 'utf-8', '')
-        pages = ['\n'.join(','.join(r) for r in [headers] + rows)] if headers else []
+        for offset in range(0, len(rows), 10):
+            text = '\n'.join(','.join(r) for r in [headers, *rows[offset:offset + 10]])
+            blocks.append({'page': None, 'location': f'数据行{offset + 2}-{min(offset + 11, len(rows) + 1)}', 'original_text': text})
     elif suffix == '.txt':
-        pages = [path.read_text(encoding=record['encoding'] or 'utf-8')]
-    text = '\n'.join(pages).strip()
+        lines = path.read_text(encoding=record['encoding'] or 'utf-8').splitlines()
+        blocks = [{'page': None, 'location': f'行{i + 1}-{min(i + 12, len(lines))}', 'original_text': '\n'.join(lines[i:i + 12])}
+                  for i in range(0, len(lines), 12)]
+    text = '\n'.join(b['original_text'] for b in blocks).strip()
     if len(text) < 30:
         raise ValueError('KNOWLEDGE_PARSE_EMPTY: 解析后无有效文本（扫描件需先OCR，系统不自动宣称成功）')
-    entry = {'enterprise_id': options.get('enterprise_id', ''), 'industry_id': options.get('industry_id', ''),
-             'evidence_id': 'k-' + record['sha256'][:16], 'source': record['filename'], 'title': title,
-             'text': text, 'location': f'共{len(pages)}页' if suffix == '.pdf' else '全文',
-             'applicable_products': options.get('products', []), 'applicable_factories': options.get('factories', []),
-             'effective_period': options.get('period', ''), 'version': options.get('version', '1'),
-             'sha256': record['sha256'], 'parsed_at': _now()}
+    page_count = len({b['page'] for b in blocks if b.get('page') is not None})
+    shared = {**metadata, 'enterprise_id': enterprise_id, 'industry_id': industry_id, 'source_id': source_id,
+              'source': record['filename'], 'sha256': record['sha256'],
+              'source_category': metadata['data_type'], 'scope': 'product' if products else 'general'}
+    records = [{**b, **shared, 'text': b['original_text']} for b in blocks if b['original_text'].strip()]
+    entry = {**shared, 'evidence_id': source_id, 'text': text, 'records': records,
+             'pages': page_count, 'location': f'共{page_count}页' if suffix == '.pdf' else '段落/行号定位',
+             'version': version, 'parsed_at': _now()}
     (folder / 'knowledge_entry.json').write_text(json.dumps(entry, ensure_ascii=False), encoding='utf-8')
     record = _save(record, {**record['meta'], 'knowledge_entry': True,
-                            'parse': {'pages': len(pages), 'characters': len(text)}})
-    return {'evidence_id': entry['evidence_id'], 'pages': len(pages), 'characters': len(text),
-            'entry_file': 'knowledge_entry.json'}
+                            'context_id': context_id, 'source_id': source_id,
+                            'parse': {'pages': page_count, 'characters': len(text)}})
+    return {'source_id': source_id, 'evidence_id': source_id, 'title': title, 'context_id': context_id,
+            'pages': page_count, 'characters': len(text), 'entry_file': 'knowledge_entry.json'}
 
 
 def check_template(record: dict[str, Any]) -> dict[str, Any]:
@@ -930,7 +956,8 @@ def publish_business_batch(entries: list[tuple[dict[str, Any], dict[str, str], d
     existed_before = enterprise_dir.exists()  # 重复发布同企业时不得删除既有有效目录
     enterprise_dir.mkdir(parents=True, exist_ok=True)
     (enterprise_dir / 'facts.json').write_text(json.dumps(dataset, ensure_ascii=False), encoding='utf-8')
-    (enterprise_dir / 'knowledge.json').write_text('[]', encoding='utf-8')
+    if not (enterprise_dir / 'knowledge.json').exists():
+        (enterprise_dir / 'knowledge.json').write_text('[]', encoding='utf-8')
     specification = options.get('specification') or '导入数据未声明规格'
     config = {'id': enterprise_id, 'name': enterprise_name, 'dataset_id': source_snapshot[:16],
               'policy_version': 'imported-v1', 'quantity_unit': quantity_unit, 'currency': 'CNY',
@@ -954,18 +981,85 @@ def publish_business_batch(entries: list[tuple[dict[str, Any], dict[str, str], d
             'published_at': _now()}
 
 
-def write_knowledge_source(record: dict[str, Any], text: str) -> Path:
-    """把解析出的知识文本落入知识入库目录（文件哈希进入知识版本，自动重建）。
-
-    文件名前缀保留数据类型（产品知识/行业知识/企业内部知识），检索证据可溯源。
-    """
-    KNOWLEDGE_INGEST_DIR.mkdir(parents=True, exist_ok=True)
-    data_type = record.get('meta', {}).get('data_type', 'enterprise')
-    stem = re.sub(r'[\\/:*?"<>|\s]+', '_', Path(record['filename']).stem)[:60]
-    target = KNOWLEDGE_INGEST_DIR / f'{DATA_TYPE_LABELS.get(data_type, data_type)}__{stem}.txt'
-    header = f'【{DATA_TYPE_LABELS.get(data_type, data_type)}】来源文件：{record["filename"]}\n'
-    target.write_text(header + text, encoding='utf-8')
+def write_knowledge_source(record: dict[str, Any], text: str | None = None, *, activate=True) -> Path:
+    """Write immutable location records; activating a newer version keeps older sources."""
+    from .knowledge import knowledge_scope_dir
+    path = IMPORTS_ROOT / record['id'] / 'knowledge_entry.json'
+    if not path.is_file():
+        raise ValueError('KNOWLEDGE_NOT_PARSED')
+    entry = json.loads(path.read_text(encoding='utf-8'))
+    if not entry.get('records'):
+        raise ValueError('KNOWLEDGE_REPARSE_REQUIRED')
+    folder = knowledge_scope_dir(entry['context_id'])
+    folder.mkdir(parents=True, exist_ok=True)
+    target = folder / (entry['source_id'] + '.json')
+    serialized = json.dumps(entry['records'], ensure_ascii=False, sort_keys=True)
+    if target.exists() and target.read_text(encoding='utf-8') != serialized:
+        raise ValueError('IMMUTABLE_KNOWLEDGE_VERSION_CONFLICT')
+    if not target.exists():
+        target.write_text(serialized, encoding='utf-8')
+    if activate:
+        activate_knowledge_sources(entry['context_id'], [record])
     return target
+
+
+def candidate_knowledge_registry(context_id: str, records: list[dict[str, Any]]) -> dict[str, Any]:
+    from .knowledge import knowledge_context_id, knowledge_registry
+    context_id = knowledge_context_id(context_id)
+    registry = knowledge_registry(context_id)
+    for record in records:
+        entry = json.loads((IMPORTS_ROOT / record['id'] / 'knowledge_entry.json').read_text(encoding='utf-8'))
+        if entry['context_id'] != context_id:
+            raise ValueError('KNOWLEDGE_CONTEXT_MISMATCH')
+        source_id = entry['source_id']
+        registry['versions'][source_id] = {'import_id': record['id'], 'filename': record['filename'],
+            'title': entry['title'], 'source_hash': record['sha256'], 'pages': entry['pages'],
+            'document_version': entry['document_version'], 'data_type': record['meta'].get('data_type', 'enterprise')}
+        logical_key = record['meta'].get('data_type', 'enterprise') + ':' + record['filename']
+        registry['active'][logical_key] = source_id
+    return registry
+
+
+def activate_knowledge_sources(context_id: str, records: list[dict[str, Any]]) -> dict[str, Any]:
+    from .knowledge import knowledge_scope_dir
+    from .locks import exclusive
+    folder = knowledge_scope_dir(context_id)
+    folder.mkdir(parents=True, exist_ok=True)
+    with exclusive(folder / 'registry.lock'):
+        registry = candidate_knowledge_registry(context_id, records)
+        candidate = folder / 'registry.tmp'
+        candidate.write_text(json.dumps(registry, ensure_ascii=False, sort_keys=True), encoding='utf-8')
+        os.replace(candidate, folder / 'registry.json')
+    return registry
+
+
+def resolve_knowledge_source(source_id: str, context_id: str = 'pharmaceutical:competition') -> dict[str, Any]:
+    """Resolve a registered immutable source only; callers never supply a path."""
+    from .knowledge import knowledge_context_id, knowledge_registry, source_identifier, competition_extra_sources
+    if not re.fullmatch(r'src-[a-f0-9]{24}', source_id):
+        raise KeyError('KNOWLEDGE_SOURCE_NOT_FOUND')
+    context_id = knowledge_context_id(context_id)
+    registry = knowledge_registry(context_id)
+    source = registry['versions'].get(source_id)
+    if source:
+        record = get_import(source['import_id'])
+        path = original_path(record)
+        if record['sha256'] != source['source_hash'] or hashlib.sha256(path.read_bytes()).hexdigest() != source['source_hash']:
+            raise ValueError('KNOWLEDGE_ORIGINAL_CHANGED')
+        return {'path': path, 'filename': source['filename'], 'title': source['title']}
+    # Original contest/enterprise entries also expose opaque IDs; no arbitrary URL or path resolver.
+    from .industry import resolve_context, knowledge_entry_for_context
+    from .config import PACKAGE
+    context = resolve_context(context_id)
+    if context_id == 'pharmaceutical:competition':
+        sources = [p for p in (PACKAGE / '03_制药知识文档').iterdir() if p.suffix.lower() in ('.pdf', '.docx', '.txt')]
+        sources += competition_extra_sources()
+    else:
+        sources = [knowledge_entry_for_context(context)]
+    for path in sources:
+        if source_identifier(path, context_id) == source_id:
+            return {'path': path, 'filename': path.name, 'title': path.name}
+    raise KeyError('KNOWLEDGE_SOURCE_NOT_FOUND')
 
 
 def get_import(id_: str) -> dict[str, Any]:

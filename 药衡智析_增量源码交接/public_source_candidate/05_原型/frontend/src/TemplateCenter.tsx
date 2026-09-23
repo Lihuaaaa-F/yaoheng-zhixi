@@ -13,6 +13,7 @@ export default function TemplateCenter() {
   return <div>
     <ImportWorkflow
       kind="template"
+      onPublished={()=>void load()}
       types={[
         { id: 'monthly', label: '月度成本分析', accept: '.docx', note: 'Word 模板：需含六个固定章节（封面/总成本概览/要素明细/重点产品/对标/总结建议）与 {{占位符}}。' },
         { id: 'quarterly', label: '季度成本分析', accept: '.docx', note: '季度报告模板；未安装时沿用月度模板并按季度口径改写。' },
@@ -23,9 +24,10 @@ export default function TemplateCenter() {
       successPrefix="报告模板解析成功"
       failPrefix="报告模板解析失败"
       listTitle="报告模板导入列表"
-      hint="报告模板决定 Word/PDF 报告的章节结构与数据占位符。解析将执行模板结构检查（六章节契约）、占位符语义绑定分析（数据分析模型辅助）并安装为对应类型的当前模板。"
+      hint="上传 Word 报告模板并解析。安装成功后，分析报告页将按相应模板生成 Word 和 PDF。"
+      processingNotes="解析会检查必需章节和占位符，完成数据绑定后安装为该报告类型的当前模板。生成时保留模板结构，并检查数字、章节、引用和未填占位符。"
       emptyText="暂无待解析的报告模板，请先在上方上传 Word 模板文件。"
-      extra={() => <section className="panel" style={{ marginTop: 16 }}>
+      extra={() => <section className="installed-templates">
         <h2>已安装模板</h2>
         {error && <div className="error" role="alert">读取失败：{error}</div>}
         <div className="table-scroll"><table>
@@ -34,7 +36,7 @@ export default function TemplateCenter() {
             <td>{t.label}</td>
             <td>{t.installed ? <span className="badge">已安装</span> : <span className="muted">未安装（回退题包月度模板）</span>}</td>
             <td>{t.installed ? t.placeholder_count : '—'}</td>
-            <td className="muted">{t.installed ? t.path : '题包 04_报告模板'}</td>
+            <td className="muted">{t.installed ? String(t.path??'已安装模板').split(/[\\/]/).at(-1) : '默认月度模板'}</td>
           </tr>)}</tbody>
         </table></div>
       </section>}

@@ -11,7 +11,7 @@ from decimal import Decimal, ROUND_HALF_UP
 from .ingestion import ingest, load_rows
 
 D = Decimal
-FORMULA_VERSION = 'cost-formulas-1.1'
+FORMULA_VERSION = 'cost-formulas-1.2-bound-attribution'
 from .ingestion import _CONTRACT, source_contract, source_contract_hash
 ELEMENTS = _CONTRACT['elements']
 
@@ -284,10 +284,16 @@ def analyze(factory, product, month, analysis_type='monthly', basis='unit'):
             values[label]=sum(D(r['data']['费用总额(元)']) for r in rr)/qty if qty and {r['month'] for r in rr}==set(period) else None
         c=change(values['current'],values['mom'])
         expenses_summary.append({'name':category,'current':c['current'],'previous':c['base'],'rate':c['rate'],'delta':c['delta'],'unit':'元/盒','reason':c['reason']})
-    result={'period_values':period_values,'period_changes':period_changes,'labor_metrics':labor_metrics,'materials_summary':materials_summary,'expenses_summary':expenses_summary,'data_version':manifest['snapshot_id'],'snapshot_id': '', 'formula_version':FORMULA_VERSION,'factory':factory,'product':product,'month':months[-1],
+    result={'period_values':period_values,'period_changes':period_changes,'labor_metrics':labor_metrics,'materials_summary':materials_summary,'expenses_summary':expenses_summary,'data_version':manifest['snapshot_id'],'data_provenance':'competition','snapshot_id': '', 'formula_version':FORMULA_VERSION,'factory':factory,'product':product,'month':months[-1],
             'analysis_type':analysis_type,'specification':spec,'basis':basis,'period':{'start':months[0],'end':months[-1]},'metrics':metrics,'comparison':comparison,
             'elements':elements,'trend':trend,'details':details,'industry':industry,'budget_bridge':bridge,'alerts':alerts,
             'source_hashes':sorted({r['source_hash'] for r in rows}), 'limits':['原料单位消耗成本不是采购单价或实物耗用量；市场价格不代表企业采购价','设备事件与成本共变只支持假设；维修费不额外加入汇总']}
+    from .attribution import support_for_rows
+    designated = source_contract().get('benchmark_factory')
+    controls = {r['factory'] for r in all_rows if r['kind'] == 'cost' and r['product'] == product}
+    result['attribution_support'] = support_for_rows(
+        all_rows, factory, product, month, analysis_type,
+        control=designated if designated in controls and designated != factory else None)
     result['snapshot_id']=hashlib.sha256(json.dumps(result,sort_keys=True,ensure_ascii=False).encode()).hexdigest()
     return result
 
@@ -350,31 +356,33 @@ def _benchmark_factories(left, right, factory=None, product=None):
     return partner, right
 
 
-def _benchmark_payload(product,month,left,right,analysis_type,a,b):
+def _benchmark_payload(product,month,left,right,analysis_type,a,b,basis='unit'):
     """对标合同体的纯组装段：给定两厂 analyze 结果拼装，不做计算（2026-09-23 审查 SSE-5）。"""
     summary=[]
     for key,name,unit in [('unit_cost','单位成本','元/盒'),('total_cost','总成本','元'),('quantity','产量','盒')]:
         x,y=a['metrics'][key]['value'],b['metrics'][key]['value']
         summary.append({'name':name,'key':key,'unit':unit,'left':x,'right':y,**{k:v for k,v in change(x,y).items() if k in ('delta','rate','reason')}})
     elements=[]
-    for x,y in zip(a['elements'],b['elements']):
-        c = change(x['unit'],y['unit'])
-        denominator = summary[0]['delta']
-        elements.append({'key':x['key'],'name':x['name'],'unit':'元/盒','left':x['unit'],'right':y['unit'],
+    other_elements = {row['key']: row for row in b['elements']}
+    for x in a['elements']:
+        y = other_elements.get(x['key'])
+        c = change(x[basis], y[basis] if y else None)
+        denominator = summary[0 if basis == 'unit' else 1]['delta']
+        elements.append({'key':x['key'],'name':x['name'],'unit':'元/盒' if basis == 'unit' else '元','left':x[basis],'right':y[basis] if y else None,
             **{k:v for k,v in c.items() if k in ('delta','rate','reason')},
             'contribution':contribution(c['delta'],denominator),'numerator':c['delta'],'denominator':denominator,
             'comparison_period':a['period'], 'comparison_object':f'{left}−{right}',
-            'contribution_reason':'跨厂单位成本总差额为0' if denominator is not None and D(denominator)==0 else None})
+            'contribution_reason':'同口径跨厂成本总差额为0' if denominator is not None and D(denominator)==0 else None})
     from .config import SYNTHETIC_DETAIL_FACTORIES as _synth_factories
     if _synth_factories:
-        benchmark_hypothesis='跨厂成本差异已由同规格月度成本确认；规模、设备及工艺差异需核查。当前二厂明细为按汇总校准的合成演示数据，结构结论仅用于演示。'
+        benchmark_hypothesis='跨厂成本差异已由同规格同期成本确认；规模、设备及工艺差异需核查。当前二厂明细为按汇总校准的合成演示数据，结构结论仅用于演示。'
         benchmark_missing=['二厂真实经营明细（现有为合成演示明细）','相同口径设备利用率与批次工艺记录']
     else:
         # 2026-09-22 起默认停用合成明细：二厂只有题包成本汇总口径，拆结构到
         # 要素层为止，原材料下钻缺失按"证据支持假设/证据不足"合同输出归因推测。
-        benchmark_hypothesis='跨厂成本差异已由同规格月度成本与三要素汇总口径确认；规模、设备及工艺差异需核查。二厂缺少原材料/费用等经营明细，结构归因仅到要素层，更深层原因以证据支持假设表述、不认定因果。'
+        benchmark_hypothesis='跨厂成本差异已由同规格同期成本与要素汇总口径确认；规模、设备及工艺差异需核查。二厂缺少原材料/费用等经营明细，结构归因仅到要素层，更深层原因以证据支持假设表述、不认定因果。'
         benchmark_missing=['二厂原材料消耗与制造费用明细（当前仅有成本汇总口径）','相同口径设备利用率与批次工艺记录']
-    return {'analysis_type':analysis_type,'period':a['period'],'direction':f'{left}−{right}，以{right}为分母','product':product,'month':month,'left':left,'right':right,
+    return {'analysis_type':analysis_type,'basis':basis,'period':a['period'],'direction':f'{left}−{right}，以{right}为分母','product':product,'month':month,'left':left,'right':right,
             'snapshot_ids':[a['snapshot_id'],b['snapshot_id']], 'summary':summary,'elements':elements,
             'details':{'left':a['details'],'right':b['details']},
             'hypotheses':[{'claim_type':'hypothesis','hypothesis':benchmark_hypothesis,
@@ -384,23 +392,23 @@ def _benchmark_payload(product,month,left,right,analysis_type,a,b):
             'limits':['总成本对比受产量影响，不能作为单位效率结论','文档原因证据由报告检索流程补充；仅表内数值不能证明因果']}
 
 
-def benchmark(product, month, left=None, right=None, analysis_type='monthly', factory=None):
+def benchmark(product, month, left=None, right=None, analysis_type='monthly', factory=None, basis='unit'):
     """跨厂对标：方向为 left−right，以 right 为分母。
 
     缺省（left/right 未传）时按"factory（本单位）− benchmark_partner（对标厂）"
     配对，与报告/worker 路径同向；见 _benchmark_factories。
     """
     left,right=_benchmark_factories(left,right,factory,product)
-    a,b=analyze(left,product,month,analysis_type),analyze(right,product,month,analysis_type)
-    return _benchmark_payload(product,month,left,right,analysis_type,a,b)
+    a,b=analyze(left,product,month,analysis_type,basis),analyze(right,product,month,analysis_type,basis)
+    return _benchmark_payload(product,month,left,right,analysis_type,a,b,basis)
 
 
-def benchmark_analysis(product,month,left=None,right=None,analysis_type='monthly'):
+def benchmark_analysis(product,month,left=None,right=None,analysis_type='monthly',basis='unit'):
     """Package already-calculated cross-factory metrics for constrained generation."""
-    left,right=_benchmark_factories(left,right)
-    snapshot=analyze(left,product,month,analysis_type)
-    right_snapshot=analyze(right,product,month,analysis_type)
-    comparison=_benchmark_payload(product,month,left,right,analysis_type,snapshot,right_snapshot)
+    left,right=_benchmark_factories(left,right,product=product)
+    snapshot=analyze(left,product,month,analysis_type,basis)
+    right_snapshot=analyze(right,product,month,analysis_type,basis)
+    comparison=_benchmark_payload(product,month,left,right,analysis_type,snapshot,right_snapshot,basis)
     for row in comparison['summary']+comparison['elements']:
         key=row['key'];base=snapshot['metrics'][key]
         row['metric_refs'] = {}
@@ -408,7 +416,7 @@ def benchmark_analysis(product,month,left=None,right=None,analysis_type='monthly
             metric_id=f"benchmark:{left}:{right}:{product}:{month}:{key}:{field}"
             value=row[field]
             row['metric_refs'][field] = metric_id
-            snapshot['metrics'][metric_id]={**base,'metric_id':metric_id,'label':comparison['direction']+' '+row['name']+{'rate':'差异率','delta':'差异金额','contribution':'占跨厂单位成本差额'}[field],'value':value,'display':'N/A' if value is None else format(D(value).quantize(D('0.01')),'f'),'unit':unit,'formula':{'rate':'(左厂−右厂)/右厂×100','delta':'左厂−右厂','contribution':'要素跨厂差额/单位成本跨厂总差额×100'}[field],'numerator':row['delta'],'denominator':row['right'] if field=='rate' else row['denominator'] if field=='contribution' else '1','comparison_period':comparison['period'],'row_keys':base['row_keys']+right_snapshot['metrics'][key]['row_keys'],'source_hash':sorted(set(base['source_hash']+right_snapshot['metrics'][key]['source_hash']))}
-    snapshot['benchmark_context']={k:comparison[k] for k in ('left','right','direction','summary','elements','limits','period')}
+            snapshot['metrics'][metric_id]={**base,'metric_id':metric_id,'label':comparison['direction']+' '+row['name']+{'rate':'差异率','delta':'差异金额','contribution':'占同口径跨厂成本差额'}[field],'value':value,'display':'N/A' if value is None else format(D(value).quantize(D('0.01')),'f'),'unit':unit,'formula':{'rate':'(左厂−右厂)/右厂×100','delta':'左厂−右厂','contribution':'要素跨厂差额/同口径跨厂总差额×100'}[field],'numerator':row['delta'],'denominator':row['right'] if field=='rate' else row['denominator'] if field=='contribution' else '1','comparison_period':comparison['period'],'row_keys':base['row_keys']+right_snapshot['metrics'].get(key, right_snapshot['metrics']['unit_cost'])['row_keys'],'source_hash':sorted(set(base['source_hash']+right_snapshot['metrics'].get(key, right_snapshot['metrics']['unit_cost'])['source_hash']))}
+    snapshot['benchmark_context']={k:comparison[k] for k in ('left','right','direction','summary','elements','limits','period','basis')}
     snapshot['snapshot_id']=hashlib.sha256(json.dumps(snapshot,sort_keys=True,ensure_ascii=False).encode()).hexdigest()
     return snapshot,comparison

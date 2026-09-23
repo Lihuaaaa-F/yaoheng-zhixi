@@ -659,52 +659,146 @@ def validate_findings(findings,snapshot,evidence):
     return result
 
 
+_PARAM_UNSET = '__MODEL_PARAMETER_UNSET__'
+
+
 class ModelGateway:
     # 多模型协作（赛题加分项：报表生成用大模型、数据提取用小模型）：
     # analysis=数据分析（报告解释/归因/任务生成，大模型）；
     # extraction=数据提取等轻量任务（小模型）。旧名 narrative/decision 由
     # for_route 自动映射，历史调用点与环境变量无需同步修改。
-    ROUTES = ('extraction', 'analysis')
+    ROUTES = ('extraction', 'analysis', 'assistant')
     ROUTE_ALIASES = {'narrative': 'analysis', 'decision': 'extraction'}
 
     def __init__(self, client=None, runtime=None, provider=None, base_url=None, model=None,
-                 key_file=None, max_calls=None, max_repairs=None, route=None, reasoning_effort=None):
+                 key_file=None, max_calls=None, max_repairs=None, route=None, reasoning_effort=None,
+                 api_key=None, temperature=_PARAM_UNSET, top_p=_PARAM_UNSET, max_tokens=None,
+                 timeout_seconds=None, protocol=None, auth_mode=None):
         from . import model_settings as _settings
         # 统一配置解析（fix：页面设置与实际调用一致）：显式参数 → 环境变量 →
         # 设置文件（RUNTIME/model_settings.json，API 与 worker 共读同一份）→ 默认。
         self.route = _settings.canonical_route(route or 'analysis')
         configured = _settings.resolve(self.route)
+        independent = self.route == 'assistant'
+        legacy = [name for name, new in self.ROUTE_ALIASES.items() if new == self.route]
+        route_config = {}
+        route_found = False
+        raw = os.getenv('PHARMA_MODEL_ROUTES')
+        if raw:
+            parsed = json.loads(raw)
+            if not isinstance(parsed, dict):
+                raise ValueError('INVALID_MODEL_ROUTES')
+            for name in [self.route, *legacy]:
+                section = parsed.get(name)
+                if section is not None and not isinstance(section, dict):
+                    raise ValueError('INVALID_MODEL_ROUTES')
+                if section is not None and not route_found:
+                    route_config = dict(section)
+                    route_found = True
+        prefixes = ['PHARMA_MODEL_' + name.upper() + '_' for name in [self.route, *legacy]]
+
+        def route_value(field):
+            if field in route_config:
+                return route_config[field]
+            for prefix in prefixes:
+                value = os.getenv(prefix + field.upper())
+                if value is not None and value != '':
+                    return value
+            return None
+
+        def setting(field, explicit, default=None, global_name=None):
+            if explicit != _PARAM_UNSET and explicit is not None:
+                return explicit
+            value = route_value(field)
+            if value is not None:
+                return value
+            if not independent and global_name and os.getenv(global_name, ''):
+                return os.getenv(global_name)
+            return configured.get(field, default)
+
         self.runtime = Path(runtime) if runtime else RUNTIME
         self.runtime.mkdir(parents=True,exist_ok=True)
-        self.provider = provider or os.getenv('PHARMA_MODEL_PROTOCOL','') or configured.get('protocol') or MODEL_PROTOCOL_DEFAULT
-        self.base_url = (base_url or os.getenv('PHARMA_MODEL_BASE_URL','') or configured.get('base_url') or MODEL_BASE_URL_DEFAULT).rstrip('/')
+        self.provider = setting('protocol', provider or protocol, MODEL_PROTOCOL_DEFAULT, 'PHARMA_MODEL_PROTOCOL')
+        self.base_url = str(setting('base_url', base_url, '' if independent else MODEL_BASE_URL_DEFAULT,
+                                    'PHARMA_MODEL_BASE_URL') or '').rstrip('/')
         # Coding Plan 端点（用户 2026-09-18 授权的暂定政策）：主端点余额/资源包
         # 耗尽（错误码 1113）后自动切换至此继续运行；主端点恢复后自动优先，
         # 无需改代码。置 PHARMA_MODEL_CODING_BASE_URL='' 可禁用。
-        self.coding_base_url = os.getenv('PHARMA_MODEL_CODING_BASE_URL', MODEL_CODING_BASE_URL_DEFAULT).rstrip('/')
-        self.model = model or os.getenv('PHARMA_MODEL','') or configured.get('model') or MODEL_DEFAULT
-        keypath_value = key_file or os.getenv('PHARMA_MODEL_KEY_FILE') or os.getenv('PHARMA_API_KEY_FILE') or configured.get('key_file')
+        self.coding_base_url = '' if independent else os.getenv('PHARMA_MODEL_CODING_BASE_URL', MODEL_CODING_BASE_URL_DEFAULT).rstrip('/')
+        self.model = str(setting('model', model, '' if independent else MODEL_DEFAULT, 'PHARMA_MODEL') or '')
+        self.auth_mode = setting('auth_mode', auth_mode, 'auto', 'PHARMA_MODEL_AUTH_MODE')
+        if self.auth_mode not in ('auto', 'required', 'none'):
+            raise ValueError('MODEL_AUTH_MODE_INVALID')
+        if self.auth_mode == 'none' and not _settings._loopback_host(self.base_url):
+            raise ValueError('MODEL_AUTH_MODE_INVALID: 无鉴权模式仅允许本地地址')
+        keypath_value = key_file or route_value('key_file') or configured.get('key_file')
+        if not keypath_value and not independent and not configured.get('key_disabled'):
+            keypath_value = os.getenv('PHARMA_MODEL_KEY_FILE') or os.getenv('PHARMA_API_KEY_FILE')
         keypath = Path(keypath_value) if keypath_value else None
         # Explicit key files never silently borrow the main environment credential.
-        generic_key = (keypath.read_text().strip() if keypath.is_file() else '') if keypath else os.getenv('PHARMA_API_KEY', '')
+        if keypath and keypath.is_file() and keypath.stat().st_size <= 10 * 1024:
+            generic_key = keypath.read_text(encoding='utf-8').strip()
+        else:
+            generic_key = ''
+        route_key = route_value('api_key')
+        source = 'key_file' if generic_key else 'NONE'
+        if not keypath and route_key:
+            generic_key, source = str(route_key), 'ROUTE_ENV'
+        if not keypath and not generic_key and not independent and not configured.get('key_disabled'):
+            generic_key = os.getenv('PHARMA_API_KEY', '')
+            source = 'PHARMA_API_KEY' if generic_key else 'NONE'
         official = self.provider == 'openai' and any(
             _official_zhipu_endpoint(self.base_url, path)
             for path in ('/api/paas/v4', '/api/coding/paas/v4'))
         self.key = generic_key or (os.getenv('GLM_API_KEY') or os.getenv('ZHIPU_API_KEY') or ''
-                                   if official and not keypath else '')
+                                   if official and not keypath and not independent and not configured.get('key_disabled') else '')
+        if self.key and not generic_key:
+            source = 'GLM/ZHIPU_ENV'
+        if api_key is not None:
+            self.key, source = str(api_key).strip(), 'REQUEST' if api_key else 'NONE'
+        if self.auth_mode == 'none':
+            self.key, source = '', 'LOCAL_NO_AUTH'
+        # Settings-file credentials belong to their saved endpoint. A global env override
+        # must not silently send that credential to another provider or tenant path.
+        uses_saved_key = bool(configured.get('key_file') and not (key_file or route_value('key_file') or route_key)
+                              and api_key is None)
+        saved_endpoint = str(configured.get('base_url') or self.base_url).rstrip('/')
+        saved_protocol = configured.get('protocol') or self.provider
+        if uses_saved_key and (self.base_url, self.provider) != (saved_endpoint, saved_protocol):
+            self.key, source = '', 'SETTINGS_ENDPOINT_MISMATCH'
+        # A route may share the legacy main credential only at the exact configured endpoint.
+        dedicated_key = bool(key_file or route_value('key_file') or configured.get('key_file') or route_key or api_key is not None)
+        main_endpoint = os.getenv('PHARMA_MODEL_BASE_URL') or _settings.resolve('analysis').get('base_url') or MODEL_BASE_URL_DEFAULT
+        main_protocol = os.getenv('PHARMA_MODEL_PROTOCOL') or _settings.resolve('analysis').get('protocol') or MODEL_PROTOCOL_DEFAULT
+        if not independent and not dedicated_key and route is not None and (self.base_url, self.provider) != (main_endpoint.rstrip('/'), main_protocol):
+            self.key, source = '', 'ROUTE_KEY_REQUIRED'
         self.credential_scope = {'host': urlsplit(self.base_url).hostname, 'protocol': self.provider,
-                                 'source': 'key_file' if keypath and generic_key else
-                                           'PHARMA_API_KEY' if generic_key else 'GLM/ZHIPU_ENV' if self.key else 'NONE',
+                                 'source': source,
                                  'route': self.route}
-        # 推理强度（low/medium/high）：设置文件 → 路由级环境变量 → 全局环境变量 → 默认 low。
-        # 各厂商请求参数的映射在 _complete 内经 model_registry.effort_body_params 完成。
-        self.reasoning_effort = (reasoning_effort
-            or os.getenv('PHARMA_MODEL_' + self.route.upper() + '_REASONING_EFFORT','')
-            or configured.get('reasoning_effort')
-            or os.getenv('PHARMA_MODEL_REASONING_EFFORT','')
-            or 'low')
-        if self.reasoning_effort not in ('low','medium','high'):self.reasoning_effort='low'
-        self.client = client or httpx.Client(timeout=httpx.Timeout(float(os.getenv('PHARMA_MODEL_TIMEOUT','90')),connect=15), follow_redirects=False)
+        # 缺省不发送推理/采样字段；适配结果及不支持原因都可供设置界面检查。
+        self.reasoning_effort = setting('reasoning_effort', reasoning_effort, '', 'PHARMA_MODEL_REASONING_EFFORT') or ''
+        if self.reasoning_effort not in _settings.EFFORTS:
+            raise ValueError('REASONING_EFFORT_INVALID')
+        self.temperature = None if temperature is None else setting('temperature', temperature, None, 'PHARMA_MODEL_TEMPERATURE')
+        self.top_p = None if top_p is None else setting('top_p', top_p, None, 'PHARMA_MODEL_TOP_P')
+        self.max_tokens = setting('max_tokens', max_tokens, 8192, 'PHARMA_MODEL_MAX_TOKENS')
+        self.timeout_seconds = setting('timeout_seconds', timeout_seconds, 90, 'PHARMA_MODEL_TIMEOUT')
+        params = _settings._sanitize_overrides({'temperature': self.temperature, 'top_p': self.top_p,
+                    'max_tokens': self.max_tokens, 'timeout_seconds': self.timeout_seconds})
+        self.temperature, self.top_p = params.get('temperature'), params.get('top_p')
+        self.max_tokens, self.timeout_seconds = params['max_tokens'], params['timeout_seconds']
+        from .model_registry import reasoning_parameters
+        self.effort_parameters, self.parameter_warnings, self.parameter_errors = reasoning_parameters(
+            self.model, self.base_url, self.reasoning_effort, self.provider)
+        if source == 'SETTINGS_ENDPOINT_MISMATCH':
+            self.parameter_warnings.append('环境变量覆盖了已保存的服务地址或协议；为保护密钥，尚未发送旧凭据，请统一连接配置')
+        self.configured = bool(self.model and self.base_url)
+        self.available = self.configured and bool(self.key or (self.auth_mode != 'required' and self.provider == 'openai' and _settings._loopback_host(self.base_url)))
+        self.generation_parameters = {'reasoning_effort': self.reasoning_effort, 'temperature': self.temperature,
+             'top_p': self.top_p, 'max_tokens': self.max_tokens, 'timeout_seconds': self.timeout_seconds,
+             'effective_reasoning_parameters': self.effort_parameters}
+        self.generation_parameters['auth_mode'] = self.auth_mode
+        self.client = client or httpx.Client(timeout=httpx.Timeout(self.timeout_seconds, connect=min(15, self.timeout_seconds)), follow_redirects=False)
         self.max_calls = max_calls if max_calls is not None else int(os.getenv('PHARMA_MODEL_MAX_CALLS','40'))
         self.max_repairs = max(0,min(2,max_repairs if max_repairs is not None else int(os.getenv('PHARMA_MODEL_MAX_REPAIRS','2'))))
         self.dbpath = self.runtime/'model_gateway.sqlite3'
@@ -718,7 +812,9 @@ class ModelGateway:
                 except sqlite3.OperationalError: pass
 
     def _headers(self):
-        return {'x-api-key':self.key,'anthropic-version':'2023-06-01'} if self.provider=='anthropic' else {'Authorization':'Bearer '+self.key}
+        if self.provider == 'anthropic':
+            return {'anthropic-version': '2023-06-01', **({'x-api-key': self.key} if self.key else {})}
+        return {'Authorization': 'Bearer ' + self.key} if self.key else {}
 
     @classmethod
     def for_route(cls, route, **overrides):
@@ -727,54 +823,11 @@ class ModelGateway:
         配置优先级：PHARMA_MODEL_ROUTES（JSON，route→{model,base_url,protocol,key_file}）
         → PHARMA_MODEL_<ROUTE>_MODEL/_BASE_URL/_PROTOCOL/_KEY_FILE 单变量（含旧名
         NARRATIVE/DECISION 回退）→ 主配置（PHARMA_MODEL 等）回退。未配置专用
-        小模型时与主模型同源，机制就绪且行为透明，不伪造多模型实调。
+        小模型时与主模型同源；assistant 没有主配置回退，不伪造多模型实调。
         """
-        aliases = cls.ROUTE_ALIASES
-        legacy_names = [name for name, new in aliases.items() if new == route] if route in aliases.values() else [route]
-        if route not in cls.ROUTES:
-            route = aliases.get(route)
-        if route not in cls.ROUTES: raise ValueError('UNKNOWN_MODEL_ROUTE')
-        config = {}
-        raw = os.getenv('PHARMA_MODEL_ROUTES')
-        if raw:
-            parsed = json.loads(raw)
-            if not isinstance(parsed, dict): raise ValueError('INVALID_MODEL_ROUTES')
-            # 路由表允许只配置部分路由：未列出的路由回退主配置；规范名优先于
-            # 旧名条目，任何已列出条目的形状错误（非对象）都显式拒绝。
-            section = None
-            for name in [route] + [x for x in legacy_names if x != route]:
-                value = parsed.get(name)
-                if value is None: continue
-                if not isinstance(value, dict): raise ValueError('INVALID_MODEL_ROUTES')
-                if section is None: section = value
-            config = section or {}
-        prefixes = ['PHARMA_MODEL_' + route.upper() + '_'] + ['PHARMA_MODEL_' + name.upper() + '_' for name in legacy_names]
-        for field in ('model', 'base_url', 'protocol', 'key_file', 'reasoning_effort'):
-            if field in config:
-                continue  # JSON 路由表已显式指定的字段优先
-            for prefix in prefixes:
-                value = os.getenv(prefix + field.upper())
-                if value: config[field] = value; break
-        # 设置文件的路由专属密钥优先于主环境密钥（2026-09-22 修复）：__init__ 的
-        # key 解析顺序为 显式参数→env→设置文件，主 env 密钥（PHARMA_MODEL_KEY_FILE）
-        # 会把路由专属密钥遮蔽，随后跨主机保护把密钥清空——用户在"模型配置"页为
-        # 跨厂商路由保存的密钥从未生效。这里把它提升为显式参数；env 路由变量与
-        # 请求覆盖仍优先于设置文件。
-        from . import model_settings as _settings_module
-        settings_section = _settings_module.resolve(route)
-        if settings_section.get('key_file') and 'key_file' not in config and 'key_file' not in overrides:
-            config['key_file'] = settings_section['key_file']
-        gateway = cls(model=config.get('model'), base_url=config.get('base_url'),
-                      provider=config.get('protocol'), key_file=config.get('key_file'),
-                      route=route, reasoning_effort=config.get('reasoning_effort'), **overrides)
-        from .config import MODEL_BASE_URL_DEFAULT as _MBU
-        main_host = urlsplit(os.getenv('PHARMA_MODEL_BASE_URL', _MBU)).hostname
-        main_protocol = os.getenv('PHARMA_MODEL_PROTOCOL', 'openai')
-        if ((urlsplit(gateway.base_url).hostname, gateway.provider) != (main_host, main_protocol)
-                and not config.get('key_file') and not overrides.get('key_file')):
-            gateway.key = ''
-            gateway.credential_scope['source'] = 'ROUTE_KEY_REQUIRED'
-        return gateway
+        from .model_settings import canonical_route
+        # 唯一解析点在 __init__，覆盖字典只传一次，避免重复 keyword TypeError。
+        return cls(route=canonical_route(route), **overrides)
 
     @classmethod
     def routes_status(cls):
@@ -785,7 +838,10 @@ class ModelGateway:
             gateway = cls.for_route(route)
             routes[route] = {'model': gateway.model, 'protocol': gateway.provider,
                              'base_url': gateway.base_url, 'key_set': bool(gateway.key),
-                             'dedicated': (gateway.model, gateway.base_url) != (main.model, main.base_url),
+                             'dedicated': route == 'assistant' or (gateway.model, gateway.base_url) != (main.model, main.base_url),
+                             'independent': route == 'assistant', 'available': gateway.available,
+                             'configured': gateway.configured, 'generation_parameters': gateway.generation_parameters,
+                             'parameter_warnings': gateway.parameter_warnings,
                              'max_calls': gateway.max_calls, 'credential_scope': gateway.credential_scope}
         return {'routes': routes, 'main_model': main.model, 'routing_mechanism': 'PHARMA_MODEL_ROUTES/env-fallback'}
 
@@ -797,7 +853,9 @@ class ModelGateway:
         return self._complete(system,user,operation,prompt_version or PROMPT_VERSION)
 
     def _complete(self,system,user,operation='generate',prompt_version=None):
-        if not self.key: raise RuntimeError('MODEL_KEY_NOT_SET')
+        if not self.configured: raise RuntimeError('MODEL_NOT_CONFIGURED: 请配置本角色的模型和服务地址')
+        if not self.available: raise RuntimeError('MODEL_KEY_NOT_SET')
+        if self.parameter_errors: raise RuntimeError('MODEL_PARAMETERS_UNSUPPORTED: ' + '；'.join(self.parameter_errors))
         from .locks import exclusive
         with _CALL_LOCK, exclusive(self.runtime/'model-call.lock'), sqlite3.connect(self.dbpath) as db:
             db.execute('BEGIN IMMEDIATE')
@@ -810,16 +868,20 @@ class ModelGateway:
         try:
             if self.provider == 'anthropic':
                 # 与 openai 分支同源读环境变量（此前硬编码 2500 会截断长解释）
-                body = {'model':self.model,'max_tokens':int(os.getenv('PHARMA_MODEL_MAX_TOKENS','8192')),'system':system,'messages':[{'role':'user','content':user}]}
+                body = {'model':self.model,'max_tokens':self.max_tokens,'system':system,'messages':[{'role':'user','content':user}]}
             elif self.provider == 'openai':
-                body = {'model':self.model,'max_tokens':int(os.getenv('PHARMA_MODEL_MAX_TOKENS','8192')),'temperature':0,'response_format':{'type':'json_object'},'messages':[{'role':'system','content':system},{'role':'user','content':user}]}
+                from .model_registry import uses_completion_tokens
+                token_field = 'max_completion_tokens' if uses_completion_tokens(self.model, self.base_url) else 'max_tokens'
+                body = {'model':self.model,token_field:self.max_tokens,'response_format':{'type':'json_object'},'messages':[{'role':'system','content':system},{'role':'user','content':user}]}
                 # 推理强度按厂商映射（单一来源 model_registry）：GLM-5 系列始终思考
                 # （端点错误 1210 明示不支持关闭，low 档显著降低时延，2026-09-21 实测
                 # glm-5.3 默认档 55s+ 读超时）；DeepSeek 用 thinking.type；通义用
                 # enable_thinking；OpenAI 用 reasoning_effort。未识别厂商不附加参数。
-                from .model_registry import effort_body_params
-                body.update(effort_body_params(self.model,self.base_url,self.reasoning_effort))
             else: raise ValueError('Unsupported model protocol')
+            body.update(self.effort_parameters)
+            for name in ('temperature', 'top_p'):
+                if getattr(self, name) is not None:
+                    body[name] = getattr(self, name)
             def _chat_url(base):
                 # 按协议拼完整对话端点；anthropic 兼容 /v1 结尾时直接挂 /messages
                 base = base.rstrip('/')
@@ -837,7 +899,8 @@ class ModelGateway:
             data = None
             for index, endpoint in enumerate(candidates):
                 last = index == len(candidates) - 1
-                for attempt in range(3):
+                attempts = 1 if self.route == 'assistant' else 3
+                for attempt in range(attempts):
                     attempt_start = time.monotonic()
                     attempt_status, attempt_error, http_status = 'FAILED', None, None
                     used_endpoint = _safe_endpoint(endpoint, self.key)
@@ -854,7 +917,7 @@ class ModelGateway:
                         if quota and not last: break
                         if quota: raise
                         retryable = exc.response.status_code == 429 or exc.response.status_code >= 500
-                        if not retryable or attempt == 2: raise
+                        if not retryable or attempt == attempts - 1: raise
                         time.sleep(20 * (attempt + 1))
                     except Exception as exc:
                         attempt_error = type(exc).__name__
@@ -921,7 +984,7 @@ def rule_findings(snapshot,evidence):
     if snapshot.get('analysis_context') and snapshot['analysis_context'].get('enterprise_id') != 'competition':
         for element in elements:
             if element.get('unit_delta') is not None and Decimal(str(element['unit_delta'])) != 0:
-                action(element['key'],element['name']+'存在期间差异；合成演示数据仅支持成本比较，尚不足以确认原因。',
+                action(element['key'],element['name']+'存在期间差异；当前数据仅支持成本比较，尚不足以确认原因。',
                        element['name']+'成本归集与生产记录',['对应成本归集明细','对应生产计量记录'],'成本核算与生产部门',
                        '核对成本归集和生产计量记录，确认口径一致后分析差异；缺少明细时保留待核查状态。')
         return findings
@@ -959,7 +1022,8 @@ def _prepare_generation(snapshot, evidence, gateway=None):
     # 叙事生成必须走 narrative 路由：页面路由配置（PHARMA_MODEL_ROUTES 等）
     # 与实际调用保持一致，否则 routes_status 宣称与真实模型不符（fix4）。
     gateway = gateway or ModelGateway.for_route('analysis')
-    version_inputs = {'snapshot':snapshot,'evidence':sources,'knowledge_version':knowledge_version,'model':gateway.model,'protocol':gateway.provider,'base_url':gateway.base_url,'prompt':PROMPT_VERSION,'template':snapshot.get('template_version','template-unset'),'validator':VALIDATOR_VERSION,'retrieval':{k:evidence.get(k) for k in ('retriever_version','retrieval_policy_version','reranker_version','embedding_version','fusion_weights','mode','analysis_context','status','recall_status','graph_expansion')} if isinstance(evidence,dict) else None,'generation_parameters':{'max_tokens':os.getenv('PHARMA_MODEL_MAX_TOKENS','8192'),'reasoning_effort':os.getenv('PHARMA_MODEL_REASONING_EFFORT','low'),'max_repairs':gateway.max_repairs,'temperature':0}}
+    generation_parameters = getattr(gateway, 'generation_parameters', {'max_tokens':8192,'reasoning_effort':'','temperature':None})
+    version_inputs = {'snapshot':snapshot,'evidence':sources,'knowledge_version':knowledge_version,'model':gateway.model,'protocol':gateway.provider,'base_url':gateway.base_url,'prompt':PROMPT_VERSION,'template':snapshot.get('template_version','template-unset'),'validator':VALIDATOR_VERSION,'retrieval':{k:evidence.get(k) for k in ('retriever_version','retrieval_policy_version','reranker_version','embedding_version','fusion_weights','mode','analysis_context','status','recall_status','graph_expansion')} if isinstance(evidence,dict) else None,'generation_parameters':{**generation_parameters,'max_repairs':gateway.max_repairs}}
     key = hashlib.sha256(json.dumps(version_inputs,ensure_ascii=False,sort_keys=True,default=str).encode()).hexdigest()
     return sources, excluded, knowledge_version, gateway, key
 
@@ -1013,7 +1077,7 @@ recommendation可为null；提供时须有suggestion、verification_target、exp
             attribution_directions.append({'cause':_rk.get('cause'),'direction':_rk.get('direction'),'likelihood':_rk.get('label'),'basis':_rk.get('basis')})
         if (_attr.get('did') or {}).get('status')=='PASS':
             attribution_directions.append({'cause':'对照厂反事实估计','direction':('与本期变动同向' if (_attr['did'].get('parallel_trend')=='稳健') else '平行趋势存疑'),'likelihood':None,'basis':'DiD'+_attr['did'].get('parallel_trend','')})
-    user=json.dumps({'metrics':prompt_metrics,'context':{k:snapshot.get(k) for k in ('month','factory','product','specification','analysis_context')},'alerts':required_alerts(snapshot),'required_alerts':required_alerts(snapshot),'required_sections':required_explanation_sections(snapshot),'tasks':explanation_tasks(snapshot),'benchmark_context':snapshot.get('benchmark_context'),'quantity_comparisons':snapshot.get('period_changes',{}).get('quantity'),'attribution_directions':attribution_directions,'evidence':excerpts},ensure_ascii=False,default=str)
+    user=json.dumps({'metrics':prompt_metrics,'context':{k:snapshot.get(k) for k in ('month','factory','product','specification','analysis_context','analysis_type','period','topic')},'alerts':required_alerts(snapshot),'required_alerts':required_alerts(snapshot),'required_sections':required_explanation_sections(snapshot),'tasks':explanation_tasks(snapshot),'benchmark_context':snapshot.get('benchmark_context'),'quantity_comparisons':snapshot.get('period_changes',{}).get('quantity'),'attribution_directions':attribution_directions,'evidence':excerpts},ensure_ascii=False,default=str)
     failures, usage, valid, failed_sections, sections = [], {}, {}, {}, {}
     identities, model_responded = [], False
     accepted_units,failed_units = {}, {}

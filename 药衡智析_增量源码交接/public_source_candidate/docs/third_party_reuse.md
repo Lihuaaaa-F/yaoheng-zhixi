@@ -50,3 +50,11 @@
 本轮字体：项目assets/fonts内Noto Sans SC TrueType来自notofonts/noto-cjk，SIL OFL 1.1，固定400/700字重实例。来源、原文件哈希、适配说明及许可随包；导出临时Fontconfig仅加载本项目字体，不修改系统。用于修复CJK TTC经LibreOffice Type1子集导出的缩放漏绘。
 
 本轮新增可选演示文档依赖：python-pptx==1.0.2（MIT）、XlsxWriter==3.2.9（BSD-2-Clause，传递依赖），锁在requirements-docs.lock，仅项目venv用于PPTX生成。现有LibreOffice仅Writer，无Impress；PPTX结构重开验证与PDF阅读版已生成，不能把阅读版称PowerPoint实渲染。
+
+
+## 工作台界面依赖（2026-09-23）
+
+- [Ant Design](https://github.com/ant-design/ant-design)：`antd 6.6.5`，MIT；复用表单、选择器、抽屉、菜单、提示和主题令牌。
+- [Ant Design Icons](https://github.com/ant-design/ant-design-icons)：`@ant-design/icons 6.3.4`，MIT；统一导航与操作图标。
+- 本轮借鉴 Codex 风格的输入框布局，所有交互均为项目自身 React 实现，没有复制其源码、商标或产品素材。
+- 验证环境的临时 Chromium 包未进入应用依赖、镜像或交付物。

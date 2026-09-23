@@ -1,0 +1,22 @@
+{
+  "id": "generic_manufacturing",
+  "version": "1.0.0",
+  "name": "通用制造成本框架",
+  "core_compatibility": ">=1,<2",
+  "manufacturing_mode": "hybrid",
+  "data_label": "通用技术框架；没有内置企业、合成业务数据或行业基准。",
+  "enterprise_entry": null,
+  "capabilities": {
+    "cost_analysis": ["costs", "quantities"],
+    "word_export": ["word_service"],
+    "model_explanation": ["model_service"],
+    "simulated_delivery": ["rpa_service"],
+    "pdf_export": ["pdf_service"]
+  },
+  "elements": {
+    "materials": "材料",
+    "labor": "人工",
+    "overhead": "制造费用"
+  },
+  "strategies": []
+}

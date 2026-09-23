@@ -436,6 +436,8 @@ def build_bindings(snapshot,narrative,benchmark=None):
     m=snapshot['metrics']; els={e['key']:e for e in snapshot['elements']}; quarterly=snapshot['analysis_type']=='quarterly'
     period=snapshot.get('period',{}); label=(period.get('start','')+' 至 '+period.get('end','')) if quarterly else snapshot['month']
     values={'报告标题':f"{snapshot['product']} {'季度成本分析' if quarterly else '专题分析' if snapshot['analysis_type']=='special' else '月度成本分析'}报告",'报告类型':{'monthly':'月度成本分析','quarterly':'季度成本分析','special':'专题分析'}[snapshot['analysis_type']],'分析月份':label,'产品名称':snapshot['product'],'产品规格':snapshot.get('specification') or '未提供规格','编制日期':datetime.now().strftime('%Y-%m-%d'),'本月产量':number(m['quantity'],0),'本月单位成本':number(m['unit_cost'],4 if quarterly else 2),'单位成本':number(m['unit_cost'],4 if quarterly else 2),'本月总成本':number(m['total_cost'])}
+    if snapshot['analysis_type']=='special' and snapshot.get('topic'):
+        values['报告标题']=f"{snapshot['product']} · {snapshot['topic']}专题分析报告"
     # Comparison metric snapshots are the sole source of calculated fields.
     for key,cn in [('mom','单位成本环比'),('yoy','单位成本同比'),('budget','单位成本预算偏差')]:values[cn]=number(m.get(key))
     for key,prefix in [('mom','上月'),('yoy','去年'),('budget','预算')]:
@@ -1048,6 +1050,8 @@ def soffice_exe(converter='libreoffice'):
     """定位 LibreOffice 可执行文件；能力预览（industry.capabilities）必须与转换器共用此探测，
     否则 Windows 安装（soffice.exe，通常不在 PATH）会被误报为缺服务（2026-09-24）。"""
     exe = shutil.which(converter)
+    if exe is None and converter == 'libreoffice':
+        exe = shutil.which('soffice')
     if exe is None and converter == 'libreoffice' and os.name == 'nt':
         for candidate in ('soffice', r'C:\Program Files\LibreOffice\program\soffice.exe', r'C:\Program Files (x86)\LibreOffice\program\soffice.exe'):
             found = shutil.which(candidate) if not candidate.startswith('C:') else (candidate if Path(candidate).exists() else None)

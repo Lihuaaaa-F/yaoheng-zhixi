@@ -10,7 +10,7 @@ export function displayFocusRate(value:unknown){
 
 export const cleanText = (value: unknown) => String(value ?? '').replace(/\\r\\n|\\n|\\r/g, '\n').replace(/\\t/g, ' ').trim();
 export function sourceLabel(e: any) {
- const source = e.source_file ?? e.source ?? e.table ?? '来源待核对';
+ const source = e.title ?? e.source_file ?? e.source ?? e.table ?? '来源待核对';
  const name = String(source).split(/[\\/]/).at(-1);
  const location = e.page ? `第 ${e.page} 页` : e.location;
  return [name, e.heading ?? e.section, location, e.product, e.period].filter(v=>typeof v==='string'||typeof v==='number').join(' · ');

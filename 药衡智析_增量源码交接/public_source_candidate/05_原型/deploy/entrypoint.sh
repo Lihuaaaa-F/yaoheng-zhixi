@@ -12,7 +12,7 @@ case "$CMD" in
   *)     EXEC="$@" ;;
 esac
 
-if [ "$CMD" = "worker" ] || [ "$CMD" = "web" ]; then
+if [ "$CMD" = "worker" ] && [ "${PHARMA_FETCH_EMBEDDING:-0}" = "1" ]; then
   python /app/05_原型/scripts/fetch_embedding.py --check-only >/dev/null 2>&1 || \
   python /app/05_原型/scripts/fetch_embedding.py >/dev/null 2>&1 || \
   echo "[entrypoint] 向量模型未能就绪（可设 PHARMA_EMBEDDING_MIRROR=1 重试）；当前以确定性分析与词法检索降级运行" >&2
