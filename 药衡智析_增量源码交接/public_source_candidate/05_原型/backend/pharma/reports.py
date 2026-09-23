@@ -1040,8 +1040,19 @@ def convert_pdf(docx_path,timeout=90,converter='libreoffice',_toc_pass=0):
             font_config=folder/'fonts.conf'
             font_config.write_text('<?xml version="1.0"?><!DOCTYPE fontconfig SYSTEM "fonts.dtd"><fontconfig><include ignore_missing="yes">/etc/fonts/fonts.conf</include><dir>'+escape(str(ROOT/'05_原型/assets/fonts'))+'</dir><cachedir>'+escape(str(folder/'font-cache'))+'</cachedir></fontconfig>')
             env={**os.environ,'TMPDIR':'/tmp','XDG_RUNTIME_DIR':work,'FONTCONFIG_FILE':str(font_config)}
-            result=subprocess.run([exe,f'-env:UserInstallation={profile.as_uri()}','--headless','--convert-to','pdf','--outdir',work,str(path)],capture_output=True,text=True,timeout=timeout,env=env)
-            if result.returncode or not target.exists():return {'status':'FAILED','reason':'CONVERSION_FAILED','log':result.stderr[-1000:]}
+            proc=subprocess.Popen([exe,f'-env:UserInstallation={profile.as_uri()}','--headless','--convert-to','pdf','--outdir',work,str(path)],stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,env=env)
+            try:
+                out,err=proc.communicate(timeout=timeout)
+            except subprocess.TimeoutExpired:
+                # soffice.exe 与 venv python.exe 同为"启动器"型：真身 soffice.bin
+                # 是其子进程，超时只 TerminateProcess 直接子进程会孤儿化 bin——
+                # 残留进程还锁死临时 profile 目录（Windows 上 TemporaryDirectory
+                # 清理会因此报错）。树杀一并回收（2026-09-23 同族排查 manage.py）。
+                if os.name=='nt':subprocess.run(['taskkill','/F','/T','/PID',str(proc.pid)],capture_output=True)
+                else:proc.kill()
+                proc.communicate()
+                return {'status':'FAILED','reason':'CONVERT_TIMEOUT'}
+            if proc.returncode or not target.exists():return {'status':'FAILED','reason':'CONVERSION_FAILED','log':err[-1000:]}
             import fitz
             with fitz.open(target) as doc:
                 text=''.join(p.get_text() for p in doc);pages=len(doc)
