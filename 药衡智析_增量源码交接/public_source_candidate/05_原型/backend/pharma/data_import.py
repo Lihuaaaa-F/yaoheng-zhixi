@@ -16,6 +16,7 @@ import hashlib
 import io
 import json
 import re
+import shutil
 import sqlite3
 import time
 from datetime import datetime, timezone
@@ -242,8 +243,19 @@ def save_mapping(headers: list[str], mapping: dict[str, str], name: str = '') ->
 
 # ---------- 业务数据：映射 → 质检 → 能力预览 ----------
 
+# 数值角色列（产量/要素/总成本）空值率超过该比例时判 INVALID：
+# XLSX 公式单元格无缓存值（openpyxl data_only=True 读回空）会整列静默变空，
+# 部分丢失此前发布成功且无任何提示（审计 AUD-DATA-01）。
+EMPTY_NUMERIC_INVALID_RATIO = Decimal('0.5')
+
+
 def validate_business(record: dict[str, Any], mapping: dict[str, str], options: dict[str, Any]) -> dict[str, Any]:
-    """执行字段映射与口径检查，返回质检错误（含文件/表/行号/原因）与能力预览。"""
+    """执行字段映射与口径检查，返回质检错误（含文件/表/行号/原因）与能力预览。
+
+    数值角色列的空单元格逐行给出警告级提示（公式无缓存值或漏填）；
+    金额全空或关键数值列空值率超过 EMPTY_NUMERIC_INVALID_RATIO 时判 INVALID，
+    不允许"看起来通过、数据无声消失"的发布。
+    """
     folder = IMPORTS_ROOT / record['id']
     payload = (folder / ('original' + record['meta']['suffix'])).read_bytes()
     headers, rows = _read_table(record['meta']['suffix'], payload, record['encoding'] or 'utf-8',
@@ -257,9 +269,18 @@ def validate_business(record: dict[str, Any], mapping: dict[str, str], options: 
     quantities: dict[tuple[str, str, str, str], Decimal] = {}
     amounts: dict[tuple[str, str, str, str, str], Decimal] = {}
     seen_quantity_rows: set[tuple[str, str, str, str]] = set()
+    dimension_rows = 0
+    numeric_empty: dict[str, int] = {}
+
+    def note_empty_cell(header: str, row_index: int) -> None:
+        numeric_empty[header] = numeric_empty.get(header, 0) + 1
+        # 行级警告封顶交给外层 warnings[:100]，这里全部记录用于空值率判定
+        warnings.append(f'第 {row_index} 行：列“{header}”为空（公式无缓存值或漏填），该单元格不参与聚合')
 
     role_of = {h: mapping.get(h, '') for h in headers}
     element_headers = [h for h, r in role_of.items() if r.startswith('element:')]
+    numeric_roles = [h for h, r in role_of.items()
+                     if r == 'quantity' or r == 'total_cost' or str(r).startswith('element:')]
     for required in DIMENSION_ROLES:
         if not any(r == required for r in role_of.values()):
             errors.append({'file': record['filename'], 'sheet': record['meta'].get('sheet', ''),
@@ -286,6 +307,7 @@ def validate_business(record: dict[str, Any], mapping: dict[str, str], options: 
             else ('budget' if marker and marker in ' '.join(row) else 'actual')
         if not (factory and product and period):
             continue
+        dimension_rows += 1
         dimension_values['factory_id'].add(factory)
         dimension_values['product_id'].add(product)
         periods.add(period)
@@ -293,12 +315,13 @@ def validate_business(record: dict[str, Any], mapping: dict[str, str], options: 
         for header, role in role_of.items():
             value = cells.get(header, '')
             if role == 'quantity':
+                if not value.strip():
+                    note_empty_cell(header, index)
+                    continue
                 number = parse_number(value)
-                if value.strip() and number is None:
+                if number is None:
                     errors.append({'file': record['filename'], 'sheet': record['meta'].get('sheet', ''),
                                    'row': index, 'reason': f'“{header}”产量“{value}”不是有效数字'})
-                    continue
-                if number is None:
                     continue
                 if key in quantities and quantities[key] != number:
                     errors.append({'file': record['filename'], 'sheet': record['meta'].get('sheet', ''),
@@ -308,18 +331,29 @@ def validate_business(record: dict[str, Any], mapping: dict[str, str], options: 
                     quantities[key] = number
                     seen_quantity_rows.add(key)
             elif role and (role.startswith('element:') or role == 'total_cost'):
+                if not value.strip():
+                    note_empty_cell(header, index)
+                    continue
                 number = parse_number(value)
-                if value.strip() and number is None:
+                if number is None:
                     errors.append({'file': record['filename'], 'sheet': record['meta'].get('sheet', ''),
                                    'row': index, 'reason': f'“{header}”金额“{value}”不是有效数字'})
-                    continue
-                if number is None:
                     continue
                 element = role.split(':', 1)[1] if role.startswith('element:') else '__total__'
                 amount_key = (factory, product, period, scenario, element)
                 if amount_key in amounts:
                     warnings.append(f'第 {index} 行：{factory}/{product}/{period}/{element} 金额重复，已按明细累加（请确认不是汇总行重复导入）')
                 amounts[amount_key] = amounts.get(amount_key, Decimal(0)) + number * scale
+    # 金额侧硬校验：全空或关键列空值率超阈值一律 INVALID（防公式无缓存值静默丢失）
+    if dimension_rows and not amounts:
+        errors.append({'file': record['filename'], 'sheet': record['meta'].get('sheet', ''), 'row': '',
+                       'reason': '未解析到任何金额数据：金额列全部为空（XLSX 公式单元格无缓存值或漏填）或无有效数据行'})
+    for header in numeric_roles:
+        empty = numeric_empty.get(header, 0)
+        if dimension_rows and Decimal(empty) / Decimal(dimension_rows) > EMPTY_NUMERIC_INVALID_RATIO:
+            errors.append({'file': record['filename'], 'sheet': record['meta'].get('sheet', ''), 'row': '',
+                           'reason': f'“{header}”空值率 {empty}/{dimension_rows} 行（公式无缓存值或漏填）超过 '
+                                     f'{int(EMPTY_NUMERIC_INVALID_RATIO * 100)}%，无法确认数据完整性，请用“值”而非公式重新导出后上传'})
     total_by_key: dict[tuple[str, str, str, str], Decimal] = {}
     for (factory, product, period, scenario, element), amount in amounts.items():
         if element == '__total__':
@@ -344,15 +378,25 @@ def validate_business(record: dict[str, Any], mapping: dict[str, str], options: 
 
 
 def _capabilities(periods: set[str], quantities: dict, amounts: dict) -> list[dict[str, Any]]:
-    """根据数据实际开放的分析能力：缺什么就明确说什么不可用。"""
+    """根据数据实际开放的分析能力：缺什么就明确说什么不可用。
+
+    2026-09-23 修复（审计 AUD-DATA-02）：available 由数据决定而非恒真；
+    语义对齐注册口径——发布注册要求成本与产量事实同时非空
+    （industry.register_enterprise 对空任一侧拒绝 EMPTY_DATASET），
+    缺产量时明示"发布需独立产量"，不再出现"可用+无成本数据"的自相矛盾。
+    """
+    has_amounts = bool(amounts)
     has_quantity = bool(quantities)
     has_budget = any(key[3] == 'budget' for key in amounts) or any(key[3] == 'budget' for key in quantities)
     has_yoy = any(str(int(p[:4]) - 1) + p[4:] in periods for p in periods)
     has_mom = len(periods) >= 2
     items = [
-        {'capability': 'total_cost_analysis', 'available': True, 'reason': '' if amounts else '无成本数据'},
-        {'capability': 'unit_cost_analysis', 'available': has_quantity,
-         'reason': '' if has_quantity else '缺少独立产量，仅提供总成本分析'},
+        {'capability': 'total_cost_analysis', 'available': has_amounts,
+         'reason': '' if has_amounts else '未解析到任何金额数据（金额列全空或无数据行）'},
+        {'capability': 'unit_cost_analysis', 'available': has_quantity and has_amounts,
+         'reason': '' if (has_quantity and has_amounts)
+                   else ('缺少独立产量：单位成本不可计算；发布注册需成本与产量事实同时齐备（请补产量列）'
+                         if has_amounts else '缺少金额数据，无法分析也无法发布')},
         {'capability': 'mom_comparison', 'available': has_mom, 'reason': '' if has_mom else '只有一个期间，环比不可计算'},
         {'capability': 'yoy_comparison', 'available': has_yoy, 'reason': '' if has_yoy else '缺少去年同期数据，同比不可计算'},
         {'capability': 'budget_comparison', 'available': has_budget, 'reason': '' if has_budget else '缺少预算口径行，预算差异不可计算'},
@@ -450,6 +494,7 @@ def publish_business(record: dict[str, Any], mapping: dict[str, str], options: d
                'quantities': [f for f in facts if 'quantity' in f],
                'optional': []}
     enterprise_dir = IMPORTS_ROOT / 'enterprises' / enterprise_id
+    existed_before = enterprise_dir.exists()  # 重复发布同企业时不得删除既有有效目录
     enterprise_dir.mkdir(parents=True, exist_ok=True)
     (enterprise_dir / 'facts.json').write_text(json.dumps(dataset, ensure_ascii=False), encoding='utf-8')
     (enterprise_dir / 'knowledge.json').write_text('[]', encoding='utf-8')
@@ -461,7 +506,13 @@ def publish_business(record: dict[str, Any], mapping: dict[str, str], options: d
               'responsibilities': {}, 'source_mode': 'imported_cost'}
     config_path = enterprise_dir / 'enterprise.json'
     config_path.write_text(json.dumps(config, ensure_ascii=False), encoding='utf-8')
-    register_enterprise(pack_id, str(config_path))
+    try:
+        register_enterprise(pack_id, str(config_path))
+    except Exception:
+        # 注册失败不留孤儿目录（审计 AUD-DATA-02）：仅在本次新建时回滚
+        if not existed_before:
+            shutil.rmtree(enterprise_dir, ignore_errors=True)
+        raise
     return {'enterprise_id': enterprise_id, 'context_id': f'{pack_id}:{enterprise_id}',
             'dataset_facts': len(dataset['costs']) + len(dataset['quantities']),
             'published_at': _now()}
@@ -718,6 +769,7 @@ def publish_business_batch(entries: list[tuple[dict[str, Any], dict[str, str], d
                'quantities': [f for f in facts if 'quantity' in f],
                'optional': []}
     enterprise_dir = IMPORTS_ROOT / 'enterprises' / enterprise_id
+    existed_before = enterprise_dir.exists()  # 重复发布同企业时不得删除既有有效目录
     enterprise_dir.mkdir(parents=True, exist_ok=True)
     (enterprise_dir / 'facts.json').write_text(json.dumps(dataset, ensure_ascii=False), encoding='utf-8')
     (enterprise_dir / 'knowledge.json').write_text('[]', encoding='utf-8')
@@ -729,7 +781,13 @@ def publish_business_batch(entries: list[tuple[dict[str, Any], dict[str, str], d
               'responsibilities': {}, 'source_mode': 'imported_cost'}
     config_path = enterprise_dir / 'enterprise.json'
     config_path.write_text(json.dumps(config, ensure_ascii=False), encoding='utf-8')
-    register_enterprise(pack_id, str(config_path))
+    try:
+        register_enterprise(pack_id, str(config_path))
+    except Exception:
+        # 注册失败不留孤儿目录（审计 AUD-DATA-02）：仅在本次新建时回滚
+        if not existed_before:
+            shutil.rmtree(enterprise_dir, ignore_errors=True)
+        raise
     return {'enterprise_id': enterprise_id, 'context_id': f'{pack_id}:{enterprise_id}',
             'dataset_facts': len(dataset['costs']) + len(dataset['quantities']),
             'factories': sorted(factories), 'products': sorted(products), 'periods': sorted(periods),

@@ -1,0 +1,263 @@
+{
+ "generated_at": "2026-09-23",
+ "queries": 10,
+ "baseline": {
+  "graph_enabled": false,
+  "hits": 10,
+  "total": 10,
+  "hit_rate": 1.0,
+  "mrr": 0.883,
+  "rows": [
+   {
+    "query": "金银花 用量 配比",
+    "product": "银黄口服液",
+    "golden": "产品配方文档_银黄口服液",
+    "hit": true,
+    "first_rank": 1,
+    "top_sources": [
+     "产品配方文档_银黄口服液.pdf",
+     "产品配方文档_银黄口服液.pdf",
+     "产品配方文档_银黄口服液.pdf"
+    ]
+   },
+   {
+    "query": "黄芩 提取 工艺参数",
+    "product": "银黄口服液",
+    "golden": "生产工艺文档_中药一厂",
+    "hit": true,
+    "first_rank": 1,
+    "top_sources": [
+     "生产工艺文档_中药一厂.pdf",
+     "产品配方文档_银黄口服液.pdf",
+     "生产工艺文档_中药一厂.pdf"
+    ]
+   },
+   {
+    "query": "银黄口服液 处方组成",
+    "product": "银黄口服液",
+    "golden": "产品配方文档_银黄口服液",
+    "hit": true,
+    "first_rank": 1,
+    "top_sources": [
+     "产品配方文档_银黄口服液.pdf",
+     "产品配方文档_银黄口服液.pdf",
+     "生产工艺文档_中药一厂.pdf"
+    ]
+   },
+   {
+    "query": "板蓝根 制粒 干燥",
+    "product": "板蓝根颗粒",
+    "golden": "生产工艺文档_中药一厂",
+    "hit": true,
+    "first_rank": 2,
+    "top_sources": [
+     "产品配方文档_板蓝根颗粒.pdf",
+     "生产工艺文档_中药一厂.pdf",
+     "产品配方文档_板蓝根颗粒.pdf"
+    ]
+   },
+   {
+    "query": "板蓝根颗粒 处方",
+    "product": "板蓝根颗粒",
+    "golden": "产品配方文档_板蓝根颗粒",
+    "hit": true,
+    "first_rank": 1,
+    "top_sources": [
+     "产品配方文档_板蓝根颗粒.pdf",
+     "产品配方文档_板蓝根颗粒.pdf",
+     "行业成本基准_行业知识_2026.txt"
+    ]
+   },
+   {
+    "query": "山茱萸 用量",
+    "product": "六味地黄胶囊",
+    "golden": "产品配方文档_六味地黄胶囊",
+    "hit": true,
+    "first_rank": 1,
+    "top_sources": [
+     "产品配方文档_六味地黄胶囊.pdf",
+     "产品配方文档_六味地黄胶囊.pdf",
+     "产品配方文档_六味地黄胶囊.pdf"
+    ]
+   },
+   {
+    "query": "六味地黄胶囊 工序",
+    "product": "六味地黄胶囊",
+    "golden": "生产工艺文档_中药一厂",
+    "hit": true,
+    "first_rank": 1,
+    "top_sources": [
+     "生产工艺文档_中药一厂.pdf",
+     "产品配方文档_六味地黄胶囊.pdf",
+     "行业成本基准_行业知识_2026.txt"
+    ]
+   },
+   {
+    "query": "灌装 轧盖 工序",
+    "product": "银黄口服液",
+    "golden": "生产工艺文档_中药一厂",
+    "hit": true,
+    "first_rank": 1,
+    "top_sources": [
+     "生产工艺文档_中药一厂.pdf",
+     "药品生产质量管理规范GMP.pdf",
+     "生产工艺文档_中药一厂.pdf"
+    ]
+   },
+   {
+    "query": "胶囊填充 填充机",
+    "product": "六味地黄胶囊",
+    "golden": "车间设备清单_中药一厂",
+    "hit": true,
+    "first_rank": 3,
+    "top_sources": [
+     "生产工艺文档_中药一厂.pdf",
+     "生产工艺文档_中药一厂.pdf",
+     "车间设备清单_中药一厂.pdf"
+    ]
+   },
+   {
+    "query": "GMP 偏差处理",
+    "product": null,
+    "golden": "GMP法规核心摘要_2010修订版",
+    "hit": true,
+    "first_rank": 1,
+    "top_sources": [
+     "GMP法规核心摘要_2010修订版.pdf",
+     "GMP法规核心摘要_2010修订版.pdf",
+     "药品生产质量管理规范GMP.pdf"
+    ]
+   }
+  ]
+ },
+ "enhanced": {
+  "graph_enabled": true,
+  "hits": 10,
+  "total": 10,
+  "hit_rate": 1.0,
+  "mrr": 0.883,
+  "rows": [
+   {
+    "query": "金银花 用量 配比",
+    "product": "银黄口服液",
+    "golden": "产品配方文档_银黄口服液",
+    "hit": true,
+    "first_rank": 1,
+    "top_sources": [
+     "产品配方文档_银黄口服液.pdf",
+     "产品配方文档_银黄口服液.pdf",
+     "产品配方文档_银黄口服液.pdf"
+    ]
+   },
+   {
+    "query": "黄芩 提取 工艺参数",
+    "product": "银黄口服液",
+    "golden": "生产工艺文档_中药一厂",
+    "hit": true,
+    "first_rank": 1,
+    "top_sources": [
+     "生产工艺文档_中药一厂.pdf",
+     "产品配方文档_银黄口服液.pdf",
+     "生产工艺文档_中药一厂.pdf"
+    ]
+   },
+   {
+    "query": "银黄口服液 处方组成",
+    "product": "银黄口服液",
+    "golden": "产品配方文档_银黄口服液",
+    "hit": true,
+    "first_rank": 1,
+    "top_sources": [
+     "产品配方文档_银黄口服液.pdf",
+     "产品配方文档_银黄口服液.pdf",
+     "生产工艺文档_中药一厂.pdf"
+    ]
+   },
+   {
+    "query": "板蓝根 制粒 干燥",
+    "product": "板蓝根颗粒",
+    "golden": "生产工艺文档_中药一厂",
+    "hit": true,
+    "first_rank": 2,
+    "top_sources": [
+     "产品配方文档_板蓝根颗粒.pdf",
+     "生产工艺文档_中药一厂.pdf",
+     "产品配方文档_板蓝根颗粒.pdf"
+    ]
+   },
+   {
+    "query": "板蓝根颗粒 处方",
+    "product": "板蓝根颗粒",
+    "golden": "产品配方文档_板蓝根颗粒",
+    "hit": true,
+    "first_rank": 1,
+    "top_sources": [
+     "产品配方文档_板蓝根颗粒.pdf",
+     "产品配方文档_板蓝根颗粒.pdf",
+     "行业成本基准_行业知识_2026.txt"
+    ]
+   },
+   {
+    "query": "山茱萸 用量",
+    "product": "六味地黄胶囊",
+    "golden": "产品配方文档_六味地黄胶囊",
+    "hit": true,
+    "first_rank": 1,
+    "top_sources": [
+     "产品配方文档_六味地黄胶囊.pdf",
+     "产品配方文档_六味地黄胶囊.pdf",
+     "产品配方文档_六味地黄胶囊.pdf"
+    ]
+   },
+   {
+    "query": "六味地黄胶囊 工序",
+    "product": "六味地黄胶囊",
+    "golden": "生产工艺文档_中药一厂",
+    "hit": true,
+    "first_rank": 1,
+    "top_sources": [
+     "生产工艺文档_中药一厂.pdf",
+     "产品配方文档_六味地黄胶囊.pdf",
+     "行业成本基准_行业知识_2026.txt"
+    ]
+   },
+   {
+    "query": "灌装 轧盖 工序",
+    "product": "银黄口服液",
+    "golden": "生产工艺文档_中药一厂",
+    "hit": true,
+    "first_rank": 1,
+    "top_sources": [
+     "生产工艺文档_中药一厂.pdf",
+     "药品生产质量管理规范GMP.pdf",
+     "生产工艺文档_中药一厂.pdf"
+    ]
+   },
+   {
+    "query": "胶囊填充 填充机",
+    "product": "六味地黄胶囊",
+    "golden": "车间设备清单_中药一厂",
+    "hit": true,
+    "first_rank": 3,
+    "top_sources": [
+     "生产工艺文档_中药一厂.pdf",
+     "生产工艺文档_中药一厂.pdf",
+     "车间设备清单_中药一厂.pdf"
+    ]
+   },
+   {
+    "query": "GMP 偏差处理",
+    "product": null,
+    "golden": "GMP法规核心摘要_2010修订版",
+    "hit": true,
+    "first_rank": 1,
+    "top_sources": [
+     "GMP法规核心摘要_2010修订版.pdf",
+     "GMP法规核心摘要_2010修订版.pdf",
+     "药品生产质量管理规范GMP.pdf"
+    ]
+   }
+  ]
+ },
+ "conclusion": "图谱 BM25 扩展在本查询集上：命中 10→10，MRR 0.883→0.883，无正增益。查询集仅 10 条、golden 为单目标文档，结果不能外推为总体收益；该对照用于把 gain_status=NOT_ESTABLISHED 更新为\"已做小样本对照\"。"
+}

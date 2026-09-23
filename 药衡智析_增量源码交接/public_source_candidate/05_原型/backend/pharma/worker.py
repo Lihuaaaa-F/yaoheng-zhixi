@@ -12,7 +12,7 @@ def process_job(store,job):
     from .reports import render_docx,convert_pdf,assess_report,working_template
     id=job['id'];result=job['result'];payload=job['input']
     try:
-        store.update(id,'VALIDATING',result)
+        store.update(id,'VALIDATING',result,progress=5,detail='校验输入版本与任务合同')
         if job['kind']=='import':
             from .ingestion import ingest
             result['manifest']=ingest();store.update(id,'SUCCEEDED',result);return
@@ -48,9 +48,9 @@ def process_job(store,job):
             raise ValueError('TEMPLATE_VERSION_CHANGED_RESUBMIT')
         # resolve_context above binds source knowledge; retrieval records its
         # separate index/embedding/retriever version in the evidence bundle.
-        store.update(id,'COMPUTING',result)
+        store.update(id,'COMPUTING',result,progress=15,detail='读取固定版本分析快照')
         if 'snapshot' not in result:result['snapshot']=store.get_snapshot(payload['snapshot_id'])
-        snapshot=result['snapshot'];snapshot['template_version']=payload.get('versions',{}).get('template','UNKNOWN');store.update(id,'RETRIEVING',result)
+        snapshot=result['snapshot'];snapshot['template_version']=payload.get('versions',{}).get('template','UNKNOWN');store.update(id,'RETRIEVING',result,progress=30,detail='检索知识证据（源未变化时秒级返回）')
         if 'evidence' not in result:
             # 知识源幂等校验（2026-09-21 修复）：build() 内部按源文件指纹判断，
             # 源未变化时秒级返回；补充知识目录增删改后报告链路自动纳入新版本，
@@ -58,7 +58,7 @@ def process_job(store,job):
             Knowledge().build()
             from .context_services import retrieve
             result['evidence']=retrieve(snapshot,snapshot['product']+' 工序 批次 成本 维修 单耗 核查')
-        store.update(id,'GENERATING',result)
+        store.update(id,'GENERATING',result,progress=45,detail='模型生成解释（首次约 1-2 分钟；失败自动降级规则解释）')
         if 'benchmark' not in result:
             if synthetic:
                 from .industry import catalog as scoped_catalog,benchmark_reference
@@ -90,16 +90,17 @@ def process_job(store,job):
             except Exception as exc:  # noqa: BLE001
                 snapshot['attribution']={'status':'UNAVAILABLE','reason':type(exc).__name__+': '+str(exc)[:120]}
         if 'narrative' not in result:result['narrative']=generate(snapshot,result['evidence'])
-        store.update(id,'RENDERING_DOCX',result)
+        store.update(id,'RENDERING_DOCX',result,progress=70,detail='渲染 Word 报告（模板绑定与图表）')
         folder=ARTIFACTS/id;folder.mkdir(parents=True,exist_ok=True)
         output=folder/'report.docx'
         if 'benchmark' not in result:
             if ingest()['snapshot_id']!=snapshot.get('data_version'):raise ValueError('DATA_VERSION_CHANGED_RESUBMIT')
-            result['benchmark']=benchmark(snapshot['product'],snapshot['month'],analysis_type=snapshot['analysis_type'])
+            # factory 传入保证缺省方向=本单位−对标厂（与 benchmark_analysis 同向）
+            result['benchmark']=benchmark(snapshot['product'],snapshot['month'],analysis_type=snapshot['analysis_type'],factory=snapshot['factory'])
         if 'docx' not in result:
             docx=render_docx(snapshot,result['narrative'],result['evidence'],output,result['benchmark'])
             result['docx']=store.artifact(id,docx,'docx')
-        store.update(id,'CONVERTING_PDF',result)
+        store.update(id,'CONVERTING_PDF',result,progress=85,detail='转换 PDF（LibreOffice；首次转换较慢）')
         if 'pdf' not in result:
             pdf=convert_pdf(output)
             result['pdf']=store.artifact(id,pdf,'pdf') if pdf['status']=='PASS' else pdf
@@ -107,7 +108,7 @@ def process_job(store,job):
         result['docx']=store.artifact(id,{**result['docx'],'path':str(output),'sha256':hashlib.sha256(output.read_bytes()).hexdigest()},'docx')
         audit=folder/'machine_audit.json'
         if audit.exists():result['audit']=store.artifact(id,{'status':'PASS','scope':'machine_audit','path':str(audit),'sha256':hashlib.sha256(audit.read_bytes()).hexdigest()},'json')
-        store.update(id,'VERIFYING',result)
+        store.update(id,'VERIFYING',result,progress=95,detail='逐项验收：文件/计算/证据/任务可执行')
         result['acceptance']=assess_report(result)
         result['execution_status']='COMPLETED'
         result['generation_mode']=result['narrative'].get('generation_mode','rules')

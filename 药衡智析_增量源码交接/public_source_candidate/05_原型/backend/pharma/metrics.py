@@ -320,14 +320,40 @@ def benchmark_partner(factory=None, product=None):
         candidates=by_data
     return candidates[0] if candidates else None
 
-def _benchmark_factories(left, right):
-    factories=source_contract()['factories']
-    if len(factories)<2 and (left is None or right is None):raise ValueError('TWO_FACTORIES_REQUIRED')
-    return left or factories[1],right or factories[0]
+def _benchmark_factories(left, right, factory=None, product=None):
+    """缺省方向与报告路径一致：以 benchmark_partner 选出的对标厂为基准（右厂/分母）。
+
+    2026-09-23 修复（审计 AUD-BENCH-02）：此前缺省 left/right 取 factories[1]/[0]，
+    与报告/worker 路径显式传入的"本单位−对标厂，以对标厂为分母"方向相反，
+    直接调用 benchmark() 时差异额符号易被误读。现在缺省时：
+    - 两厂都未给：base=factory（或目录首厂），partner=benchmark_partner(base)；
+    - 只给 left：right=benchmark_partner(left)；
+    - 只给 right：left=benchmark_partner(right)。
+    partner 为 None（无第二工厂）时显式拒绝。
+    """
+    factories = source_contract()['factories']
+    if len(factories) < 2 and (left is None or right is None):
+        raise ValueError('TWO_FACTORIES_REQUIRED')
+    if left is not None and right is not None:
+        return left, right
+    if right is None:
+        partner = benchmark_partner(left or factory or factories[0], product)
+        if partner is None:
+            raise ValueError('TWO_FACTORIES_REQUIRED')
+        return left or (factory or factories[0]), partner
+    partner = benchmark_partner(right, product)
+    if partner is None:
+        raise ValueError('TWO_FACTORIES_REQUIRED')
+    return partner, right
 
 
-def benchmark(product, month, left=None, right=None, analysis_type='monthly'):
-    left,right=_benchmark_factories(left,right)
+def benchmark(product, month, left=None, right=None, analysis_type='monthly', factory=None):
+    """跨厂对标：方向为 left−right，以 right 为分母。
+
+    缺省（left/right 未传）时按"factory（本单位）− benchmark_partner（对标厂）"
+    配对，与报告/worker 路径同向；见 _benchmark_factories。
+    """
+    left,right=_benchmark_factories(left,right,factory,product)
     a,b=analyze(left,product,month,analysis_type),analyze(right,product,month,analysis_type)
     summary=[]
     for key,name,unit in [('unit_cost','单位成本','元/盒'),('total_cost','总成本','元'),('quantity','产量','盒')]:

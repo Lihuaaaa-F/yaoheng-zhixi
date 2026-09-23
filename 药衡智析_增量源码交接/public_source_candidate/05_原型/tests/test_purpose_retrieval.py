@@ -122,6 +122,7 @@ def test_fixed_graph_toggle_comparison_uses_same_scope_and_no_model(tmp_path,mon
             result=services.retrieve(snapshot,query,mode='bm25',graph_enabled=enabled)
             counts[enabled]+=bool(result['evidence'])
             assert all(row['products']==['SYNTH-P'] for row in result['evidence'])
-            assert result['graph_expansion']['gain_status']=='NOT_ESTABLISHED'
+            # 2026-09-23：增益状态在完成小样本对照后如实更新（docs/validation/graph_gain_20260923.json）
+            assert result['graph_expansion']['gain_status']=='EVALUATED_SMALL_SAMPLE_NO_GAIN'
     # 只锁定固定样本的结果，不用这三个开发期问题声称泛化检索增益。
     assert counts=={False:2,True:3}

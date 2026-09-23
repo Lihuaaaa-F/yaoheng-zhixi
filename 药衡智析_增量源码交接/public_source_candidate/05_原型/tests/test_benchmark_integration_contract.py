@@ -16,7 +16,9 @@ def test_competition_benchmark_uses_bound_retrieval(tmp_path, monkeypatch):
     monkeypatch.setattr(knowledge,'Knowledge',lambda *a,**k:SimpleNamespace(search=forbidden))
     monkeypatch.setattr(narrative,'generate',lambda *a,**k:{'findings':[]})
     monkeypatch.setattr(api,'store',JobStore(tmp_path/'db'))
-    api.get_benchmark('Synthetic','2031-06','Synthetic A','Synthetic B',context_id='pharmaceutical:competition')
+    # explain='sync'：本测试断言检索范围绑定合同（2026-09-23 起默认 async，
+    # async 额外入队报告任务与此断言无关；默认路径行为见 test_audit_fixes_20260923）。
+    api.get_benchmark('Synthetic','2031-06','Synthetic A','Synthetic B',context_id='pharmaceutical:competition',explain='sync')
     assert seen==[context]
 
 def test_reference_report_worker_passes_cross_metrics_to_generation(tmp_path, monkeypatch):

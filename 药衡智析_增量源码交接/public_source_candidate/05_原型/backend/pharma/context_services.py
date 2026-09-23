@@ -90,7 +90,10 @@ def retrieve(snapshot, query, *, mode='hybrid', limit=8, graph_enabled=None):
             expansion={'status':'DEGRADED','terms':[],'reason':type(exc).__name__}
     effective=query if not expansion.get('terms') else query+' '+' '.join(expansion['terms'])
     result=knowledge.search(query,**scope,keyword_query=effective)
-    expansion.update(experimental=True,scope='bm25_only',gain_status='NOT_ESTABLISHED')
+    # 增益状态：2026-09-23 小样本对照（scripts/eval_graph_gain.py，10 查询 Top-5+MRR）
+    # 实测本查询集无正增益（基线已 10/10 命中）——如实标注，不宣称检索收益。
+    expansion.update(experimental=True,scope='bm25_only',gain_status='EVALUATED_SMALL_SAMPLE_NO_GAIN',
+                     gain_evidence='docs/validation/graph_gain_20260923.json')
     result['graph_expansion']=expansion
     result['retrieval_policy_version']=_policy_version(policy,graph_enabled)
     diagnostic={'query_budget':1+(policy.max_supplemental_queries if policy else 0),'queries_executed':1,

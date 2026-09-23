@@ -24,6 +24,10 @@ RESIDUAL_SCALE = 1.0           # ±一步残差均方根；未经覆盖率验证
 MIN_POINTS = 3                  # 少于 3 个有效月度点无法区分水平与斜率
 MAX_HORIZON = 6                 # 外推步数上限，防止把短线趋势外推太远
 CAVEAT = '预测基于历史成本趋势的统计外推，仅供管理参考，不构成预算承诺；实际成本受采购、工艺与产量影响。'
+# 2026-09-23 实测（scripts/eval_forecast_coverage.py，题包 3产品×5序列×3滚动原点=45 检验点）：
+# ±1σ 区间滚动留出覆盖率 88.9%（单位成本 9/9，总成本 5/9）。小样本实测，
+# 不能推断总体覆盖率；RESIDUAL_SCALE 维持 1.0，不在 45 点上调参。
+COVERAGE_NOTE = '波动范围覆盖率为题包小样本滚动留出实测（88.9%，45 检验点；详见 docs/validation/forecast_coverage_20260923.json），不能推断总体覆盖率'
 
 
 def _next_month(month, step=1):
@@ -130,13 +134,14 @@ def forecast_series(series, horizon=3):
                'baseline_mae': round(holdout_baseline_mae, 4) if holdout_baseline_mae is not None else None}
     if holdout_origins:
         evaluation_notice = (f'滚动原点留出验证（{holdout_origins} 个原点，留出一步MAE：Holt {holdout["mae"]}，'
-                             f'上期值基线 {holdout["baseline_mae"]}）；波动范围仍由样本内残差估计，未验证覆盖率。')
+                             f'上期值基线 {holdout["baseline_mae"]}）；波动范围按样本内残差估计，'
+                             f'{COVERAGE_NOTE}。')
     else:
-        evaluation_notice = '历史仅够初始化，无独立留出原点；仅报告样本内一步误差，波动范围未验证覆盖率。'
+        evaluation_notice = '历史仅够初始化，无独立留出原点；仅报告样本内一步误差，波动范围为实验性估计。'
     return {'status': 'PASS', 'forecast_version': FORECAST_VERSION,
             'method': 'Holt双参数指数平滑(α=0.6,β=0.3，OLS初始化)',
             'observations': len(points), 'history_months': [months[0], months[-1]],
-            'residual_std': round(sigma, 4), 'interval': '实验性波动范围（±样本内一步残差均方根；未验证覆盖率）',
+            'residual_std': round(sigma, 4), 'interval': '实验性波动范围（±样本内一步残差均方根；' + COVERAGE_NOTE + '）',
             'one_step_mae': round(sum(abs(r) for r in residuals) / len(residuals), 4) if residuals else 0.0,
             'holdout': holdout,
             'baseline': {'method': 'last_observation',

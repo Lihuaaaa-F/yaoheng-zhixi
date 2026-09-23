@@ -34,3 +34,18 @@ jobs:
           PYTHONPATH=backend .venv/bin/python -m pytest -q tests
           npm run build --prefix frontend
           node --test frontend/record_demo_20260918.test.mjs
+  # 镜像可构建性守门（2026-09-23 审计 AUD-DEP-03）：与 deploy/docker-compose.yml
+  # 同一构建上下文/Dockerfile，只构建不 push——Dockerfile 或依赖漂移导致镜像
+  # 无法构建时在此暴露，而不是在比赛机首次 compose up 才发现。
+  docker-image-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: 药衡智析_增量源码交接/public_source_candidate
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Build application image (no push)
+        run: docker build -f 05_原型/deploy/Dockerfile --tag yaoheng-app:ci .

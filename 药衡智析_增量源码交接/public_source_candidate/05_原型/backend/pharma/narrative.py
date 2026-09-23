@@ -807,7 +807,8 @@ class ModelGateway:
         used_endpoint = _safe_endpoint(self.base_url, self.key)
         try:
             if self.provider == 'anthropic':
-                body = {'model':self.model,'max_tokens':2500,'system':system,'messages':[{'role':'user','content':user}]}
+                # 与 openai 分支同源读环境变量（此前硬编码 2500 会截断长解释）
+                body = {'model':self.model,'max_tokens':int(os.getenv('PHARMA_MODEL_MAX_TOKENS','8192')),'system':system,'messages':[{'role':'user','content':user}]}
             elif self.provider == 'openai':
                 body = {'model':self.model,'max_tokens':int(os.getenv('PHARMA_MODEL_MAX_TOKENS','8192')),'temperature':0,'response_format':{'type':'json_object'},'messages':[{'role':'system','content':system},{'role':'user','content':user}]}
                 # 推理强度按厂商映射（单一来源 model_registry）：GLM-5 系列始终思考
@@ -931,9 +932,13 @@ def rule_findings(snapshot,evidence):
     return findings
 
 
-def generate(snapshot,evidence,gateway=None,use_cache=True):
+def _prepare_generation(snapshot, evidence, gateway=None):
+    """生成前置：证据适用性过滤 + 生成版本指纹缓存键。
+
+    generate 与 cached_generation 共用，保证"查缓存"与"写缓存"的键构造
+    永远同源（对标页异步路径据此在无模型调用的情况下命中既有结果）。
+    """
     from .knowledge import Knowledge
-    evidence_status = evidence.get('status') if isinstance(evidence,dict) else None
     knowledge_version = evidence.get('knowledge_version') if isinstance(evidence,dict) else (evidence[0].get('knowledge_version') if evidence else None)
     supplied = evidence.get('evidence',[]) if isinstance(evidence,dict) else evidence
     sources, excluded = [], []
@@ -954,6 +959,28 @@ def generate(snapshot,evidence,gateway=None,use_cache=True):
     gateway = gateway or ModelGateway.for_route('analysis')
     version_inputs = {'snapshot':snapshot,'evidence':sources,'knowledge_version':knowledge_version,'model':gateway.model,'protocol':gateway.provider,'base_url':gateway.base_url,'prompt':PROMPT_VERSION,'template':snapshot.get('template_version','template-unset'),'validator':VALIDATOR_VERSION,'retrieval':{k:evidence.get(k) for k in ('retriever_version','retrieval_policy_version','reranker_version','embedding_version','fusion_weights','mode','analysis_context','status','recall_status','graph_expansion')} if isinstance(evidence,dict) else None,'generation_parameters':{'max_tokens':os.getenv('PHARMA_MODEL_MAX_TOKENS','8192'),'reasoning_effort':os.getenv('PHARMA_MODEL_REASONING_EFFORT','low'),'max_repairs':gateway.max_repairs,'temperature':0}}
     key = hashlib.sha256(json.dumps(version_inputs,ensure_ascii=False,sort_keys=True,default=str).encode()).hexdigest()
+    return sources, excluded, knowledge_version, gateway, key
+
+
+def cached_generation(snapshot, evidence, gateway=None):
+    """只读生成缓存：命中返回完整结果（含 cache_hit 标记），未命中返回 None。
+
+    供对标页等交互路径在"零模型调用"前提下复用既有生成结果；未命中时
+    调用方自行决定同步生成或转入后台任务（2026-09-23 对标页异步化）。
+    """
+    _sources, _excluded, _kv, gateway, key = _prepare_generation(snapshot, evidence, gateway)
+    with sqlite3.connect(gateway.dbpath) as db:
+        row = db.execute('SELECT created_at,result FROM cache WHERE key=?',(key,)).fetchone()
+    if row:
+        return dict(json.loads(row[1]),cache_hit=True,cache_source_time=row[0])
+    return None
+
+
+def generate(snapshot,evidence,gateway=None,use_cache=True,allow_model=True):
+    """有界生成。allow_model=False 时不发起任何模型调用，直接返回规则结果：
+    供交互端点即时响应（对标页），模型解释由后台报告任务异步补全并写缓存。"""
+    evidence_status = evidence.get('status') if isinstance(evidence,dict) else None
+    sources, excluded, knowledge_version, gateway, key = _prepare_generation(snapshot, evidence, gateway)
     if use_cache:
         with sqlite3.connect(gateway.dbpath) as db:
             row = db.execute('SELECT created_at,result FROM cache WHERE key=?',(key,)).fetchone()
@@ -995,7 +1022,9 @@ recommendation可为null；提供时须有suggestion、verification_target、exp
             try: usage[key]=usage.get(key,0)+int(call_usage.get(key,0) or 0)
             except (TypeError,ValueError): pass
         usage['calls']=usage_totals['calls']
-    for attempt in range(gateway.max_repairs+1):
+    # allow_model=False：不发起任何模型调用（对标页异步路径），直接落规则结果；
+    # 后台报告任务随后按同一缓存键生成完整模型解释并入缓存。
+    for attempt in (range(gateway.max_repairs+1) if allow_model else ()):
         try:
             raw,call_usage,identity=gateway.complete(system,user)
             model_responded=True

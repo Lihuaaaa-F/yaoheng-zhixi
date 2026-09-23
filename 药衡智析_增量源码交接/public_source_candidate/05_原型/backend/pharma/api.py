@@ -131,9 +131,17 @@ def dashboard_heatmap(context_id:str|None=None,factory:str|None=None,
 @app.get('/api/analyses/{id}')
 def get_analysis(id:str):return store.get_snapshot(id)
 @app.get('/api/benchmarks')
-def get_benchmark(product:str,month:str,left:str,right:str,analysis_type:Literal['monthly','quarterly','special']='monthly',basis:Literal['unit','total']='unit',context_id:str|None=None):
+def get_benchmark(product:str,month:str,left:str,right:str,analysis_type:Literal['monthly','quarterly','special']='monthly',basis:Literal['unit','total']='unit',context_id:str|None=None,explain:Literal['async','sync']='async'):
+    """跨厂对标。explain 默认 async（2026-09-23 审计 AUD-BENCH-01 修复）：
+
+    - async：数值/检索证据即时返回；解释优先命中既有生成缓存（零模型调用），
+      未命中则返回确定性规则解释 + 后台报告任务 job_id（模型解释异步补全并
+      写缓存，前端进度条轮询，完成后对标章节解释自动更新）。首次冷请求不再
+      阻塞数分钟。
+    - sync：旧行为，请求内同步完整模型生成（冷请求可等待 1-4 分钟）。
+    """
     from .knowledge import Knowledge
-    from .narrative import generate
+    from .narrative import generate, cached_generation
     cid=selected_context(context_id)
     if left==right:raise ValueError('COMPARISON_REQUIRES_TWO_FACTORIES')
     if cid=='pharmaceutical:competition':
@@ -158,7 +166,31 @@ def get_benchmark(product:str,month:str,left:str,right:str,analysis_type:Literal
         seen.add(key);unique.append(e)
     retrieved['evidence']=unique
     result['evidence']=retrieved
-    result['narrative']=generate(snapshot,result['evidence'])
+    if explain=='sync':
+        result['narrative']=generate(snapshot,result['evidence'])
+    else:
+        cached=cached_generation(snapshot,result['evidence'])
+        if cached is not None:
+            result['narrative']=cached
+        else:
+            # 即时确定性解释；模型解释转后台报告任务（幂等：同输入指纹复用既有任务，
+            # 不重复计费）。任务完成后的 narrative 缓存键与本接口快照不同源，因此
+            # 终态任务的结果在此直接复用，前端同时轮询 job 显示进度并自动补全。
+            # 入队失败不阻断对标主响应（数值/证据/确定性解释仍然完整可用）。
+            try:
+                j,_=_enqueue_report(ReportRequest(context_id=cid,factory=left,product=product,month=month,
+                                                  analysis_type=analysis_type,basis=basis))
+            except Exception as exc:
+                result['narrative']=generate(snapshot,result['evidence'],allow_model=False)
+                result['narrative']={**result['narrative'],'model_status':'ENQUEUE_FAILED',
+                                     'enqueue_error':type(exc).__name__+': '+str(exc)[:160]}
+            else:
+                finished=(j.get('result') or {}).get('narrative') if j['status'] in ('SUCCEEDED','DEGRADED') else None
+                if finished:
+                    result['narrative']=finished
+                else:
+                    result['narrative']=generate(snapshot,result['evidence'],allow_model=False)
+                    result['narrative']={**result['narrative'],'model_status':'QUEUED','job_id':j['id']}
     result['hypotheses']=[{**f,'hypothesis':f['rendered_text']} for f in result['narrative']['findings']]
     return result
 def _generation_versions(snapshot,req):
