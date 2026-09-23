@@ -24,7 +24,7 @@ MAP_PATH = _TEMPLATE_DIR / 'placeholder_map.json'
 # 用户安装模板（数据中心“报告模板”解析后安装）：按报告类型存放；
 # 季度/专题未安装时回退月度模板（绑定合同一致，仅期间口径不同）。
 RUNTIME_TEMPLATES = RUNTIME / 'templates'
-RENDERER_VERSION='reader-20260923-caption-v9'
+RENDERER_VERSION='reader-20260924-layout-v10'
 NA = 'N/A（无可用基期或明细）'
 
 
@@ -972,6 +972,7 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
     _number_and_caption(doc,dynamic_tbl_specs)
     _standardize_typography(doc)
     style_reader(doc)
+    _strip_keep_with_next(doc)  # 存盘前摘除 keepNext/keepLines（黑色方框编辑标记）
     audit=output.with_name('machine_audit.json')
     audit.write_text(json.dumps({'snapshot':snapshot,'narrative':narrative,'evidence':evidence,'benchmark':benchmark,'bindings':values},ensure_ascii=False,indent=2))
     temp=output.with_suffix('.tmp.docx');doc.save(temp)
@@ -1497,11 +1498,14 @@ def _beautify_native_tables(doc):
 def _number_and_caption(doc,dynamic_tbl_specs=None):
     """图表规范编号（2026-09-23 用户要求：图表须有"图几-几/表几-几"）。
 
-    仅对程序生成的动态表格加"表几-几"题注（上方，名称来自锚点语义名；
-    动态表以表内 YHU_TBL_i 书签识别——lxml 代理 id() 不稳定不可作键）；
-    模板原生表格（封面信息/总成本概览等）按用户裁定不加题注——它们是
-    赛题模板的固定结构。图题注在图下方（"图4-1 标题"），从旧"图｜副题｜
-    标题"重写并绑定图与图题同页。前置区（目录前）与封面装饰图不编号。"""
+    对正文全部表格加"表几-几"题注（上方）：动态表名称来自锚点语义名
+    （以表内 YHU_TBL_i 书签识别——lxml 代理 id() 不稳定不可作键）；模板
+    原生表命名取所在小节标题（2026-09-24 用户要求：每张表都必须有标题，
+    推翻此前"原生表不加题注"的裁定）。图题注在图下方（"图4-1 标题"），
+    从旧"图｜副题｜标题"重写。前置区（目录前）的文档控制/阅读指南表与
+    封面装饰图不编号。题注/图段的 keep_with_next 仅作排版意图表达，
+    最终被 _strip_keep_with_next 统一清除（用户不接受 Word 黑色小方块
+    编辑标记，见该函数 docstring）。"""
     from docx.oxml.ns import qn as _qn
     from docx.text.paragraph import Paragraph
     from docx.shared import Pt
@@ -1546,7 +1550,9 @@ def _number_and_caption(doc,dynamic_tbl_specs=None):
                     try:spec=dynamic_tbl_specs[int(name[len('YHU_TBL_'):])]
                     except (IndexError,ValueError):spec=''
                     break
-            if spec is None:continue  # 模板原生表不加题注（用户裁定）
+            # 2026-09-24 用户要求：每张表都必须有标题——模板原生表（无
+            # YHU_TBL 书签）不再跳过，命名取所在小节标题；前置区的文档控制/
+            # 阅读指南表仍不编号（chapter 为 None，模板固定结构件）。
             tbl_n[chapter]=tbl_n.get(chapter,0)+1
             label='表'+str(chapter)+'-'+str(tbl_n[chapter])
             cap=doc.add_paragraph()
@@ -1565,7 +1571,12 @@ def _layout_front_pages(doc):
     ② 阅读指南、目录标题强制 page_break_before（阅读指南=第3页开头，
        目录单独成页）；
     ③ 四、重点产品专项分析（即"六味地黄胶囊 专题分析"章）单独新起一页。
-    封面区的空段（标题/版本信息的垂直定位）不动。"""
+    封面区的空段（标题/版本信息的垂直定位）不动。
+    2026-09-24 用户反馈追加：
+    ④ 封面落款三行落在第1页末尾（编制单位后的空段清除 + 版本块下压），
+       文档控制强制新页开头；
+    ⑤ 正文首部的报告标题（与封面标题同文的第二处）另起新页开头，
+       其后的报告编号/核心结论随标题同页（原page_break_before转移到标题）。"""
     from docx.oxml.ns import qn
     def _removable(p):
         # 空段且不含图/书签/域/分页符才可删
@@ -1605,6 +1616,63 @@ def _layout_front_pages(doc):
             para.paragraph_format.page_break_before=True
         elif re.match(r'^四、重点产品专项分析',t):
             para.paragraph_format.page_break_before=True
+    # ④ 封面落款收尾：编制单位之后的空段全删（落款=封面最后一段），文档控制
+    # 强制新页——任何渲染器下"第1页以编制单位结尾、第2页以文档控制开头"。
+    docctrl=next((p for p in doc.paragraphs if p.text.strip()=='文档控制'),None)
+    if docctrl is not None:
+        from docx.text.paragraph import Paragraph as _P2
+        prev=docctrl._p.getprevious()
+        while prev is not None and prev.tag==qn('w:p'):
+            cand=_P2(prev,docctrl._parent)
+            if not _removable(cand):break
+            nxt=prev.getprevious();prev.getparent().remove(prev);prev=nxt
+        docctrl.paragraph_format.page_break_before=True
+    # 落款块下压至页尾：版本块前加精确段前距（LibreOffice 实测校准 40pt，
+    # 落款底缘约在页高 86% 处；留 ≥40pt 余量防 Word 行高差异把落款挤出第1页）。
+    ver=next((p for p in doc.paragraphs if p.text.strip().startswith('文件版本') and len(p.text.strip())<40),None)
+    if ver is not None:
+        from docx.shared import Pt as _Pt
+        ver.paragraph_format.space_before=_Pt(40)
+    # ⑤ 正文标题另起新页：与封面标题同文的第二处段落强制分页；紧随其后的
+    # 报告编号段（add_reader_summary 加的 page_break_before）取消，标题+
+    # 报告编号+核心结论同页，标题位于页首。
+    cover_title=next((p.text.strip() for p in doc.paragraphs if p.text.strip()),None)
+    if cover_title:
+        from docx.text.paragraph import Paragraph as _P3
+        seen=False
+        for para in doc.paragraphs:
+            t=para.text.strip()
+            if not t or para._p.xpath('.//w:hyperlink|.//w:fldChar'):continue
+            if t!=cover_title:continue
+            if not seen:seen=True;continue
+            para.paragraph_format.page_break_before=True
+            nxt=para._p.getnext()
+            while nxt is not None and nxt.tag==qn('w:p'):
+                cand=_P3(nxt,para._parent)
+                if cand.text.strip():
+                    cand.paragraph_format.page_break_before=None
+                    break
+                nxt=nxt.getnext()
+            break
+
+def _strip_keep_with_next(doc):
+    """存盘前清除全部 keepNext/keepLines（2026-09-24 用户反馈"黑色方框"）：
+
+    Word 会对带"与下段同页"(keepNext)或"段中不分页"(keepLines)的段落在
+    左侧页边显示黑色小方块编辑标记（■），用户视为多余的项目符号——题注、
+    图段、阅读指南、目录标题等均中招。用户要求全部去除（含标题前），故在
+    渲染管线最后统一摘除段落级与样式级标记；此前代码里各处 keep_with_next
+    设定仅保留排版意图、以本函数为准。代价：题注与表格/图与图题可能在
+    分页处分离，由分页参数（_layout_front_pages）兜底。"""
+    from docx.oxml.ns import qn
+    for ppr in doc.element.body.iter(qn('w:pPr')):
+        for tag in ('w:keepNext','w:keepLines'):
+            for x in list(ppr.findall(qn(tag))):ppr.remove(x)
+    for st in doc.styles.element.findall(qn('w:style')):
+        ppr=st.find(qn('w:pPr'))
+        if ppr is None:continue
+        for tag in ('w:keepNext','w:keepLines'):
+            for x in list(ppr.findall(qn(tag))):ppr.remove(x)
 
 def _key_conclusion_lines(snapshot,narrative,benchmark=None):
     """核心结论结构化条目（2026-09-23 用户反馈"核心结论太少太简陋"）：
@@ -1646,8 +1714,10 @@ def _key_conclusion_lines(snapshot,narrative,benchmark=None):
                 lines.append('对标：对比 '+str(benchmark.get('right') or '对标厂')+'，单位成本差异 '+number(r.get('delta'))+' 元/盒（'+('本厂较高' if delta>0 else '对标厂较高')+'），差异结构与拆解见第五章。')
     sugg=[f for f in narrative.get('findings',[]) if (f.get('suggestion') or '').strip()]
     if sugg:
-        first=re.sub(r'\s+',' ',sugg[0].get('suggestion',''))[:60]
-        lines.append('行动：共 '+str(len(sugg))+' 条整改/核查建议（第六章）；优先项——'+first+'……')
+        # 2026-09-24 用户反馈：核心结论不应出现"……"——不再 60 字硬截加省略号，
+        # 改取建议首句完整表述（到第一个句号/分号为止），缺句号时补句号。
+        sent=re.split(r'(?<=[。；])',re.sub(r'\s+',' ',sugg[0].get('suggestion','')).strip())[0].strip().rstrip('，、；')
+        lines.append('行动：共 '+str(len(sugg))+' 条整改/核查建议（第六章）；优先项——'+sent+'。')
     return lines
 
 def _ensure_outline_styles(doc):
