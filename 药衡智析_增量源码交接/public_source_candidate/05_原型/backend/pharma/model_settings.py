@@ -152,8 +152,13 @@ def save_settings(payload: dict[str, Any]) -> dict[str, Any]:
                 pass
             entry['key_file'] = str(key_path)
         if entry.get('key_file'):
-            if not Path(entry['key_file']).is_file():
+            key_path = Path(entry['key_file'])
+            if not key_path.is_file():
                 raise ValueError('KEY_FILE_NOT_FOUND:' + route)
+            # 2026-09-24（审计 AUD-MDL-01）：密钥文件应是短文本；过大文件极可能是
+            # 误选（其内容将作为 Bearer 发往所配端点）——此处拒绝并给出明确提示。
+            if key_path.stat().st_size > 10 * 1024:
+                raise ValueError('KEY_FILE_TOO_LARGE:' + route + '（密钥文件应小于 10KB；请确认选择的是密钥文件本身）')
         if entry:
             cleaned['connections'][route] = entry
     SETTINGS_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -222,7 +227,10 @@ def test_connection(route: str = 'analysis', overrides: dict[str, Any] | None = 
     from .narrative import ModelGateway
     route = canonical_route(route)
     overrides = _sanitize_overrides(overrides) or None
-    gateway = ModelGateway.for_route(route, **(overrides or {})) if overrides else ModelGateway.for_route(route)
+    # 2026-09-24 修复（审计 AUD-MDL-07）：vendor 是保存字段而非构造器形参，
+    # 混入 overrides 会让真实调用 500；此处只把构造器支持的字段传下去。
+    constructable = {k: v for k, v in (overrides or {}).items() if k != 'vendor'}
+    gateway = ModelGateway.for_route(route, **constructable) if constructable else ModelGateway.for_route(route)
     if not gateway.key:
         return {'status': 'NO_KEY', 'reason': '未配置密钥：请先在设置中填写密钥或配置 PHARMA_MODEL_KEY_FILE'}
     import time as _time

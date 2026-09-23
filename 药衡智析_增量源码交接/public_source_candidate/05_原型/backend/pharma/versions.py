@@ -19,8 +19,12 @@ def soft_items(gateway):
     from .reports import RENDERER_VERSION
     from .narrative import PROMPT_VERSION
     from .attribution import ATTRIBUTION_VERSION
+    # 2026-09-24 修复（审计 AUD-MDL-04）：effort 进指纹——页面改推理强度后
+    # 同指纹任务不再命中旧档位的生成缓存。stub 网关（测试）可能不带该
+    # 属性——getattr 容错，取与真实默认档一致的 'low'。
     return [('renderer', RENDERER_VERSION), ('model', gateway.model), ('protocol', gateway.provider),
-            ('endpoint', gateway.base_url), ('prompt', PROMPT_VERSION), ('attribution', ATTRIBUTION_VERSION)]
+            ('endpoint', gateway.base_url), ('prompt', PROMPT_VERSION), ('attribution', ATTRIBUTION_VERSION),
+            ('reasoning_effort', getattr(gateway, 'reasoning_effort', 'low'))]
 
 
 def hard_items(snapshot):

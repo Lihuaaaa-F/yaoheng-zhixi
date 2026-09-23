@@ -32,20 +32,22 @@ function Resolve-Docker {
     if ($dockerExe) {
         return @{ Docker = @($dockerExe); Compose = @($dockerExe, 'compose', '-f', $ComposeFile) }
     }
-    # WSL 集成回退：Ubuntu-20.04 内的 docker（与 Docker Desktop 同一引擎）。
+    # WSL 集成回退：发行版内的 docker（与 Docker Desktop 同一引擎）。
     # compose 文件路径需换算为发行版内可见的 /mnt/<盘>/… 形式。
+    # 2026-09-24 修复（审计 AUD-DEP-06）：不再硬编码 Ubuntu-20.04——按序探测
+    # 每个发行版内是否有 docker，适配任意发行版名。
     $distros = @()
     try { $distros = (wsl -l -q 2>$null | ForEach-Object { $_.Trim([char]0) }) | Where-Object { $_ } } catch {}
-    if ($distros -contains 'Ubuntu-20.04') {
-        wsl -d Ubuntu-20.04 -e sh -c 'command -v docker >/dev/null 2>&1' 2>$null
+    foreach ($distro in $distros) {
+        wsl -d $distro -e sh -c 'command -v docker >/dev/null 2>&1' 2>$null
         if ($LASTEXITCODE -eq 0) {
             $wslFile = $ComposeFile -replace '\\', '/'
             if ($wslFile -match '^([A-Za-z]):/(.*)$') { $wslFile = '/mnt/' + $Matches[1].ToLower() + '/' + $Matches[2] }
-            return @{ Docker = @('wsl', '-d', 'Ubuntu-20.04', 'docker')
-                      Compose = @('wsl', '-d', 'Ubuntu-20.04', 'docker', 'compose', '-f', $wslFile) }
+            return @{ Docker = @('wsl', '-d', $distro, 'docker')
+                      Compose = @('wsl', '-d', $distro, 'docker', 'compose', '-f', $wslFile) }
         }
-        throw 'DOCKER_WSL_INTEGRATION_OFF'
     }
+    if ($distros.Count -gt 0) { throw 'DOCKER_WSL_INTEGRATION_OFF' }
     throw 'DOCKER_NOT_INSTALLED'
 }
 

@@ -30,7 +30,12 @@ def _soffice_installed_independently() -> bool:
 def test_pdf_export_capability_matches_real_converter():
     installed = _soffice_installed_independently()
     cat = client.get('/api/industry/catalog').json()
-    pdf = [c for c in cat['contexts'][0]['capabilities'] if c['id'] == 'pdf_export'][0]
+    # 空数据环境（CI 冷缓存）首个上下文可能是赛题上下文（capabilities 为空）
+    # ——取第一个含能力清单的上下文；均无则本测试不适用。
+    with_caps = [c for c in cat['contexts'] if c.get('capabilities')]
+    if not with_caps:
+        import pytest; pytest.skip('当前环境无带能力清单的数据上下文')
+    pdf = [c for c in with_caps[0]['capabilities'] if c['id'] == 'pdf_export'][0]
     assert (pdf['status'] == 'available') == installed, \
         f'soffice 实际安装={installed}，能力预览却报 {pdf["status"]}（{pdf["reason"]}）'
 

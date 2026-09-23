@@ -1,3 +1,8 @@
+/**
+ * ⚠ 已废弃（2026-09-24 审计 AUD-FE-02）：本脚本的选择器基于三模块改版（2026-09-22）之前的
+ * 界面结构，当前 UI 下首步即超时。保留仅作历史演示物料溯源，不再作为回归入口；
+ * 现行可用脚本见 e2e-dashboard.mjs / e2e-knowledge-graph.mjs / record_demo_20260918.mjs。
+ */
 /** Record real localhost screens from public, independently synthetic contexts only. */
 import {chromium} from 'playwright';
 import {mkdir,writeFile} from 'node:fs/promises';

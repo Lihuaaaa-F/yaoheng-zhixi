@@ -1,6 +1,8 @@
+> 版本说明：提示词与校验器版本以代码常量为准（narrative.PROMPT_VERSION / VALIDATOR_VERSION，2026-09-24 同步为 v21 / v10）。
+
 # Prompt 设计与解释合同 / Prompt Design & Explanation Contract
 
-> 版本：Prompt v18（`insufficient-grammar-aligned`），校验器 v9（`claim-contract-v9-cost-document-synonyms`）。v16→v18 迭代：缺证分句语法与程序校验逐字对齐，使 GLM 默认模型七场景解释合同 7/7（v16/v17 两轮实测失败记录保留于 current_run.json prior_runs）。
+> 版本：Prompt v21（`insufficient-grammar-aligned`），校验器 v10（`claim-contract-v10-cost-document-synonyms`）。v16→v21 迭代：缺证分句语法与程序校验逐字对齐，使 GLM 默认模型七场景解释合同 7/7（v16/v17 两轮实测失败记录保留于 current_run.json prior_runs）。
 > 本文档说明大模型在报告链路中的角色边界、系统提示词结构与程序侧校验合同。
 
 ## 1. 设计原则 / Design Principles
@@ -32,7 +34,7 @@
 - **因果纪律**：禁止“已证实/确定导致/必然”等表述；hypothesis 必须含不确定表述。
 - **事件≠净减产**：产量上升期不得把局部事件损失写成月度净减产，除非显式区分。
 - **覆盖强制**：每个 ±10% 告警、每个必备解释章节都必须有模型实质解释（数字复述不算），否则整节 DEGRADED。
-- **同义词合同（v9）**：证据文档名按受限同义词集合匹配（如实调发现的成本类文档具体名称误拒问题），不放松其余严格性。
+- **同义词合同（v10）**：证据文档名按受限同义词集合匹配（如实调发现的成本类文档具体名称误拒问题），不放松其余严格性。
 
 ## 4. 决策路由提示词 / Decision-Route Prompt
 

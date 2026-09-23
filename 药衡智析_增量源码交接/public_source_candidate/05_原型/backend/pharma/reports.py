@@ -273,6 +273,18 @@ def binding_semantics(field,ratio=False):
     if field=='总环比':return 'period_changes.unit_cost.mom.delta','元/盒'
     return 'period_values.'+period+'.'+metric,'盒' if metric=='quantity' else '元' if metric=='total_cost' else '元/盒'
 
+def _is_contribution_total_cell(xml, paragraph_index, window=6):
+    """定位"成本结构"表合计行的贡献度单元格：目标段文本为 100%，且邻近
+    window 个段落内出现"合计"与"贡献度"字样。找不到邻近特征时不替换
+    （宁缺勿错，字面 100% 保留为静态文本）。"""
+    paragraphs = xml.findall('.//w:p', NS)
+    neighbourhood = ''.join(
+        ''.join(t.text or '' for t in paragraphs[j].findall('.//w:t', NS))
+        for j in range(max(0, paragraph_index - window), min(len(paragraphs), paragraph_index + window + 1))
+        if j != paragraph_index)
+    return '合计' in neighbourhood and '贡献度' in neighbourhood
+
+
 def normalize_template(output=TEMPLATE, map_path=MAP_PATH):
     # 跳过 Word 锁文件（~$ 前缀）并按名排序保证选择稳定（2026-09-21：容器内锁文件曾致 BadZipFile）
     original = next(p for p in sorted((PACKAGE / '04_报告模板').glob('*.docx')) if not p.name.startswith('~$'))
@@ -286,7 +298,10 @@ def normalize_template(output=TEMPLATE, map_path=MAP_PATH):
                 for i,p in enumerate(xml.findall('.//w:p',NS)):
                     nodes=p.findall('.//w:t',NS);text=''.join(t.text or '' for t in nodes)
                     rename={}
-                    if info.filename=='word/document.xml' and i==235 and text=='100%':
+                    # 2026-09-24 修复（审计 AUD-REP-06）：题包"成本结构"表合计行
+                    # 贡献度单元格（字面 100%）此前按段号 235 硬编码——换版即静默
+                    # 退化；现按邻近"合计/贡献度"文本特征定位（见辅助函数）。
+                    if info.filename=='word/document.xml' and text.strip()=='100%' and _is_contribution_total_cell(xml,i):
                         nodes[0].text='{{合计贡献度}}%'
                         for n in nodes[1:]:n.text=''
                         text='{{合计贡献度}}%'
@@ -605,7 +620,12 @@ def explanation_presence(path, narrative, scoped=True):
             continue
         checked+=1
         expected=layout_text(finding.get('rendered_text') or finding.get('text',''))
-        candidates=by_section.get(finding.get('section'),[]) if scoped else all_body
+        # 2026-09-24 修复（审计 AUD-REP-01）：模型返回 legacy findings 形状时
+        # section 可能为 summary/actions——不在 3.1/3.2/3.3/5.3 四节索引内，
+        # 此前直接判缺失→整任务 FAILED；现在非四节回退全文匹配（仍要求逐字
+        # 落在正文，不放松存在性校验）。
+        section_key=finding.get('section') if finding.get('section') in by_section else None
+        candidates=(by_section.get(section_key,[]) if scoped and section_key else all_body) if scoped else all_body
         if not expected or not any(expected in text for text in candidates):
             failures.append({'finding':index,'section':finding.get('section'),'reason':'MODEL_EXPLANATION_MISSING_FROM_BODY'})
     return {'explanation_bindings_checked':checked,'explanation_binding_failures':failures}
@@ -1149,6 +1169,9 @@ def convert_pdf(docx_path,timeout=90,converter='libreoffice',_toc_pass=0):
             toc_verified[base]=page
         if _toc_pass<5 and (layout_changed or toc_updated):
             d.save(path)
+            # 2026-09-24 修复（审计 AUD-REP-04）：回填写盘后再过一次出厂兼容闸门
+            # （mc:Ignorable 前缀作用域），防止回填产物绕过 validate_word_compat。
+            validate_word_compat(path)
             return convert_pdf(path,timeout,converter,_toc_pass+1)
         _strip_keep_with_next(d)  # 兜底：多轮修复中任何残存的 keepNext/keepLines 一并摘除
         d.save(path)
@@ -1169,7 +1192,23 @@ def compact_working_template(output=TEMPLATE,map_path=MAP_PATH):
     from docx.oxml import OxmlElement
     from docx.oxml.ns import qn
     d=Document(output);meta=json.loads(Path(map_path).read_text())
-    if meta.get('reader_template_version')=='reader-v5':return
+    if meta.get('reader_template_version')=='reader-v6':return
+    if meta.get('reader_template_version')=='reader-v5':
+        # 2026-09-24 重建（审计 AUD 视觉发现/Flash 判读）：v5 手术曾移除前置区
+        # 尾段的 sectPr，连带丢失定义在该分节里的正文页眉/水印——已被破坏的
+        # 工作模板无法原地修复，从题包原件整体重新规范化。
+        return normalize_template(output,map_path)
+    # 保留正文分节的页眉引用（2026-09-24 修复）：题包原件为 3 节结构，正文
+    # 的水印页眉（"整体解决方案"+textpath 艺术字）定义在前置区尾段 sectPr 的
+    # headerReference 里；移除该分节会使全文退回首节纯图片页眉（页眉/水印
+    # 全部消失）。手术前摘下这些引用，术后挂到 body 级 sectPr 上。
+    import copy as _copymod
+    _body_header_refs=[]
+    for _sec in d.sections:
+        if _sec.header is None or _sec.header.is_linked_to_previous:continue
+        _xml=_sec.header._element.xml.lower()
+        if 'textpath' in _xml or '整体解决方案' in _sec.header._element.xml:
+            _body_header_refs=[_copymod.deepcopy(el) for el in _sec._sectPr.findall(qn('w:headerReference'))]
     body=d.element.body
     # 2026-09-21 四轮：前置章节（解决方案封面、文档控制三表、阅读指南、目录域）
     # 完整保留不裁剪。五轮（用户反馈）：前置区内部解除强制分页与分节（消除
@@ -1218,9 +1257,18 @@ def compact_working_template(output=TEMPLATE,map_path=MAP_PATH):
         if skipped and bound:yoy_note+='；跳过：'+'；'.join(skipped)
     # 2026-09-21 真人评审四轮（B 项）：模板原生分页（封面/文档控制/阅读指南/目录
     # 各归各页）完整保留，不再剥离 w:br page 与 pageBreakBefore。
+    # 2026-09-24：正文水印节的页眉引用挂到 body 级 sectPr（手术已移除原分节）。
+    # r:id 指向的 header part 仍在包内未删；引用置于 sectPr 首部（OOXML 要求
+    # headerReference 位于 sectPr 子元素最前）。
+    if _body_header_refs:
+        final_sectPr=d.sections[-1]._sectPr
+        for _existing in final_sectPr.findall(qn('w:headerReference')):
+            final_sectPr.remove(_existing)
+        for _ref in reversed(_body_header_refs):
+            final_sectPr.insert(0,_ref)
     style_reader(d)
     d.save(output)
-    meta['reader_template_version']='reader-v5'
+    meta['reader_template_version']='reader-v6'
     meta['template_hash']=hashlib.sha256(Path(output).read_bytes()).hexdigest()
     meta['working_changes']=['前置章节与原生分页完整保留（模板为准）','六个赛题固定章节保留','同比三要素单独绑定','动态表格按模板md列结构']
     if yoy_note:meta['working_changes'].append(yoy_note)
@@ -1898,7 +1946,19 @@ def add_reader_summary(doc,snapshot,narrative,output,benchmark=None):
     # 不在“正文首章新起一页”的覆盖范围内——显式从新页开始，消除“目录与
     # 正文同页 + 随后近空白页”的连锁。
     _head.paragraph_format.page_break_before=True
-    mode='本次采用基础分析，原因解释待复核。' if not narrative.get('model_live') or narrative.get('status')!='PASS' else '本次采用模型辅助解释；因果归因仍待人工复核。'
+    # 2026-09-24 修复（审计 AUD-NAR-06）：三档标注——实调 / 缓存复用（附生成时间）/ 基础分析。
+    if not narrative.get('model_live') or narrative.get('status')!='PASS':
+        mode='本次采用基础分析，原因解释待复核。'
+    elif narrative.get('cache_hit'):
+        _cached_at=narrative.get('cache_source_time')
+        from datetime import datetime as _dt
+        _cached_label=''
+        try:
+            if isinstance(_cached_at,(int,float)): _cached_label=_dt.fromtimestamp(_cached_at).strftime('%Y-%m-%d %H:%M')
+        except Exception: _cached_label=''
+        mode=f'本次复用相同输入的既有模型解释（生成于{_cached_label or "早前"}，未发起新模型调用）；因果归因仍待人工复核。'
+    else:
+        mode='本次采用模型辅助解释（本次实调）；因果归因仍待人工复核。'
     anchor.insert_paragraph_before('人工审核：待审核。'+mode)
     # 核心结论（2026-09-23 用户反馈"核心结论太少太简陋"）：单段改为结构化
     # 条目——总量/要素/根因/对标/行动，数据缺则跳过不编造，数字程序所有。

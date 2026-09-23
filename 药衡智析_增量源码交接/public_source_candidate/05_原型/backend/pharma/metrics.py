@@ -252,7 +252,10 @@ def analyze(factory, product, month, analysis_type='monthly', basis='unit'):
             values[label] = material_totals[label]/quantity if quantity and complete else None
             refs[label] = rr
         c = change(values['current'],values['previous'])
-        denominator = elements[0]['comparisons']['mom']['unit']['delta']
+        # 2026-09-24 修复（审计 AUD-CORE-08）：按 key 显式取材料要素——
+        # 此前 elements[0] 依赖契约顺序，换契约静默错分母。
+        materials_element = next((e for e in elements if e['key'] == 'materials'), elements[0] if elements else None)
+        denominator = materials_element['comparisons']['mom']['unit']['delta'] if materials_element else None
         percentage = contribution(c['delta'],denominator)
         item = {'name':name,'current':c['current'],'previous':c['base'],'delta':c['delta'],'rate':c['rate'],
                 'contribution':percentage,'numerator':c['delta'],'denominator':denominator,'unit':'元/盒',

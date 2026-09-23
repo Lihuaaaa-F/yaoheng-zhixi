@@ -12,10 +12,17 @@ export default function ReportGeneration({ selection, snapshot, jobs, refresh, o
   const [showHistory, setShowHistory] = useState(false);
   const [pending, setPending] = useState(false);
   const [notice, setNotice] = useState('');
+  // 2026-09-24 修复（AUD-FE-01）：按当前选择参数过滤而非 snapshot_id——
+  // 此前进本页改筛选后快照未刷新，新任务默认列表不显示（须勾"查看历史"）。
+  const matchesSelection = (j: any) => j.kind === 'report'
+    && j.input?.context_id === selection.context_id
+    && j.input?.factory === selection.factory
+    && j.input?.product === selection.product
+    && j.input?.month === selection.month
+    && j.input?.analysis_type === selection.analysis_type;
   const visibleJobs = showHistory ? jobs.filter(j => j.kind !== 'data_parse' && j.kind !== 'kb' && j.kind !== 'template_parse' && j.kind !== 'vector_switch')
-    : jobs.filter(j => (j.result?.snapshot?.snapshot_id === snapshot?.snapshot_id || j.input?.snapshot_id === snapshot?.snapshot_id)
-      && j.kind === 'report').slice(0, 3);
-  const snapshotJob = jobs.find(j => (j.result?.snapshot?.snapshot_id === snapshot?.snapshot_id || j.input?.snapshot_id === snapshot?.snapshot_id) && j.kind === 'report');
+    : jobs.filter(matchesSelection).slice(0, 3);
+  const snapshotJob = jobs.find(matchesSelection);
   const needsRetry = !!snapshotJob && ['DEGRADED', 'FAILED'].includes(snapshotJob.status);
   const currentReport = snapshotReport(jobs, snapshot?.snapshot_id);
   const run = async (fn: () => Promise<void>) => {

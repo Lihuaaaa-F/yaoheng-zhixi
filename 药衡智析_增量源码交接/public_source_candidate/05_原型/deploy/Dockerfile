@@ -36,8 +36,10 @@ RUN sed -i 's|deb.debian.org|mirrors.tuna.tsinghua.edu.cn|g' /etc/apt/sources.li
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app/05_原型
-COPY 05_原型/requirements.txt /tmp/requirements.txt
-RUN pip install --no-cache-dir -r /tmp/requirements.txt
+# 2026-09-24 审计 AUD-DEP-02：改用锁定依赖（与 CI 同源，可复现）；
+# requirements.txt 仅作开发提示，不再是镜像依赖集。
+COPY 05_原型/requirements.lock /tmp/requirements.lock
+RUN pip install --no-cache-dir -r /tmp/requirements.lock
 
 COPY 05_原型/backend ./backend
 COPY 05_原型/industry_packs ./industry_packs
@@ -49,7 +51,10 @@ COPY --from=frontend /src/dist ./frontend/dist
 COPY competition_configuration /app/competition_configuration
 COPY docs/embedding_manifest.json /app/docs/embedding_manifest.json
 COPY 05_原型/deploy/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh && mkdir -p /data/runtime /data/artifacts
+RUN chmod +x /entrypoint.sh && mkdir -p /data/runtime /data/artifacts     # 2026-09-24 审计 AUD-DEP-04：非 root 运行（数据卷由 compose 以 app 用户属主挂载）
+    && useradd -r -u 10001 -m appuser     && mkdir -p /home/appuser && chown -R appuser:appuser /data /home/appuser /app/05_原型
+USER appuser
+ENV HOME=/home/appuser MPLCONFIGDIR=/data/runtime/matplotlib
 
 EXPOSE 8765
 ENTRYPOINT ["/entrypoint.sh"]

@@ -298,7 +298,13 @@ def run_data_parse(store, job):
         published = data_import.publish_business_batch(publish_entries, enterprise_name,
                                                        'pharmaceutical', quantity_hint)
         context_id = published['context_id']
-        overview = _attribution_overview(context_id)
+        try:
+            overview = _attribution_overview(context_id)
+        except Exception as exc:  # noqa: BLE001 审计 AUD-IMP-04：数据已发布生效，
+            # 归因概览失败只降级为提示，不回滚/误标整批 PARSE_FAILED
+            overview = {'context_id': context_id, 'alert_count': 0, 'alerts': [],
+                        'attribution_mode': 'unavailable',
+                        'hypotheses': [], 'note': f'归因概览生成失败（{type(exc).__name__}: {str(exc)[:160]}）；数据已发布生效，可稍后在分析页重试归因'}
         step(90, f'发布注册：企业“{enterprise_name}”（{published["dataset_facts"]} 条事实）…', 'PUBLISH')
         for record, _mapping, _options, _v in validated:
             data_import.mark_import_status(record, 'PARSED', {

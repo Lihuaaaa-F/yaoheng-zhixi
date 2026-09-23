@@ -607,7 +607,9 @@ def validate_findings(findings,snapshot,evidence):
             # At least one concrete shared phrase; ID existence alone is insufficient.
             # 假设正文必须与引用原文共享至少一个二字词组：仅引用ID存在不算有主题关联。
             if not any(any(w[i:i+2] in plain for i in range(len(w)-1)) for w in quote_words): raise ValueError('hypothesis lacks source subject')
-        if re.search(r'忽略.*指令|system prompt|api.?key|执行.*(?:shell|SQL)|curl |https?://',plain,re.I): raise ValueError('untrusted instruction content')
+        # 2026-09-24（审计 AUD-NAR-05）：补英文祈使/越权模式（中文为主的
+        # 原正则之外；四层合同兜底不变，此为第一层加宽）。
+        if re.search(r'忽略.*指令|system prompt|api.?key|执行.*(?:shell|SQL)|curl |https?://|ignore (?:all|any|previous|prior) (?:instructions?|prompts?)|disregard (?:all|any|the above)|forget (?:your|all|previous) (?:instructions?|prompt)|reveal (?:your|the) (?:system|initial) prompt',plain,re.I): raise ValueError('untrusted instruction content')
         text = f.text_template
         for slot in context_slots: text = text.replace('[[context:'+slot+']]', context[slot])
         for slot in document_slots: text = text.replace('[[evidence:'+slot+']]', f.evidence_quotes[slot])
@@ -1078,7 +1080,11 @@ recommendation可为null；提供时须有suggestion、verification_target、exp
         except Exception as exc:
             reason=type(exc).__name__+((': '+str(exc)[:100]) if isinstance(exc,(ValueError,RuntimeError)) and not isinstance(exc,httpx.HTTPError) else '')
             failures.append(reason)
-            if isinstance(exc,(httpx.TimeoutException,httpx.ConnectError,RuntimeError,httpx.HTTPStatusError)):break
+            # 2026-09-24（审计 AUD-MDL-05）：网络类错误按设计不重试（仅 429/5xx
+            # 退避重试）——失败原因注明未重试，避免被误读为已重试仍失败。
+            if isinstance(exc,(httpx.TimeoutException,httpx.ConnectError,RuntimeError,httpx.HTTPStatusError)):
+                failures.append('网络/配置类错误未重试（仅限流与5xx自动退避重试）') if isinstance(exc,(httpx.TimeoutException,httpx.ConnectError)) else None
+                break
             user += '\n输出格式校验失败：'+reason+'。只返回explanations数组，每个task_id一次；不要findings、section、alert_refs、metric_refs或数字复述。'
     required=required_explanation_sections(snapshot)
     explanation_types={'hypothesis','insufficient_evidence'}

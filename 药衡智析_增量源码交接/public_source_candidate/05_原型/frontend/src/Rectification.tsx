@@ -14,7 +14,12 @@ export default function Rectification({ selection, snapshot, jobs, actions, refr
   const [showHistory, setShowHistory] = useState(false);
   const [acknowledging, setAcknowledging] = useState<string | null>(null), [confirmationName, setConfirmationName] = useState(''), [confirmationComment, setConfirmationComment] = useState('');
   const [pending, setPending] = useState(false), [notice, setNotice] = useState(''), [name, setName] = useState('待分配'), [department, setDepartment] = useState('生产管理部'), [finding, setFinding] = useState(''), [suggestion, setSuggestion] = useState(''), [target, setTarget] = useState(''), [expected, setExpected] = useState(''), [role, setRole] = useState('待分配'), [priority, setPriority] = useState('medium'), [deadlineBasis, setDeadlineBasis] = useState(''), [deadline, setDeadline] = useState(''), [editing, setEditing] = useState<string | null>(null);
-  const visibleActions = showHistory ? actions : actions.filter(a => a.metadata?.snapshot_id === snapshot?.snapshot_id);
+  // 2026-09-24（AUD-FE-01）：默认按当前选择过滤（快照可能未随筛选刷新）；
+  // 历史任务用"查看全部任务"查看。
+  const matchesSelection = (a: any) => a.payload?.source?.analysis_month === selection.month
+    && a.payload?.source?.product === selection.product
+    && a.metadata?.context_id === selection.context_id;
+  const visibleActions = showHistory ? actions : actions.filter(matchesSelection);
   const currentReport = snapshotReport(jobs, snapshot?.snapshot_id);
   const availableFindings = (currentReport?.result?.narrative?.findings ?? []).filter(isActionable);
   useEffect(() => { setFinding(''); setSuggestion(''); setTarget(''); setExpected(''); setDeadlineBasis(''); setEditing(null); }, [snapshot?.snapshot_id]);

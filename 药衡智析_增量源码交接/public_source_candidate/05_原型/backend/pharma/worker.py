@@ -55,7 +55,16 @@ def process_job(store,job):
             # 知识源幂等校验（2026-09-21 修复）：build() 内部按源文件指纹判断，
             # 源未变化时秒级返回；补充知识目录增删改后报告链路自动纳入新版本，
             # 不再依赖手动触发构建（实测旧版本会在检索侧静默沿用）。
-            Knowledge().build()
+            built = Knowledge().build()
+            # 2026-09-24 修复（审计 AUD-RAG-02）：此前 build() 返回值被丢弃——
+            # 源变更+部分解析失败时索引静默陈旧。DEGRADED（failures 非空、
+            # CURRENT 未切换）现在透出到任务结果供前端/评测可见。
+            if isinstance(built, dict) and built.get('status') == 'DEGRADED':
+                result['kb_index_warning'] = {
+                    'reason': '知识索引重建部分失败，检索仍使用上一版索引',
+                    'failures': built.get('failures', [])[:5],
+                    'chunks_current': built.get('chunks'),
+                }
             from .context_services import retrieve
             result['evidence']=retrieve(snapshot,snapshot['product']+' 工序 批次 成本 维修 单耗 核查')
         store.update(id,'GENERATING',result,progress=45,detail='模型生成解释（首次约 1-2 分钟；失败自动降级规则解释）')

@@ -29,6 +29,8 @@ jobs:
           python3 -m venv .venv
           .venv/bin/pip install -r requirements.lock
           npm ci --ignore-scripts --prefix frontend
+      - name: Install LibreOffice for real PDF-render tests (AUD-TST-02)
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libreoffice-writer fonts-noto-cjk
       - name: Synthetic regression and frontend build
         run: |
           PYTHONPATH=backend .venv/bin/python -m pytest -q tests
@@ -49,3 +51,5 @@ jobs:
           persist-credentials: false
       - name: Build application image (no push)
         run: docker build -f 05_原型/deploy/Dockerfile --tag yaoheng-app:ci .
+      - name: Validate compose definition (AUD-DEP-05)
+        run: docker compose -f 05_原型/deploy/docker-compose.yml config -q

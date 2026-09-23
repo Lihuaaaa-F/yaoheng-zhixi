@@ -272,6 +272,41 @@ def save_mapping(headers: list[str], mapping: dict[str, str], name: str = '') ->
 EMPTY_NUMERIC_INVALID_RATIO = Decimal('0.5')
 
 
+def _is_unit_cost_column(header: str) -> bool:
+    """表头含"元/盒""元/件"等单位成本记法时，单元格是单位成本而非绝对金额。
+
+    审计 AUD-IMP-01（P0）：此前题包《成本汇总》的 直接材料(元/盒) 等列被按
+    绝对金额发布，总成本错 4.5 万倍且零警告。此类列必须乘以同行产量换算。
+    """
+    return '元/' in str(header)
+
+
+def _tolerance_label(tolerance: Decimal) -> str:
+    return f'{tolerance.normalize():f}'
+
+
+def _row_amount(header: str, number: Decimal, row_quantity: Decimal | None,
+                errors: list, warnings: list, record: dict, index: int) -> Decimal | None:
+    """按表头单位语义把单元格数值换算为期间金额（单位成本×产量）。
+
+    返回 None 表示无法换算（错误已记录）。明细长表（原材料/费用逐行）传
+    accumulated=True 时由调用方处理，不在此换算——明细表头均为总额列。
+    """
+    if not _is_unit_cost_column(header):
+        return number * Decimal(1)
+    if row_quantity is None:
+        errors.append({'file': record['filename'], 'sheet': record['meta'].get('sheet', ''),
+                       'row': index,
+                       'reason': f'“{header}”是单位成本列（元/盒口径），但该行缺少可用产量，无法换算为金额'})
+        return None
+    if row_quantity <= 0:
+        errors.append({'file': record['filename'], 'sheet': record['meta'].get('sheet', ''),
+                       'row': index,
+                       'reason': f'“{header}”是单位成本列，但该行产量 {row_quantity} 非正数，金额无定义'})
+        return None
+    return number * row_quantity
+
+
 def validate_business(record: dict[str, Any], mapping: dict[str, str], options: dict[str, Any]) -> dict[str, Any]:
     """执行字段映射与口径检查，返回质检错误（含文件/表/行号/原因）与能力预览。
 
@@ -335,6 +370,19 @@ def validate_business(record: dict[str, Any], mapping: dict[str, str], options: 
         dimension_values['product_id'].add(product)
         periods.add(period)
         key = (factory, product, period, scenario)
+        # 先取该行产量（金额换算需要；列序不保证产量列在金额列之前）
+        row_quantity: Decimal | None = None
+        for header, role in role_of.items():
+            if role != 'quantity':
+                continue
+            value = cells.get(header, '')
+            if value.strip():
+                parsed = parse_number(value)
+                if parsed is not None:
+                    row_quantity = parsed
+        # 汇总/预算宽表：同一要素键重复出现视为重导汇总行（双计风险）；
+        # 明细长表（原材料/费用逐行）同键累加是正常形态。
+        allow_accumulation = record['meta'].get('data_type') in ('material_detail', 'manufacturing_detail', 'labor_detail')
         for header, role in role_of.items():
             value = cells.get(header, '')
             if role == 'quantity':
@@ -362,11 +410,21 @@ def validate_business(record: dict[str, Any], mapping: dict[str, str], options: 
                     errors.append({'file': record['filename'], 'sheet': record['meta'].get('sheet', ''),
                                    'row': index, 'reason': f'“{header}”金额“{value}”不是有效数字'})
                     continue
+                converted = _row_amount(header, number, row_quantity, errors, warnings, record, index)
+                if converted is None:
+                    continue
                 element = role.split(':', 1)[1] if role.startswith('element:') else '__total__'
                 amount_key = (factory, product, period, scenario, element)
+                if amount_key in amounts and not allow_accumulation:
+                    # 审计 AUD-IMP-06：汇总/预算行重复导入此前仅告警累加（双计）
+                    errors.append({'file': record['filename'], 'sheet': record['meta'].get('sheet', ''),
+                                   'row': index,
+                                   'reason': f'{factory}/{product}/{period}/{element} 金额在汇总/预算表中重复出现'
+                                             f'（{amounts[amount_key]} 与 {converted}）——请确认不是汇总行重复导入'})
+                    continue
                 if amount_key in amounts:
-                    warnings.append(f'第 {index} 行：{factory}/{product}/{period}/{element} 金额重复，已按明细累加（请确认不是汇总行重复导入）')
-                amounts[amount_key] = amounts.get(amount_key, Decimal(0)) + number * scale
+                    warnings.append(f'第 {index} 行：{factory}/{product}/{period}/{element} 明细金额累加')
+                amounts[amount_key] = amounts.get(amount_key, Decimal(0)) + converted * scale
     # 金额侧硬校验：全空或关键列空值率超阈值一律 INVALID（防公式无缓存值静默丢失）
     if dimension_rows and not amounts:
         errors.append({'file': record['filename'], 'sheet': record['meta'].get('sheet', ''), 'row': '',
@@ -378,12 +436,27 @@ def validate_business(record: dict[str, Any], mapping: dict[str, str], options: 
                            'reason': f'“{header}”空值率 {empty}/{dimension_rows} 行（公式无缓存值或漏填）超过 '
                                      f'{int(EMPTY_NUMERIC_INVALID_RATIO * 100)}%，无法确认数据完整性，请用“值”而非公式重新导出后上传'})
     total_by_key: dict[tuple[str, str, str, str], Decimal] = {}
+    declared_totals: dict[tuple[str, str, str, str], Decimal] = {}
+    element_sums: dict[tuple[str, str, str, str], Decimal] = {}
     for (factory, product, period, scenario, element), amount in amounts.items():
+        group = (factory, product, period, scenario)
         if element == '__total__':
-            total_by_key[(factory, product, period, scenario)] = amount
+            declared_totals[group] = amount
+            total_by_key[group] = amount
         else:
-            total_by_key[(factory, product, period, scenario)] = total_by_key.get(
-                (factory, product, period, scenario), Decimal(0)) + amount
+            element_sums[group] = element_sums.get(group, Decimal(0)) + amount
+            total_by_key[group] = total_by_key.get(group, Decimal(0)) + amount
+    # 审计 AUD-IMP-02（数据合同不变量，与 ingestion.audit 同口径的可行子集）：
+    # 总成本列与 Σ要素金额 勾稽（单位成本列经产量换算后两者必须一致）。
+    # 该校验此前缺失，正是 AUD-IMP-01 量纲错误零警告通过的根源。
+    for group in sorted(set(declared_totals) & set(element_sums)):
+        declared, elements_total = declared_totals[group], element_sums[group]
+        tolerance = max(Decimal('1'), abs(declared) * Decimal('0.005'))
+        if abs(declared - elements_total) > tolerance:
+            errors.append({'file': record['filename'], 'sheet': record['meta'].get('sheet', ''), 'row': '',
+                           'reason': f'{group[0]}/{group[1]}/{group[2]}：总成本列 {declared} 与成本要素合计 '
+                                     f'{elements_total} 不一致（超容差 {_tolerance_label(tolerance)}）——'
+                                     f'请核对单位成本列是否已按产量换算、或数据本身勾稽不符'})
     for key, total in total_by_key.items():
         if key in quantities and quantities[key] <= 0:
             errors.append({'file': record['filename'], 'sheet': record['meta'].get('sheet', ''), 'row': '',
@@ -444,14 +517,18 @@ def publish_business(record: dict[str, Any], mapping: dict[str, str], options: d
                                 record['meta'].get('sheet'))
     role_of = {h: mapping.get(h, '') for h in headers}
     scale = Decimal(str(options.get('amount_scale', '1')))
-    enterprise_id = 'imp-' + hashlib.sha256((enterprise_name + pack_id).encode()).hexdigest()[:8]
+    # 审计 AUD-IMP-03：企业目录名纳入数据指纹——同名重导不同数据得到新目录，
+    # 不再覆盖旧注册条目指向的数据；同内容重导幂等落回同一目录。
     source_snapshot = record['sha256']
+    enterprise_id = 'imp-' + hashlib.sha256((enterprise_name + pack_id + source_snapshot).encode()).hexdigest()[:8]
     facts: list[dict[str, Any]] = []
     quantities: dict[tuple[str, str, str, str], Decimal] = {}
     amounts: dict[tuple[str, str, str, str, str], Decimal] = {}
     periods: set[str] = set()
     products: set[str] = set()
     factories: set[str] = set()
+    _publish_errors: list = []
+    _publish_warnings: list = []
     for index, row in enumerate(rows, start=2):
         cells = dict(zip(headers, row))
         factory = product = period = ''
@@ -467,18 +544,26 @@ def publish_business(record: dict[str, Any], mapping: dict[str, str], options: d
                 'product_version': '1', 'period': period, 'cost_object': product,
                 'policy_version': 'imported-v1', 'source_row': f'{record["filename"]}:{index}',
                 'source_snapshot': source_snapshot}
+        # 先取行产量：单位成本列（元/盒口径）须乘产量换算为期间金额（AUD-IMP-01）
+        row_quantity = None
+        for header, role in role_of.items():
+            if role == 'quantity':
+                number = parse_number(cells.get(header, ''))
+                if number is not None:
+                    row_quantity = number
+                    quantities[(factory, product, period, scenario)] = number
         for header, role in role_of.items():
             value = cells.get(header, '')
-            if role == 'quantity':
+            if role and (role.startswith('element:') or role == 'total_cost'):
                 number = parse_number(value)
-                if number is not None:
-                    quantities[(factory, product, period, scenario)] = number
-            elif role and (role.startswith('element:') or role == 'total_cost'):
-                number = parse_number(value)
-                if number is not None:
-                    element = role.split(':', 1)[1] if role.startswith('element:') else '__total__'
-                    amounts[(factory, product, period, scenario, element)] = amounts.get(
-                        (factory, product, period, scenario, element), Decimal(0)) + number * scale
+                if number is None:
+                    continue
+                converted = _row_amount(header, number, row_quantity, _publish_errors, _publish_warnings, record, index)
+                if converted is None:
+                    continue
+                element = role.split(':', 1)[1] if role.startswith('element:') else '__total__'
+                amounts[(factory, product, period, scenario, element)] = amounts.get(
+                    (factory, product, period, scenario, element), Decimal(0)) + converted * scale
     totals: dict[tuple[str, str, str, str], Decimal] = {}
     for (factory, product, period, scen, element), amount in amounts.items():
         totals.setdefault((factory, product, period, scen), Decimal(0))
@@ -556,7 +641,11 @@ def publish_knowledge(record: dict[str, Any], options: dict[str, Any]) -> dict[s
     elif suffix == '.docx':
         from docx import Document
         document = Document(path)
-        pages = ['\n'.join(p.text for p in document.paragraphs)]
+        # 审计 AUD-IMP-07：此前只取段落，表格内容静默缺失（check_template 都专门扫表格）
+        parts = [p.text for p in document.paragraphs]
+        for table in document.tables:
+            parts.append('\n'.join(' | '.join(cell.text for cell in row.cells) for row in table.rows))
+        pages = ['\n'.join(parts)]
     elif suffix == '.csv':
         # 行情/基准等表格类知识：按行转文本入库（保留列名行）。
         headers, rows = _read_table(suffix, path.read_bytes(), record['encoding'] or 'utf-8', '')
@@ -652,9 +741,24 @@ def original_path(record: dict[str, Any]) -> Path:
     return path
 
 
-def waiting_imports(kind: str) -> list[dict[str, Any]]:
-    """待解析列表：已上传（UPLOADED）与解析失败（PARSE_FAILED，可重试）。"""
-    return [r for r in list_imports(kind) if r['status'] in ('UPLOADED', 'PARSE_FAILED')]
+def waiting_imports(kind: str, stale_after_seconds: int = 1800) -> list[dict[str, Any]]:
+    """待解析列表：UPLOADED / PARSE_FAILED，以及 PARSING 超时回收。
+
+    审计 AUD-IMP-05：worker 崩溃后记录永久停在 PARSING 且无复位端点；按
+    updated 时间戳判定——超过 stale_after_seconds（默认 30 分钟）视为
+    死锁，可被重新领取解析。"""
+    from datetime import datetime
+    cutoff = datetime.now(timezone.utc).timestamp() - stale_after_seconds
+    def recoverable(record: dict[str, Any]) -> bool:
+        if record['status'] in ('UPLOADED', 'PARSE_FAILED'):
+            return True
+        if record['status'] != 'PARSING':
+            return False
+        try:
+            return datetime.fromisoformat(record['updated']).timestamp() < cutoff
+        except (ValueError, TypeError, KeyError):
+            return False
+    return [r for r in list_imports(kind) if recoverable(r)]
 
 
 def mark_import_status(record: dict[str, Any], status: str, extra_meta: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -685,8 +789,10 @@ def publish_business_batch(entries: list[tuple[dict[str, Any], dict[str, str], d
             raise ValueError('IMPORT_VALIDATION_FAILED:' + record['filename'] + ':'
                              + '；'.join(e.get('reason', str(e)) for e in failed))
     from .import_pipeline import TYPE_PRIORITY
-    enterprise_id = 'imp-' + hashlib.sha256((enterprise_name + pack_id).encode()).hexdigest()[:8]
+    # 审计 AUD-IMP-03：企业目录名纳入数据指纹——同名重导不同数据得到新目录，
+    # 不再覆盖旧注册条目指向的数据；同内容重导幂等落回同一目录。
     source_snapshot = hashlib.sha256('|'.join(r['sha256'] for r, _, _, _ in validations).encode()).hexdigest()
+    enterprise_id = 'imp-' + hashlib.sha256((enterprise_name + pack_id + source_snapshot).encode()).hexdigest()[:8]
     merged_amounts: dict[tuple[str, str, str, str, str], Decimal] = {}
     amount_priority: dict[tuple[str, str, str, str, str], int] = {}
     merged_quantities: dict[tuple[str, str, str, str], Decimal] = {}
@@ -704,6 +810,8 @@ def publish_business_batch(entries: list[tuple[dict[str, Any], dict[str, str], d
         role_of = {h: mapping.get(h, '') for h in headers}
         file_amounts: dict[tuple[str, str, str, str, str], Decimal] = {}
         file_quantities: dict[tuple[str, str, str, str], Decimal] = {}
+        _publish_errors: list = []
+        _publish_warnings: list = []
         for index, row in enumerate(rows, start=2):
             cells = dict(zip(headers, row))
             factory = product = period = ''
@@ -715,19 +823,27 @@ def publish_business_batch(entries: list[tuple[dict[str, Any], dict[str, str], d
             if not (factory and product and period):
                 continue
             periods.add(period); products.add(product); factories.add(factory)
+            # 先取行产量：单位成本列（元/盒口径）须乘产量换算（AUD-IMP-01）
+            row_quantity = None
             for header, role in role_of.items():
-                value = cells.get(header, '')
                 if role == 'quantity':
-                    number = parse_number(value)
+                    number = parse_number(cells.get(header, ''))
                     if number is not None:
+                        row_quantity = number
                         key = (factory, product, period, scenario)
                         file_quantities[key] = number
-                elif role and (role.startswith('element:') or role == 'total_cost'):
+            for header, role in role_of.items():
+                value = cells.get(header, '')
+                if role and (role.startswith('element:') or role == 'total_cost'):
                     number = parse_number(value)
-                    if number is not None:
-                        element = role.split(':', 1)[1] if role.startswith('element:') else '__total__'
-                        key = (factory, product, period, scenario, element)
-                        file_amounts[key] = file_amounts.get(key, Decimal(0)) + number * scale
+                    if number is None:
+                        continue
+                    converted = _row_amount(header, number, row_quantity, _publish_errors, _publish_warnings, record, index)
+                    if converted is None:
+                        continue
+                    element = role.split(':', 1)[1] if role.startswith('element:') else '__total__'
+                    key = (factory, product, period, scenario, element)
+                    file_amounts[key] = file_amounts.get(key, Decimal(0)) + converted * scale
         for key, number in file_quantities.items():
             if key in merged_quantities and merged_quantities[key] != number:
                 raise ValueError(f'IMPORT_QUANTITY_CONFLICT:{key[0]}/{key[1]}/{key[2]}'

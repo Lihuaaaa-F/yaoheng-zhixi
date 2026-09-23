@@ -139,13 +139,23 @@ def run_vector_switch(store, job):
                      progress=100, detail='向量模型切换成功')
     except SwitchFailure as exc:
         # 回滚配置：写回前值，避免半切换状态
+        rolled_back = False
         try:
             if previous:
                 model_settings.set_vector_model(str(previous.get('path') or ''))
             else:
                 model_settings.clear_vector_model()
+            rolled_back = True
         except Exception:
             pass
+        # 2026-09-24 修复（审计 AUD-RAG-07）：配置回滚后重建一次索引，使 CURRENT
+        # 立即指回旧模型版本——否则检索在新（可能坏）索引上继续运行至下次构建。
+        if rolled_back:
+            try:
+                from .knowledge import Knowledge as _K
+                _K().build()
+            except Exception:
+                pass  # 重建失败时维持旧行为：下次任何 build() 幂等自愈
         message = f'向量模型切换失败，{exc.step}报错：{exc.reason}'
         store.update(job_id, 'FAILED', result, error=message, detail=message)
     except Exception as exc:  # noqa: BLE001

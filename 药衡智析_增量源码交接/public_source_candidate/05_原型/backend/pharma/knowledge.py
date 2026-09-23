@@ -250,7 +250,14 @@ class Knowledge:
         from .config import KNOWLEDGE_SUPPLEMENT_DIR
         self.extra_dir = None
         self.ingest_dir = None
-        if not self.context and self.source_files is None and source_dir is None:
+        # 2026-09-24 修复（审计 AUD-RAG-01）：竞赛正式上下文（pharmaceutical+competition）
+        # 此前不挂补充知识与用户上传知识——报告/对标链只检索题包 7 份 PDF，补充的
+        # 行情/异常处理/对标基线与数据中心上传知识只进交互式检索。现与默认上下文
+        # 同源（显式 source_files 的行业包仍是 allowlist，不受影响）。
+        _default_context = (not self.context) or (
+            self.context.get('industry_id') == 'pharmaceutical'
+            and self.context.get('enterprise_id') == 'competition')
+        if _default_context and self.source_files is None and source_dir is None:
             supplement = Path(KNOWLEDGE_SUPPLEMENT_DIR)
             if supplement.is_dir():
                 self.extra_dir = supplement
@@ -445,6 +452,13 @@ class Knowledge:
         if self.status().get('terminology_hash')!=terminology_hash():raise ValueError('TERMINOLOGY_REBUILD_FAILED')
         version = (self.path/'CURRENT').read_text().strip()
         target = self.path/version
+        # 2026-09-24 修复（审计 AUD-RAG-06）：溯源标注用本索引 manifest 的实际
+        # 向量指纹（切换模型后不再恒报内置常量）；无 manifest 时回退常量。
+        try:
+            _manifest = json.loads((target/'manifest.json').read_text(encoding='utf-8'))
+            embedding_label = (_manifest.get('embedding') or {}).get('sha') or EMBEDDING_SHA
+        except (OSError, ValueError):
+            embedding_label = EMBEDDING_SHA
         index_key = (str(target), version)
         db = sqlite3.connect(target/'fts.sqlite')
         try:
@@ -512,4 +526,4 @@ class Knowledge:
         import copy as _copy
         evidence = [dict(_copy.deepcopy(chunks[n.node.node_id]),score=n.score,
                          applicability=_copy_applicability(applicability[n.node.node_id])) for n in nodes]
-        return {'status':status,'knowledge_version':version,'mode':mode,'evidence':evidence,'reason':error,'reranker_error':reranker_error,'fusion_weights':weights if mode=='hybrid' else None,'framework':'llama-index-core BaseRetriever/TextNode','retrieval_status':'EXECUTED' if not error else 'DEGRADED','recall_status':'RECALLED' if evidence else 'NO_MATCH' if eligible else 'NO_APPLICABLE_CANDIDATES','eligible_count':len(eligible),'retriever_version':RETRIEVER_VERSION,'reranker_version':self.reranker_version,'embedding_version':EMBEDDING_SHA,'analysis_context':self.context}
+        return {'status':status,'knowledge_version':version,'mode':mode,'evidence':evidence,'reason':error,'reranker_error':reranker_error,'fusion_weights':weights if mode=='hybrid' else None,'framework':'llama-index-core BaseRetriever/TextNode','retrieval_status':'EXECUTED' if not error else 'DEGRADED','recall_status':'RECALLED' if evidence else 'NO_MATCH' if eligible else 'NO_APPLICABLE_CANDIDATES','eligible_count':len(eligible),'retriever_version':RETRIEVER_VERSION,'reranker_version':self.reranker_version,'embedding_version':embedding_label,'analysis_context':self.context}

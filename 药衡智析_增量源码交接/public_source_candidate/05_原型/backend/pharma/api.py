@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 from typing import Any, Literal
 from pathlib import Path
-import hashlib,json,time,os
+import hashlib,json,re,time,os
 from fastapi import FastAPI,File,Form,HTTPException,Request,Query,UploadFile
 from fastapi.responses import FileResponse,JSONResponse
 from fastapi.middleware.gzip import GZipMiddleware
@@ -117,7 +117,10 @@ def analysis(req:AnalysisRequest):
     available=False
     if enabled:
         from .narrative import ModelGateway
-        available=bool(ModelGateway().key)
+        # 2026-09-24 修复（审计 AUD-NAR-04）：探测与生成同用 for_route('analysis')
+        # ——路由 env 指向别家时不再出现"探测可用、实跑无钥降级"的误导。
+        probe = ModelGateway.for_route('analysis') if hasattr(ModelGateway, 'for_route') else ModelGateway()
+        available=bool(probe.key)
     focus=focus_analysis(snapshot,enabled=enabled,model_available=available,
         latest_job=store.latest_report_for_snapshot(snapshot['snapshot_id']) if enabled else None,
         enqueue=lambda:_enqueue_report(ReportRequest(**req.model_dump()))[0])
@@ -146,6 +149,7 @@ def get_benchmark(product:str,month:str,left:str,right:str,analysis_type:Literal
     from .knowledge import Knowledge
     from .narrative import generate, cached_generation
     cid=selected_context(context_id)
+    if not re.fullmatch(r'20\d{2}-(0[1-9]|1[0-2])',str(month)):raise ValueError('INVALID_MONTH')
     if left==right:raise ValueError('COMPARISON_REQUIRES_TWO_FACTORIES')
     if cid=='pharmaceutical:competition':
         snapshot,result=benchmark_analysis(product,month,left,right,analysis_type=analysis_type)
@@ -356,8 +360,17 @@ def imports():return {'job_id':store.enqueue('import',{})['id']}
 
 # ---- 数据中心 v2：类型化上传、原始预览、解析流水线（进度经 /api/jobs/{id} 轮询） ----
 def _reject_active_parse(kind:str):
-    for existing in store.list_jobs(limit=60):
-        if existing['kind']==kind and existing['status'] in ('QUEUED','RUNNING'):
+    # 审计 AUD-IMP-05：worker 崩溃后任务永久停在 RUNNING 并阻塞同类新解析；
+    # 更新时间超过 30 分钟视为陈旧，不再阻塞（配合 data_import.waiting_imports
+    # 对 PARSING 记录的超时回收）。
+    from datetime import datetime
+    def _stale(job):
+        try:
+            return (datetime.now().astimezone()-datetime.fromisoformat(job['updated'])).total_seconds()>1800
+        except (ValueError,TypeError):
+            return False
+    for existing in store.list_jobs(limit=200):
+        if existing['kind']==kind and existing['status'] in ('QUEUED','RUNNING') and not _stale(existing):
             raise ValueError(f'PARSE_ALREADY_RUNNING:{existing["id"]}')
 
 class DataParseRequest(BaseModel):

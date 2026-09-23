@@ -53,7 +53,10 @@ def focus_analysis(snapshot, *, enqueue=None, enabled=False, model_available=Fal
                                 ('基期为零，环比无定义' if base == 0 else '缺少完整可比基期或本期')})
                 continue
             rate = (current - base) / base * 100
-            if abs(rate) <= Decimal('10'):
+            # 2026-09-24 修复（审计 AUD-NAR-08）：与 metrics.threshold_alert 单点
+            # 同源（严格>10），不再双份维护同一阈值常量。
+            from .metrics import threshold_alert
+            if not threshold_alert(rate):
                 continue
             causal_limit = '缺少经核实的业务原因与对应原始记录；成本变化仅支持待核查假设，不能认定因果。'
             if basis == 'total':

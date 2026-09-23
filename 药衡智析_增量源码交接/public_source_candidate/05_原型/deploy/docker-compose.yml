@@ -8,6 +8,9 @@ name: yaoheng
 
 x-app-base: &app-base
   image: yaoheng-app:latest
+  # 2026-09-24 审计 AUD-DEP-04：基础资源上限（本地演示防止失控占用）
+  mem_limit: 2g
+  cpus: 2.0
   build:
     context: ../..
     dockerfile: 05_原型/deploy/Dockerfile
@@ -31,7 +34,10 @@ x-app-base: &app-base
     PHARMA_MODEL_KEY_FILE: ${PHARMA_MODEL_KEY_FILE:-}
     PHARMA_MODEL: ${PHARMA_MODEL:-glm-5.3}
     PHARMA_MODEL_MAX_CALLS: ${PHARMA_MODEL_MAX_CALLS:-200}
-    # 首次拉取向量模型优先国内镜像（内容仍按固定哈希校验）
+    # 首次拉取向量模型优先国内镜像（内容仍按固定哈希校验）。
+    # 注：pip/npm 默认直连官方源——镜像内 pip 安装 requirements.lock、前端
+    # 构建已在中国镜像 apt 源之外直连；如需全程国内镜像，在 build args
+    # 之外另行配置 PIP_INDEX_URL/.npmrc（2026-09-24 审计 AUD-DEP-02 修正注释）。
     PHARMA_EMBEDDING_MIRROR: "1"
   volumes:
     - appdata:/data/runtime

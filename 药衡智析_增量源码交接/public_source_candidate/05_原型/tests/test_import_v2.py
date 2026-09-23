@@ -138,7 +138,9 @@ def test_summary_and_detail_no_double_count(isolated_runtime, tmp_path):
     facts = json.loads((data_import.IMPORTS_ROOT / 'enterprises' / result['enterprise_id'] / 'facts.json').read_text(encoding='utf-8'))
     material = [f for f in facts['costs'] if f['element_id'] == 'material' and f['period'] == '2026-02' and f['scenario'] == 'actual']
     assert len(material) == 1  # 汇总口径覆盖明细，未叠加
-    assert material[0]['amount'] == '3.50'
+    # 2026-09-24 AUD-IMP-01 修复后语义：单位成本列(元/盒)按产量换算为期间金额
+    # 3.50 元/盒 × 10100 盒 = 35350 元；汇总口径覆盖明细（12600）不叠加
+    assert material[0]['amount'] == '35350.00'
     assert result['merge_warnings']  # 明细差异被记录为提示
 
 

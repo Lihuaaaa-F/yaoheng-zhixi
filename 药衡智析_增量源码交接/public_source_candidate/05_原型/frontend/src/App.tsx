@@ -77,15 +77,18 @@ export default function App() {
   }, [contextId, reload]);
   const { factory, product, month, analysis_type, basis } = selection;
   const isAnalysisPage = pageInfo?.item === '数据分析';
+  // 2026-09-24 修复（AUD-FE-01）：报告生成/问题整改页同样消费快照——
+  // 此前以 isAnalysisPage 为闸，这两页改筛选后快照陈旧、任务卡按旧快照过滤不可见。
+  const snapshotPages = isAnalysisPage || pageInfo?.item === '报告生成' || pageInfo?.item === '问题整改';
   useEffect(() => {
-    if (!isAnalysisPage || !catalog || selection.context_id !== contextId) return;
+    if (!snapshotPages || !catalog || selection.context_id !== contextId) return;
     const c = new AbortController();
     setAnalysisLoading(true); setError(''); setSnapshot(null);
     api('/analyses', selection, c.signal).then(x => { if (!c.signal.aborted) setSnapshot(x); })
       .catch(e => { if (!c.signal.aborted) setError(e.message); })
       .finally(() => { if (!c.signal.aborted) setAnalysisLoading(false); });
     return () => c.abort();
-  }, [isAnalysisPage, catalog, contextId, selection, reload]);
+  }, [snapshotPages, catalog, contextId, selection, reload]);
   useEffect(() => {
     if (pageInfo?.item !== '跨厂对标' || !catalog || selection.context_id !== contextId || !left || !right || left === right) return;
     const c = new AbortController();

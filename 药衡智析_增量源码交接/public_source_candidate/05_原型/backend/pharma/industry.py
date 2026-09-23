@@ -770,10 +770,10 @@ def analyze_reference(context_id, factory=None, product=None, month=None, analys
         'snapshot_id':'','formula_version':FORMULA_VERSION,'factory':factory,'product':product,'month':month,'analysis_type':analysis_type,'basis':basis,
         'specification':enterprise['products'][product]['specification'],'period':{'start':months[0],'end':months[-1]},'metrics':metrics,'elements':elements,'trend':trend,
         'alerts':alerts,'comparison':comparisons,'details':{'available':False,'reason':'仅合成已归集成本与专用驱动事实；不推算采购/BOM明细','materials':[],'expenses':[],'labor':[],'market':[]},
-        'industry':{'rows':[],'converted_unit_cost':metrics['unit_cost']['value'],'unit':money+'/'+unit,'notice':pack.data_label},'budget_bridge':None,
+        'industry':{'rows':[],'converted_unit_cost':metrics['unit_cost']['value'],'unit':money+'/'+unit,'notice':_import_or_pack_label(enterprise, pack)},'budget_bridge':None,
         'period_values':{},'period_changes':{},'materials_summary':[],'expenses_summary':[],'labor_metrics':{},'source_hashes':[context.data_snapshot],
-        'quantity_unit':unit,'currency':currency,'data_label':pack.data_label,'capabilities':capabilities(pack,ds),
-        'limits':[pack.data_label,'未支持联副产品分配和在制品计价；缺少实际价格/实耗不能严格价量分解','维修记录仅支持待验证假设；不是已证实净原因']}
+        'quantity_unit':unit,'currency':currency,'data_label':_import_or_pack_label(enterprise, pack),'capabilities':capabilities(pack,ds),
+        'limits':[_import_or_pack_label(enterprise, pack),'未支持联副产品分配和在制品计价；缺少实际价格/实耗不能严格价量分解','维修记录仅支持待验证假设；不是已证实净原因']}
     for capability in result['capabilities']:
         if capability['id'] in pack.strategies and metrics[capability['id']]['value'] is None:
             capability.update(status='degraded',reason=metrics[capability['id']]['reason'],missing=['complete_validated_driver_facts'])
@@ -781,6 +781,12 @@ def analyze_reference(context_id, factory=None, product=None, month=None, analys
     result['specialized_metrics']=[{'key':name,'name':{'machine_hours_per_piece':'单位机时','energy_per_kg':'单位能耗'}.get(name,name),**metrics[name]} for name in pack.strategies]
     result['snapshot_id']=digest(result)
     return result
+
+
+def _import_or_pack_label(enterprise, pack):
+    """2026-09-24 修复（审计 AUD-IND-05）：用户导入企业（真实数据）不再被
+    保守标成包级"合成演示数据"——与 context_catalog 的标签口径一致。"""
+    return '用户导入数据（数据中心发布）' if enterprise.get('source_mode') == 'imported_cost' else pack.data_label
 
 
 def benchmark_reference(context_id, product, month, left, right, analysis_type='monthly', basis='unit'):
