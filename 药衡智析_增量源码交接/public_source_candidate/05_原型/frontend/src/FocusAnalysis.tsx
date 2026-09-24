@@ -6,5 +6,25 @@ export default function FocusAnalysis({focus}:{focus:any}){
  const seenMissing=new Set<string>();
  const uniqueMissing:string[]=[];
  focus.items?.forEach((item:any)=>{(item.missing_evidence??[]).forEach((m:string)=>{if(!seenMissing.has(m)){seenMissing.add(m);uniqueMissing.push(m)}})});
- return <section className="panel" aria-label="自动重点分析"><h2>自动重点分析</h2><p className="muted">各要素环比严格超过 ±10% 即显示；单位与总额分别判断，恰好 ±10% 不触发。以下通常显示至四位小数，临界值保留必要精度。</p>{focus.items?.length?focus.items.map((item:any,i:number)=><article className="finding" key={`${item.element_key}:${item.basis}`}><div className="finding-head"><strong>{item.element} · {item.basis==='unit'?'单位成本':'总成本'} · {Number(item.rate)>0?'+':''}{displayFocusRate(item.rate)}%</strong></div><p>{item.current!=null&&item.base!=null?<>{item.element}{item.basis==='unit'?'单位成本':'总成本'}由 {displayNumber(item.base)} {item.unit}变为 {displayNumber(item.current)} {item.unit}，环比{Number(item.rate)>0?'上升':'下降'} {displayFocusRate(String(item.rate).replace(/^-/,''))}%，严格超过 ±10%，列为重点分析。</>:item.text}</p></article>):<p>当前可比要素未触发重点分析阈值。</p>}{uniqueMissing.length>0&&<p className="muted">缺少证据（各重点项共用）：{uniqueMissing.join('；')}</p>}{focus.missing?.length>0&&<details open><summary>不可比较的要素（不按零值处理）</summary><ul>{focus.missing.map((item:any)=><li key={`${item.element_key}:${item.basis}`}>{item.element} · {item.basis==='unit'?'单位成本':'总成本'}：{item.reason}</li>)}</ul></details>}{focus.items?.length>0&&<p role="status">{modelLabels[focus.model_status]??'模型解释暂不可用，保留确定性分析。'}</p>}</section>
+ // 2026-09-24 反馈：按变动幅度排序并标注等级，首要项一眼可辨；颜色沿用模块方向语义（升=风险橙、降=有利绿）。
+ const items=(focus.items??[]).slice().sort((a:any,b:any)=>Math.abs(Number(b.rate))-Math.abs(Number(a.rate)));
+ const top=items[0];
+ return <section className="panel focus-panel" aria-label="自动重点分析"><h2>自动重点分析</h2><p className="muted">各要素环比严格超过 ±10% 即显示；单位与总额分别判断，恰好 ±10% 不触发。按变动幅度排序，通常显示至四位小数，临界值保留必要精度。</p>
+ {items.length?<>
+  <p className="focus-summary">共 <b>{items.length}</b> 项触发重点分析{top?<>，{Number(top.rate)>0?'升幅':'降幅'}最大的是 <b>{top.element} · {top.basis==='unit'?'单位成本':'总成本'}（{Number(top.rate)>0?'+':''}{displayFocusRate(top.rate)}%）</b></>:null}</p>
+  <div className="focus-list">{items.map((item:any,i:number)=>{
+   const up=Number(item.rate)>0;
+   return <article className={`focus-card ${up?'up':'down'}${i===0?' focus-primary':''}`} key={`${item.element_key}:${item.basis}`}>
+    <span className="focus-rank">{i===0?'首要关注':`关注 ${String(i+1).padStart(2,'0')}`}</span>
+    <div className="focus-body">
+     <div className="focus-target">{item.element} · {item.basis==='unit'?'单位成本':'总成本'}</div>
+     <div className="focus-compare">{item.current!=null&&item.base!=null?`${displayNumber(item.base)} → ${displayNumber(item.current)} ${item.unit}，环比${up?'上升':'下降'}，严格超过 ±10%`:item.text}</div>
+    </div>
+    <div className={`focus-rate ${up?'up':'down'}`}><span aria-hidden="true">{up?'▲':'▼'} {item.rate>0?'+':''}{displayFocusRate(item.rate)}</span><small>%</small></div>
+   </article>})}</div>
+ </>:<p>当前可比要素未触发重点分析阈值。</p>}
+ {uniqueMissing.length>0&&<p className="muted">缺少证据（各重点项共用）：{uniqueMissing.join('；')}</p>}
+ {focus.missing?.length>0&&<details open><summary>不可比较的要素（不按零值处理）</summary><ul>{focus.missing.map((item:any)=><li key={`${item.element_key}:${item.basis}`}>{item.element} · {item.basis==='unit'?'单位成本':'总成本'}：{item.reason}</li>)}</ul></details>}
+ {focus.items?.length>0&&<p role="status" className="notice">{modelLabels[focus.model_status]??'模型解释暂不可用，保留确定性分析。'}</p>}
+ </section>
 }
