@@ -41,7 +41,8 @@ WORKDIR /app/05_原型
 # 2026-09-24 审计 AUD-DEP-02：改用锁定依赖（与 CI 同源，可复现）；
 # requirements.txt 仅作开发提示，不再是镜像依赖集。
 COPY 05_原型/requirements.lock /tmp/requirements.lock
-RUN pip install --no-cache-dir -r /tmp/requirements.lock
+ARG PIP_INDEX_URL=https://pypi.org/simple
+RUN pip install --no-cache-dir --index-url "$PIP_INDEX_URL" -r /tmp/requirements.lock
 
 COPY 05_原型/backend ./backend
 COPY 05_原型/industry_packs ./industry_packs
