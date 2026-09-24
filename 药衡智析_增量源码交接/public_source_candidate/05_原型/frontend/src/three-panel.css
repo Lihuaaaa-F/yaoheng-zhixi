@@ -73,11 +73,13 @@ body { margin: 0; background: var(--bg); }
 .three-panel-shell .workspace-filters > .period-field { min-width: 109px; flex: 1.05 1 0; }
 .three-panel-shell .workspace-filters > .range-field { min-width: 76px; flex: .75 1 0; }
 .three-panel-shell .workspace-filters > .cost-basis { min-width: 98px; flex: 0 0 98px; }
-/* 2026-09-24 修复“选中后文字上移不居中”：外层曾强制 32px，而主题 controlHeight=34px，
- * 内层选择器按 34px 居中，文字视觉上移。统一对齐 34px 并显式锁定选择器高度与行高。 */
-.three-panel-shell .workspace-filters > label .ant-select { width: 100%; min-width: 0; height: 34px; flex: none; }
-.three-panel-shell .workspace-filters > label .ant-select .ant-select-selector { height: 34px; }
-.three-panel-shell .workspace-filters > label .ant-select-selection-item { font-size: 12px; line-height: 32px; }
+/* 2026-09-24 二次修复“选中后文字上移不居中”：antd v6 重构了 Select DOM——
+ * 选中文字渲染在内部 <input class="ant-select-input">（自带 min-height:38px，
+ * 覆盖普通低特异性规则），外层 .ant-select 为 flex 且默认 align-items:flex-start，
+ * 于是文字贴顶、下方留白。v5 时代的 .ant-select-selection-item 行高修复在 v6 无效。
+ * 修法：外层改居中，输入框压回 34px 控制高度的内容行高。 */
+.three-panel-shell .workspace-filters > label .ant-select { width: 100%; min-width: 0; height: 34px; flex: none; align-items: center; }
+.three-panel-shell .workspace-filters > label .ant-select .ant-select-input { min-height: 0; height: 22px; line-height: 22px; }
 .three-panel-shell .workspace-filters .ant-select-selector { border-color: #e1e7ec !important; border-radius: 9px; padding-inline: 9px !important; }
 .three-panel-shell .workspace-filters .cost-basis .ant-segmented { width: 98px; height: 34px; padding: 3px; background: #f1f4f6; border-radius: 9px; }
 .three-panel-shell .workspace-filters .cost-basis .ant-segmented-item { border-radius: 7px; }
