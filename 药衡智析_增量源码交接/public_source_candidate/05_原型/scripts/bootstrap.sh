@@ -19,7 +19,7 @@ echo "解释器: $pharma_python"
 if ! env -u PYTHONPATH "$pharma_python" scripts/check_dependencies.py >"$pharma_deps_log" 2>&1; then
   if [ -n "${PHARMA_PYTHON:-}" ]; then
     cat "$pharma_deps_log" >&2 || true
-    echo "指定的复用解释器缺少依赖或不兼容；请移除PHARMA_PYTHON并创建本项目venv。" >&2
+    echo "指定的复用解释器缺少依赖或不兼容；请先按 requirements.lock 补齐 PHARMA_PYTHON 指定环境的依赖，再重试。" >&2
     exit 1
   fi
   dependency_file=requirements.txt
@@ -73,9 +73,9 @@ from pharma.industry import context_catalog,analyze_reference
 from pharma.context_services import retrieve
 if PACKAGE.is_dir():
     from pharma.ingestion import ingest
-    from pharma.reports import normalize_template,TEMPLATE
+    from pharma.reports import ensure_working_template
     print('赛题数据摄取：',ingest()['status'])
-    if not TEMPLATE.exists():normalize_template()
+    ensure_working_template()
 else:
     print('未找到赛题数据目录：跳过摄取，可在数据中心导入业务数据')
 catalog=context_catalog()

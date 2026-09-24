@@ -28,6 +28,26 @@ RENDERER_VERSION='reader-20260924-delivery-v11'
 NA = 'N/A（无可用基期或明细）'
 
 
+def ensure_working_template():
+    """升级程序生成的旧工作模板；用户安装模板走独立路径，不在此重写。"""
+    if not TEMPLATE.exists():
+        return normalize_template(TEMPLATE, MAP_PATH)
+    meta = json.loads(MAP_PATH.read_text(encoding='utf-8'))
+    if meta.get('reader_template_version') != 'reader-v6':
+        # 旧版本可能已丢失 OOXML 命名空间。必须从未改动的题包原件重建，
+        # 不能在坏 XML 上继续手术；先在临时目录完成兼容校验再替换工作副本。
+        with tempfile.TemporaryDirectory(prefix='.template-upgrade-', dir=TEMPLATE.parent) as folder:
+            candidate = Path(folder) / TEMPLATE.name
+            candidate_map = Path(folder) / MAP_PATH.name
+            result = normalize_template(candidate, candidate_map)
+            validate_word_compat(candidate)
+            candidate.replace(TEMPLATE)
+            candidate_map.replace(MAP_PATH)
+        return result
+    validate_word_compat(TEMPLATE)
+    return meta
+
+
 def working_template(analysis_type='monthly'):
     """按报告类型解析当前模板：已安装模板优先，否则回退题包月度工作模板。
 
@@ -668,8 +688,7 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
     from docx.oxml.ns import qn
     template_path, template_map = working_template(snapshot.get('analysis_type', 'monthly'))
     if template_path == TEMPLATE:
-        if not TEMPLATE.exists():normalize_template()
-        elif json.loads(MAP_PATH.read_text()).get('reader_template_version') not in ('reader-v2','reader-v3-truetype'):compact_working_template(TEMPLATE,MAP_PATH)
+        ensure_working_template()
     meta=json.loads(template_map.read_text());doc=Document(template_path)
     sanitize_template_identity(doc)
     values=build_bindings(snapshot,narrative,benchmark)

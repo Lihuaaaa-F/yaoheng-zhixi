@@ -37,11 +37,11 @@ function Resolve-Docker {
     # 2026-09-24 修复（审计 AUD-DEP-06）：不再硬编码 Ubuntu-20.04——按序探测
     # 每个发行版内是否有 docker，适配任意发行版名。
     $distros = @()
-    try { $distros = (wsl -l -q 2>$null | ForEach-Object { $_.Trim([char]0) }) | Where-Object { $_ } } catch {}
+    try { $distros = (wsl -l -q 2>$null | ForEach-Object { ($_ -replace "`0", '').Trim() }) | Where-Object { $_ } } catch {}
     foreach ($distro in $distros) {
         wsl -d $distro -e sh -c 'command -v docker >/dev/null 2>&1' 2>$null
         if ($LASTEXITCODE -eq 0) {
-            $wslFile = $ComposeFile -replace '\\', '/'
+            $wslFile = $ComposeFile.Replace([char]92, [char]47)
             if ($wslFile -match '^//wsl(?:\.localhost|\$)/([^/]+)/(.*)$') {
                 if ($Matches[1] -ne $distro) { continue }
                 $wslFile = '/' + $Matches[2]

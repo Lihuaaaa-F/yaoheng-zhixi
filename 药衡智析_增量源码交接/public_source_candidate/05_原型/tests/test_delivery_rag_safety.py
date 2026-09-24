@@ -245,3 +245,14 @@ def test_incomplete_vector_build_cannot_be_reported_as_pass(tmp_path, monkeypatc
     assert bool(result['evidence']) is (mode == 'hybrid')
     lexical = instance.search('设备记录', mode='bm25')
     assert lexical['status'] == 'PASS' and lexical['evidence']
+
+
+def test_explicit_root_does_not_use_another_projects_vector_settings(tmp_path, monkeypatch):
+    from pharma import model_settings
+    from pharma.knowledge import Knowledge
+    monkeypatch.delenv('PHARMA_EMBEDDING_DIR', raising=False)
+    foreign = tmp_path / 'another-project-model'
+    monkeypatch.setattr(model_settings, 'embedding_dir', lambda: foreign)
+    isolated = tmp_path / 'isolated-project'
+    kb = Knowledge(root=isolated)
+    assert kb.model_dir == isolated / '05_原型/.runtime' / model_settings.DEFAULT_EMBEDDING_SUBDIR

@@ -5,9 +5,11 @@
 # ---------- 阶段 1：前端构建 ----------
 FROM node:20-alpine AS frontend
 WORKDIR /src
+ARG NPM_REGISTRY=https://registry.npmjs.org
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 COPY 05_原型/frontend/package.json 05_原型/frontend/package-lock.json ./
-RUN npm ci
+RUN npm ci --include=dev --registry="$NPM_REGISTRY" \
+    && test -x node_modules/.bin/tsc
 COPY 05_原型/frontend ./
 RUN npm run build
 

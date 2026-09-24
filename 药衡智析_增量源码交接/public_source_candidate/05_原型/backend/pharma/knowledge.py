@@ -432,7 +432,10 @@ class Knowledge:
                 self.ingest_dir = ingest
         # 向量模型目录：环境变量 → 模型设置文件（向量模型“确认”切换后写入）→ 默认。
         from . import model_settings as _model_settings
-        self.model_dir = _model_settings.embedding_dir()
+        self.model_dir = (Path(os.environ['PHARMA_EMBEDDING_DIR'])
+                          if os.environ.get('PHARMA_EMBEDDING_DIR', '').strip()
+                          else runtime / _model_settings.DEFAULT_EMBEDDING_SUBDIR
+                          if root is not None else _model_settings.embedding_dir())
         self.vector_enabled = vector_enabled
         if reranker and not reranker_version: raise ValueError('RERANKER_VERSION_REQUIRED')
         self.reranker_version = reranker_version

@@ -80,3 +80,36 @@ def test_reference_render_output_passes_word_compat(tmp_path):
     path = tmp_path / 'generic.docx'
     render_docx(snapshot, narrative, {'evidence': []}, path)
     assert validate_word_compat(path)['status'] == 'PASS'
+
+
+def test_render_upgrades_legacy_default_template_without_changing_original(tmp_path, monkeypatch):
+    import json
+    import hashlib
+    from xml.etree import ElementTree as ET
+    import pharma.reports as reports
+    from pharma.metrics import analyze
+    template, mapping = tmp_path / 'working.docx', tmp_path / 'mapping.json'
+    reports.normalize_template(template, mapping)
+    original = next(p for p in sorted((reports.PACKAGE / '04_报告模板').glob('*.docx')) if not p.name.startswith('~$'))
+    original_hash = hashlib.sha256(original.read_bytes()).hexdigest()
+    damaged = tmp_path / 'legacy.docx'
+    with zipfile.ZipFile(template) as src, zipfile.ZipFile(damaged, 'w', zipfile.ZIP_DEFLATED) as dst:
+        for info in src.infolist():
+            raw = src.read(info.filename)
+            if info.filename.startswith('word/') and info.filename.endswith('.xml'):
+                raw = ET.tostring(ET.fromstring(raw), encoding='utf-8', xml_declaration=True)
+            dst.writestr(info, raw)
+    damaged.replace(template)
+    meta = json.loads(mapping.read_text())
+    meta['reader_template_version'] = 'reader-v3-truetype'
+    mapping.write_text(json.dumps(meta))
+    monkeypatch.setattr(reports, 'TEMPLATE', template)
+    monkeypatch.setattr(reports, 'MAP_PATH', mapping)
+    monkeypatch.setattr(reports, 'RUNTIME_TEMPLATES', tmp_path / 'installed')
+    output = tmp_path / 'report.docx'
+    reports.render_docx(analyze('中药一厂', '银黄口服液', '2026-05'),
+                        {'status': 'DEGRADED', 'findings': []}, {'evidence': []}, output)
+    assert validate_word_compat(output)['status'] == 'PASS'
+    assert validate_word_compat(template)['status'] == 'PASS'
+    assert json.loads(mapping.read_text())['reader_template_version'] == 'reader-v6'
+    assert hashlib.sha256(original.read_bytes()).hexdigest() == original_hash
