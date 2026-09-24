@@ -51,8 +51,11 @@ COPY --from=frontend /src/dist ./frontend/dist
 COPY competition_configuration /app/competition_configuration
 COPY docs/embedding_manifest.json /app/docs/embedding_manifest.json
 COPY 05_原型/deploy/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh && mkdir -p /data/runtime /data/artifacts     # 2026-09-24 审计 AUD-DEP-04：非 root 运行（数据卷由 compose 以 app 用户属主挂载）
-    && useradd -r -u 10001 -m appuser     && mkdir -p /home/appuser && chown -R appuser:appuser /data /home/appuser /app/05_原型
+# 新建命名卷从镜像目录继承属主；已有卷保留，不在启动时递归改写外部资料。
+RUN chmod +x /entrypoint.sh \
+    && mkdir -p /data/runtime /data/artifacts \
+    && useradd -r -u 10001 -m appuser \
+    && chown -R appuser:appuser /data /home/appuser /app/05_原型
 USER appuser
 ENV HOME=/home/appuser MPLCONFIGDIR=/data/runtime/matplotlib
 

@@ -1,34 +1,38 @@
 """模型厂商注册表：预填充、档位与推理强度映射的单一来源。
 
-三个模型角色（对应"模型配置"模块）：
-- extraction 数据提取模型：赛题加分项"数据提取用小模型"，仅允许轻量档；
-- analysis  数据分析模型：赛题基础项"大模型"（报告/归因/任务生成），仅允许旗舰/推理档；
+模型角色（对应"模型配置"模块）：
+- extraction 数据提取模型：建议轻量模型；
+- analysis 数据分析模型：建议质量较高的大模型，实际效果由评测决定；
+- assistant 独立助手：型号与参数自由配置，凭据不跨角色复用；
 - vector    向量模型：本地 ONNX 推理（knowledge.CpuEmbedding），不走 API。
 
 档位数据来源：2026-09-22 逐家核对官方文档（docs.bigmodel.cn、api-docs.deepseek.com、
 help.aliyun.com/zh/model-studio、platform.kimi.com、docs.siliconflow.cn、
 developers.openai.com、ollama.com、docs.vllm.ai、lmstudio.ai）。厂商模型迭代快，
-注册表只做"预填充 + 已知档位限制"，未收录的模型 ID 允许手填（状态页给出提示），
+注册表只做"预填充 + 档位建议"，所有模型 ID 都允许手填，
 list_remote_models 可从端点拉取真实清单。
 """
 from __future__ import annotations
 
 from typing import Any
 
-EFFORT_LEVELS = ('low', 'medium', 'high')
-EFFORT_LABELS = {'low': '低', 'medium': '中', 'high': '高'}
+EFFORT_LEVELS = ('', 'none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max')
+EFFORT_LABELS = {'': '服务默认', 'none': '关闭思考（需模型支持）', 'minimal': '最少',
+                 'low': '低', 'medium': '中', 'high': '高', 'xhigh': '更高', 'max': '最高'}
 
 ROLE_RULES = {
     'extraction': {
         'label': '数据提取模型（小模型）',
-        'hint': '赛题多模型协作加分项：数据提取/字段映射等轻量任务使用小模型。仅提供轻量档模型；旗舰档被限制。',
+        'hint': '建议轻量模型处理数据提取与字段映射；仍可自由选择型号，并用实际效果验证。',
         'allowed_tier': 'small', 'rejected_tier': 'large',
     },
     'analysis': {
         'label': '数据分析模型（大模型）',
-        'hint': '赛题基础项：报告分析文本、看板归因、对标拆原因、整改任务生成使用大模型。仅提供旗舰/推理档模型；轻量档被限制。',
+        'hint': '建议选择结构化输出和中文分析能力强的模型；档位仅作建议，不限制型号。',
         'allowed_tier': 'large', 'rejected_tier': 'small',
     },
+    'assistant': {'label': '工作台 AI 助手', 'hint': '独立服务地址、密钥与参数；不借用报告模型的凭据。',
+                  'allowed_tier': None, 'rejected_tier': None},
 }
 
 # 已知模型档位（registry 未收录的模型按 pattern 兜底分类，仍允许手填）。
@@ -138,46 +142,79 @@ def classify_tier(model: str) -> str | None:
     return None
 
 
-def tier_error(route: str, model: str) -> str | None:
-    """档位限制：extraction 拒绝已知 large，analysis 拒绝已知 small。"""
+def tier_advice(route: str, model: str) -> str | None:
+    """档位仅作建议；模型名不能替代真实质量与成本评测。"""
     rule = ROLE_RULES.get(route)
-    if not rule or not model:
+    if not rule or not model or not rule.get('allowed_tier'):
         return None
     tier = classify_tier(model)
     if tier is None or tier == rule['allowed_tier']:
         return None
-    return (f'{rule["label"]}不应使用{"旗舰/推理档" if tier == "large" else "轻量档"}模型 {model}'
-            f'（赛题要求：报表生成用大模型、数据提取用小模型）。请选择{"轻量档" if route == "extraction" else "旗舰/推理档"}模型或手动填写未收录模型。')
+    return f'{rule["label"]}通常建议选择{rule["allowed_tier"]}档；当前选择仍可保存，请用实际任务检验质量和成本。'
+
+
+def tier_error(route: str, model: str) -> str | None:
+    """旧调用兼容：不再把档位建议用作保存阻塞条件。"""
+    return None
 
 
 def effort_body_params(model: str, base_url: str, effort: str) -> dict[str, Any]:
-    """把统一推理强度档（low/medium/high）映射为各厂商请求参数。
+    params, _, errors = reasoning_parameters(model, base_url, effort)
+    if errors:
+        raise ValueError('MODEL_PARAMETERS_UNSUPPORTED: ' + '；'.join(errors))
+    return params
 
-    依据 2026-09-22 官方文档：GLM-5.3 系列仅接受 low/high/max；GLM-5.2 另有
-    medium/xhigh；DeepSeek 用 thinking.type；通义用 enable_thinking；OpenAI 用
-    reasoning_effort；Kimi-k3 用顶层 reasoning_effort（low/high/max）。
-    未识别的厂商不附加参数（端点忽略未知字段或按默认档执行）。
+
+def reasoning_parameters(model: str, base_url: str, effort: str, protocol: str = 'openai'):
+    """明确返回请求字段、提示和阻塞原因，不把“低”偷偷当成“关闭”。
+
+    2026-09-23 核对一手文档：docs.z.ai/guides/capabilities/thinking、
+    api-docs.deepseek.com/guides/thinking_mode、
+    platform.claude.com/docs/en/build-with-claude/effort。
+    默认档完全不发送推理字段；未知兼容端点明示尚未验证。
     """
+    if not effort:
+        return {}, [], []
     if effort not in EFFORT_LEVELS:
-        return {}
-    model_id = (model or '').lower()
+        return {}, [], ['推理强度取值无效']
     from urllib.parse import urlsplit
     host = (urlsplit(base_url or '').hostname or '').lower()
-    if model_id.startswith('glm-5.3') or 'kimi-k3' in model_id or model_id.startswith('gpt-6'):
-        return {'reasoning_effort': {'low': 'low', 'medium': 'high', 'high': 'max'}[effort]}
+    model_id = (model or '').lower()
+    warnings: list[str] = []
+    if protocol == 'anthropic':
+        if effort in ('none', 'minimal'):
+            return {'thinking': {'type': 'disabled'}}, ['关闭思考需该模型支持；不支持时请选服务默认'], []
+        mapped = 'max' if effort == 'xhigh' else effort
+        return {'output_config': {'effort': mapped}}, ['仅支持 effort 的 Anthropic 兼容模型可使用此参数；旧模型请选服务默认'], []
+    if model_id.startswith('glm-5.3'):
+        if effort == 'none':
+            return {}, [], ['GLM-5.3 不支持关闭思考；请选 low、high、max 或服务默认']
+        mapped = {'minimal': 'low', 'medium': 'high', 'xhigh': 'max'}.get(effort, effort)
+        if mapped != effort:
+            warnings.append(f'GLM-5.3 将 {effort} 明确映射为 {mapped}；思考仍然开启')
+        return {'reasoning_effort': mapped}, warnings, []
     if model_id.startswith('glm-5.2'):
-        # GLM-5.2 起支持 medium/xhigh（官方 thinking 文档）。
-        return {'reasoning_effort': {'low': 'low', 'medium': 'medium', 'high': 'xhigh'}[effort]}
-    if model_id.startswith('glm-5'):
-        # GLM-5/5.1/5-turbo：沿用实测可用档 low/high/max（1210 错误明示不支持关闭思考）。
-        return {'reasoning_effort': {'low': 'low', 'medium': 'high', 'high': 'max'}[effort]}
-    if host.endswith('deepseek.com'):
-        return {'thinking': {'type': 'enabled' if effort != 'low' else 'disabled'}}
-    if host.endswith('aliyuncs.com'):
-        return {'enable_thinking': effort != 'low'}
-    if host.endswith('openai.com') or model_id.startswith('gpt-'):
-        return {'reasoning_effort': effort}
-    return {}
+        return {'reasoning_effort': effort}, [], []
+    if model_id.startswith(('glm-5', 'glm-4.5', 'glm-4.6', 'glm-4.7')):
+        return {'thinking': {'type': 'disabled' if effort == 'none' else 'enabled'}}, ['该 GLM 型号仅映射思考开关，不声称支持精确强度档位'], []
+    if host == 'api.deepseek.com':
+        if effort == 'none':
+            return {'thinking': {'type': 'disabled'}}, [], []
+        mapped = {'minimal': 'low', 'medium': 'high', 'xhigh': 'max'}.get(effort, effort)
+        if mapped != effort:
+            warnings.append(f'DeepSeek 将 {effort} 明确映射为 {mapped}')
+        return {'thinking': {'type': 'enabled'}, 'reasoning_effort': mapped}, warnings, []
+    if host.endswith('.aliyuncs.com'):
+        return {'enable_thinking': effort != 'none'}, ['当前通义适配映射思考开关，强度档位不作等效承诺'], []
+    if host == 'api.openai.com' or model_id.startswith(('gpt-', 'o1', 'o3', 'o4')):
+        return {'reasoning_effort': effort}, ['不同 OpenAI 模型支持的强度不同；以连接测试为准，未支持请选服务默认'], []
+    return {'reasoning_effort': effort}, ['此兼容服务的推理参数尚未验证；将原样发送 reasoning_effort，不支持时请选服务默认'], []
+
+
+def uses_completion_tokens(model: str, base_url: str) -> bool:
+    from urllib.parse import urlsplit
+    return (urlsplit(base_url or '').hostname == 'api.openai.com'
+            and (model or '').lower().startswith(('gpt-5', 'gpt-6', 'o1', 'o3', 'o4')))
 
 
 def presets_payload() -> dict[str, Any]:

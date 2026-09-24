@@ -4,6 +4,7 @@ from pathlib import Path
 from datetime import datetime
 import hashlib,json,sqlite3,uuid
 from .config import DB_PATH,ARTIFACTS
+from .sqlite_utils import enable_wal
 
 STAGES=['VALIDATING','COMPUTING','RETRIEVING','GENERATING','RENDERING_DOCX','CONVERTING_PDF','VERIFYING']
 TERMINAL=('SUCCEEDED','DEGRADED','FAILED')
@@ -25,8 +26,9 @@ class JobStore:
                 except sqlite3.OperationalError:pass
     @contextmanager
     def db(self):
-        c=sqlite3.connect(self.path,timeout=15);c.row_factory=sqlite3.Row;c.execute('PRAGMA journal_mode=WAL')
+        c=sqlite3.connect(self.path,timeout=15);c.row_factory=sqlite3.Row
         try:
+            enable_wal(c)
             with c:yield c
         finally:c.close()
     def snapshot(self,body):

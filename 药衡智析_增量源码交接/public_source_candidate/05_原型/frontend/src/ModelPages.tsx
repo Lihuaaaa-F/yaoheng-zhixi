@@ -6,14 +6,14 @@ import JobProgress from './JobProgress';
 export function ExtractionModel() {
   return <div>
     <ModelConfigForm route="extraction" />
-    <p className="muted" style={{ padding: '0 4px' }}>数据提取模型用于：业务数据字段映射建议、知识/模板解析辅助等轻量任务（赛题加分项“多模型协作：数据提取用小模型”）。未配置时导入流程确定性回退（预设映射），不阻塞使用。</p>
+    <p className="muted" style={{ padding: '0 4px' }}>数据提取模型用于：业务数据字段映射建议、知识/模板解析辅助等轻量任务。未配置时使用预设映射；请在发布前核对字段与单位。</p>
   </div>;
 }
 
 export function AnalysisModel() {
   return <div>
     <ModelConfigForm route="analysis" />
-    <p className="muted" style={{ padding: '0 4px' }}>数据分析模型用于：报告分析文本、看板归因、对标拆原因、整改任务生成、导入归因推测与向量模型适配评估（赛题基础项“大模型”）。未配置时报告降级为规则化解释。</p>
+    <p className="muted" style={{ padding: '0 4px' }}>数据分析模型用于：报告分析文本、看板归因、对标拆原因、整改任务生成、导入归因推测与向量模型适配评估。未配置时报告降级为规则化解释。</p>
   </div>;
 }
 
@@ -46,7 +46,7 @@ export function VectorModel() {
         <dt>当前模型</dt><dd>{info.name}{info.is_default ? '（内置默认）' : ''}</dd>
         <dt>模型目录</dt><dd title={info.path}>{String(info.path ?? '').split(/[\\/]/).filter(Boolean).at(-1) ?? info.path}{info.is_default ? '' : ''}</dd>
         <dt>资产状态</dt><dd>ONNX {info.onnx_present ? '✓' : '缺失'} · 分词器 {info.tokenizer_present ? '✓' : '缺失'}{info.dimension ? ` · 维度 ${info.dimension}` : ''}</dd>
-        <dt>资产指纹</dt><dd>{String(info.fingerprint ?? '').slice(0, 16)}…（进入知识版本，切换自动重建）</dd>
+        <dt>索引更新</dt><dd>切换完成后启用新知识版本，旧报告保留原引用。</dd>
       </dl>
     </div>}
     <div className="filters" style={{ marginTop: 12 }}>

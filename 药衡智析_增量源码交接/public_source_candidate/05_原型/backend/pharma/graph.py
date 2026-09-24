@@ -218,9 +218,6 @@ class KnowledgeGraph:
 
 def graph_for_context(context):
     """按分析上下文定位 Knowledge 并返回对应图谱（竞争/制药走私有文档集）。"""
-    from .knowledge import Knowledge
-    if not context or (not context.get('industry_id')):
-        knowledge = Knowledge()
-    else:
-        knowledge = Knowledge(context=context)
+    from .context_services import knowledge_for_context
+    knowledge = knowledge_for_context(context)
     return KnowledgeGraph(knowledge)

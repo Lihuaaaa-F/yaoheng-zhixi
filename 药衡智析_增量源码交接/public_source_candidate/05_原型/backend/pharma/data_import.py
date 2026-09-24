@@ -15,6 +15,7 @@ import csv
 import hashlib
 import io
 import json
+import os
 import re
 import shutil
 import sqlite3
@@ -185,13 +186,25 @@ def create_upload(kind: str, filename: str, payload: bytes, data_type: str = '')
     if suffix not in allowed or kind not in allowed[suffix]:
         raise ValueError('UNSUPPORTED_FILE_TYPE_FOR_KIND:' + suffix)
     import_id = hashlib.sha256(payload).hexdigest()[:16] + '-' + kind
+    if kind == 'business':
+        # Actual and budget may legitimately contain identical bytes. Their
+        # explicit role is part of identity, while old same-role IDs remain valid.
+        legacy_original=IMPORTS_ROOT / import_id / ('original' + suffix)
+        if legacy_original.is_file():
+            existing=_row(import_id)
+            if existing['meta'].get('data_type')==data_type:
+                return {**existing,'dedup':True}
+        import_id += '-' + data_type
     folder = _folder(import_id)
     original = folder / ('original' + suffix)
     if original.exists():  # 同内容重复上传：幂等返回已有记录
         # dedup 标记（2026-09-24 用户反馈"上传后没进待解析而是直接解析了"）：
         # 返回的是已有记录——若它早已解析完，记录会直接出现在"已处理记录"
         # 而不是"待解析"。前端据此给出明确提示，避免像被悄悄解析了一样。
-        return {**_row(import_id), 'dedup': True}
+        existing = _row(import_id)
+        if existing['meta'].get('data_type') != data_type:
+            raise ValueError('IMPORT_DATA_TYPE_CONFLICT: 同一文件已按其他资料类型上传，请核对实际或预算口径')
+        return {**existing, 'dedup': True}
     original.write_bytes(payload)  # 原始字节保留
     meta: dict[str, Any] = {'filename': filename, 'suffix': suffix, 'data_type': data_type}
     if suffix in ('.csv', '.txt'):
@@ -220,12 +233,32 @@ def delete_import(import_id: str) -> None:
     record = _row(import_id)  # KeyError → 404
     if record['status'] not in DELETABLE_IMPORT_STATUSES:
         raise ValueError('IMPORT_NOT_DELETABLE:' + record['status'])
+    if record['meta'].get('parsed') or record['meta'].get('published'):
+        raise ValueError('IMPORT_ALREADY_REFERENCED')
+    if record['kind'] == 'knowledge':
+        # A failed retry must not make an earlier published original deletable.
+        for path in (IMPORTS_ROOT / 'knowledge' / 'scopes').glob('*/registry.json'):
+            registry = json.loads(path.read_text(encoding='utf-8'))
+            if any(item.get('import_id') == import_id for item in registry.get('versions', {}).values()):
+                raise ValueError('IMPORT_ALREADY_REFERENCED')
     shutil.rmtree(IMPORTS_ROOT / import_id, ignore_errors=True)
     with _connect() as db:
         db.execute('DELETE FROM imports WHERE id=?', (import_id,))
 
 
-def _read_table(suffix: str, payload: bytes, encoding: str, sheet: str | None) -> tuple[list[str], list[list[str]]]:
+def _xlsx_nonempty_sheets(payload: bytes) -> list[str]:
+    """Formula-only sheets are not empty even if formula caches are absent."""
+    import openpyxl
+    book=openpyxl.load_workbook(io.BytesIO(payload),read_only=True,data_only=False)
+    try:
+        return [sheet.title for sheet in book if any(
+            any(cell is not None and str(cell).strip() for cell in row)
+            for row in sheet.iter_rows(values_only=True))]
+    finally:book.close()
+
+
+def _read_table(suffix: str, payload: bytes, encoding: str, sheet: str | None, *,
+                preview_only: bool = False) -> tuple[list[str], list[list[str]]]:
     """返回 (表头, 行)。XLSX 指定工作表；CSV 单表。"""
     if suffix == '.csv':
         text = payload.decode(encoding)
@@ -233,9 +266,12 @@ def _read_table(suffix: str, payload: bytes, encoding: str, sheet: str | None) -
         return ([h.strip() for h in rows[0]] if rows else []), [r for r in rows[1:] if any(c.strip() for c in r)]
     if suffix == '.xlsx':
         import openpyxl
+        populated=_xlsx_nonempty_sheets(payload)
+        if len(populated)>1 and not preview_only:
+            raise ValueError('MULTIPLE_WORKSHEETS_NOT_SUPPORTED: 含多个非空工作表，请拆分为单表 XLSX/CSV 后分别上传；尚未接入任何工作表')
         book = openpyxl.load_workbook(io.BytesIO(payload), read_only=True, data_only=True)
         names = book.sheetnames
-        target = sheet if sheet in names else names[0]
+        target = sheet if sheet in populated else (populated[0] if populated else names[0])
         grid = list(book[target].iter_rows(values_only=True))
         book.close()
         rows = [[('' if c is None else str(c)).strip() for c in r] for r in grid if any(str(c or '').strip() for c in r)]
@@ -254,10 +290,14 @@ def _build_preview(kind: str, suffix: str, payload: bytes, meta: dict[str, Any])
         book = openpyxl.load_workbook(io.BytesIO(payload), read_only=True)
         meta['sheets'] = book.sheetnames
         book.close()
-    headers, rows = _read_table(suffix, payload, encoding, meta.get('sheet'))
+        meta['nonempty_sheets']=_xlsx_nonempty_sheets(payload)
+        meta['sheet']=(meta['nonempty_sheets'] or meta['sheets'])[0]
+    headers, rows = _read_table(suffix, payload, encoding, meta.get('sheet'),preview_only=True)
     meta.setdefault('sheet', meta.get('sheets', [''])[0] if suffix == '.xlsx' else '')
     mapping = suggest_mapping(headers)
     return {'sheet': meta.get('sheet', ''), 'headers': headers,
+            'warning':'含多个非空工作表，请拆分为单表 XLSX/CSV 后分别上传；尚未接入任何工作表'
+                      if len(meta.get('nonempty_sheets',[]))>1 else None,
             'sample_rows': rows[:8], 'row_count': len(rows),
             'suggested_mapping': mapping,
             'header_fingerprint': hashlib.sha256('|'.join(headers).encode()).hexdigest()[:12]}
@@ -340,6 +380,8 @@ def validate_business(record: dict[str, Any], mapping: dict[str, str], options: 
     errors: list[dict[str, Any]] = []
     warnings: list[str] = []
     scale = Decimal(str(options.get('amount_scale', '1')))  # 元=1；万元=10000
+    if not scale.is_finite() or scale <= 0:
+        raise ValueError('INVALID_AMOUNT_SCALE: 金额倍率必须为有限正数')
     quantity_is_independent = options.get('quantity_independent', True)
     dimension_values = {'factory_id': set(), 'product_id': set()}
     periods: set[str] = set()
@@ -348,6 +390,7 @@ def validate_business(record: dict[str, Any], mapping: dict[str, str], options: 
     seen_quantity_rows: set[tuple[str, str, str, str]] = set()
     dimension_rows = 0
     numeric_empty: dict[str, int] = {}
+    seen_detail_rows: dict[tuple[str, ...], int] = {}
 
     def note_empty_cell(header: str, row_index: int) -> None:
         numeric_empty[header] = numeric_empty.get(header, 0) + 1
@@ -366,6 +409,14 @@ def validate_business(record: dict[str, Any], mapping: dict[str, str], options: 
         errors.append({'file': record['filename'], 'sheet': record['meta'].get('sheet', ''), 'row': '',
                        'reason': '未映射任何成本要素列（element:*）或成本列，无法构成成本数据'})
     for index, row in enumerate(rows, start=2):
+        if record['meta'].get('data_type') in ('material_detail','manufacturing_detail','labor_detail'):
+            identity=tuple(str(cell).strip() for cell in row)
+            if identity in seen_detail_rows:
+                errors.append({'file':record['filename'],'sheet':record['meta'].get('sheet',''),
+                               'row':index,'reason':f'与第 {seen_detail_rows[identity]} 行完全重复；'
+                                   '缺少可区别的业务明细标识，请去重或补充标识后重新上传'})
+                continue
+            seen_detail_rows[identity]=index
         cells = dict(zip(headers, row))
         factory = product = period = ''
         for header, role in role_of.items():
@@ -383,6 +434,9 @@ def validate_business(record: dict[str, Any], mapping: dict[str, str], options: 
         scenario = options.get('scenario') if options.get('scenario') in ('actual', 'budget') \
             else ('budget' if marker and marker in ' '.join(row) else 'actual')
         if not (factory and product and period):
+            missing=[name for name,value in [('工厂',factory),('产品',product),('期间',period)] if not value]
+            errors.append({'file':record['filename'],'sheet':record['meta'].get('sheet',''),
+                           'row':index,'reason':'业务行缺少有效的'+ '、'.join(missing)+'，未加入分析'})
             continue
         dimension_rows += 1
         dimension_values['factory_id'].add(factory)
@@ -624,7 +678,8 @@ def publish_business(record: dict[str, Any], mapping: dict[str, str], options: d
     existed_before = enterprise_dir.exists()  # 重复发布同企业时不得删除既有有效目录
     enterprise_dir.mkdir(parents=True, exist_ok=True)
     (enterprise_dir / 'facts.json').write_text(json.dumps(dataset, ensure_ascii=False), encoding='utf-8')
-    (enterprise_dir / 'knowledge.json').write_text('[]', encoding='utf-8')
+    if not (enterprise_dir / 'knowledge.json').exists():
+        (enterprise_dir / 'knowledge.json').write_text('[]', encoding='utf-8')
     specification = options.get('specification') or '导入数据未声明规格'
     config = {'id': enterprise_id, 'name': enterprise_name, 'dataset_id': record['sha256'][:16],
               'policy_version': 'imported-v1', 'quantity_unit': quantity_unit, 'currency': 'CNY',
@@ -646,45 +701,61 @@ def publish_business(record: dict[str, Any], mapping: dict[str, str], options: d
 
 
 def publish_knowledge(record: dict[str, Any], options: dict[str, Any]) -> dict[str, Any]:
-    """知识资料解析：文本直接抽取；解析失败必须显式失败，不得标成功。"""
+    """Parse without flattening genuine page/paragraph locations or publishing yet."""
+    from .knowledge import knowledge_context_id, parse_document
+    record = get_import(record['id'])
     folder = IMPORTS_ROOT / record['id']
-    path = folder / ('original' + record['meta']['suffix'])
+    path = original_path(record)
     suffix = record['meta']['suffix']
-    title = options.get('title') or record['filename']
-    pages: list[str] = []
-    if suffix == '.pdf':
-        import fitz
-        doc = fitz.open(path)
-        pages = [page.get_text() for page in doc]
-        doc.close()
-    elif suffix == '.docx':
-        from docx import Document
-        document = Document(path)
-        # 审计 AUD-IMP-07：此前只取段落，表格内容静默缺失（check_template 都专门扫表格）
-        parts = [p.text for p in document.paragraphs]
-        for table in document.tables:
-            parts.append('\n'.join(' | '.join(cell.text for cell in row.cells) for row in table.rows))
-        pages = ['\n'.join(parts)]
+    context_id = knowledge_context_id(options.get('context_id') or
+                                    ({'industry_id': options['industry_id'], 'enterprise_id': options['enterprise_id']}
+                                     if options.get('industry_id') and options.get('enterprise_id') else None))
+    industry_id, enterprise_id = context_id.split(':', 1)
+    title = str(options.get('title') or record['filename'])[:200]
+    products = options.get('products') or []
+    if not isinstance(products, list) or any(not isinstance(p, str) or not p.strip() or len(p) > 200 for p in products):
+        raise ValueError('INVALID_KNOWLEDGE_PRODUCTS')
+    version = str(options.get('document_version') or options.get('version') or '1')[:100]
+    metadata = {'context_id': context_id, 'title': title, 'products': products,
+                'source_format': suffix.lstrip('.'),
+                'factory': str(options.get('factory') or '')[:200],
+                'specification': str(options.get('specification') or '')[:200],
+                'document_version': version, 'effective_date': str(options.get('effective_date') or '')[:10],
+                'data_type': record['meta'].get('data_type', 'enterprise')}
+    source_seed = json.dumps([record['sha256'], record['filename'], metadata], ensure_ascii=False, sort_keys=True)
+    source_id = 'src-' + hashlib.sha256(source_seed.encode()).hexdigest()[:24]
+    blocks = []
+    if suffix in ('.pdf', '.docx'):
+        blocks = list(parse_document(path))
+        ocr_pages = [b['page'] for b in blocks if b.get('requires_ocr')]
+        if ocr_pages:
+            raise ValueError('KNOWLEDGE_OCR_REQUIRED: 第' + '、'.join(map(str, ocr_pages)) + '页含图片但缺少可检索文字，请先OCR后重新上传；原件已保留')
     elif suffix == '.csv':
-        # 行情/基准等表格类知识：按行转文本入库（保留列名行）。
         headers, rows = _read_table(suffix, path.read_bytes(), record['encoding'] or 'utf-8', '')
-        pages = ['\n'.join(','.join(r) for r in [headers] + rows)] if headers else []
+        for offset in range(0, len(rows), 10):
+            text = '\n'.join(','.join(r) for r in [headers, *rows[offset:offset + 10]])
+            blocks.append({'page': None, 'location': f'数据行{offset + 2}-{min(offset + 11, len(rows) + 1)}', 'original_text': text})
     elif suffix == '.txt':
-        pages = [path.read_text(encoding=record['encoding'] or 'utf-8')]
-    text = '\n'.join(pages).strip()
+        lines = path.read_text(encoding=record['encoding'] or 'utf-8').splitlines()
+        blocks = [{'page': None, 'location': f'行{i + 1}-{min(i + 12, len(lines))}', 'original_text': '\n'.join(lines[i:i + 12])}
+                  for i in range(0, len(lines), 12)]
+    text = '\n'.join(b['original_text'] for b in blocks).strip()
     if len(text) < 30:
         raise ValueError('KNOWLEDGE_PARSE_EMPTY: 解析后无有效文本（扫描件需先OCR，系统不自动宣称成功）')
-    entry = {'enterprise_id': options.get('enterprise_id', ''), 'industry_id': options.get('industry_id', ''),
-             'evidence_id': 'k-' + record['sha256'][:16], 'source': record['filename'], 'title': title,
-             'text': text, 'location': f'共{len(pages)}页' if suffix == '.pdf' else '全文',
-             'applicable_products': options.get('products', []), 'applicable_factories': options.get('factories', []),
-             'effective_period': options.get('period', ''), 'version': options.get('version', '1'),
-             'sha256': record['sha256'], 'parsed_at': _now()}
+    page_count = len({b['page'] for b in blocks if b.get('page') is not None})
+    shared = {**metadata, 'enterprise_id': enterprise_id, 'industry_id': industry_id, 'source_id': source_id,
+              'source': record['filename'], 'sha256': record['sha256'],
+              'source_category': metadata['data_type'], 'scope': 'product' if products else 'general'}
+    records = [{**b, **shared, 'text': b['original_text']} for b in blocks if b['original_text'].strip()]
+    entry = {**shared, 'evidence_id': source_id, 'text': text, 'records': records,
+             'pages': page_count, 'location': f'共{page_count}页' if suffix == '.pdf' else '段落/行号定位',
+             'version': version, 'parsed_at': _now()}
     (folder / 'knowledge_entry.json').write_text(json.dumps(entry, ensure_ascii=False), encoding='utf-8')
     record = _save(record, {**record['meta'], 'knowledge_entry': True,
-                            'parse': {'pages': len(pages), 'characters': len(text)}})
-    return {'evidence_id': entry['evidence_id'], 'pages': len(pages), 'characters': len(text),
-            'entry_file': 'knowledge_entry.json'}
+                            'context_id': context_id, 'source_id': source_id,
+                            'parse': {'pages': page_count, 'characters': len(text)}})
+    return {'source_id': source_id, 'evidence_id': source_id, 'title': title, 'context_id': context_id,
+            'pages': page_count, 'characters': len(text), 'entry_file': 'knowledge_entry.json'}
 
 
 def check_template(record: dict[str, Any]) -> dict[str, Any]:
@@ -777,18 +848,28 @@ def waiting_imports(kind: str, stale_after_seconds: int = 1800) -> list[dict[str
             return datetime.fromisoformat(record['updated']).timestamp() < cutoff
         except (ValueError, TypeError, KeyError):
             return False
-    return [r for r in list_imports(kind) if recoverable(r)]
+    records = _business_records() if kind == 'business' else list_imports(kind)
+    if kind == 'business':
+        manifest=_workspace_manifest() or {}
+        consumed={item['import_id'] for field in ('sources','superseded_sources') for item in manifest.get(field,[])}
+        records=[record for record in records if record['id'] not in consumed]
+    return [r for r in records if recoverable(r)]
 
 
 def mark_import_status(record: dict[str, Any], status: str, extra_meta: dict[str, Any] | None = None) -> dict[str, Any]:
     if status not in IMPORT_STATUSES + ('PUBLISHED',):
         raise ValueError('UNKNOWN_IMPORT_STATUS')
+    # Workers keep earlier copies while publication adds an immutable mapping
+    # contract. Refresh metadata so marking PARSED cannot erase that contract.
+    record = get_import(record['id'])
     record['status'] = status
     return _save(record, {**record['meta'], **(extra_meta or {})})
 
 
 def publish_business_batch(entries: list[tuple[dict[str, Any], dict[str, str], dict[str, Any]]],
-                           enterprise_name: str, pack_id: str, quantity_unit: str) -> dict[str, Any]:
+                           enterprise_name: str, pack_id: str, quantity_unit: str, *,
+                           workspace_enterprise_id: str | None = None,
+                           workspace_manifest: dict[str, Any] | None = None) -> dict[str, Any]:
     """多文件合并发布（v2 数据解析流水线）：同一企业的 汇总/明细/预算 文件
     合并为一个 facts 数据集后注册。
 
@@ -810,12 +891,23 @@ def publish_business_batch(entries: list[tuple[dict[str, Any], dict[str, str], d
     from .import_pipeline import TYPE_PRIORITY
     # 审计 AUD-IMP-03：企业目录名纳入数据指纹——同名重导不同数据得到新目录，
     # 不再覆盖旧注册条目指向的数据；同内容重导幂等落回同一目录。
-    source_snapshot = hashlib.sha256('|'.join(r['sha256'] for r, _, _, _ in validations).encode()).hexdigest()
-    enterprise_id = 'imp-' + hashlib.sha256((enterprise_name + pack_id + source_snapshot).encode()).hexdigest()[:8]
+    if not validations:
+        raise ValueError('EMPTY_BUSINESS_IMPORT')
+    # Mapping, scenario and unit are part of the immutable input version too.
+    # Sorting makes upload order immaterial and preserves reproducible snapshots.
+    validations.sort(key=lambda entry: entry[0]['id'])
+    source_snapshot = hashlib.sha256(json.dumps({'entries':[
+        {'sha256':r['sha256'],'mapping':m,'options':o,'data_type':r['meta'].get('data_type'),
+         'sheet':r['meta'].get('sheet')} for r,m,o,_ in validations],
+        'enterprise':enterprise_name,'pack':pack_id,'unit':quantity_unit},
+        ensure_ascii=False,sort_keys=True,separators=(',',':')).encode()).hexdigest()
+    enterprise_id = workspace_enterprise_id or 'imp-' + hashlib.sha256((enterprise_name + pack_id + source_snapshot).encode()).hexdigest()[:8]
     merged_amounts: dict[tuple[str, str, str, str, str], Decimal] = {}
     amount_priority: dict[tuple[str, str, str, str, str], int] = {}
     merged_quantities: dict[tuple[str, str, str, str], Decimal] = {}
     quantity_source: dict[tuple[str, str, str, str], str] = {}
+    amount_sources: dict[tuple, list[str]] = {}
+    quantity_sources: dict[tuple, list[str]] = {}
     periods: set[str] = set()
     products: set[str] = set()
     factories: set[str] = set()
@@ -829,6 +921,8 @@ def publish_business_batch(entries: list[tuple[dict[str, Any], dict[str, str], d
         role_of = {h: mapping.get(h, '') for h in headers}
         file_amounts: dict[tuple[str, str, str, str, str], Decimal] = {}
         file_quantities: dict[tuple[str, str, str, str], Decimal] = {}
+        file_amount_sources: dict[tuple, list[str]] = {}
+        file_quantity_sources: dict[tuple, list[str]] = {}
         _publish_errors: list = []
         _publish_warnings: list = []
         for index, row in enumerate(rows, start=2):
@@ -851,6 +945,7 @@ def publish_business_batch(entries: list[tuple[dict[str, Any], dict[str, str], d
                         row_quantity = number
                         key = (factory, product, period, scenario)
                         file_quantities[key] = number
+                        file_quantity_sources.setdefault(key, []).append(f'{record["filename"]}:{index}')
             for header, role in role_of.items():
                 value = cells.get(header, '')
                 if role and (role.startswith('element:') or role == 'total_cost'):
@@ -863,6 +958,7 @@ def publish_business_batch(entries: list[tuple[dict[str, Any], dict[str, str], d
                     element = role.split(':', 1)[1] if role.startswith('element:') else '__total__'
                     key = (factory, product, period, scenario, element)
                     file_amounts[key] = file_amounts.get(key, Decimal(0)) + converted * scale
+                    file_amount_sources.setdefault(key, []).append(f'{record["filename"]}:{index}:{header}')
         for key, number in file_quantities.items():
             if key in merged_quantities and merged_quantities[key] != number:
                 raise ValueError(f'IMPORT_QUANTITY_CONFLICT:{key[0]}/{key[1]}/{key[2]}'
@@ -870,21 +966,29 @@ def publish_business_batch(entries: list[tuple[dict[str, Any], dict[str, str], d
                                  f'{merged_quantities[key]} 与 {number}')
             merged_quantities[key] = number
             quantity_source.setdefault(key, record['filename'])
+            quantity_sources.setdefault(key, []).extend(file_quantity_sources[key])
         for key, amount in file_amounts.items():
             if key not in merged_amounts:
                 merged_amounts[key] = amount
                 amount_priority[key] = priority
+                amount_sources[key] = list(file_amount_sources[key])
                 continue
             existing_priority = amount_priority[key]
+            if workspace_enterprise_id and merged_amounts[key] != amount:
+                raise ValueError(f'IMPORT_AMOUNT_CONFLICT:{key[0]}/{key[1]}/{key[2]}/{key[4]}：'
+                                 f'{"、".join(amount_sources[key])} 与 {record["filename"]} 金额不一致；'
+                                 '本批数据未加入工作区，请核对后重新上传')
             if existing_priority == priority:
                 if merged_amounts[key] != amount:
                     raise ValueError(f'IMPORT_AMOUNT_CONFLICT:{key[0]}/{key[1]}/{key[2]}/{key[4]}'
                                      f' 同优先级文件口径冲突：{merged_amounts[key]} 与 {amount}')
+                amount_sources[key].extend(file_amount_sources[key])
             elif priority < existing_priority:  # 汇总覆盖先前明细/预算
                 if merged_amounts[key] != amount:
                     merge_warnings.append(f'{key[0]}/{key[1]}/{key[2]}/{key[4]}：以{record["filename"]}（汇总口径）为准')
                 merged_amounts[key] = amount
                 amount_priority[key] = priority
+                amount_sources[key] = list(file_amount_sources[key])
             elif merged_amounts[key] != amount:  # 低优先级与汇总不一致：汇总为准
                 merge_warnings.append(f'{key[0]}/{key[1]}/{key[2]}/{key[4]}：已由汇总口径覆盖，明细值 {amount} 不采用')
     amounts = merged_amounts
@@ -907,7 +1011,7 @@ def publish_business_batch(entries: list[tuple[dict[str, Any], dict[str, str], d
                       'enterprise_id': enterprise_id, 'factory_id': factory, 'product_id': product,
                       'product_version': '1', 'period': period, 'cost_object': product,
                       'scenario': scen, 'policy_version': 'imported-v1',
-                      'source_row': 'batch:quantity:{0}:{1}:{2}:{3}'.format(factory, product, period, scen),
+                      'source_row': '；'.join(sorted(set(quantity_sources[(factory,product,period,scen)]))),
                       'source_snapshot': source_snapshot, 'quantity': str(quantity), 'unit': quantity_unit})
     elements_present = sorted({key[4] for key in amounts if key[4] != '__total__'})
     for (factory, product, period, scen), total in totals.items():
@@ -919,18 +1023,22 @@ def publish_business_batch(entries: list[tuple[dict[str, Any], dict[str, str], d
                           'enterprise_id': enterprise_id, 'factory_id': factory, 'product_id': product,
                           'product_version': '1', 'period': period, 'cost_object': product,
                           'scenario': scen, 'policy_version': 'imported-v1',
-                          'source_row': 'batch:cost:{0}:{1}:{2}:{3}:{4}'.format(factory, product, period, scen, element),
+                          'source_row': '；'.join(sorted(set(amount_sources[(factory,product,period,scen,element)]))),
                           'source_snapshot': source_snapshot,
                           'element_id': element, 'level': 'detail',
                           'amount': str(amount), 'currency': 'CNY', 'quantity_unit': quantity_unit})
     dataset = {'costs': [f for f in facts if 'element_id' in f],
                'quantities': [f for f in facts if 'quantity' in f],
                'optional': []}
-    enterprise_dir = IMPORTS_ROOT / 'enterprises' / enterprise_id
+    if workspace_enterprise_id and not any(f['scenario']=='actual' for f in dataset['costs']):
+        raise ValueError('WORKSPACE_ACTUAL_DATA_REQUIRED: 仅有预算，尚缺实际成本数据；请补充后一起解析')
+    enterprise_dir = (IMPORTS_ROOT / 'workspace' / 'versions' / source_snapshot
+                      if workspace_enterprise_id else IMPORTS_ROOT / 'enterprises' / enterprise_id)
     existed_before = enterprise_dir.exists()  # 重复发布同企业时不得删除既有有效目录
     enterprise_dir.mkdir(parents=True, exist_ok=True)
     (enterprise_dir / 'facts.json').write_text(json.dumps(dataset, ensure_ascii=False), encoding='utf-8')
-    (enterprise_dir / 'knowledge.json').write_text('[]', encoding='utf-8')
+    if not (enterprise_dir / 'knowledge.json').exists():
+        (enterprise_dir / 'knowledge.json').write_text('[]', encoding='utf-8')
     specification = options.get('specification') or '导入数据未声明规格'
     config = {'id': enterprise_id, 'name': enterprise_name, 'dataset_id': source_snapshot[:16],
               'policy_version': 'imported-v1', 'quantity_unit': quantity_unit, 'currency': 'CNY',
@@ -939,8 +1047,20 @@ def publish_business_batch(entries: list[tuple[dict[str, Any], dict[str, str], d
               'responsibilities': {}, 'source_mode': 'imported_cost'}
     config_path = enterprise_dir / 'enterprise.json'
     config_path.write_text(json.dumps(config, ensure_ascii=False), encoding='utf-8')
+    if workspace_enterprise_id:
+        from .industry import digest, NormalizedDataset
+        version = {**(workspace_manifest or {}), 'context_id':f'{pack_id}:{enterprise_id}',
+                   'enterprise_id':enterprise_id,'data_snapshot':digest(NormalizedDataset.model_validate(dataset).model_dump(mode='json')),
+                   'source_snapshot':source_snapshot,'published_at':_now()}
+        existing_version = enterprise_dir / 'workspace.json'
+        if existing_version.is_file():
+            previous=json.loads(existing_version.read_text(encoding='utf-8'))
+            if previous.get('data_snapshot') != version['data_snapshot']:
+                raise ValueError('WORKSPACE_IMMUTABLE_VERSION_CONFLICT')
+            version['published_at']=previous['published_at']
+        (enterprise_dir / 'workspace.json').write_text(json.dumps(version, ensure_ascii=False), encoding='utf-8')
     try:
-        register_enterprise(pack_id, str(config_path))
+        register_enterprise(pack_id, str(config_path), advance_workspace=bool(workspace_enterprise_id))
     except Exception:
         # 注册失败不留孤儿目录（审计 AUD-DATA-02）：仅在本次新建时回滚
         if not existed_before:
@@ -950,22 +1070,280 @@ def publish_business_batch(entries: list[tuple[dict[str, Any], dict[str, str], d
             'dataset_facts': len(dataset['costs']) + len(dataset['quantities']),
             'factories': sorted(factories), 'products': sorted(products), 'periods': sorted(periods),
             'source_files': [r['filename'] for r, _, _, _ in validations],
+            'data_snapshot': version['data_snapshot'] if workspace_enterprise_id else source_snapshot,
             'merge_warnings': merge_warnings[:50],
             'published_at': _now()}
 
 
-def write_knowledge_source(record: dict[str, Any], text: str) -> Path:
-    """把解析出的知识文本落入知识入库目录（文件哈希进入知识版本，自动重建）。
+def _business_records() -> list[dict[str, Any]]:
+    """Internal enumeration is deliberately not the 200-row UI list."""
+    with _connect() as db:
+        rows = db.execute("SELECT * FROM imports WHERE kind='business' ORDER BY created,id").fetchall()
+    return [{**dict(row), 'meta':json.loads(row['meta'])} for row in rows]
 
-    文件名前缀保留数据类型（产品知识/行业知识/企业内部知识），检索证据可溯源。
+
+def _workspace_manifest() -> dict[str, Any] | None:
+    """The enterprise registry is the sole atomic pointer to a complete version."""
+    from .industry import _registered
+    root = (IMPORTS_ROOT / 'workspace' / 'versions').resolve()
+    candidates = []
+    for path in _registered().values():
+        path = Path(path).resolve()
+        try: path.relative_to(root)
+        except ValueError: continue
+        manifest = path.parent / 'workspace.json'
+        if manifest.is_file(): candidates.append(json.loads(manifest.read_text(encoding='utf-8')))
+    if len(candidates) > 1:
+        raise ValueError('WORKSPACE_REGISTRATION_CONFLICT: 本地工作区存在多个企业绑定，需核对导入记录')
+    return candidates[0] if candidates else None
+
+
+def _legacy_workspace_entries(records):
+    """Recover old successful imports without calling a model or changing originals.
+
+    Mappings are recovered from saved contracts/presets only. Unrecoverable or
+    different-enterprise records block migration rather than being silently left
+    out. Existing explicit contexts remain registered and readable.
     """
-    KNOWLEDGE_INGEST_DIR.mkdir(parents=True, exist_ok=True)
-    data_type = record.get('meta', {}).get('data_type', 'enterprise')
-    stem = re.sub(r'[\\/:*?"<>|\s]+', '_', Path(record['filename']).stem)[:60]
-    target = KNOWLEDGE_INGEST_DIR / f'{DATA_TYPE_LABELS.get(data_type, data_type)}__{stem}.txt'
-    header = f'【{DATA_TYPE_LABELS.get(data_type, data_type)}】来源文件：{record["filename"]}\n'
-    target.write_text(header + text, encoding='utf-8')
+    from .industry import _enterprise, load_pack
+    from .import_pipeline import DETAIL_TYPE_MAPPINGS, _options_for
+    entries=[]; bindings=[]; contexts=[]
+    for record in records:
+        meta=record['meta']; published=meta.get('published') or meta.get('parsed') or {}
+        context_id=published.get('context_id')
+        if not context_id: continue
+        pack_id, _, enterprise_id=context_id.partition(':')
+        enterprise=_enterprise(load_pack(pack_id),enterprise_id)
+        bindings.append((enterprise['name'],pack_id,enterprise['quantity_unit']))
+        contexts.append(context_id)
+        saved=meta.get('business_contract') or {}
+        headers=meta.get('preview',{}).get('headers') or []
+        mapping=saved.get('mapping')
+        if mapping is None:
+            fixed=DETAIL_TYPE_MAPPINGS.get(meta.get('data_type'))
+            mapping={h:fixed.get(h,'') for h in headers} if fixed else {
+                h:v for h,v in suggest_mapping(headers).items() if not h.startswith('_')}
+        options=saved.get('options') or _options_for(record)
+        entries.append((record,mapping,options))
+    if not entries:return [],None,[]
+    if len(set(bindings)) != 1:
+        raise ValueError('WORKSPACE_ENTERPRISE_CONFLICT: 历史导入包含不同企业、行业或计量单位，不能自动合并；请在业务数据中核对来源')
+    return entries,bindings[0],sorted(set(contexts))
+
+
+def _declared_quantity_units(record, mapping):
+    units=set()
+    for header in record['meta'].get('preview',{}).get('headers') or []:
+        role=mapping.get(header,'')
+        if role=='quantity' or (role.startswith('element:') and _is_unit_cost_column(header)):
+            match=re.search(r'(?:产量|数量)[(（]([^()（）]+)[)）]|元/([^()（）]+)',header)
+            if match:units.add((match.group(1) or match.group(2)).strip())
+    return units
+
+
+def publish_workspace(entries, enterprise_name='', pack_id='', quantity_unit=''):
+    """Publish every accepted source in this single-enterprise local installation.
+
+    Versions are immutable. Validation/reconciliation completes before the one
+    registry pointer changes; failed imports retain the prior valid version.
+    The stable context ID keeps knowledge and chat history bound across updates.
+    """
+    from .locks import exclusive
+    folder=IMPORTS_ROOT / 'workspace';folder.mkdir(parents=True,exist_ok=True)
+    with exclusive(folder / 'publish.lock'):
+        current=_workspace_manifest()
+        legacy_contexts=[]
+        if current:
+            prior=[(get_import(item['import_id']),item['mapping'],item['options']) for item in current['sources']]
+            binding=(current['enterprise_name'],current['industry_id'],current['quantity_unit'])
+            enterprise_id=current['enterprise_id']
+            legacy_contexts=current.get('legacy_context_ids',[])
+            superseded=list(current.get('superseded_sources',[]))
+        else:
+            prior,binding,legacy_contexts=_legacy_workspace_entries(_business_records())
+            # Adopt a single preexisting context so its uploaded knowledge and
+            # conversation histories retain their identity during migration.
+            enterprise_id=legacy_contexts[0].partition(':')[2] if len(legacy_contexts)==1 else 'imp-workspace'
+            superseded=[]
+        if binding:
+            if enterprise_name and enterprise_name!=binding[0]:
+                raise ValueError('WORKSPACE_ENTERPRISE_CONFLICT: 当前工作区已绑定企业“'+binding[0]+'”，新文件声明了不同企业')
+            if pack_id and pack_id!=binding[1]:
+                raise ValueError('WORKSPACE_INDUSTRY_CONFLICT: 新文件行业与已接入数据不一致')
+            if quantity_unit and quantity_unit!=binding[2]:
+                raise ValueError('WORKSPACE_UNIT_CONFLICT: 新文件计量单位与已接入数据不一致，请先核对口径')
+            enterprise_name,pack_id,quantity_unit=binding
+        else:
+            enterprise_name=enterprise_name or '我的企业'
+            pack_id=pack_id or 'generic_manufacturing'
+            if not quantity_unit:
+                declared=set().union(*[_declared_quantity_units(r,m) for r,m,_ in entries])
+                if len(declared)>1:
+                    raise ValueError('WORKSPACE_UNIT_CONFLICT: 上传文件声明了不同计量单位，不能合并计算')
+                quantity_unit=next(iter(declared),'件')
+        by_id={record['id']:(record,mapping,options) for record,mapping,options in prior}
+        for record,mapping,options in entries:
+            previous=by_id.get(record['id'])
+            if previous and (previous[1],previous[2]) != (mapping,options):
+                raise ValueError('WORKSPACE_MAPPING_CONFLICT: 同一原始文件不能同时采用不同字段映射或核算口径')
+            replacement=options.get('replace_import_id')
+            if replacement and not previous:
+                replaced=by_id.get(replacement)
+                if not replaced or replacement==record['id']:
+                    raise ValueError('INVALID_REPLACEMENT_SOURCE: 只能明确替换当前工作区已接入的文件')
+                if replaced[0]['meta'].get('data_type')!=record['meta'].get('data_type'):
+                    raise ValueError('REPLACEMENT_DATA_TYPE_CONFLICT: 替换文件必须与原文件资料类型一致')
+                superseded.append({'import_id':replacement,'filename':replaced[0]['filename'],
+                                   'replaced_by':record['id'],'replacement_filename':record['filename']})
+                del by_id[replacement]
+            units=_declared_quantity_units(record,mapping)
+            if units and units != {quantity_unit}:
+                raise ValueError(f'WORKSPACE_UNIT_CONFLICT: {record["filename"]} 声明的单位与工作区单位“{quantity_unit}”不一致')
+            if options.get('currency','CNY')!='CNY':
+                raise ValueError('WORKSPACE_CURRENCY_NOT_SUPPORTED: 当前表格导入适配器仅支持人民币；不得混合币种或自动换汇')
+            by_id[record['id']]=(record,dict(mapping),dict(options))
+        combined=[by_id[key] for key in sorted(by_id)]
+        manifest={'workspace_id':'local-enterprise','enterprise_name':enterprise_name,
+                  'industry_id':pack_id,'quantity_unit':quantity_unit,
+                  'legacy_context_ids':legacy_contexts,
+                  'superseded_sources':superseded,
+                  'sources':[{'import_id':r['id'],'filename':r['filename'],'sha256':r['sha256'],
+                              'data_type':r['meta'].get('data_type'),'mapping':m,'options':o}
+                             for r,m,o in combined]}
+        result=publish_business_batch(combined,enterprise_name,pack_id,quantity_unit,
+                    workspace_enterprise_id=enterprise_id,workspace_manifest=manifest)
+        # The pointer is already durable. A process interruption here is safe:
+        # workspace_state obtains accepted sources from the immutable manifest.
+        for record,mapping,options in combined:
+            fresh=get_import(record['id'])
+            _save(fresh,{**fresh['meta'],'business_contract':{'mapping':mapping,'options':options},
+                         'workspace_context_id':result['context_id']})
+        return {**result,'workspace_id':'local-enterprise','enterprise_name':enterprise_name,
+                'quantity_unit':quantity_unit,'accepted_imports':len(combined),
+                'legacy_context_ids':legacy_contexts}
+
+
+def workspace_state() -> dict[str, Any]:
+    """Scope-free workbench status, including every pending or rejected file.
+
+    No uploaded data silently falls back to the competition demonstration.
+    Legacy published imports are migrated once using deterministic mappings.
+    """
+    from .industry import _competition_available
+    records=_business_records();issues=[]
+    try:
+        current=_workspace_manifest()
+        if current is None and any((r['meta'].get('published') or r['meta'].get('parsed')) for r in records):
+            entries,binding,_contexts=_legacy_workspace_entries(records)
+            if entries and binding:
+                publish_workspace(entries,*binding)
+                current=_workspace_manifest()
+    except (ValueError,KeyError,OSError) as exc:
+        current=None;issues.append({'code':'WORKSPACE_MIGRATION_BLOCKED','message':str(exc)})
+    accepted={s['import_id'] for s in (current or {}).get('sources',[])}
+    superseded={s['import_id'] for s in (current or {}).get('superseded_sources',[])}
+    pending=[]
+    for record in records:
+        if record['id'] in accepted or record['id'] in superseded:continue
+        item={'import_id':record['id'],'filename':record['filename'],'status':record['status']}
+        pending.append(item)
+        if record['status']=='PARSE_FAILED':
+            issues.append({**item,'code':'IMPORT_REJECTED',
+                           'message':record['meta'].get('parse_error') or '文件解析失败，请在业务数据中核对后重试'})
+    has_uploads=bool(records or current)
+    cid=(current or {}).get('context_id')
+    if not has_uploads and _competition_available():cid='pharmaceutical:competition'
+    status='BLOCKED' if issues else ('PENDING' if pending else ('READY' if cid else 'EMPTY'))
+    return {'workspace_id':'local-enterprise','context_id':cid,'status':status,
+            'has_uploads':has_uploads,'source':'uploaded' if has_uploads else ('competition' if cid else 'none'),
+            'enterprise_name':(current or {}).get('enterprise_name'),
+            'data_snapshot':(current or {}).get('data_snapshot'),
+            'updated_at':(current or {}).get('published_at'),
+            'imported_files':[{k:s[k] for k in ('import_id','filename','data_type')} for s in (current or {}).get('sources',[])],
+            'pending_files':pending,'issues':issues,
+            'superseded_files':(current or {}).get('superseded_sources',[]),
+            'all_files_included':bool(cid) and not pending and not issues,
+            'legacy_context_ids':(current or {}).get('legacy_context_ids',[])}
+
+
+def write_knowledge_source(record: dict[str, Any], text: str | None = None, *, activate=True) -> Path:
+    """Write immutable location records; activating a newer version keeps older sources."""
+    from .knowledge import knowledge_scope_dir
+    path = IMPORTS_ROOT / record['id'] / 'knowledge_entry.json'
+    if not path.is_file():
+        raise ValueError('KNOWLEDGE_NOT_PARSED')
+    entry = json.loads(path.read_text(encoding='utf-8'))
+    if not entry.get('records'):
+        raise ValueError('KNOWLEDGE_REPARSE_REQUIRED')
+    folder = knowledge_scope_dir(entry['context_id'])
+    folder.mkdir(parents=True, exist_ok=True)
+    target = folder / (entry['source_id'] + '.json')
+    serialized = json.dumps(entry['records'], ensure_ascii=False, sort_keys=True)
+    if target.exists() and target.read_text(encoding='utf-8') != serialized:
+        raise ValueError('IMMUTABLE_KNOWLEDGE_VERSION_CONFLICT')
+    if not target.exists():
+        target.write_text(serialized, encoding='utf-8')
+    if activate:
+        activate_knowledge_sources(entry['context_id'], [record])
     return target
+
+
+def candidate_knowledge_registry(context_id: str, records: list[dict[str, Any]]) -> dict[str, Any]:
+    from .knowledge import knowledge_context_id, knowledge_registry
+    context_id = knowledge_context_id(context_id)
+    registry = knowledge_registry(context_id)
+    for record in records:
+        entry = json.loads((IMPORTS_ROOT / record['id'] / 'knowledge_entry.json').read_text(encoding='utf-8'))
+        if entry['context_id'] != context_id:
+            raise ValueError('KNOWLEDGE_CONTEXT_MISMATCH')
+        source_id = entry['source_id']
+        registry['versions'][source_id] = {'import_id': record['id'], 'filename': record['filename'],
+            'title': entry['title'], 'source_hash': record['sha256'], 'pages': entry['pages'],
+            'document_version': entry['document_version'], 'data_type': record['meta'].get('data_type', 'enterprise')}
+        logical_key = record['meta'].get('data_type', 'enterprise') + ':' + record['filename']
+        registry['active'][logical_key] = source_id
+    return registry
+
+
+def activate_knowledge_sources(context_id: str, records: list[dict[str, Any]]) -> dict[str, Any]:
+    from .knowledge import knowledge_scope_dir
+    from .locks import exclusive
+    folder = knowledge_scope_dir(context_id)
+    folder.mkdir(parents=True, exist_ok=True)
+    with exclusive(folder / 'registry.lock'):
+        registry = candidate_knowledge_registry(context_id, records)
+        candidate = folder / 'registry.tmp'
+        candidate.write_text(json.dumps(registry, ensure_ascii=False, sort_keys=True), encoding='utf-8')
+        os.replace(candidate, folder / 'registry.json')
+    return registry
+
+
+def resolve_knowledge_source(source_id: str, context_id: str = 'pharmaceutical:competition') -> dict[str, Any]:
+    """Resolve a registered immutable source only; callers never supply a path."""
+    from .knowledge import knowledge_context_id, registered_knowledge_source, source_identifier, competition_extra_sources
+    if not re.fullmatch(r'src-[a-f0-9]{24}', source_id):
+        raise KeyError('KNOWLEDGE_SOURCE_NOT_FOUND')
+    context_id = knowledge_context_id(context_id)
+    source = registered_knowledge_source(source_id, context_id)
+    if source:
+        record = get_import(source['import_id'])
+        path = original_path(record)
+        if record['sha256'] != source['source_hash'] or hashlib.sha256(path.read_bytes()).hexdigest() != source['source_hash']:
+            raise ValueError('KNOWLEDGE_ORIGINAL_CHANGED')
+        return {'path': path, 'filename': source['filename'], 'title': source['title']}
+    # Original contest/enterprise entries also expose opaque IDs; no arbitrary URL or path resolver.
+    from .industry import resolve_context, knowledge_entry_for_context
+    from .config import PACKAGE
+    context = resolve_context(context_id)
+    if context_id == 'pharmaceutical:competition':
+        sources = [p for p in (PACKAGE / '03_制药知识文档').iterdir() if p.suffix.lower() in ('.pdf', '.docx', '.txt')]
+        sources += competition_extra_sources()
+    else:
+        sources = [knowledge_entry_for_context(context)]
+    for path in sources:
+        if source_identifier(path, context_id) == source_id:
+            return {'path': path, 'filename': path.name, 'title': path.name}
+    raise KeyError('KNOWLEDGE_SOURCE_NOT_FOUND')
 
 
 def get_import(id_: str) -> dict[str, Any]:

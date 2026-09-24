@@ -1,0 +1,13 @@
+{
+  "format": "canonical-json-or-csv",
+  "cost_entry": "facts.json:costs",
+  "quantity_entry": "facts.json:quantities",
+  "grain": "product_period",
+  "quantity_unit_source": "enterprise.quantity_unit",
+  "element_map": {
+    "materials": "materials",
+    "labor": "labor",
+    "overhead": "overhead"
+  },
+  "prohibition": "汇总与明细不得并加；数量按独立生产对象去重；企业需核对成本范围、币种、规格及计量单位。没有单价与实耗时不进行严格价量分解。"
+}

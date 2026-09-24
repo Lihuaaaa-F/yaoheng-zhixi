@@ -1,137 +1,286 @@
 {
-  "run_id": "delivery_20260921",
-  "attempt_id": "2b260558de0d42e495a7cea235702b41",
-  "revision": "ded9267",
+  "run_id": "three_panel_20260923",
   "revision_kind": "git",
-  "commit": "ded9267",
+  "commit": "7624a19afa6c4a18e0d820eb9c4959c9c6207524",
+  "tested_changes": "Three-panel UI, cumulative uploads, knowledge inheritance, chat lifecycle, SQLite cold-start lock recovery; following commit contains receipts only",
   "required_scenarios": [
-    "S1_六味地黄胶囊_2026-06",
-    "S2_银黄口服液_2026-06"
+    "S1",
+    "S2",
+    "S3"
   ],
   "scenarios": [
     {
-      "id": "S1_六味地黄胶囊_2026-06",
-      "job_id": "fe8bfa735d9a4f4994108c8b8094f300",
-      "attempt_id": "attempt-live-20260921",
-      "status": "NARRATIVE_PASS_HUMAN_PENDING",
-      "docx": "d218f8a3ba4c25b38da4d12a810137291a4b584ea4fd32baaed43c08629d174b",
-      "pdf": "908a4d915c60a942b4037da5d9b63d4833dda5aa4642d33b8929419448aad32a",
-      "error": null,
-      "snapshot_id": "83a0143c4bd5dde6a3e8017d88a035b4b282f150f58575ea738a3f71e87f6ab6",
-      "artifacts": {
-        "docx": "六味地黄胶囊_2026-06.docx",
-        "pdf": "六味地黄胶囊_2026-06.pdf",
-        "audit": "六味地黄胶囊_2026-06_machine_audit.json"
-      }
+      "id": "S1",
+      "context_id": "pharmaceutical:competition",
+      "product": "银黄口服液",
+      "month": "2026-05",
+      "analysis_type": "monthly",
+      "job_id": null,
+      "status": "PENDING_CURRENT_BUILD",
+      "human_review": "PENDING"
     },
     {
-      "id": "S2_银黄口服液_2026-06",
-      "job_id": "d13e75ee079e4d4baa1677f535e129e6",
-      "attempt_id": "attempt-live-20260921",
-      "status": "NARRATIVE_PASS_HUMAN_PENDING",
-      "docx": "30ffe07414be6906fe59635292683100a432eb2ed333d29075cababe029ebdfa",
-      "pdf": "d3e8eca25f3c22e87df2ea16e8796c36b480eb586b764bf33cda742a62707ea8",
-      "error": null,
-      "snapshot_id": null,
-      "artifacts": {
-        "docx": "银黄口服液_2026-06.docx",
-        "pdf": "银黄口服液_2026-06.pdf",
-        "audit": "银黄口服液_2026-06_machine_audit.json"
-      }
+      "id": "S2",
+      "context_id": "pharmaceutical:competition",
+      "product": "板蓝根颗粒",
+      "month": "2026-05",
+      "analysis_type": "special",
+      "job_id": null,
+      "status": "PENDING_CURRENT_BUILD",
+      "human_review": "PENDING"
+    },
+    {
+      "id": "S3",
+      "context_id": "pharmaceutical:competition",
+      "product": "六味地黄胶囊",
+      "month": "2026-03",
+      "analysis_type": "monthly",
+      "job_id": null,
+      "status": "PENDING_CURRENT_BUILD",
+      "human_review": "PENDING"
     }
   ],
-  "receipts": {
-    "model_live": "model_live.json",
-    "retrieval": "retrieval.json",
-    "rpa": "rpa.json",
-    "browser": "browser.json"
-  },
   "human_review": "PENDING",
   "competition_ready": false,
-  "model_provenance": "model_provenance.json",
-  "public_manifest": "validation/delivery_20260921/manifest.json",
-  "verification_receipt": "validation/delivery_20260921/verification.json",
-  "verification_exit_code": 0,
-  "automatic_status": "PASS_WITH_HUMAN_PENDING",
-  "model": {
-    "provider": "DeepSeek official API",
-    "model": "deepseek-flash",
-    "authorization": "User clarified on 2026-09-19: local DeepSeek tests; teammate uses GLM",
-    "fresh_source_run": "delivery_20260919_26",
-    "fresh_source_commit": "7bef1ce8e915ebd6697915d55d8d47da7bfab2d0",
-    "fresh_http_calls": 7,
-    "fresh_http_calls_in_final_attempt": 0,
-    "final_narratives_reused": 7,
-    "provenance": "validation/delivery_20260919_final/model_provenance.json",
-    "teammate_glm": "Historical 20260918 GLM receipts retained without relabeling"
-  },
-  "static_delivery": {
-    "path": "07_交付/delivery_20260919_final",
-    "source_run": "delivery_20260919_final",
-    "source_code": "04011c2a595a5d9f8efdd8de92bd5fd1dfcd8830"
-  },
-  "previous_index": "current_run_before_20260919.json",
-  "prior_runs": [
-    "delivery_20260919_final@04011c2"
-  ],
-  "test_results": {
-    "local_full_suite": {
-      "passed": 346,
-      "failed_before_targeted_fix": 1,
-      "scope": "Includes retained local historical tests; obsolete Coding fixture corrected; 70 targeted tests passed"
-    },
-    "clean_checkout_ci": {
-      "passed": 287,
+  "automatic_status": "PARTIAL_VALIDATION",
+  "verification_exit_code": 2,
+  "public_manifest": "validation/three_panel_20260923/manifest.json",
+  "verification_receipt": "validation/three_panel_20260923/verification.json",
+  "implementation_record": "workspace_upgrade_20260923.md",
+  "validation": {
+    "python": {
+      "passed": 530,
       "skipped": 1,
       "status": "PASS",
-      "commit": "04011c2a595a5d9f8efdd8de92bd5fd1dfcd8830",
-      "url": "https://github.com/Lihuaaaa-F/yaoheng-zhixi/actions/runs/35436891332"
+      "duration_seconds": 16.28,
+      "skipped_reason": "No catalogue context with capability list in isolated capability-gate fixture; actual PDF conversion tests passed",
+      "warnings": "Two existing Starlette/httpx and AnyIO deprecations"
     },
-    "automatic_dimensions": {
-      "environment": "PASS",
-      "regression": "PASS",
-      "scenarios": "PASS",
-      "retrieval": "PASS",
-      "rpa": "PASS",
-      "browser": "PASS",
-      "model_live": "PASS"
+    "post_label_adjustment": {
+      "tests": [
+        "test_industry.py",
+        "test_unified_workspace.py"
+      ],
+      "passed": 66,
+      "status": "PASS"
+    },
+    "frontend_build": "PASS",
+    "browser": {
+      "status": "PASS",
+      "viewports": [
+        [
+          1600,
+          1000
+        ],
+        [
+          1366,
+          768
+        ],
+        [
+          1585,
+          992
+        ],
+        [
+          390,
+          844
+        ]
+      ],
+      "provider": "offline deterministic rules; no cloud/model provider requests",
+      "pages": 9,
+      "read_only_page_viewport_checks": 18,
+      "console_errors": 0,
+      "flows": [
+        "three surfaces",
+        "sidebar runtime",
+        "no title/scope selector",
+        "fixed toolbar and independent scroll",
+        "five distinct new chats",
+        "three visible tabs",
+        "pin/close/history/archive/restore/delete",
+        "message-turn jump",
+        "refresh persistence",
+        "24-title scrollable dropdown",
+        "nine pages",
+        "desktop/mobile overflow"
+      ],
+      "upload_and_mobile_checks": [
+        "mobile drawer after animation within viewport",
+        "UI upload blocks stale competition display",
+        "two successive UI imports cumulative",
+        "explicit UI version replacement and confirmation",
+        "updated analysis from 12.00 to 13.00",
+        "original superseded source retained"
+      ]
+    },
+    "sqlite_startup": {
+      "status": "PASS",
+      "tests": 2,
+      "scope": "Real exclusive lock recovery and eight simultaneous store initializations"
+    },
+    "model_live": "NOT_RUN",
+    "docker_clean_start": "NOT_RUN",
+    "human": "PENDING",
+    "remote_delivery": "NOT_PUSHED: existing GitHub integration write restriction"
+  },
+  "previous_run": {
+    "run_id": "delivery_20260921",
+    "attempt_id": "2b260558de0d42e495a7cea235702b41",
+    "revision": "ded9267",
+    "revision_kind": "git",
+    "commit": "ded9267",
+    "required_scenarios": [
+      "S1_六味地黄胶囊_2026-06",
+      "S2_银黄口服液_2026-06"
+    ],
+    "scenarios": [
+      {
+        "id": "S1_六味地黄胶囊_2026-06",
+        "job_id": "fe8bfa735d9a4f4994108c8b8094f300",
+        "attempt_id": "attempt-live-20260921",
+        "status": "NARRATIVE_PASS_HUMAN_PENDING",
+        "docx": "d218f8a3ba4c25b38da4d12a810137291a4b584ea4fd32baaed43c08629d174b",
+        "pdf": "908a4d915c60a942b4037da5d9b63d4833dda5aa4642d33b8929419448aad32a",
+        "error": null,
+        "snapshot_id": "83a0143c4bd5dde6a3e8017d88a035b4b282f150f58575ea738a3f71e87f6ab6",
+        "artifacts": {
+          "docx": "六味地黄胶囊_2026-06.docx",
+          "pdf": "六味地黄胶囊_2026-06.pdf",
+          "audit": "六味地黄胶囊_2026-06_machine_audit.json"
+        }
+      },
+      {
+        "id": "S2_银黄口服液_2026-06",
+        "job_id": "d13e75ee079e4d4baa1677f535e129e6",
+        "attempt_id": "attempt-live-20260921",
+        "status": "NARRATIVE_PASS_HUMAN_PENDING",
+        "docx": "30ffe07414be6906fe59635292683100a432eb2ed333d29075cababe029ebdfa",
+        "pdf": "d3e8eca25f3c22e87df2ea16e8796c36b480eb586b764bf33cda742a62707ea8",
+        "error": null,
+        "snapshot_id": null,
+        "artifacts": {
+          "docx": "银黄口服液_2026-06.docx",
+          "pdf": "银黄口服液_2026-06.pdf",
+          "audit": "银黄口服液_2026-06_machine_audit.json"
+        }
+      }
+    ],
+    "receipts": {
+      "model_live": "model_live.json",
+      "retrieval": "retrieval.json",
+      "rpa": "rpa.json",
+      "browser": "browser.json"
+    },
+    "human_review": "PENDING",
+    "competition_ready": false,
+    "model_provenance": "model_provenance.json",
+    "public_manifest": "validation/delivery_20260921/manifest.json",
+    "verification_receipt": "validation/delivery_20260921/verification.json",
+    "verification_exit_code": 0,
+    "automatic_status": "PASS_WITH_HUMAN_PENDING",
+    "model": {
+      "provider": "DeepSeek official API",
+      "model": "deepseek-flash",
+      "authorization": "User clarified on 2026-09-19: local DeepSeek tests; teammate uses GLM",
+      "fresh_source_run": "delivery_20260919_26",
+      "fresh_source_commit": "7bef1ce8e915ebd6697915d55d8d47da7bfab2d0",
+      "fresh_http_calls": 7,
+      "fresh_http_calls_in_final_attempt": 0,
+      "final_narratives_reused": 7,
+      "provenance": "validation/delivery_20260919_final/model_provenance.json",
+      "teammate_glm": "Historical 20260918 GLM receipts retained without relabeling"
+    },
+    "static_delivery": {
+      "path": "07_交付/delivery_20260919_final",
+      "source_run": "delivery_20260919_final",
+      "source_code": "04011c2a595a5d9f8efdd8de92bd5fd1dfcd8830"
+    },
+    "previous_index": "current_run_before_20260919.json",
+    "prior_runs": [
+      "delivery_20260919_final@04011c2"
+    ],
+    "test_results": {
+      "local_full_suite": {
+        "passed": 346,
+        "failed_before_targeted_fix": 1,
+        "scope": "Includes retained local historical tests; obsolete Coding fixture corrected; 70 targeted tests passed"
+      },
+      "clean_checkout_ci": {
+        "passed": 287,
+        "skipped": 1,
+        "status": "PASS",
+        "commit": "04011c2a595a5d9f8efdd8de92bd5fd1dfcd8830",
+        "url": "https://github.com/Lihuaaaa-F/yaoheng-zhixi/actions/runs/35436891332"
+      },
+      "automatic_dimensions": {
+        "environment": "PASS",
+        "regression": "PASS",
+        "scenarios": "PASS",
+        "retrieval": "PASS",
+        "rpa": "PASS",
+        "browser": "PASS",
+        "model_live": "PASS"
+      }
+    },
+    "artifacts": {
+      "scenarios": 7,
+      "pages": 38,
+      "fonts_embedded": true,
+      "unresolved_placeholders": false,
+      "developer_visual": "validation/delivery_20260919_final/visual.json",
+      "human_visual": "PENDING"
+    },
+    "media": {
+      "video_seconds": 59.16,
+      "video": "07_交付/delivery_20260919_final/demo/yaoheng_demo_narrated.webm",
+      "slides": 10,
+      "pptx": "07_交付/delivery_20260919_final/deck/药衡智析_演示与答辩稿.pptx",
+      "native_render": "07_交付/delivery_20260919_final/deck/pptx_render"
+    },
+    "external_pending": [
+      "Named human S1/S2/S3 0–5 attribution/readability/layout review",
+      "Professional causal review; dense tables and compound-unit wrapping remain human layout items",
+      "Real controlled industry data and unseen retrieval evaluation",
+      "Forecast held-out performance and graph/multi-model gain are not established"
+    ],
+    "tested_code_policy": "修复轮实测（2026-09-21）：两场景叙事合同与模型参与全 PASS；比赛完整验收仍待真人三场景评分与演示视频重录",
+    "runtime_measurements": {
+      "benchmark_cold_seconds": {
+        "六味地黄胶囊": 14.7,
+        "银黄口服液": 18.6
+      },
+      "heatmap_first_seconds": 16.5,
+      "heatmap_cached_seconds": 0.29,
+      "narrative_calls_per_report": 2,
+      "kb": {
+        "sources": 11,
+        "chunks": 180,
+        "supplements": 4
+      },
+      "plant2_details": "synthetic_labeled_calibrated"
     }
   },
-  "artifacts": {
-    "scenarios": 7,
-    "pages": 38,
-    "fonts_embedded": true,
-    "unresolved_placeholders": false,
-    "developer_visual": "validation/delivery_20260919_final/visual.json",
-    "human_visual": "PENDING"
-  },
-  "media": {
-    "video_seconds": 59.16,
-    "video": "07_交付/delivery_20260919_final/demo/yaoheng_demo_narrated.webm",
-    "slides": 10,
-    "pptx": "07_交付/delivery_20260919_final/deck/药衡智析_演示与答辩稿.pptx",
-    "native_render": "07_交付/delivery_20260919_final/deck/pptx_render"
-  },
   "external_pending": [
-    "Named human S1/S2/S3 0–5 attribution/readability/layout review",
-    "Professional causal review; dense tables and compound-unit wrapping remain human layout items",
-    "Real controlled industry data and unseen retrieval evaluation",
-    "Forecast held-out performance and graph/multi-model gain are not established"
+    "Target-machine Docker and desktop launcher verification",
+    "Real model responses and human S1/S2/S3 review on current build",
+    "Human review of new layout and renewed demonstration recording",
+    "GitHub synchronization via an authorized write connection"
   ],
-  "tested_code_policy": "修复轮实测（2026-09-21）：两场景叙事合同与模型参与全 PASS；比赛完整验收仍待真人三场景评分与演示视频重录",
-  "runtime_measurements": {
-    "benchmark_cold_seconds": {
-      "六味地黄胶囊": 14.7,
-      "银黄口服液": 18.6
+  "previous_workspace_run": {
+    "run_id": "workspace_20260923",
+    "commit": "40e8d5b372304c54a423f6b9c83b1e0d9566b6cc",
+    "manifest": "validation/workspace_20260923/manifest.json",
+    "verification": "validation/workspace_20260923/verification.json"
+  },
+  "local_integration_20260924": {
+    "record": "../../../docs/repository/INTEGRATION_20260924.md",
+    "validation_status": "STOPPED_BY_USER",
+    "python": {
+      "passed": 522,
+      "failed": 6,
+      "skipped": 3,
+      "failure_reason": "Missing local openpyxl dependency"
     },
-    "heatmap_first_seconds": 16.5,
-    "heatmap_cached_seconds": 0.29,
-    "narrative_calls_per_report": 2,
-    "kb": {
-      "sources": 11,
-      "chunks": 180,
-      "supplements": 4
-    },
-    "plant2_details": "synthetic_labeled_calibrated"
+    "frontend_build": "NOT_COMPLETED",
+    "instruction": "Stop tests immediately and finish normal push; previous validation above is package history, not local retesting."
   }
 }

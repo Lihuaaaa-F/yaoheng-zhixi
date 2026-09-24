@@ -211,6 +211,14 @@ def test_actual_pdf_number_unit_groups_and_footer_clearance(tmp_path):
             else:body.append(line['bbox'])
             if '12345.67' in text:
                 occurrences+=1
-                assert '12345.67 元' in text.replace('\u00a0',' ')
+                # PDF 字体切换会把同一可见行拆成两个 line 对象（西文/CJK
+                # bbox 相差约0.55pt），不能把提取分组误判为视觉换行。
+                # 只拼接同一基线、紧邻右侧的字块；真实下一行仍会失败。
+                neighbors=[other for other in lines
+                           if other is not line and abs(other['bbox'][3]-line['bbox'][3])<1
+                           and -1<=other['bbox'][0]-line['bbox'][2]<2]
+                joined=text+''.join(''.join(s['text'] for s in other['spans'])
+                                    for other in sorted(neighbors,key=lambda row:row['bbox'][0]))
+                assert '12345.67 元' in joined.replace('\u00a0',' ')
         assert min(b[1] for b in foot)-max(b[3] for b in body)>10
     assert occurrences==12

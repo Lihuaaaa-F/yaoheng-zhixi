@@ -18,7 +18,7 @@ v3（2026-09-22）：初始化从"末两点差分"改为"前半段最小二乘"�
 import math
 
 # 方法版本号：参数或口径变化时必须递增，调用方据此判断缓存/回执有效性。
-FORECAST_VERSION = 'holt-alpha0.6-beta0.3-v3-ols-init'
+FORECAST_VERSION = 'holt-alpha0.6-beta0.3-v4-scoped-coverage'
 ALPHA, BETA = 0.6, 0.3          # 水平/斜率平滑系数：固定值，不拟合调参
 RESIDUAL_SCALE = 1.0           # ±一步残差均方根；未经覆盖率验证的实验性范围
 MIN_POINTS = 3                  # 少于 3 个有效月度点无法区分水平与斜率
@@ -27,7 +27,7 @@ CAVEAT = '预测基于历史成本趋势的统计外推，仅供管理参考，�
 # 2026-09-23 实测（scripts/eval_forecast_coverage.py，题包 3产品×5序列×3滚动原点=45 检验点）：
 # ±1σ 区间滚动留出覆盖率 88.9%（单位成本 9/9，总成本 5/9）。小样本实测，
 # 不能推断总体覆盖率；RESIDUAL_SCALE 维持 1.0，不在 45 点上调参。
-COVERAGE_NOTE = '波动范围覆盖率为题包小样本滚动留出实测（88.9%，45 检验点；详见 docs/validation/forecast_coverage_20260923.json），不能推断总体覆盖率'
+COVERAGE_NOTE = '覆盖率仅针对当前序列的一步滚动留出；小样本结果不能推断总体覆盖率，也不代表多步预测覆盖率'
 
 
 def _next_month(month, step=1):
@@ -75,17 +75,24 @@ def _holt(values, horizon):
 def _rolling_holdout(values):
     """滚动原点留出评估：用 [0..t-1] 预测 t（t 从 3 起，保证至少 3 点历史）。
 
-    返回 (原点数, Holt 留出MAE, 上期值基线留出MAE)；原点数为 0 表示历史
+    返回 (原点数, Holt 留出MAE, 上期值基线留出MAE, 当前序列范围覆盖统计)；原点数为 0 表示历史
     太短无法做独立留出（此时沿用样本内口径并如实声明）。
     """
-    errs, baseline_errs = [], []
+    errs, baseline_errs, covered = [], [], 0
     for t in range(3, len(values)):
         preds, _residuals, _k = _holt(values[:t], 1)
         errs.append(abs(preds[0] - values[t]))
         baseline_errs.append(abs(values[t - 1] - values[t]))
+        # Fit each interval on that origin's training prefix only. Neither the
+        # held-out observation nor another enterprise's validation enters it.
+        sigma = math.sqrt(sum(r * r for r in _residuals) / len(_residuals)) if _residuals else 0.0
+        tolerance = 1e-12 * max(1.0, abs(values[t]), abs(preds[0]))
+        covered += abs(preds[0] - values[t]) <= RESIDUAL_SCALE * sigma + tolerance
+    coverage = {'covered': covered, 'tested': len(errs), 'rate': covered / len(errs) if errs else None,
+                'horizon': 1, 'scope': 'current_series_rolling_origin'}
     if not errs:
-        return 0, None, None
-    return len(errs), sum(errs) / len(errs), sum(baseline_errs) / len(baseline_errs)
+        return 0, None, None, coverage
+    return len(errs), sum(errs) / len(errs), sum(baseline_errs) / len(baseline_errs), coverage
 
 
 def forecast_series(series, horizon=3):
@@ -122,7 +129,7 @@ def forecast_series(series, horizon=3):
     projections, residuals, _init_k = _holt(values, horizon)
     # 一步残差均方根，不声称分布或覆盖概率；精确线性/常量序列可为 0。
     sigma = math.sqrt(sum(r * r for r in residuals) / len(residuals)) if residuals else 0.0
-    holdout_origins, holdout_mae, holdout_baseline_mae = _rolling_holdout(values)
+    holdout_origins, holdout_mae, holdout_baseline_mae, coverage = _rolling_holdout(values)
     rows = []
     for step, point in enumerate(projections, 1):
         low, high = point - RESIDUAL_SCALE * sigma, point + RESIDUAL_SCALE * sigma
@@ -131,11 +138,13 @@ def forecast_series(series, horizon=3):
                      'negative_warning': point <= 0})
     holdout = {'origins': holdout_origins,
                'mae': round(holdout_mae, 4) if holdout_mae is not None else None,
-               'baseline_mae': round(holdout_baseline_mae, 4) if holdout_baseline_mae is not None else None}
+               'baseline_mae': round(holdout_baseline_mae, 4) if holdout_baseline_mae is not None else None,
+               'interval_coverage': coverage}
     if holdout_origins:
         evaluation_notice = (f'滚动原点留出验证（{holdout_origins} 个原点，留出一步MAE：Holt {holdout["mae"]}，'
                              f'上期值基线 {holdout["baseline_mae"]}）；波动范围按样本内残差估计，'
-                             f'{COVERAGE_NOTE}。')
+                             f'当前序列一步范围覆盖 {coverage["covered"]}/{coverage["tested"]}'
+                             f'（{coverage["rate"] * 100:.1f}%）；{COVERAGE_NOTE}。')
     else:
         evaluation_notice = '历史仅够初始化，无独立留出原点；仅报告样本内一步误差，波动范围为实验性估计。'
     return {'status': 'PASS', 'forecast_version': FORECAST_VERSION,

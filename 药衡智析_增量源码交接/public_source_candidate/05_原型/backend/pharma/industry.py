@@ -22,7 +22,7 @@ from .config import APP, PACKAGE, RUNTIME
 D = Decimal
 CORE_VERSION = '1.0'
 PACKS = APP / 'industry_packs'
-FORMULA_VERSION = 'normalized-cost-3-comparison-evidence'
+FORMULA_VERSION = 'normalized-cost-4-bound-attribution'
 SNAPSHOT_CONTRACT_VERSION = 'analysis-snapshot-2-frozen-template'
 ENTERPRISE_REGISTRY = RUNTIME / 'enterprise_registry.json'
 
@@ -132,7 +132,8 @@ class PackManifest(Contract):
     knowledge_entry: str = 'knowledge.json'
     template_entry: str = 'template.json'
     evaluation_entry: str = 'evaluation.json'
-    enterprise_entry: str = 'enterprise.json'
+    # A reusable framework can have no bundled enterprise or made-up dataset.
+    enterprise_entry: str | None = 'enterprise.json'
 
 
 # Trusted functions are registered by deployment code, never by uploaded JSON.
@@ -205,6 +206,8 @@ def load_pack(pack):
     if result.core_compatibility != '>=1,<2': raise ValueError('INCOMPATIBLE_CORE_VERSION')
     if any(name not in STRATEGIES for name in result.strategies): raise ValueError('UNREGISTERED_STRATEGY')
     for entry in (result.mapping_entry,result.knowledge_entry,result.template_entry,result.evaluation_entry,result.enterprise_entry):
+        if entry is None:
+            continue
         if Path(entry).name != entry: raise ValueError('UNSAFE_PACK_ENTRY')
     return result
 
@@ -256,20 +259,20 @@ def _registered():
 
 
 def _enterprises(pack):
-    default=_load_enterprise_file(PACKS / pack.id / pack.enterprise_entry)
-    result=[default]
+    default=_load_enterprise_file(PACKS / pack.id / pack.enterprise_entry) if pack.enterprise_entry else None
+    result=[default] if default else []
     for key,path in sorted(_registered().items()):
         industry,_,enterprise=key.partition(':')
         if industry != pack.id: continue
         value=_load_enterprise_file(path)
-        if value['id'] != enterprise or enterprise==default['id']: raise ValueError('ENTERPRISE_REGISTRATION_CONFLICT')
+        if value['id'] != enterprise or (default and enterprise==default['id']): raise ValueError('ENTERPRISE_REGISTRATION_CONFLICT')
         result.append(value)
     return result
 
 
 def _enterprise(pack, company=None):
     entries=_enterprises(pack)
-    if company is None:return entries[0]
+    if company is None and entries:return entries[0]
     for entry in entries:
         if entry['id']==company:return entry
     raise ValueError('UNKNOWN_ENTERPRISE_CONTEXT')
@@ -321,7 +324,7 @@ def _read_dataset_uncached(pack, enterprise):
     return dataset
 
 
-def register_enterprise(pack_id, configuration_path):
+def register_enterprise(pack_id, configuration_path, *, advance_workspace=False):
     """Register a trusted local config; no uploads, imports, eval or networking.
 
     The caller owns authorization to install local enterprise configuration.
@@ -330,7 +333,9 @@ def register_enterprise(pack_id, configuration_path):
     from .locks import exclusive
     pack=load_pack(pack_id)
     enterprise=_load_enterprise_file(configuration_path)
-    if enterprise['id']==_enterprise(pack)['id']: raise ValueError('DEFAULT_ENTERPRISE_CANNOT_BE_REPLACED')
+    if pack.enterprise_entry:
+        default = _load_enterprise_file(PACKS / pack.id / pack.enterprise_entry)
+        if enterprise['id'] == default['id']: raise ValueError('DEFAULT_ENTERPRISE_CANNOT_BE_REPLACED')
     dataset=_read_dataset(pack,enterprise)
     if not dataset.costs or not dataset.quantities:raise ValueError('EMPTY_DATASET')
     for factory,product,scenario in {(x.factory_id,x.product_id,x.scenario) for x in dataset.costs}:
@@ -343,7 +348,14 @@ def register_enterprise(pack_id, configuration_path):
     ENTERPRISE_REGISTRY.parent.mkdir(parents=True,exist_ok=True)
     with exclusive(ENTERPRISE_REGISTRY.with_suffix('.lock')):
         entries=_registered();path=str(enterprise['_config_file'])
-        if key in entries and entries[key]!=path:raise ValueError('ENTERPRISE_REGISTRATION_CONFLICT')
+        if key in entries and entries[key]!=path and not advance_workspace:
+            raise ValueError('ENTERPRISE_REGISTRATION_CONFLICT')
+        if advance_workspace:
+            # Only the trusted importer can advance this one local workspace.
+            # Arbitrary enterprise registrations still cannot replace one another.
+            from .data_import import IMPORTS_ROOT
+            try: Path(path).resolve().relative_to((IMPORTS_ROOT / 'workspace' / 'versions').resolve())
+            except ValueError: raise ValueError('INVALID_WORKSPACE_VERSION_PATH')
         entries[key]=path
         with tempfile.TemporaryDirectory(dir=ENTERPRISE_REGISTRY.parent,prefix='enterprise-') as temporary:
             candidate=Path(temporary)/'registry.json';candidate.write_text(json.dumps(entries,ensure_ascii=False,sort_keys=True))
@@ -383,6 +395,8 @@ def resolve_context(context_id=None):
         # Template content participates even before the working copy is created.
         templates = sorted((PACKAGE / '04_报告模板').glob('*.docx'))
         template_version = digest({p.name:sha256(p.read_bytes()).hexdigest() for p in templates})
+    from .knowledge import scoped_knowledge_snapshot
+    knowledge_snapshot = scoped_knowledge_snapshot(context_id, knowledge_snapshot)
     return AnalysisContext(enterprise_id=company,dataset_id=dataset_id,industry_id=pack.id,
         industry_version=pack.version,policy_version=policy_version,data_snapshot=snapshot,
         knowledge_snapshot=knowledge_snapshot,template_version=template_version,
@@ -633,12 +647,12 @@ def context_catalog():
     contexts=[]
     for raw in list_packs():
         pack=load_pack(raw)
-        if pack.id!='pharmaceutical' and not show_test: continue
         for enterprise in _enterprises(pack):
-            if enterprise['id']=='synthetic-pharma' and not show_test: continue
+            bundled = pack.enterprise_entry and enterprise['_config_file'] == (PACKS / pack.id / pack.enterprise_entry).resolve()
+            if bundled and not show_test: continue
             dataset=_read_dataset(pack,enterprise)
             cid=pack.id+':'+enterprise['id']
-            label='用户导入数据（数据中心发布）' if enterprise.get('source_mode')=='imported_cost' else pack.data_label
+            label = _import_or_pack_label(enterprise, pack)
             contexts.append({'id':cid,'context_id':cid,'industry_id':pack.id,'industry_name':pack.name,
                  'company_id':enterprise['id'],'company_name':enterprise['name'],
                  'capabilities':capabilities(pack,dataset),'data_label':label})
@@ -648,7 +662,33 @@ def context_catalog():
         default='pharmaceutical:competition'
     elif contexts:
         default=contexts[0]['context_id']
+    # Automatic local workspace supersedes the demo; pending/invalid uploads
+    # must never make the interface quietly display competition figures.
+    from .data_import import workspace_state
+    workspace = workspace_state()
+    if workspace.get('has_uploads'):
+        default = workspace.get('context_id')
+        # A first-run migration can have published its registry while this
+        # catalogue was being assembled. Add the resulting context once.
+        if default and not any(item['context_id'] == default for item in contexts):
+            pack = load_pack(default.split(':')[0]); enterprise = _enterprise(pack, default.partition(':')[2])
+            contexts.append({'id':default,'context_id':default,'industry_id':pack.id,'industry_name':pack.name,
+                'company_id':enterprise['id'],'company_name':enterprise['name'],
+                'capabilities':capabilities(pack,_read_dataset(pack,enterprise)), 'data_label':'用户上传的业务数据'})
     return {'contexts':contexts,'default_context_id':default}
+
+
+def workspace_state():
+    """Public integration contract for the scope-free local workbench."""
+    from .data_import import workspace_state as state
+    return state()
+
+
+def workspace_context_id():
+    state = workspace_state()
+    if not state.get('context_id'):
+        raise ValueError('WORKSPACE_DATA_NOT_READY: 请先在业务数据中完成数据解析')
+    return state['context_id']
 
 
 def catalog(context_id):
@@ -661,7 +701,7 @@ def catalog(context_id):
     return {'factories':sorted({x.factory_id for x in dataset.costs}), 'products':sorted({x.product_id for x in dataset.costs}),
         'months':sorted({x.period for x in dataset.costs if x.scenario=='actual'}),'context_id':context_id,
         'snapshot_id':digest(dataset.model_dump(mode='json')),'quantity_unit':enterprise['quantity_unit'],
-        'currency':enterprise['currency'],'capabilities':capabilities(pack,dataset),'data_label':pack.data_label}
+        'currency':enterprise['currency'],'capabilities':capabilities(pack,dataset),'data_label':_import_or_pack_label(enterprise,pack)}
 
 
 def retrieve_reference(context, query, *, product=None, limit=8):
@@ -693,7 +733,10 @@ def analyze_reference(context_id, factory=None, product=None, month=None, analys
     if sha256(template_bytes).hexdigest()!=context.template_version:raise ValueError('TEMPLATE_SNAPSHOT_CHANGED')
     report_template=json.loads(template_bytes)
     if basis not in ('unit','total'): raise ValueError('INVALID_BASIS')
-    ds=_read_dataset(pack,enterprise);factory=factory or sorted({x.factory_id for x in ds.costs})[0];product=product or sorted({x.product_id for x in ds.costs})[0]
+    ds=_read_dataset(pack,enterprise)
+    if digest(ds.model_dump(mode='json')) != context.data_snapshot:
+        raise ValueError('DATA_SNAPSHOT_CHANGED: 工作区数据刚完成更新，请重新载入分析')
+    factory=factory or sorted({x.factory_id for x in ds.costs})[0];product=product or sorted({x.product_id for x in ds.costs})[0]
     month=month or max(x.period for x in ds.costs if x.scenario=='actual')
     ds=NormalizedDataset(costs=tuple(x for x in ds.costs if x.enterprise_id==context.enterprise_id and x.factory_id==factory and x.product_id==product),
         quantities=tuple(x for x in ds.quantities if x.enterprise_id==context.enterprise_id and x.factory_id==factory and x.product_id==product),
@@ -750,7 +793,7 @@ def analyze_reference(context_id, factory=None, product=None, month=None, analys
         metrics[key]=metric(key,cu if basis=='unit' else amount,money+'/'+unit if basis=='unit' else money,'Σ要素金额/Σ产量' if basis=='unit' else 'Σ要素金额',current['quantity'] if basis=='unit' else 1,numerator=amount)
         for b,c in changes.items():
             mk=key+'_'+b+'_rate';metrics[mk]=metric(mk,c['rate'],'%','(本期要素−基期要素)/基期要素×100',c['base'],periods['mom'],numerator=c['delta'],base=bases['mom'],metric_basis=b)
-            if flags[b]: alerts.append({'alert_id':'alert-'+digest([scope,key,b])[:20],'element_key':key,'element':name,'basis':b,'current':c['current'],'base':c['base'],'value_unit':money+'/'+unit if b=='unit' else money,'rate':c['rate'],'metric_id':metrics[mk]['metric_id'],'fact_summary':f'{name} {b} 环比 {c["rate"]}%，本期 {c["current"]}，基期 {c["base"]}','rule':'严格超过±10%','note':'合成演示阈值；非行业标准'})
+            if flags[b]: alerts.append({'alert_id':'alert-'+digest([scope,key,b])[:20],'element_key':key,'element':name,'basis':b,'current':c['current'],'base':c['base'],'value_unit':money+'/'+unit if b=='unit' else money,'rate':c['rate'],'metric_id':metrics[mk]['metric_id'],'fact_summary':f'{name} {b} 环比 {c["rate"]}%，本期 {c["current"]}，基期 {c["base"]}','rule':'严格超过±10%','note':'默认核查阈值；不是行业标准'})
         elements.append(item)
     optional=[x for x in ds.optional if x.period in months and x.scenario=='actual' and x.scope=='completed']
     # WIP/联产口径的驱动事实（工时、能耗）不支持分摊，直接拒绝而非静默计入
@@ -766,13 +809,23 @@ def analyze_reference(context_id, factory=None, product=None, month=None, analys
     trend=[]
     for m in sorted({x.period for x in ds.costs if x.scenario=='actual' and _shift(month,-5)<=x.period<=month}):
         a=aggregate(ds,[m]);trend.append({'month':m,**{k:None if a[k] is None else str(a[k]) for k in ('unit_cost','total_cost','quantity')},**{k:None if v is None else str(v) for k,v in a['elements_'+basis].items()}})
+    period_values = {}
+    for label, values in {'current': current, **bases}.items():
+        period_values[label] = None if values is None else {
+            **{key: None if values[key] is None else str(values[key]) for key in ('quantity', 'unit_cost', 'total_cost')},
+            **{kind: {key: None if value is None else str(value) for key, value in values[kind].items()}
+               for kind in ('elements_unit', 'elements_total')},
+        }
+    period_changes = {key: {label: change(current[key], base[key] if base else None)
+                           for label, base in bases.items()}
+                      for key in ('quantity', 'unit_cost', 'total_cost')}
     result={'snapshot_contract_version':SNAPSHOT_CONTRACT_VERSION,'report_template':report_template,'context_id':context_id,'analysis_context':context.model_dump(),'context_hash':context.context_hash,'data_version':context.data_snapshot,
         'snapshot_id':'','formula_version':FORMULA_VERSION,'factory':factory,'product':product,'month':month,'analysis_type':analysis_type,'basis':basis,
         'specification':enterprise['products'][product]['specification'],'period':{'start':months[0],'end':months[-1]},'metrics':metrics,'elements':elements,'trend':trend,
-        'alerts':alerts,'comparison':comparisons,'details':{'available':False,'reason':'仅合成已归集成本与专用驱动事实；不推算采购/BOM明细','materials':[],'expenses':[],'labor':[],'market':[]},
+        'alerts':alerts,'comparison':comparisons,'details':{'available':False,'reason':'当前数据仅含已归集成本与已接入驱动事实；不推算采购/BOM明细','materials':[],'expenses':[],'labor':[],'market':[]},
         'industry':{'rows':[],'converted_unit_cost':metrics['unit_cost']['value'],'unit':money+'/'+unit,'notice':_import_or_pack_label(enterprise, pack)},'budget_bridge':None,
-        'period_values':{},'period_changes':{},'materials_summary':[],'expenses_summary':[],'labor_metrics':{},'source_hashes':[context.data_snapshot],
-        'quantity_unit':unit,'currency':currency,'data_label':_import_or_pack_label(enterprise, pack),'capabilities':capabilities(pack,ds),
+        'period_values':period_values,'period_changes':period_changes,'materials_summary':[],'expenses_summary':[],'labor_metrics':{},'source_hashes':[context.data_snapshot],
+        'quantity_unit':unit,'currency':currency,'data_label':_import_or_pack_label(enterprise, pack),'data_provenance':_data_provenance(enterprise, pack),'capabilities':capabilities(pack,ds),
         'limits':[_import_or_pack_label(enterprise, pack),'未支持联副产品分配和在制品计价；缺少实际价格/实耗不能严格价量分解','维修记录仅支持待验证假设；不是已证实净原因']}
     for capability in result['capabilities']:
         if capability['id'] in pack.strategies and metrics[capability['id']]['value'] is None:
@@ -783,10 +836,14 @@ def analyze_reference(context_id, factory=None, product=None, month=None, analys
     return result
 
 
+def _data_provenance(enterprise, pack):
+    bundled = pack.enterprise_entry and enterprise['_config_file'] == (PACKS / pack.id / pack.enterprise_entry).resolve()
+    return 'synthetic_fixture' if bundled else 'user_import'
+
+
 def _import_or_pack_label(enterprise, pack):
-    """2026-09-24 修复（审计 AUD-IND-05）：用户导入企业（真实数据）不再被
-    保守标成包级"合成演示数据"——与 context_catalog 的标签口径一致。"""
-    return '用户导入数据（数据中心发布）' if enterprise.get('source_mode') == 'imported_cost' else pack.data_label
+    """Distinguish bundled fixtures from registered user data, regardless of mode."""
+    return pack.data_label if _data_provenance(enterprise, pack) == 'synthetic_fixture' else '用户导入数据（数据中心发布）'
 
 
 def benchmark_reference(context_id, product, month, left, right, analysis_type='monthly', basis='unit'):
@@ -817,7 +874,7 @@ def benchmark_reference(context_id, product, month, left, right, analysis_type='
     comparison={'analysis_type':analysis_type,'basis':basis,'period':a['period'],'direction':left+'−'+right+'，以'+right+'为分母',
         'product':product,'month':month,'left':left,'right':right,'snapshot_ids':[a['snapshot_id'],b['snapshot_id']],
         'summary':summary,'elements':elements,'details':{'left':a['details'],'right':b['details']},
-        'hypotheses':[],'limits':['合成演示工厂；只比较同产品、规格、期间与政策的归集结果','缺采购/BOM/批次实耗不推算成本净原因'],
+        'hypotheses':[],'limits':[a.get('data_label', '当前企业数据')+'；只比较同产品、规格、期间与政策的归集结果','缺采购/BOM/批次实耗不推算成本净原因'],
         'context_id':context_id,'analysis_context':a['analysis_context']}
     for row in summary+elements:
         row['metric_refs']={}

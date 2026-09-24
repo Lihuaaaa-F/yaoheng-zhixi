@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, contextQuery } from './api';
 import { Job, RpaAction } from './types';
 
-export function useJobsActions(tab: number, contextId: string) {
+export function useJobsActions(tab: number, contextId: string, pollInterval = 2000) {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [actions, setActions] = useState<RpaAction[]>([]);
   const [error, setError] = useState('');
@@ -26,8 +26,9 @@ export function useJobsActions(tab: number, contextId: string) {
     if (!id) return;
     const [j, a] = await Promise.all([api(`/jobs?${contextQuery(id)}`), api(`/actions?${contextQuery(id)}`)]);
     if (currentContext.current !== id) return;
-    apply(j, a);
+    apply(j, a); setError('');
   }, [contextId, apply]);
+  useEffect(()=>{lastSnapshot.current='';setJobs([]);setActions([]);setError('')},[contextId]);
   useEffect(() => {
     if (tab !== 2 || !contextId) return;
     const c = new AbortController();
@@ -35,15 +36,15 @@ export function useJobsActions(tab: number, contextId: string) {
     const poll = async () => {
       try {
         const [j, a] = await Promise.all([api(`/jobs?${contextQuery(contextId)}`, undefined, c.signal), api(`/actions?${contextQuery(contextId)}`, undefined, c.signal)]);
-        if (!c.signal.aborted) apply(j, a);
+        if (!c.signal.aborted) { apply(j, a); setError(''); }
       } catch (e) {
         if (!c.signal.aborted) setError(e instanceof Error ? e.message : String(e));
       } finally {
-        if (!c.signal.aborted) timer = setTimeout(poll, 2000);
+        if (!c.signal.aborted) timer = setTimeout(poll, pollInterval);
       }
     };
     void poll();
     return () => { c.abort(); clearTimeout(timer); };
-  }, [tab, contextId]);
+  }, [tab, contextId, pollInterval]);
   return { jobs, setJobs, actions, setActions, jobsError: error, refresh };
 }

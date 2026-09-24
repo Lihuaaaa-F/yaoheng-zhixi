@@ -1,0 +1,46 @@
+{
+  "run_id": "workspace_20260923",
+  "commit": "40e8d5b372304c54a423f6b9c83b1e0d9566b6cc",
+  "required_scenarios": [
+    "S1",
+    "S2",
+    "S3"
+  ],
+  "scenarios": [
+    {
+      "id": "S1",
+      "context_id": "pharmaceutical:competition",
+      "product": "银黄口服液",
+      "month": "2026-05",
+      "analysis_type": "monthly",
+      "job_id": null,
+      "status": "PENDING_CURRENT_BUILD",
+      "human_review": "PENDING"
+    },
+    {
+      "id": "S2",
+      "context_id": "pharmaceutical:competition",
+      "product": "板蓝根颗粒",
+      "month": "2026-05",
+      "analysis_type": "special",
+      "job_id": null,
+      "status": "PENDING_CURRENT_BUILD",
+      "human_review": "PENDING"
+    },
+    {
+      "id": "S3",
+      "context_id": "pharmaceutical:competition",
+      "product": "六味地黄胶囊",
+      "month": "2026-03",
+      "analysis_type": "monthly",
+      "job_id": null,
+      "status": "PENDING_CURRENT_BUILD",
+      "human_review": "PENDING"
+    }
+  ],
+  "status": "PARTIAL_VALIDATION",
+  "exit_code": 2,
+  "competition_ready": false,
+  "human_review": "PENDING",
+  "scope": "Not a full contest verify.sh PASS"
+}

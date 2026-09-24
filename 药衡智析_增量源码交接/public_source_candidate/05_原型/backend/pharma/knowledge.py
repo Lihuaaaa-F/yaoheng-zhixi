@@ -17,7 +17,7 @@ import time
 from .config import ROOT, PACKAGE, RUNTIME
 
 EMBEDDING_SHA = 'a48549b3259a6165364f226599cd91f39923d5d5'
-PARSER_VERSION = 'scope-prefilter-v7-private-terminology'
+PARSER_VERSION = 'scope-prefilter-v9-workspace-source-provenance'
 RETRIEVER_VERSION = 'bm25-chroma-prefilter-rrf-v6-chunk-cache'
 # 分块解析与适用性进程内有界缓存（2026-09-23 审计 AUD-KB-01）：此前每次
 # search 全量 SELECT+反序列化所有 chunk 并逐个重算 evidence_applicability
@@ -100,8 +100,158 @@ def _term_tokenizer(words):
 
 def source_snapshot(source_dir):
     files = sorted(p for p in Path(source_dir).iterdir() if p.suffix.lower() in ('.pdf','.docx','.txt'))
-    fingerprints = {p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in files}
+    fingerprints = {p.name:file_fingerprint(p) for p in files}
     return hashlib.sha256(json.dumps({'sources':fingerprints,'terminology_hash':terminology_hash()},ensure_ascii=False,sort_keys=True,separators=(',',':')).encode()).hexdigest()
+
+
+DEFAULT_KNOWLEDGE_CONTEXT = 'pharmaceutical:competition'
+
+
+@lru_cache(maxsize=256)
+def _cached_file_fingerprint(path, mtime_ns, size):
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def file_fingerprint(path):
+    stat = path.stat()
+    return _cached_file_fingerprint(str(path.resolve()), stat.st_mtime_ns, stat.st_size)
+
+
+@lru_cache(maxsize=8)
+def _cached_embedding_fingerprint(path, signature):
+    from .model_settings import embedding_fingerprint
+    return embedding_fingerprint(Path(path))
+
+
+def embedding_fingerprint_cached(path):
+    signature = tuple((name, (path / name).stat().st_mtime_ns, (path / name).stat().st_size)
+                      for name in ('model_quantized.onnx', 'onnx/model_quantized.onnx', 'model.onnx', 'tokenizer.json', 'config.json')
+                      if (path / name).is_file())
+    return _cached_embedding_fingerprint(str(path.resolve()), signature)
+
+
+def knowledge_context_id(context=None):
+    """A context is an identifier, never a user-supplied filesystem path."""
+    if isinstance(context, str):
+        value = context
+    else:
+        context = context.model_dump() if hasattr(context, 'model_dump') else (context or {})
+        value = (f'{context["industry_id"]}:{context["enterprise_id"]}'
+                 if context.get('industry_id') and context.get('enterprise_id') else DEFAULT_KNOWLEDGE_CONTEXT)
+    if not re.fullmatch(r'[a-z][a-z0-9_]*:[A-Za-z0-9_-]{1,100}', value):
+        raise ValueError('INVALID_KNOWLEDGE_CONTEXT')
+    return value
+
+
+def knowledge_scope_dir(context=None):
+    from .config import RUNTIME as current_runtime
+    key = hashlib.sha256(knowledge_context_id(context).encode()).hexdigest()[:24]
+    return current_runtime / 'imports' / 'knowledge' / 'scopes' / key
+
+
+def knowledge_registry(context=None):
+    context_id = knowledge_context_id(context)
+    path = knowledge_scope_dir(context_id) / 'registry.json'
+    if not path.is_file():
+        return {'schema_version': 1, 'context_id': context_id, 'active': {}, 'versions': {}}
+    record = json.loads(path.read_text(encoding='utf-8'))
+    if record.get('context_id') != context_id or not isinstance(record.get('active'), dict) or not isinstance(record.get('versions'), dict):
+        raise ValueError('INVALID_KNOWLEDGE_REGISTRY')
+    return record
+
+
+def knowledge_scope_ids(context=None):
+    """Inherit only the active workspace's verified former enterprise scopes.
+
+    The immutable workspace manifest is the migration authority. Reading it
+    directly avoids recursion through workspace_state -> resolve_context. An
+    explicitly requested former scope never gains access to its siblings.
+    """
+    context_id = knowledge_context_id(context)
+    if context_id == DEFAULT_KNOWLEDGE_CONTEXT:
+        return [context_id]
+    from .data_import import _workspace_manifest
+    manifest = _workspace_manifest()
+    if not manifest or manifest.get('context_id') != context_id:
+        return [context_id]
+    industry_id = context_id.partition(':')[0]
+    result = [context_id]
+    for legacy in manifest.get('legacy_context_ids', []):
+        legacy = knowledge_context_id(legacy)
+        if legacy == DEFAULT_KNOWLEDGE_CONTEXT or legacy.partition(':')[0] != industry_id:
+            raise ValueError('INVALID_WORKSPACE_KNOWLEDGE_BINDING')
+        if legacy not in result:
+            result.append(legacy)
+    return result
+
+
+def registered_knowledge_source(source_id, context=None):
+    """Resolve immutable source metadata within the same verified enterprise."""
+    for scope_id in knowledge_scope_ids(context):
+        source = knowledge_registry(scope_id)['versions'].get(source_id)
+        if source is not None:
+            return {**source, 'source_context_id': scope_id}
+    return None
+
+
+def uploaded_knowledge_source_bindings(context=None, registry=None):
+    """Map active source files to their original scopes without rewriting them.
+
+    A new version explicitly published in the unified scope supersedes the
+    same logical document inherited from a former batch. Different inherited
+    sources stay visible together; their original source IDs remain resolvable.
+    """
+    context_id = knowledge_context_id(context)
+    own_registry = registry if registry is not None else knowledge_registry(context_id)
+    if own_registry.get('context_id') != context_id:
+        raise ValueError('INVALID_KNOWLEDGE_REGISTRY')
+    overridden = set(own_registry['active'])
+    sources = {}
+    for scope_id in knowledge_scope_ids(context_id):
+        current = own_registry if scope_id == context_id else knowledge_registry(scope_id)
+        active = {source_id for logical, source_id in current['active'].items()
+                  if scope_id == context_id or logical not in overridden}
+        folder = knowledge_scope_dir(scope_id)
+        for source_id in sorted(active):
+            if not re.fullmatch(r'src-[a-f0-9]{24}', source_id) or source_id not in current['versions']:
+                raise ValueError('INVALID_KNOWLEDGE_SOURCE_ID')
+            path = folder / (source_id + '.json')
+            if not path.is_file():
+                raise ValueError('KNOWLEDGE_SOURCE_MISSING')
+            sources[path.resolve()] = scope_id
+    return sources
+
+
+def uploaded_knowledge_sources(context=None, registry=None):
+    return list(uploaded_knowledge_source_bindings(context, registry))
+
+
+def competition_extra_sources():
+    """Legacy uploaded text belongs only to the competition scope."""
+    from .config import RUNTIME as current_runtime, KNOWLEDGE_SUPPLEMENT_DIR
+    result = []
+    for directory in (Path(KNOWLEDGE_SUPPLEMENT_DIR), current_runtime / 'imports' / 'knowledge'):
+        if directory.is_dir():
+            result.extend(p for p in directory.iterdir() if p.is_file() and p.suffix.lower() in ('.pdf', '.docx', '.txt'))
+    return sorted(result)
+
+
+def scoped_knowledge_snapshot(context, base_snapshot, registry=None):
+    """Include uploaded versions in cache keys; empty scopes retain legacy keys."""
+    context_id = knowledge_context_id(context)
+    sources = uploaded_knowledge_sources(context_id, registry)
+    if context_id == DEFAULT_KNOWLEDGE_CONTEXT:
+        sources += competition_extra_sources()
+    if not sources:
+        return base_snapshot
+    extras = {str(p): file_fingerprint(p) for p in sources}
+    return hashlib.sha256(json.dumps({'base': base_snapshot, 'context_id': context_id, 'sources': extras},
+                                     ensure_ascii=False, sort_keys=True).encode()).hexdigest()
+
+
+def source_identifier(path, context=None):
+    seed = knowledge_context_id(context) + ':' + path.name + ':' + file_fingerprint(path)
+    return 'src-' + hashlib.sha256(seed.encode()).hexdigest()[:24]
 
 
 def reciprocal_rank_fusion(rankings, limit=5, k=60, weights=None):
@@ -151,7 +301,9 @@ def parse_document(path):
         import fitz
         with fitz.open(path) as doc:
             for i, page in enumerate(doc, 1):
-                yield {'page': i, 'location': f'第{i}页', 'original_text': page.get_text(sort=True), 'reading_order': 'coordinate_sorted'}
+                text = page.get_text(sort=True)
+                yield {'page': i, 'location': f'第{i}页', 'original_text': text, 'reading_order': 'coordinate_sorted',
+                       'requires_ocr': len(re.findall(r'[\w\u4e00-\u9fff]', text)) < 15 and bool(page.get_images())}
     elif suffix == '.docx':
         from docx import Document
         doc = Document(path)
@@ -172,7 +324,12 @@ def parse_document(path):
         if not isinstance(records,list): raise ValueError('knowledge records must be a list')
         for i, record in enumerate(records,1):
             if not isinstance(record,dict) or not isinstance(record.get('text'),str): raise ValueError('invalid knowledge record')
-            yield {**record,'page':None,'location':record.get('location',f'记录{i}'),'original_text':record['text'],'scope':record.get('scope','product' if record.get('products') else 'general')}
+            # Page numbers are retained only for records parsed from an actual
+            # PDF. Older synthetic JSON fixtures sometimes contain invented pages.
+            page = record.get('page') if record.get('source_format') == 'pdf' else None
+            if page is not None and (not isinstance(page, int) or isinstance(page, bool) or page < 1):
+                raise ValueError('invalid knowledge page')
+            yield {**record,'page':page,'location':record.get('location',f'记录{i}'),'original_text':record['text'],'scope':record.get('scope','product' if record.get('products') else 'general')}
     elif suffix == '.txt':
         lines = path.read_text(encoding='utf-8-sig').splitlines()
         for i in range(0, len(lines), 12):
@@ -226,11 +383,13 @@ def section_blocks(path, industry_id=None):
 
 
 class Knowledge:
-    def __init__(self, root=None, vector_enabled=True, source_dir=None, reranker=None, context=None, reranker_version=None, source_files=None):
+    def __init__(self, root=None, vector_enabled=True, source_dir=None, reranker=None, context=None, reranker_version=None, source_files=None, include_uploads=True, uploaded_registry=None):
         self.root = Path(root) if root else ROOT
         runtime = self.root / '05_原型/.runtime' if root is not None else RUNTIME
         package = self.root / '00_赛题原始资料/模拟数据_V1.1_净化解压/创灵境_考题模拟数据' if root is not None else PACKAGE
         self.context = context.model_dump() if hasattr(context, 'model_dump') else dict(context or {})
+        self.include_uploads = include_uploads and root is None and source_dir is None and (source_files is None or bool(self.context))
+        self.uploaded_registry = uploaded_registry
         if isinstance(source_files,(str,Path)): raise ValueError('SOURCE_FILES_MUST_BE_SEQUENCE')
         self.source_files = tuple(Path(p).resolve() for p in source_files) if source_files is not None else None
         if self.source_files is not None:
@@ -297,6 +456,18 @@ class Knowledge:
         with exclusive(self.path / 'build.lock'):
             return self._build(progress)
 
+    def _sources(self):
+        sources = sorted(self.source_files) if self.source_files is not None else sorted(
+            p for p in self.source_dir.iterdir() if p.is_file() and (p.suffix.lower() in ('.pdf', '.docx', '.txt') or p.name == 'knowledge.json'))
+        if self.source_files is None:
+            if self.extra_dir is not None:
+                sources += sorted(p for p in self.extra_dir.iterdir() if p.suffix.lower() in ('.pdf', '.docx', '.txt') and p.is_file())
+            if self.ingest_dir is not None:
+                sources += sorted(p for p in self.ingest_dir.iterdir() if p.suffix.lower() == '.txt' and p.is_file())
+        if self.include_uploads:
+            sources += uploaded_knowledge_sources(self.context, self.uploaded_registry)
+        return sorted(set(p.resolve() for p in sources))
+
     def _build(self, progress=None):
         def _report(pct, detail):
             if progress is not None:
@@ -304,25 +475,19 @@ class Knowledge:
                 except Exception: pass  # 进度回调绝不影响构建本身
         # An explicit enterprise entry is an allowlist, never a hint to scan its
         # parent. Directory mode remains for the private competition document set.
-        sources = sorted(self.source_files) if self.source_files is not None else sorted(p for p in self.source_dir.iterdir() if p.suffix.lower() in ('.pdf','.docx','.txt') or p.name == 'knowledge.json')
-        if self.source_files is None:
-            if self.extra_dir is not None:
-                sources = sources + sorted(p for p in self.extra_dir.iterdir()
-                                           if p.suffix.lower() in ('.pdf','.docx','.txt') and p.is_file())
-            if self.ingest_dir is not None:
-                sources = sources + sorted(p for p in self.ingest_dir.iterdir()
-                                           if p.suffix.lower() == '.txt' and p.is_file())
-        from . import model_settings as _model_settings
-        embedding_sha = _model_settings.embedding_fingerprint(self.model_dir)
+        sources = self._sources()
+        source_scopes = (uploaded_knowledge_source_bindings(self.context, self.uploaded_registry)
+                         if self.include_uploads else {})
+        embedding_sha = embedding_fingerprint_cached(self.model_dir)
         _report(5, f'读取知识源（{len(sources)} 份）…')
-        fingerprints = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in sources}
+        fingerprints = {p.name: file_fingerprint(p) for p in sources}
         terms_hash=terminology_hash()
         version = hashlib.sha256(json.dumps([fingerprints, embedding_sha, PARSER_VERSION, self.context, terms_hash], sort_keys=True).encode()).hexdigest()[:20]
         target = self.path / version
         manifest = target / 'manifest.json'
         if manifest.exists():
             record = json.loads(manifest.read_text())
-            if record['status'] == 'PASS' or (not self.vector_enabled and not record.get('failures')):
+            if record.get('parser_version') == PARSER_VERSION and (record['status'] == 'PASS' or (not self.vector_enabled and not record.get('failures'))):
                 (self.path/'CURRENT.tmp').write_text(version)
                 os.replace(self.path/'CURRENT.tmp',self.path/'CURRENT')
                 _report(100, '知识索引已是最新版本，直接切换')
@@ -332,10 +497,16 @@ class Knowledge:
         for index, source in enumerate(sources):
             _report(8 + 20 * index / max(len(sources), 1), f'解析文档 {index + 1}/{len(sources)}：{source.name}')
             try:
+                source_id = source_identifier(source, self.context)
+                source_scope_id = source_scopes.get(source.resolve(), knowledge_context_id(self.context))
+                source_industry, source_enterprise = source_scope_id.split(':', 1)
                 source_pages = set()
                 for block in section_blocks(source,self.context.get('industry_id')):
-                    if self.context and any(block.get(k) and block[k] != self.context.get(k) for k in ('enterprise_id','industry_id')):
+                    expected_scope = {'industry_id': source_industry, 'enterprise_id': source_enterprise}
+                    if self.context and any(block.get(k) and block[k] != expected_scope[k] for k in expected_scope):
                         continue
+                    if source.resolve() in source_scopes and block.get('context_id') != source_scope_id:
+                        raise ValueError('KNOWLEDGE_SOURCE_SCOPE_MISMATCH')
                     if block['page'] is not None: source_pages.add(block['page'])
                     clean = re.sub(r'[ \t]+', ' ', block['original_text']).strip()
                     # Product headings and document-control cover blocks carry
@@ -347,6 +518,10 @@ class Knowledge:
                         continue
                     if len(re.findall(r'[\w\u4e00-\u9fff]', clean)) < 15:
                         if block.get('heading'): continue  # A short section label is metadata, not an OCR failure.
+                        if block.get('source_id') and block.get('source_format'):
+                            # Uploaded records retain these short labels in the
+                            # immutable document; they are not standalone evidence.
+                            continue
                         failures.append({'source':source.name,'location':block['location'],'reason':'LOW_TEXT_QUALITY; OCR_NOT_RUN'})
                         continue
                     # Prefer paragraph/newline boundaries, preserving a short overlap.
@@ -358,7 +533,12 @@ class Knowledge:
                             if boundary > start: end = boundary + 1
                         text = clean[start:end]
                         ident = hashlib.sha256(f'{fingerprints[source.name]}:{block["location"]}:{block.get("heading")}:{block.get("event_period")}:{index}:{text}'.encode()).hexdigest()[:24]
-                        chunks.append(dict(block, evidence_id=ident, source=source.name, hash=fingerprints[source.name], text=text, chunk=index, knowledge_version=version, analysis_context=self.context))
+                        chunks.append(dict(block, evidence_id=ident, source=block.get('source') or source.name,
+                                           source_id=block.get('source_id') or source_id,
+                                           source_context_id=source_scope_id,
+                                           title=block.get('title') or block.get('source') or source.name,
+                                           hash=block.get('sha256') or fingerprints[source.name], text=text, chunk=index,
+                                           knowledge_version=version, analysis_context=self.context))
                         if end == len(clean): break
                         start, index = max(start+1,end-80), index+1
                 pages += len(source_pages)
@@ -398,7 +578,7 @@ class Knowledge:
             except Exception as exc:
                 vector_error = type(exc).__name__ + ': ' + str(exc)[:180]
         _report(90, '索引构建完成，写入清单并验证…')
-        record = {'terminology_hash':terms_hash,'status':'PASS' if self.vector_enabled and not vector_error and not failures else 'DEGRADED','knowledge_version':version,'chunks':len(chunks),'pages':pages,'sources':fingerprints,'embedding':{'repo':self.model_dir.name,'path':str(self.model_dir),'sha':embedding_sha,'pooling':'CLS normalized','runtime':'CPU ONNX quantized' if self.model_dir.is_dir() else 'unknown'},'failures':failures,'vector_error':vector_error,'built_at':time.time()}
+        record = {'parser_version':PARSER_VERSION,'terminology_hash':terms_hash,'status':'PASS' if self.vector_enabled and not vector_error and not failures else 'DEGRADED','knowledge_version':version,'chunks':len(chunks),'pages':pages,'sources':fingerprints,'embedding':{'repo':self.model_dir.name,'path':str(self.model_dir),'sha':embedding_sha,'pooling':'CLS normalized','runtime':'CPU ONNX quantized' if self.model_dir.is_dir() else 'unknown'},'failures':failures,'vector_error':vector_error,'built_at':time.time()}
         (target/'chunks.json').write_text(json.dumps(chunks,ensure_ascii=False,indent=2))
         manifest.write_text(json.dumps(record,ensure_ascii=False,indent=2))
         # Parsing failure must not replace the last valid knowledge snapshot.
@@ -445,11 +625,21 @@ class Knowledge:
             raise ValueError('KNOWLEDGE_CONTEXT_MISMATCH')
         if mode not in ('hybrid','bm25','vector'):
             raise ValueError('mode must be hybrid, bm25 or vector')
-        if (self.path/'CURRENT').exists() and self.status().get('terminology_hash')!=terminology_hash():self.build()
-        if not (self.path/'CURRENT').exists(): self.build()
+        def current_inputs_match():
+            if not self.version:
+                return False
+            record = self.status()
+            return (record.get('terminology_hash') == terminology_hash()
+                    and record.get('parser_version') == PARSER_VERSION
+                    and record.get('sources') == {p.name: file_fingerprint(p) for p in self._sources()}
+                    and (record.get('embedding') or {}).get('sha') == embedding_fingerprint_cached(self.model_dir))
+        if not current_inputs_match():
+            self._embedding, self._collection = None, None
+            self.build()
         if not (self.path/'CURRENT').exists():
             return {'status':'FAILED','mode':mode,'evidence':[],'reason':'No valid knowledge snapshot'}
-        if self.status().get('terminology_hash')!=terminology_hash():raise ValueError('TERMINOLOGY_REBUILD_FAILED')
+        if not current_inputs_match():
+            return {'status':'FAILED','mode':mode,'evidence':[],'reason':'KNOWLEDGE_REBUILD_FAILED: 当前来源尚未形成有效索引，旧版仍保留'}
         version = (self.path/'CURRENT').read_text().strip()
         target = self.path/version
         # 2026-09-24 修复（审计 AUD-RAG-06）：溯源标注用本索引 manifest 的实际

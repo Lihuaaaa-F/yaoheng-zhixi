@@ -1,8 +1,8 @@
 # 药衡智析 · 正式运行环境（Docker Compose）
 # 三个运行职责：Web/API（静态前端+业务接口+文件下载）、后台任务处理（worker）、模拟RPA。
 # 核心数据全部落在命名卷：停止服务、更新镜像都不丢业务数据。
-# 默认仅本机访问（127.0.0.1 端口映射）。模型密钥经 PHARMA_MODEL_KEY_FILE 注入，
-# 不写入镜像、仓库或 compose 文件。
+# 默认仅本机访问（127.0.0.1 端口映射）。在网页“模型连接”保存密钥到持久卷；
+# 密钥不写入镜像、仓库或 compose 文件。宿主机路径不会自动映射进容器。
 
 name: yaoheng
 
@@ -30,15 +30,19 @@ x-app-base: &app-base
     PHARMA_RPA_INTERNAL_SIMULATOR: rpa
     PHARMA_TEMPLATE_DIR: /data/runtime/template
     RPA_BASE_URL: http://rpa:8090
-    # 密钥只从宿主机文件读入；留空则系统按"确定性分析可用、模型降级"运行
-    PHARMA_MODEL_KEY_FILE: ${PHARMA_MODEL_KEY_FILE:-}
-    PHARMA_MODEL: ${PHARMA_MODEL:-glm-5.3}
+    # 仅显式设置时覆盖网页配置；留空使用网页保存的配置或应用默认值。
+    PHARMA_MODEL: ${PHARMA_MODEL:-}
+    PHARMA_API_TOKEN: ${PHARMA_API_TOKEN:-}
+    PHARMA_DEPLOYMENT_MODE: ${PHARMA_DEPLOYMENT_MODE:-local}
+    PHARMA_NETWORK_PROBE_URL: ${PHARMA_NETWORK_PROBE_URL-https://open.bigmodel.cn}
     PHARMA_MODEL_MAX_CALLS: ${PHARMA_MODEL_MAX_CALLS:-200}
     # 首次拉取向量模型优先国内镜像（内容仍按固定哈希校验）。
     # 注：pip/npm 默认直连官方源——镜像内 pip 安装 requirements.lock、前端
     # 构建已在中国镜像 apt 源之外直连；如需全程国内镜像，在 build args
     # 之外另行配置 PIP_INDEX_URL/.npmrc（2026-09-24 审计 AUD-DEP-02 修正注释）。
     PHARMA_EMBEDDING_MIRROR: "1"
+    # 初次无网络仍能启动。需要向量模型时在“模型连接”安装或显式开启下载。
+    PHARMA_FETCH_EMBEDDING: ${PHARMA_FETCH_EMBEDDING:-0}
   volumes:
     - appdata:/data/runtime
     - artifacts:/data/artifacts

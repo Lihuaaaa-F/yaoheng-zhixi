@@ -1,5 +1,6 @@
 import { snapshotReport } from './NarrativePanel';
 import { useState, useEffect } from 'react';
+import { Select } from 'antd';
 import { api, Selection } from './api';
 import { cleanText, DeveloperDetails } from './presentation';
 
@@ -39,18 +40,18 @@ export default function Rectification({ selection, snapshot, jobs, actions, refr
       <p className="muted">汇总当前数据范围全部任务，以任务 ID 去重；模拟送达按通知回执统计。责任人确认须有署名与时间记录，发送前确认不计入，送达不等于整改完成。</p></section>
     <section className="panel"><h2>建议转为模拟整改任务</h2>
       <p className="notice">仅将实际核查建议转为草稿。具体姓名未知时保留“待分配”；确认当前完整内容后才发送题包模拟通知。</p>
-      <label className="finding-select">载入当前报告建议<select aria-label="载入当前报告建议" defaultValue="" key={snapshot?.snapshot_id} onChange={e => {
-        const f = availableFindings[Number(e.target.value)]; if (!f) return;
+      <label className="finding-select">载入当前报告建议<Select aria-label="载入当前报告建议" placeholder="选择可执行建议，或手动填写" key={snapshot?.snapshot_id} options={availableFindings.map((f:any,i:number)=>({value:i,label:cleanText(f.suggestion).slice(0,100)}))} onChange={index => {
+        const f = availableFindings[index]; if (!f) return;
         setFinding(cleanText(f.rendered_text ?? f.text_template)); setSuggestion(cleanText(f.suggestion)); setTarget(f.verification_target ?? '');
         setExpected(Array.isArray(f.expected_evidence) ? f.expected_evidence.join('；') : f.expected_evidence ?? '');
         setRole(f.responsible_role ?? '待分配'); setDepartment(f.department ?? '生产管理部'); setPriority(normalizedPriority(f.priority)); setDeadlineBasis(f.deadline_basis ?? '');
-      }}><option value="">选择可执行建议，或手动填写</option>{availableFindings.map((f: any, i: number) => <option key={i} value={i}>{cleanText(f.suggestion).slice(0, 100)}</option>)}</select></label>
-      {!availableFindings.length && <p className="muted">当前报告尚无可载入的行动建议。请先在「报告生成」页生成当前报告，或补充核查对象、所需证据和具体行动。</p>}
+      }}/></label>
+      {!availableFindings.length && <p className="muted">当前报告尚无可载入的行动建议。请先在「分析报告」页生成当前报告，或补充核查对象、所需证据和具体行动。</p>}
       <div className="form-grid">
         <label>责任人<input aria-label="责任人" value={name} onChange={e => setName(e.target.value)} /></label>
         <label>部门<input aria-label="部门" value={department} onChange={e => setDepartment(e.target.value)} /></label>
         <label>责任角色<input aria-label="责任角色" value={role} onChange={e => setRole(e.target.value)} /></label>
-        <label>优先级<select aria-label="优先级" value={priority} onChange={e => setPriority(e.target.value)}><option value="high">高</option><option value="medium">中</option><option value="low">低</option></select></label>
+        <label>优先级<Select aria-label="优先级" value={priority} onChange={setPriority} options={[{value:'high',label:'高'},{value:'medium',label:'中'},{value:'low',label:'低'}]}/></label>
         <label className="full">业务问题<textarea aria-label="业务问题" value={finding} onChange={e => setFinding(e.target.value)} /></label>
         <label className="full">核查对象<input aria-label="核查对象" value={target} onChange={e => setTarget(e.target.value)} /></label>
         <label className="full">预期证据<textarea aria-label="预期证据" value={expected} onChange={e => setExpected(e.target.value)} /></label>

@@ -1,6 +1,8 @@
 import { snapshotReport } from './NarrativePanel';
 import { useState } from 'react';
-import { api, Selection } from './api';
+import { Button, Input, Select } from 'antd';
+import FilePicker from './FilePicker';
+import { api, apiHeaders, openApiFile, Selection } from './api';
 import { Acceptance, AnalysisStatus, DeveloperDetails } from './presentation';
 
 const jobLabel = (s: string) => ({ SUCCEEDED: '生成流程结束', DEGRADED: '生成流程结束，存在待评或降级项', FAILED: '生成失败', QUEUED: '等待生成', RUNNING: '正在生成' }[s] ?? '处理中');
@@ -19,7 +21,9 @@ export default function ReportGeneration({ selection, snapshot, jobs, refresh, o
     && j.input?.factory === selection.factory
     && j.input?.product === selection.product
     && j.input?.month === selection.month
-    && j.input?.analysis_type === selection.analysis_type;
+    && j.input?.analysis_type === selection.analysis_type
+    && (j.input?.basis??'unit') === selection.basis
+    && (j.input?.topic??'') === (selection.topic??'');
   const visibleJobs = showHistory ? jobs.filter(j => j.kind !== 'data_parse' && j.kind !== 'kb' && j.kind !== 'template_parse' && j.kind !== 'vector_switch')
     : jobs.filter(matchesSelection).slice(0, 3);
   const snapshotJob = jobs.find(matchesSelection);
@@ -54,12 +58,12 @@ export default function ReportGeneration({ selection, snapshot, jobs, refresh, o
         <div className="downloads">{['docx', 'pdf'].map(kind => {
           const a = j.result?.[kind];
           return a?.artifact_id && ['SUCCEEDED', 'DEGRADED'].includes(j.status)
-            ? <a key={kind} href={`/api/artifacts/${encodeURIComponent(a.artifact_id)}`} download>{kind === 'docx' ? 'Word' : 'PDF'} 下载（待审核）</a>
+            ? <a key={kind} href={`/api/artifacts/${encodeURIComponent(a.artifact_id)}`} onClick={event=>{event.preventDefault();void openApiFile(`/api/artifacts/${encodeURIComponent(a.artifact_id)}`,`${j.input?.product??'成本分析'}_${j.input?.month??'报告'}.${kind}`).catch(e=>onError(e.message))}} download>{kind === 'docx' ? 'Word' : 'PDF'} 下载（待审核）</a>
             : <span key={kind}>{kind.toUpperCase()} · {j.status === 'FAILED' ? '生成未通过' : a?.status === 'PASS' ? '文件已生成' : '等待文件'}</span>;
-        })}{j.result?.audit?.artifact_id && ['SUCCEEDED', 'DEGRADED'].includes(j.status) && <a href={`/api/artifacts/${encodeURIComponent(j.result.audit.artifact_id)}`} download>机器审计附件</a>}</div>
+        })}{j.result?.audit?.artifact_id && ['SUCCEEDED', 'DEGRADED'].includes(j.status) && <a href={`/api/artifacts/${encodeURIComponent(j.result.audit.artifact_id)}`} onClick={event=>{event.preventDefault();void openApiFile(`/api/artifacts/${encodeURIComponent(j.result.audit.artifact_id)}`,'报告验证记录.json').catch(e=>onError(e.message))}} download>机器审计附件</a>}</div>
         <DeveloperDetails value={j} />
       </article>)}</div>}
-    {currentReport && <p className="muted">当前分析已有报告 {currentReport.id.slice(0, 8)}（{jobLabel(currentReport.status)}）；重复生成按输入版本指纹幂等复用。</p>}
+    {currentReport && <p className="muted">当前分析已有报告（{jobLabel(currentReport.status)}）。相同输入可复用已有结果，避免重复生成。</p>}
   </section>;
 }
 
@@ -68,21 +72,23 @@ const HUMAN_DIMS = ['section_completeness', 'readability', 'visual_quality'] as 
 function AcceptanceUpload({ jobId, onDone, onError }: { jobId: string; onDone: () => void; onError: (s: string) => void }) {
   const [file, setFile] = useState<File | null>(null);
   const [reviewer, setReviewer] = useState('');
-  const [score, setScore] = useState(5);
+  const [score, setScore] = useState('');
+  const [dimensions,setDimensions]=useState<Record<string,string>>({});
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState('');
   const submit = async () => {
     if (!reviewer.trim()) { onError('人工验收：请填写验收人姓名。'); return; }
     if (!file) { onError('人工验收：请选择验收文档（Word/PDF/截图）。'); return; }
+    if(score===''||HUMAN_DIMS.some(key=>!['PASS','FAIL'].includes(dimensions[key]))){onError('人工验收：请人工填写归因评分，并逐项选择通过或未通过。');return;}
     setBusy(true); onError('');
     try {
       const fd = new FormData();
       fd.append('file', file); fd.append('reviewer', reviewer.trim()); fd.append('attribution_score', String(score));
-      for (const k of HUMAN_DIMS) fd.append(k, 'PASS');
-      const r = await fetch(`/api/reports/${encodeURIComponent(jobId)}/acceptance-doc`, { method: 'POST', body: fd });
+      for (const k of HUMAN_DIMS) fd.append(k, dimensions[k]);
+      const r = await fetch(`/api/reports/${encodeURIComponent(jobId)}/acceptance-doc`, { method: 'POST', body: fd, headers: apiHeaders() });
       const data = await r.json();
       if (!r.ok) throw new Error(data.error?.message ?? data.detail ?? `HTTP ${r.status}`);
-      setDone(`已登记人工验收（验收人 ${reviewer.trim()}；验收文档已存档，编号 …${String(data.acceptance_doc?.artifact_id ?? '').slice(-8)}），下方验收状态已更新。`);
+      setDone(`已登记人工验收（验收人 ${reviewer.trim()}；已按各项实际评审结果记录），验收文档已存档。`);
       onDone();
     } catch (e) { onError(e instanceof Error ? e.message : String(e)); }
     finally { setBusy(false); }
@@ -90,12 +96,13 @@ function AcceptanceUpload({ jobId, onDone, onError }: { jobId: string; onDone: (
   return <details className="acceptance-upload">
     <summary>人工验收 · 上传验收文档</summary>
     {done ? <p className="notice" role="status">{done}</p> : <>
-      <p className="muted">上传已签署的验收文档（Word / PDF / 截图），系统将其存档为验收凭证并登记人工验收记录；人工三项（章节实质完整、内容可读、视觉合格）按“通过”登记，验收状态立即重算。</p>
+      <p className="muted">请依据实际审阅逐项填写结果和归因评分，并上传已签署的验收文档（Word / PDF / 截图）。系统按所填结果登记，上传文件本身不代表验收通过。</p>
       <div className="acceptance-form">
-        <label>验收人<input value={reviewer} onChange={e => setReviewer(e.target.value)} placeholder="如：张三（质量部）" /></label>
-        <label>人工归因评分（0–5）<select value={score} onChange={e => setScore(Number(e.target.value))}>{[5, 4, 3, 2, 1, 0].map(n => <option key={n} value={n}>{n}</option>)}</select></label>
-        <label className="grow">验收文档<input type="file" accept=".docx,.pdf,.png,.jpg,.jpeg" onChange={e => setFile(e.target.files?.[0] ?? null)} /></label>
-        <button className="primary" disabled={busy} onClick={() => void submit()}>{busy ? '正在提交…' : '提交人工验收'}</button>
+        <label>验收人<Input aria-label="验收人" value={reviewer} onChange={e => setReviewer(e.target.value)} placeholder="如：张三（质量部）" /></label>
+        <label>人工归因评分（0–5）<Select aria-label="人工归因评分" value={score||undefined} placeholder="请人工评分" onChange={setScore} options={[0,1,2,3,4,5].map(n=>({value:String(n),label:String(n)}))}/></label>
+        {([['section_completeness','章节实质完整'],['readability','内容可读'],['visual_quality','视觉与版式']] as const).map(([key,label])=><label key={key}>{label}<Select aria-label={label} value={dimensions[key]||undefined} placeholder="请人工评审" onChange={choice=>setDimensions(value=>({...value,[key]:choice}))} options={[{value:'PASS',label:'通过'},{value:'FAIL',label:'未通过'}]}/></label>)}
+        <div className="upload-field grow"><span>验收文档</span><FilePicker file={file} onChange={setFile} accept=".docx,.pdf,.png,.jpg,.jpeg" disabled={busy}/></div>
+        <Button type="primary" loading={busy} onClick={() => void submit()}>提交人工验收</Button>
       </div>
     </>}
   </details>;

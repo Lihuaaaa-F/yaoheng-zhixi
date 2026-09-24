@@ -19,7 +19,8 @@ export default function Chart({ option, label, onClick }: {
         const signature = JSON.stringify(option);
         if (signature === optionSignature.current) return;
         optionSignature.current = signature;
-        chart.setOption({ ...option, animation: false, textStyle: { fontFamily: '"Noto Sans CJK SC",sans-serif', fontSize: 12 } }, true);
+        // Imported labels are untrusted text; never render chart tooltips as HTML.
+        chart.setOption({ ...option, tooltip: { ...(option.tooltip as object), renderMode: 'richText', confine: true }, animation: false, textStyle: { fontFamily: '"Noto Sans CJK SC",sans-serif', fontSize: 13 } }, true);
     }, [option]);
     useEffect(() => { const chart = instance.current; if (!chart || !onClick) return; chart.on('click', onClick); return () => {chart.off('click', onClick)}; }, [onClick]);
     return <div className="chart" ref={ref} role="img" aria-label={label}/>;

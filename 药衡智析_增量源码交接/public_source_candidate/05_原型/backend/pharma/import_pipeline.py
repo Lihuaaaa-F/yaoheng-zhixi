@@ -97,9 +97,9 @@ def _extraction_mapping(headers: list[str], sample_rows: list[list[str]]) -> tup
     """
     from .narrative import ModelGateway
     gateway = ModelGateway.for_route('extraction')
-    if not gateway.key:
+    if not getattr(gateway, 'available', bool(gateway.key)):
         return None, '未配置数据提取模型：使用内置预设映射（确定性回退）'
-    system = ('你是制药成本数据的字段映射助手。根据表头与样例行，把每一列映射到给定角色之一；'
+    system = ('你是制造企业成本数据的字段映射助手。根据表头与样例行，把每一列映射到给定角色之一；'
               '无法判断的列留空。只返回JSON对象 {"mapping": {"列名": "角色"}}，不要输出其他文字。')
     user = json.dumps({'表头': headers, '样例行': sample_rows[:3], '可选角色': list(MAPPING_ROLES)},
                       ensure_ascii=False)
@@ -213,9 +213,9 @@ def _analysis_hypotheses(alerts: list[dict[str, Any]]) -> list[dict[str, Any]] |
     """数据分析模型（大模型）归因推测：定性假设 + 缺失证据，失败回退规则文本。"""
     from .narrative import ModelGateway
     gateway = ModelGateway.for_route('analysis')
-    if not gateway.key:
+    if not getattr(gateway, 'available', bool(gateway.key)):
         return None
-    system = ('你是制药成本归因分析助手。输入是确定性计算得到的成本要素环比告警（JSON）。'
+    system = ('你是制造企业成本归因分析助手。输入是确定性计算得到的成本要素环比告警（JSON）。'
               '对每条告警给出定性归因推测与待核查证据清单。禁止编造任何数字或因果结论；'
               '数字只能原样引用输入。只返回JSON对象 {"hypotheses": [{"element": str, '
               '"hypothesis": str, "missing_evidence": [str], "suggestion": str}]}。')
@@ -258,6 +258,8 @@ def run_data_parse(store, job):
             if not headers:
                 raise StepFailure('预处理', f'{record["filename"]} 无法读取表头（文件为空或格式不支持）')
             options = _options_for(record)
+            replacement=(payload.get('replacements') or {}).get(record['id'])
+            if replacement:options['replace_import_id']=replacement
             if not quantity_hint and options.get('quantity_unit_hint'):
                 quantity_hint = options['quantity_unit_hint']
             stats = (record['meta'].get('preview') or {}).get('row_count')
@@ -288,15 +290,16 @@ def run_data_parse(store, job):
                     factories_seen.append(factory)
             validated.append((record, mapping, options, validation))
         step(55, '指标计算与能力评估（合并多文件口径，防双计）…', 'COMPUTE')
-        if not enterprise_name:
-            enterprise_name = '、'.join(factories_seen[:2]) or Path(records[0]['filename']).stem
-            enterprise_name = f'{enterprise_name}（导入）'
+        workspace = data_import._workspace_manifest()
+        if not enterprise_name and workspace:
+            enterprise_name = workspace['enterprise_name']
         if not quantity_hint:
-            quantity_hint = '件'
+            quantity_hint = workspace['quantity_unit'] if workspace else ''
         step(70, '归因分析：告警提取 + 数据分析模型归因推测…', 'ATTRIBUTION')
         publish_entries = [(record, mapping, options) for record, mapping, options, _v in validated]
-        published = data_import.publish_business_batch(publish_entries, enterprise_name,
-                                                       'pharmaceutical', quantity_hint)
+        published = data_import.publish_workspace(publish_entries, enterprise_name,
+                                                       payload.get('industry_id') or '', quantity_hint)
+        enterprise_name = published['enterprise_name']
         context_id = published['context_id']
         try:
             overview = _attribution_overview(context_id)
@@ -313,7 +316,7 @@ def run_data_parse(store, job):
         result['published'] = published
         result['attribution'] = overview
         result['message'] = '数据处理成功'
-        result['message_detail'] = (f'新数据集 {context_id}：{len(published["factories"])} 工厂 · '
+        result['message_detail'] = (f'工作区已整合 {published["accepted_imports"]} 份业务文件：{len(published["factories"])} 工厂 · '
                                     f'{len(published["products"])} 产品 · {len(published["periods"])} 期间；'
                                     f'告警 {overview["alert_count"]} 条，归因推测 {len(overview["hypotheses"])} 条'
                                     f'（{ "数据分析模型" if overview["attribution_mode"] == "analysis_model" else "确定性规则" }）。'
@@ -337,47 +340,74 @@ def run_kb_build(store, job):
         store.update(job_id, 'KB_BUILD', result, progress=pct, detail=detail)
 
     try:
+        from hashlib import sha256
+        from .industry import resolve_context, knowledge_entry_for_context
+        from .knowledge import (Knowledge, knowledge_context_id, source_snapshot,
+                                scoped_knowledge_snapshot)
+        from .context_services import knowledge_for_context
+        from .config import PACKAGE
+        context_id = knowledge_context_id(payload.get('context_id'))
+        context = resolve_context(context_id).model_dump()
         parsed_files = []
         if records:
             step(3, f'解析待入库知识文档（{len(records)} 份）…', )
             for index, record in enumerate(records):
                 data_import.mark_import_status(record, 'PARSING', {'parse_job': job_id})
                 try:
-                    data_import.publish_knowledge(record, {'title': Path(record['filename']).stem})
+                    options = {key: payload[key] for key in ('products', 'factory', 'specification', 'document_version', 'effective_date') if key in payload}
+                    options.update(title=Path(record['filename']).stem, context_id=context_id)
+                    parsed = data_import.publish_knowledge(record, options)
                 except ValueError as exc:
                     raise StepFailure('解析文档', f'{record["filename"]}：{str(exc)[:200]}')
-                entry = json.loads((data_import.IMPORTS_ROOT / record['id'] / 'knowledge_entry.json')
-                                   .read_text(encoding='utf-8'))
-                source = data_import.write_knowledge_source(record, entry['text'])
+                source = data_import.write_knowledge_source(record, activate=False)
                 parsed_files.append({'import_id': record['id'], 'filename': record['filename'],
                                      'data_type': record['meta'].get('data_type', ''),
-                                     'characters': len(entry['text']), 'kb_source': source.name})
+                                     'characters': parsed['characters'], 'pages': parsed['pages'],
+                                     'source_id': parsed['source_id'], 'context_id': context_id,
+                                     'kb_source': source.name})
                 step(3 + 10 * (index + 1) / len(records), f'解析文档 {index + 1}/{len(records)}：{record["filename"]}')
         elif payload.get('rebuild'):
             step(3, '无待解析文档，按当前知识源重建索引…')
         else:
             raise StepFailure('解析文档', '没有待解析的知识文档，也没有请求重建')
-        from .knowledge import Knowledge
-        knowledge = Knowledge()
+        if records:
+            candidate_registry = data_import.candidate_knowledge_registry(context_id, records)
+            if context_id == 'pharmaceutical:competition':
+                source_dir = PACKAGE / '03_制药知识文档'
+                base_snapshot = source_snapshot(source_dir)
+                sources = None
+            else:
+                entry = knowledge_entry_for_context(context)
+                base_snapshot = sha256(entry.read_bytes()).hexdigest()
+                sources = [entry]
+            context['knowledge_snapshot'] = scoped_knowledge_snapshot(context_id, base_snapshot, candidate_registry)
+            knowledge = Knowledge(context=context, source_files=sources, uploaded_registry=candidate_registry)
+        else:
+            knowledge = knowledge_for_context(context)
 
         def build_progress(pct, detail):
             # build 内部 0-100 映射到本任务的 15-95 区间
             step(15 + 80 * pct / 100, detail)
 
         record_result = knowledge.build(progress=build_progress)
-        if record_result.get('status') == 'FAILED':
+        if record_result.get('status') == 'FAILED' or record_result.get('failures'):
             reasons = '；'.join(str(f.get('reason', f)) for f in (record_result.get('failures') or [])[:3])
             raise StepFailure('构建索引', f'知识库构建失败：{reasons or "无有效知识分块"}')
+        if records:
+            # Publish only after a usable lexical index is built. A failed parser
+            # leaves the current registry and every prior source intact.
+            data_import.activate_knowledge_sources(context_id, records)
         for item in parsed_files:
             data_import.mark_import_status(data_import.get_import(item['import_id']), 'PARSED', {
-                'parsed': {'job_id': job_id, 'kb_source': item['kb_source'], 'at': data_import._now()}})
+                'parsed': {'job_id': job_id, 'kb_source': item['kb_source'], 'context_id': context_id,
+                           'source_id': item['source_id'], 'at': data_import._now()}})
         degraded = record_result.get('status') == 'DEGRADED'
         vector_note = '（向量索引不可用，已降级为词法检索：' + str(record_result.get('vector_error') or '') + '）' if degraded else ''
         result['knowledge'] = record_result
+        result['context_id'] = context_id
         result['parsed_documents'] = parsed_files
         result['message'] = '知识库构建成功' + vector_note
-        result['message_detail'] = (f'知识版本 {str(record_result.get("knowledge_version"))[:12]}：'
-                                    f'{record_result.get("chunks", 0)} 个分块 · {len(record_result.get("sources", {}))} 份来源文档'
+        result['message_detail'] = (f'{record_result.get("chunks", 0)} 个分块 · {len(record_result.get("sources", {}))} 份来源文档'
                                     + (f'；新入库 {len(parsed_files)} 份' if parsed_files else ''))
         store.update(job_id, 'SUCCEEDED' if not degraded else 'DEGRADED', result, progress=100,
                      detail='知识库构建成功' + vector_note)
@@ -398,7 +428,7 @@ def _template_binding_analysis(placeholders: list[str]) -> tuple[dict[str, str] 
     from .reports import binding_semantics
     gateway = ModelGateway.for_route('analysis')
     deterministic = {name: binding_semantics(name)[0] for name in placeholders[:80]}
-    if not gateway.key or not placeholders:
+    if not getattr(gateway, 'available', bool(gateway.key)) or not placeholders:
         return None, '未配置数据分析模型：展示确定性绑定语义（reports.binding_semantics）'
     system = ('你是 Word 报告模板占位符分析助手。对每个 {{占位符}} 给出一句话语义说明（它应填充什么数据）。'
               '只返回JSON对象 {"bindings": {"占位符": "语义说明"}}。')

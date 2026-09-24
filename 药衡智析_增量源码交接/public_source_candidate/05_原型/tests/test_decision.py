@@ -122,7 +122,9 @@ def test_routes_status_reports_dedicated_flags(tmp_path,monkeypatch):
     original=GW.__init__
     monkeypatch.setattr(GW,'__init__',lambda self,**kw:original(self,runtime=tmp_path,**kw))
     status=GW.routes_status()
-    assert set(status['routes'])=={'extraction','analysis'}
+    assert set(status['routes'])=={'extraction','analysis','assistant'}
+    assert status['routes']['assistant']['independent'] is True
+    assert status['routes']['assistant']['available'] is False
     assert status['routes']['extraction']['dedicated'] is True
     assert status['routes']['analysis']['dedicated'] is False
     assert status['routes']['extraction']['model']=='glm-4-flash'

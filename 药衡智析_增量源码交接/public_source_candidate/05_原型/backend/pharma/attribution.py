@@ -1,20 +1,9 @@
-"""确定性归因引擎（2026-09-22 方法论落地，docs/数据全流程与归因方法评估）。
+"""从已选分析快照定位成本变动，不把相关信号表述为已证实的原因。
 
-三层程序化归因，全部同输入同输出、可单测，不调用模型：
-- localize   多维根因定位（ADtributor 式）：解释力 EP=Δ_属性/Δ_总量（会计可加），
-             维度惊奇度 surprise=JSD(本期份额分布, 基期份额分布)（信息论），
-             贪心选取同向属性；总额口径的量/价两因子用 Shapley 精确分配交互
-             （二因子 Shapley = 序贯分解的平均，消除口径依赖且精确可加）。
-- did        对照厂反事实（DiD）：τ̂=(处理厂前后差)−(对照厂前后差)，单位成本口径；
-             附安慰剂检验（前置无事件月应≈0，超界标注“平行趋势存疑”）。
-             对照厂选择复用 metrics.benchmark_partner（主数据指定优先+产品感知）。
-- price_signal 药材行情价格传导信号：市场价变动% 与材料单位消耗成本变动% 同向时
-             给出“价格传导解释度”估计（有界 0-100%，明示为估计而非分解）。
-- rank       假设排序：0.5×解释力 + 0.25×价格传导 + 0.25×DiD 方向支持，
-             输出 高/中/低 标签——供叙事层与报告引用（模型只拿名称与方向，不拿数字）。
-
-诚实合同：所有输出为程序计算值；数据不满足（缺对照厂、缺行情、缺基期明细）
-时该部分返回 UNAVAILABLE+原因，不臆造。
+快照归因复用同一企业、期间、比较对象与口径的 Decimal 结果；总额两因子
+为单位成本×产量的算术分配，不是采购价格×实物耗量分解。行情和跨厂前后
+差异在原快照构建时固化，仅供核查参考。经验权重是核查优先级，不是概率。
+缺明细、对照、基期或勾稽失败时明确 UNAVAILABLE，不回读其他上下文补数。
 """
 from __future__ import annotations
 
@@ -23,7 +12,7 @@ from decimal import Decimal as D
 
 from .ingestion import load_rows
 
-ATTRIBUTION_VERSION = 'attribution-v1-deterministic'
+ATTRIBUTION_VERSION = 'attribution-v2-bound-snapshot'
 
 _ELEM_COLS = (('材料', '直接材料(元/盒)'), ('人工', '直接人工(元/盒)'), ('制造费用', '制造费用(元/盒)'))
 _EP_SELECT_THRESHOLD = D('0.95')   # 同向属性累计解释力达到 95% 即止
@@ -92,6 +81,8 @@ def _material_units(rows, factory, product, month) -> dict[str, D]:
 
 def _market_change(rows, herb: str, month: str, base_month: str):
     """行情行按 月价格 列取名；跨年或列缺失返回 None。"""
+    if month[:4] != base_month[:4]:
+        return None
     col_cur, col_base = f'{int(month[5:7])}月价格', f'{int(base_month[5:7])}月价格'
     for r in rows:
         if r['kind'] == 'market' and r['data'].get('药材名称') == herb:
@@ -160,8 +151,12 @@ def localize(rows, factory, product, month, base_month, basis='unit') -> dict:
                      'attributes': [{'name': n, 'delta': str(v), 'ep_pct': f'{ep * 100:.1f}%'} for n, v, ep in picked]})
         causes += [{'set': n, 'dim': '两因子', 'attrs': [n], 'ep': ep, 'surprise': surprise,
                     'direction': _direction(v)} for n, v, ep in picked]
-        ecur = {label: (_d(cur_row.get(col)) or D(0)) * q_cur for label, col in _ELEM_COLS}
-        ebase = {label: (_d(base_row.get(col)) or D(0)) * q_base for label, col in _ELEM_COLS}
+        units_cur = {label: _d(cur_row.get(col)) for label, col in _ELEM_COLS}
+        units_base = {label: _d(base_row.get(col)) for label, col in _ELEM_COLS}
+        if any(v is None for v in (*units_cur.values(), *units_base.values())):
+            raise ValueError('ELEMENT_UNIT_DATA_MISSING')
+        ecur = {label: value * q_cur for label, value in units_cur.items()}
+        ebase = {label: value * q_base for label, value in units_base.items()}
         picked_e, surprise_e = _select_attrs(ecur, ebase, delta_total)
         dims.append({'dim': '成本要素（总额）', 'surprise': round(surprise_e, 6),
                      'attributes': [{'name': n, 'delta': str(v), 'ep_pct': f'{ep * 100:.1f}%'} for n, v, ep in picked_e]})
@@ -189,8 +184,11 @@ def _unit_series(rows, factory, product) -> dict[str, D]:
 
 
 def did(rows, factory, product, month, control=None) -> dict:
-    from .metrics import benchmark_partner
-    candidates = [control] if control else [p for p in (benchmark_partner(factory, product),) if p]
+    # Only the supplied data batch can provide comparison factories. A globally
+    # active dataset with matching product names must never become a control.
+    available = sorted({r['factory'] for r in rows if r['kind'] == 'cost'
+                        and r['product'] == product and r['factory'] != factory})
+    candidates = [control] if control else available
     treat, delta = _unit_series(rows, factory, product), None
     window = [_shift(month, -k) for k in (3, 2, 1)]
     for ctrl in candidates:
@@ -208,14 +206,19 @@ def did(rows, factory, product, month, control=None) -> dict:
             pt = sum((treat[m] for m in placebo_window), D(0)) / 3
             pc = sum((series[m] for m in placebo_window), D(0)) / 3
             placebo = (treat[placebo_month] - pt) - (series[placebo_month] - pc)
-        flag = '未检验（前置月份不足）'
+        flag = '未验证'
+        diagnostic = '前置月份不足，未计算历史变化差异'
         if placebo is not None:
             bound = max(D('0.05'), _PLACEBO_RATIO * abs(delta))
-            flag = '稳健' if abs(placebo) <= bound else '存疑'
+            diagnostic = ('历史变化差异未超过预设经验阈值' if abs(placebo) <= bound
+                          else '历史变化差异超过预设经验阈值，需核查可比性')
         return {'status': 'PASS', 'control': ctrl, 'tau': str(delta.quantize(D('0.0001'))),
                 'placebo_tau': None if placebo is None else str(placebo.quantize(D('0.0001'))),
-                'parallel_trend': flag,
-                'assumption': '平行趋势假设下的双重差分估计（处理厂前后变化−对照厂前后变化）；估计值供核查参考，不构成因果认定'}
+                'label': '跨厂前后变化对照', 'parallel_trend': flag,
+                'diagnostic': diagnostic, 'comparison_window': window,
+                'current_period': [month], 'value_unit': '元/盒',
+                'causal_identification': 'NOT_ESTABLISHED',
+                'assumption': '本月相对前三个月均值的本厂变化减去对照厂变化；历史差异阈值仅是描述性检查，不能证明平行趋势。未指定独立干预事件，不能解释为因果效应。'}
     return {'status': 'UNAVAILABLE', 'reason': '缺少可作对照且期间数据完整的同产品其他工厂'}
 
 
@@ -228,18 +231,25 @@ def price_signal(rows, factory, product, month, base_month) -> dict:
         market = _market_change(rows, name, month, base_month)
         unit = (cur[name] - base[name]) / base[name] * 100
         entry = {'name': name, 'market_change_pct': None if market is None else f'{market:.2f}%',
-                 'unit_change_pct': f'{unit:.2f}%', 'consistent': False, 'price_explained': 0.0}
+                 'unit_change_pct': f'{unit:.2f}%', 'consistent': False, 'price_explained': 0.0,
+                 'aligned_magnitude_ratio': 0.0}
         if market is not None and abs(unit) > 0.05 and (market > 0) == (unit > 0):
             entry['consistent'] = True
             entry['price_explained'] = max(-1.0, min(1.0, float(market / unit)))
+            entry['aligned_magnitude_ratio'] = entry['price_explained']
         materials.append(entry)
     weighted = 0.0
     if materials:
         total_move = sum(abs(float(m['unit_change_pct'].rstrip('%'))) for m in materials) or 1.0
         weighted = sum(m['price_explained'] * abs(float(m['unit_change_pct'].rstrip('%'))) for m in materials) / total_move
+    if not materials or not any(m['market_change_pct'] is not None for m in materials):
+        return {'status': 'UNAVAILABLE', 'materials': materials,
+                'reason': '缺少同一期间可匹配的市场行情或原料单位消耗成本，不计算行情同向信号'}
     return {'status': 'PASS', 'materials': materials,
             'aggregate_price_explained_pct': f'{max(0.0, weighted) * 100:.1f}%',
-            'note': '价格传导解释度为市场价变动与材料单位成本变动的同向比值（有界估计），非价量精确分解；采购单价与实物耗量数据到位后可升级为严格价差/量差'}
+            'aligned_magnitude_index_pct': f'{max(0.0, weighted) * 100:.1f}%',
+            'label': '行情同向幅度指标',
+            'note': '同向幅度指标是市场价变动与材料单位消耗成本变动的有界比值，仅供核查排序，不是价格解释度、概率或成本贡献。缺少企业采购单价与实耗，不能进行严格价差/量差分解。'}
 
 
 def rank(localized: dict, price: dict | None, did_result: dict | None) -> list[dict]:
@@ -262,33 +272,135 @@ def rank(localized: dict, price: dict | None, did_result: dict | None) -> list[d
         label = '高' if score >= 0.65 else ('中' if score >= 0.4 else '低')
         ranking.append({'cause': cause['set'], 'direction': cause['direction'],
                         'ep_pct': cause['ep_pct'], 'score': round(score, 3), 'label': label,
-                        'basis': f'解释力{cause["ep_pct"]}'
-                                 + (f'；行情同向(解释度{price_aff * 100:.0f}%)' if price_aff > 0 else '')
-                                 + ('；DiD方向支持' if did_align == 1.0 else ('；DiD方向相反' if did_align == 0.0 and did_tau is not None else '；DiD未定'))})
+                        'priority': label, 'score_kind': 'review_priority_heuristic',
+                        'basis': f'占同口径变动{cause["ep_pct"]}'
+                                 + ('；存在行情同向信号' if price_aff > 0 else '')
+                                 + ('；跨厂变化对照同向' if did_align == 1.0 else ('；跨厂变化对照反向' if did_align == 0.0 and did_tau is not None else '；跨厂变化对照缺失')),
+                        'note': '经验权重仅表示核查优先级，不是原因发生概率；不同维度存在包含关系，不可相加。'})
     ranking.sort(key=lambda r: (-r['score'], r['cause']))
     return ranking[:5]
 
 
-def analyze_attribution(factory, product, month, basis='unit', compare='mom') -> dict:
-    rows = load_rows()
-    base_month = _shift(month, -1) if compare == 'mom' else f'{int(month[:4]) - 1}{month[4:]}'
-    result = {'version': ATTRIBUTION_VERSION, 'factory': factory, 'product': product,
-              'month': month, 'base_month': base_month, 'basis': basis, 'compare': compare}
-    try:
-        localized = localize(rows, factory, product, month, base_month, basis)
-        result.update({'status': 'PASS', **localized})
-    except ValueError as exc:
-        return {**result, 'status': 'UNAVAILABLE', 'reason': {
-            'BASE_PERIOD_DATA_MISSING': '基期成本数据缺失，无法计算多维根因',
-            'ELEMENT_UNIT_DATA_MISSING': '要素单位成本列缺失',
-            'TOTAL_BASIS_DATA_MISSING': '总额口径产量/单位成本缺失'}.get(str(exc), str(exc))}
-    for key, fn in (('did', lambda: did(rows, factory, product, month)),
-                    ('price_signal', lambda: price_signal(rows, factory, product, month, base_month) if compare == 'mom'
-                     else {'status': 'UNAVAILABLE', 'reason': '同比基期无行情对照（行情仅覆盖当期半年）'})):
+def support_for_rows(rows, factory, product, month, analysis_type='monthly', control=None):
+    """Freeze optional evidence while the official snapshot's data is available.
+
+    Consumers never reopen that dataset; imported enterprises do not use this
+    pharmaceutical-only adapter. Quarterly market/causal identification is not
+    inferred from the final month of the quarter.
+    """
+    if analysis_type == 'quarterly':
+        return {key: {'status': 'UNAVAILABLE', 'reason': reason} for key, reason in (
+            ('did', '当前季度尚无已验证的跨厂前后对照方法；不使用季度末单月结果替代'),
+            ('price_signal', '季度缺少可比采购价格与实耗；不把末月行情替代整个季度'))}
+    out = {}
+    for key, fn in (
+        ('did', lambda: did(rows, factory, product, month, control)),
+        ('price_signal', lambda: price_signal(rows, factory, product, month, _shift(month, -1))),
+    ):
         try:
-            result[key] = fn()
-        except Exception as exc:  # noqa: BLE001 单部件失败不拖垮整体
-            result[key] = {'status': 'UNAVAILABLE', 'reason': type(exc).__name__ + ': ' + str(exc)[:120]}
-    result['ranking'] = rank(localized, result.get('price_signal'), result.get('did'))
-    result['contract'] = '本块全部数值由程序确定性计算（EP/JSD/Shapley/DiD）；估计类输出显式标注假设；数据不满足的部件返回 UNAVAILABLE 而非臆造'
+            out[key] = fn()
+        except (ValueError, KeyError, TypeError) as exc:
+            out[key] = {'status': 'UNAVAILABLE', 'reason': '当前数据无法计算此项：' + str(exc)[:120]}
+    return out
+
+
+def _snapshot_localize(snapshot, compare):
+    basis = snapshot.get('basis', 'unit')
+    delta_total = _d((snapshot.get('comparison', {}).get(compare) or {}).get('delta'))
+    if delta_total is None:
+        raise ValueError('BASE_PERIOD_DATA_MISSING')
+    cur, base = {}, {}
+    for element in snapshot.get('elements', []):
+        values = element.get('comparisons', {}).get(compare, {}).get(basis, {})
+        key = element.get('name') or element['key']
+        cur[key], base[key] = _d(values.get('current')), _d(values.get('base'))
+    if not cur or any(v is None for v in (*cur.values(), *base.values())):
+        raise ValueError('ELEMENT_UNIT_DATA_MISSING')
+    if abs(sum(cur.values(), D(0)) - sum(base.values(), D(0)) - delta_total) > D('0.000000000001'):
+        raise ValueError('ELEMENTS_DO_NOT_RECONCILE')
+    dims, causes = [], []
+
+    def dimension(name, current, previous, prefix):
+        picked, surprise = _select_attrs(current, previous, delta_total)
+        dims.append({'dim': name, 'surprise': round(surprise, 6),
+                     'attributes': [{'name': n, 'delta': str(v), 'ep_pct': f'{ep * 100:.1f}%'}
+                                    for n, v, ep in picked]})
+        causes.extend({'set': prefix + n, 'dim': name, 'attrs': [n], 'ep': ep,
+                       'surprise': surprise, 'direction': _direction(v)} for n, v, ep in picked)
+
+    dimension('成本要素' if basis == 'unit' else '成本要素（总额）', cur, base, '要素：')
+    if basis == 'total':
+        periods = snapshot.get('period_values') or {}
+        current, previous = periods.get('current') or {}, periods.get(compare) or {}
+        values = [_d(row.get(key)) for row in (previous, current) for key in ('unit_cost', 'quantity')]
+        if None not in values:
+            u0, q0, u1, q1 = values
+            c_u, c_q = _shapley_two_factor(u0, u1, q0, q1)
+            if abs(c_u + c_q - delta_total) > D('0.000000000001'):
+                raise ValueError('TOTAL_FACTORS_DO_NOT_RECONCILE')
+            factors = {'单位成本（Shapley）': c_u, '产量（Shapley）': c_q}
+            dimension('总量两因子（Shapley 精确分配）', factors, {k: D(0) for k in factors}, '')
+    elif compare == 'mom':
+        material_current, material_base = {}, {}
+        for material in snapshot.get('materials_summary') or []:
+            a, b = _d(material.get('current')), _d(material.get('previous'))
+            if a is not None and b is not None:
+                material_current[material['name']], material_base[material['name']] = a, b
+        if material_current:
+            dimension('原料明细（材料内，限完整记录）', material_current, material_base, '原料：')
+    causes.sort(key=lambda c: -abs(c['ep']))
+    roots = []
+    for index, cause in enumerate(causes[:5], 1):
+        roots.append({**cause, 'rank': index, 'ep_pct': f'{cause["ep"] * 100:.1f}%',
+                      'ep': float(cause['ep']), 'surprise': round(cause['surprise'], 6)})
+    return {'total_delta': str(delta_total), 'direction': _direction(delta_total),
+            'dims': dims, 'root_causes': roots}
+
+
+def analyze_attribution_snapshot(snapshot, compare='mom') -> dict:
+    """Use the exact frozen period, enterprise, basis and figures being shown."""
+    if compare not in ('mom', 'yoy', 'budget'):
+        raise ValueError('INVALID_COMPARISON')
+    basis = snapshot.get('basis', 'unit')
+    if basis not in ('unit', 'total'):
+        raise ValueError('INVALID_BASIS')
+    period = snapshot.get('period') or {}
+    base_period = (snapshot.get('metrics', {}).get(compare) or {}).get('comparison_period') or []
+    result = {'version': ATTRIBUTION_VERSION,
+              **{key: snapshot.get(key) for key in ('snapshot_id', 'context_id', 'factory', 'product', 'month', 'analysis_type')},
+              'period': period, 'base_period': base_period,
+              'base_month': base_period[-1] if base_period else None, 'basis': basis, 'compare': compare,
+              'value_unit': (snapshot.get('metrics', {}).get('unit_cost' if basis == 'unit' else 'total_cost') or {}).get('unit'),
+              'ranking_label': '核查优先级', 'ranking_is_probability': False}
+    try:
+        localized = _snapshot_localize(snapshot, compare)
+    except ValueError as exc:
+        code = str(exc)
+        return {**result, 'status': 'UNAVAILABLE', 'reason_code': code, 'reason': {
+            'BASE_PERIOD_DATA_MISSING': '缺少完整比较期数据，无法计算变动定位',
+            'ELEMENT_UNIT_DATA_MISSING': '比较期要素数据缺失；不将缺失当作零',
+            'ELEMENTS_DO_NOT_RECONCILE': '要素变化与所选口径总变化不勾稽，需先核查数据',
+            'TOTAL_FACTORS_DO_NOT_RECONCILE': '产量与单位成本乘积未能与总成本变化勾稽',
+        }.get(code, code)}
+    support = snapshot.get('attribution_support') or {}
+    for key in ('did', 'price_signal'):
+        result[key] = support.get(key) if compare == 'mom' and support.get(key) else {
+            'status': 'UNAVAILABLE', 'reason': '当前数据范围与比较期未提供此项可验证信号；不读取其他企业或期间的数据'}
+    result.update({'status': 'PASS', **localized})
+    result['ranking'] = rank(localized, result['price_signal'], result['did'])
+    result['contract'] = ('归因定位复用当前数据快照与同一比较期的程序计算；占变动比例不是因果解释率。'
+                          '核查优先级不是概率，跨维度不可相加。行情与跨厂变化只能支持待核查假设。')
     return result
+
+
+def analyze_attribution(factory, product, month, basis='unit', compare='mom', *,
+                        analysis_type='monthly', context_id=None, snapshot=None) -> dict:
+    """Compatibility entry point; callers with a frozen snapshot pass it directly."""
+    if snapshot is None:
+        if context_id is not None:
+            from .industry import analyze_reference
+            snapshot = analyze_reference(context_id, factory, product, month, analysis_type, basis)
+        else:
+            from .metrics import analyze
+            snapshot = analyze(factory, product, month, analysis_type, basis)
+    return analyze_attribution_snapshot(snapshot, compare)
