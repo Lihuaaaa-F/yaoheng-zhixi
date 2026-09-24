@@ -46,7 +46,7 @@ def main():
     artifacts[fmt]={'artifact_id':artifact['artifact_id'],'sha256':sha,'bytes':len(blob)}
   row.update(status=job['status'],docx=body.get('docx',{}).get('status'),pdf=body.get('pdf',{}).get('status'),error=job.get('error'),snapshot_id=body.get('snapshot',{}).get('snapshot_id'),artifacts=artifacts)
   binding={k:row[k] for k in ('id','job_id','attempt_id','snapshot_id','artifacts')}
-  narrative.append({**binding,'status':n.get('status','NOT_RUN'),'generation_mode':n.get('generation_mode'),'model_live':n.get('model_live'),'identity':n.get('model_identity'),'usage':n.get('usage'),'alert_coverage':n.get('alert_coverage'),'failures':n.get('failure_reasons',[])})
+  narrative.append({**binding,'status':n.get('status','NOT_RUN'),'generation_mode':n.get('generation_mode'),'model_live':n.get('model_live'),'identity':n.get('model_identity'),'usage':n.get('usage'),'cache_hit':bool(n.get('cache_hit')),'generated_at':n.get('generated_at'),'cache_source_time':n.get('cache_source_time'),'usage_scope':'原始模型生成用量；缓存复用不表示本次新增调用' if n.get('cache_hit') else '本次报告模型生成用量','alert_coverage':n.get('alert_coverage'),'failures':n.get('failure_reasons',[])})
   retrieval.append({**binding,'status':ev.get('status'),'mode':ev.get('mode'),'framework':ev.get('framework'),'recall_status':ev.get('recall_status'),'knowledge_version':ev.get('knowledge_version'),'count':len(ev.get('evidence',[]))})
   if body.get('snapshot'):
    f=next((x for x in n.get('findings',[]) if x.get('suggestion') and x.get('verification_target')),None)

@@ -1010,7 +1010,10 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
             doc.add_paragraph('· ……其余 '+str(len(uncovered)-12)+' 条见机器审计附件。')
     # 人工归因评分（2026-09-23 用户反馈 #8）：赛题要求真人 0—5 分评分，此前
     # 只有一行文字无处可填——改为评分表单，空格留待真人署名填写，系统不代填。
-    doc.add_paragraph('十、人工归因评分').style=doc.styles['Heading 2']
+    review_heading=doc.add_paragraph('十、人工归因评分',style='Heading 2')
+    # 评分表是完整填写区，独立起页避免说明跨页后题注又被孤标题修正推到第三页。
+    # 显式分页不引入 keepNext/keepLines，保留用户选定的正文编辑显示方式。
+    review_heading.paragraph_format.page_break_before=True
     doc.add_paragraph('以下记录由真人评审填写，系统与模型不代填。归因合理性为0—5整数，重点考察具体成本要素、适用知识引用及建议可执行性；章节完整性、内容可读性、视觉版式分别填写通过或不通过，并保留原始意见。引用不等于已证实因果。')
     _score=doc.add_table(rows=1,cols=4)
     for c,h in zip(_score.rows[0].cells,['评审维度','评分或结论','评审人（署名）','原始意见']):c.text=h
