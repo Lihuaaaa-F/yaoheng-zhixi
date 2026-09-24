@@ -1,0 +1,82 @@
+{
+  "status": "PASS_SCOPED_FRONTEND_VALIDATION",
+  "source_changes_this_handoff": [
+    "frontend/src/AssistantDock.tsx: remount native textarea when loading/creating state becomes editable; preserve draft state outside control",
+    "frontend/src/ModelConfigForm.tsx: disable form while reading/saving; ignore aborted, stale, or other-route reads",
+    "frontend/e2e-delivery-contracts.mjs: verify editable assistant input and blocked model loading/route switch"
+  ],
+  "build": {
+    "status": "PASS",
+    "evidence": "build-merged-final.log",
+    "warning": "Existing design-system chunk exceeds Vite 800 kB warning threshold"
+  },
+  "contracts": {
+    "status": "PASS",
+    "count": 6,
+    "evidence": "merged-contracts/contracts/qa.json"
+  },
+  "navigation": {
+    "status": "PASS",
+    "pages": 9,
+    "viewports": [
+      [
+        1366,
+        768
+      ],
+      [
+        390,
+        844
+      ]
+    ],
+    "checks": 18,
+    "console_errors": 0,
+    "evidence": "merged-final-smoke/smoke/qa.json"
+  },
+  "actual_user_flows": [
+    {
+      "status": "PASS_WITHIN_LATER_FAILED_RUN",
+      "scope": "chat create, Chinese input, two turns, three tabs, overflow, pin, close, history, reload, turn navigation",
+      "evidence": "resumed-final-flow3/failure.json",
+      "later_failure": "Unrelated report module syntax error during concurrent backend editing; parent corrected and will verify final reports"
+    },
+    {
+      "status": "PASS_WITHIN_LATER_FAILED_RUN",
+      "scope": "real Word/PDF generation and downloads; real HTTP simulated RPA explicitly confirmed and reached SENT",
+      "evidence": "resumed-flows-nochat2/failure.json",
+      "later_failure": "Old upload test locator did not match icon accessible name"
+    },
+    {
+      "status": "PASS_WITHIN_LATER_FAILED_RUN",
+      "scope": "CSV upload, cumulative two periods, PENDING state, explicit source replacement, source retention, new unit cost 14",
+      "evidence": "resumed-data-flow1/failure.json",
+      "later_failure": "Test attempted knowledge query before UI completed post-job remount"
+    },
+    {
+      "status": "PASS_WITHIN_LATER_FAILED_RUN",
+      "scope": "TXT knowledge build, hybrid request with honest lexical degradation, retrieval and actual evidence drawer",
+      "evidence": "resumed-knowledge-tail/failure.json",
+      "later_failure": "Found and subsequently fixed model configuration read/write race"
+    },
+    {
+      "status": "PASS",
+      "scope": "independent assistant settings via UI, loopback JSON provider test, refresh persistence, mobile drawer",
+      "evidence": "merged-model-tail-final/flow.json",
+      "note": "Initial analysis in this resumed run used the persisted imported workspace, despite old runner label saying official-data"
+    }
+  ],
+  "formal_four_report_receipt": "browser.json",
+  "browser": {
+    "cloud_skill": "Loaded and attempted",
+    "cloud_blocker": "http://127.0.0.1:8793 returned net::ERR_BLOCKED_BY_CLIENT",
+    "software_test_fallback": "Existing project Playwright with already installed Chromium 138; authorized by parent task"
+  },
+  "limits": [
+    "No paid/cloud model requests",
+    "Local fake provider only tests connection contract; no model-quality claim",
+    "No human scoring or responsibility acknowledgement entered",
+    "No Windows or Safari/Firefox runtime verification",
+    "Earlier failed runs and CSS diagnostic outputs retained; diagnostics do not count as acceptance"
+  ],
+  "final_source_commit": "2087978854a7b091191aba94568418d6730204d3",
+  "formal_four_report_status": "PASS"
+}

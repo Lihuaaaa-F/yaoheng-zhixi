@@ -1,0 +1,106 @@
+{
+  "run_id": "delivery_verified_20260924",
+  "attempt_id": "b4384b62727447fa8941c6e55235660a",
+  "revision": "2087978854a7b091191aba94568418d6730204d3",
+  "revision_kind": "git",
+  "commit": "2087978854a7b091191aba94568418d6730204d3",
+  "status": "PASS",
+  "scenarios": [
+    {
+      "id": "S1",
+      "job_id": "5151b00532ee4da6be6c24269de93371",
+      "attempt_id": "b4384b62727447fa8941c6e55235660a",
+      "snapshot_id": "8c29531ea15a4c3fb8866be75865c3a590908b53bd2ec7672d1a4e9cc7b51e80",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "5151b00532ee4da6be6c24269de93371-docx",
+          "sha256": "8639fb6255fae4bae28a63ffa87cb817066d802344fd7bee3d2851a3ec85bd92",
+          "bytes": 264825
+        },
+        "pdf": {
+          "artifact_id": "5151b00532ee4da6be6c24269de93371-pdf",
+          "sha256": "9d551fdba81d171c172c283793b4335307a40e495b6e59015cb957cfcebbab0b",
+          "bytes": 1362518
+        }
+      },
+      "status": "PASS",
+      "action_id": "YH-de1bce0347f2afadc2cde280",
+      "confirmed_payload_hash": "6ac461f1825c751efb649679502076000852a946334bc0ae8295c33861113690",
+      "receipt_sha256": "d4486f826d1b9a3add0071caac6689790008f9f527654f46d022e17d669838c5",
+      "notification": "SIMULATED_SENT",
+      "human_acknowledgement": "NOT_ENTERED"
+    },
+    {
+      "id": "S2",
+      "job_id": "659ad193444a46d2b53298fad4cbf1a5",
+      "attempt_id": "b4384b62727447fa8941c6e55235660a",
+      "snapshot_id": "391a4081d22db7975c1e8034847eaea3050184dae3056888c39a8deb0cfc6ba9",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "659ad193444a46d2b53298fad4cbf1a5-docx",
+          "sha256": "b6d77d95439f5a04d9a54240cd542675f6eaa4e48ee9f20cffcc55ce827551a0",
+          "bytes": 262574
+        },
+        "pdf": {
+          "artifact_id": "659ad193444a46d2b53298fad4cbf1a5-pdf",
+          "sha256": "b57bf2139d80bc63634cb94a7c22f9b2ec1bb5b2a5fc368a9ef2948c881f7f1a",
+          "bytes": 1345942
+        }
+      },
+      "status": "PASS",
+      "action_id": "YH-e9bb47b9771d82e3567a4250",
+      "confirmed_payload_hash": "aede9a8985c5220277099256ce416bbc66acb48a137deaa50617442fadc99030",
+      "receipt_sha256": "fcd815b25f07a1c8e6199ed84b55995934c24e1d560778daab0f7b5dc895471e",
+      "notification": "SIMULATED_SENT",
+      "human_acknowledgement": "NOT_ENTERED"
+    },
+    {
+      "id": "S3",
+      "job_id": "3f04859b9d3c4e0e91761697726536db",
+      "attempt_id": "b4384b62727447fa8941c6e55235660a",
+      "snapshot_id": "90a1c652d33a76571e276eda4d9c47a1c794376d446a61f1f9406b1ed0f43bb2",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "3f04859b9d3c4e0e91761697726536db-docx",
+          "sha256": "18288f0653cb0d3a405ba971dc26f809e6b9bebaec5a1c6ee935d22f5e65209f",
+          "bytes": 272970
+        },
+        "pdf": {
+          "artifact_id": "3f04859b9d3c4e0e91761697726536db-pdf",
+          "sha256": "83b0beb952ff2718c5fcad5818d961c222fa0fb6de36c86a9b7194ad67ec351b",
+          "bytes": 1423547
+        }
+      },
+      "status": "PASS",
+      "action_id": "YH-14b43fc040d3892626bb0395",
+      "confirmed_payload_hash": "9644aab19e4d0a0630a33da257f256fcbcc147d0e08da43d82f97f0919abaace",
+      "receipt_sha256": "9e7c9de1a51edd9fc65c958ed748e8939497e210a81cb61ad55f9ac9435e5662",
+      "notification": "SIMULATED_SENT",
+      "human_acknowledgement": "NOT_ENTERED"
+    },
+    {
+      "id": "Q2",
+      "job_id": "bf92758199264d2593586b182c5ed9ca",
+      "attempt_id": "b4384b62727447fa8941c6e55235660a",
+      "snapshot_id": "8c8a7642bff82eacf0e04bba63f58e2a1c965c16fdfce1d4881fba7cc30c5093",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "bf92758199264d2593586b182c5ed9ca-docx",
+          "sha256": "ebc5abcce491761bd817ea7b22d8754ae063b08e7a07d554e76ff74a24362e39",
+          "bytes": 270061
+        },
+        "pdf": {
+          "artifact_id": "bf92758199264d2593586b182c5ed9ca-pdf",
+          "sha256": "d4a6f964465b457d3dd0328ac9270190c3ec2c7a1c2d906b9ab4914deba61807",
+          "bytes": 1383062
+        }
+      },
+      "status": "PASS",
+      "action_id": "YH-a7614f4ec0a6c66651ef9449",
+      "confirmed_payload_hash": "8f9ba41d40866bbc3eb61f76a65a6709a0083d9b4ab6d59df1693fff0d9114a0",
+      "receipt_sha256": "e23b79bdfcf1dd02247b8562a0960ede2a99dcceac3da9f85c7b62bf0d3d7962",
+      "notification": "SIMULATED_SENT",
+      "human_acknowledgement": "NOT_ENTERED"
+    }
+  ]
+}

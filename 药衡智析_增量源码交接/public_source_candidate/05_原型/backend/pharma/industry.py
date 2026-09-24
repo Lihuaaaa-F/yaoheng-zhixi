@@ -22,7 +22,7 @@ from .config import APP, PACKAGE, RUNTIME
 D = Decimal
 CORE_VERSION = '1.0'
 PACKS = APP / 'industry_packs'
-FORMULA_VERSION = 'normalized-cost-4-bound-attribution'
+FORMULA_VERSION = 'normalized-cost-5-uploaded-details'
 SNAPSHOT_CONTRACT_VERSION = 'analysis-snapshot-2-frozen-template'
 ENTERPRISE_REGISTRY = RUNTIME / 'enterprise_registry.json'
 
@@ -713,6 +713,50 @@ def retrieve_reference(context, query, *, product=None, limit=8):
     return retrieve({'analysis_context':context.model_dump(),'product':product},query,limit=limit)['evidence']
 
 
+def _uploaded_details(enterprise, factory, product, months, previous_months, current, previous, unit):
+    """Read real item rows bound to this published enterprise version only."""
+    from .metrics import change, contribution
+    path = enterprise['_base_dir'] / 'business_details.json'
+    details = {'available': False, 'reason': '当前数据未提供可核对的原料/费用/人工明细；不按比例推算',
+               'materials': [], 'expenses': [], 'labor': [], 'market': [],
+               'quantity_unit': enterprise['quantity_unit'], 'unit_cost_unit': unit}
+    if not path.is_file():
+        return details, []
+    rows = [r for r in json.loads(path.read_text(encoding='utf-8'))
+            if r['factory'] == factory and r['product'] == product and r['scenario'] == 'actual']
+    for row in rows:
+        if row['month'] in months:
+            details[row['kind']].append({**row['data'], 'row_key': row['row_key'], 'source_hash': row['source_hash']})
+            details['available'] = True
+    if details['available']:
+        details['reason'] = '已接入用户上传的真实原始明细；只展示有来源的项目，未提供部分不按比例推算。'
+    summary = []
+    material_key = next((key for key in ('material', 'materials') if key in current['elements_unit']), None)
+    material_delta = change(current['elements_unit'].get(material_key),
+                            previous['elements_unit'].get(material_key) if previous else None)['delta']
+    names = {r['name'] for r in rows if r['kind'] == 'materials' and r['month'] in months and r['name']}
+    for name in sorted(names):
+        values, totals, refs = {}, {}, {}
+        for label, period, aggregate_value in [('current', months, current), ('previous', previous_months, previous)]:
+            selected = [r for r in rows if r['kind'] == 'materials' and r['name'] == name and r['month'] in period]
+            complete = aggregate_value is not None and {r['month'] for r in selected} == set(period)
+            total = sum((D(r['amount']) for r in selected), D(0)) if complete else None
+            quantity = aggregate_value['quantity'] if aggregate_value is not None else None
+            values[label] = total / quantity if total is not None and quantity else None
+            totals[label], refs[label] = total, selected
+        changes = change(values['current'], values['previous'])
+        percentage = contribution(changes['delta'], material_delta)
+        summary.append({'name': name, 'current': changes['current'], 'previous': changes['base'],
+            'delta': changes['delta'], 'rate': changes['rate'], 'contribution': percentage,
+            'numerator': changes['delta'], 'denominator': material_delta, 'unit': unit,
+            'comparison_period': previous_months, 'reason': changes['reason'],
+            'contribution_reason': '原料明细不完整或材料总变动为零' if percentage is None else None,
+            'source_labels': [r['row_key'] for r in refs['current'] + refs['previous']],
+            '_totals': totals, '_rows': refs, 'metric_refs': {}})
+    summary.sort(key=lambda r: (r['delta'] is None, -abs(D(r['delta'])) if r['delta'] is not None else D(0), r['name']))
+    return details, summary
+
+
 def analyze_reference(context_id, factory=None, product=None, month=None, analysis_type='monthly', basis='unit'):
     from .metrics import _months, _shift, change, contribution, threshold_alert
     if context_id == 'pharmaceutical:competition':
@@ -822,6 +866,24 @@ def analyze_reference(context_id, factory=None, product=None, month=None, analys
     period_changes = {key: {label: change(current[key], base[key] if base else None)
                            for label, base in bases.items()}
                       for key in ('quantity', 'unit_cost', 'total_cost')}
+    details, materials_summary = _uploaded_details(enterprise, factory, product, months, periods['mom'],
+                                                   current, bases['mom'], money + '/' + unit)
+    for item in materials_summary:
+        totals, source_rows = item.pop('_totals'), item.pop('_rows')
+        for field, value, numerator, denominator, output_unit, formula in [
+            ('current', item['current'], totals['current'], current['quantity'], money+'/'+unit, 'Σ本期原料金额/Σ独立产量'),
+            ('previous', item['previous'], totals['previous'], bases['mom']['quantity'] if bases['mom'] else None,
+             money+'/'+unit, 'Σ上期原料金额/Σ独立产量'),
+            ('delta', item['delta'], item['delta'], 1, money+'/'+unit, '本期原料单位消耗成本−上期原料单位消耗成本'),
+            ('contribution', item['contribution'], item['delta'], item['denominator'], '%',
+             '原料单位消耗成本变动/材料单位成本总变动×100')]:
+            key = 'material:' + item['name'] + ':' + field
+            used = source_rows[field] if field in ('current', 'previous') else source_rows['current'] + source_rows['previous']
+            metrics[key] = metric(key, value, output_unit, formula, denominator, periods['mom'],
+                                  numerator=numerator, base=bases['mom'], metric_basis='unit')
+            metrics[key]['row_keys'] = [r['row_key'] for r in used]
+            metrics[key]['source_hash'] = sorted({r['source_hash'] for r in used})
+            item['metric_refs'][field] = key
     # 行业参考：随企业文档上传的结构化基准行（通常为测试数据集），原样展示；
     # 无上传时保持空行并沿用包标签，不虚构基准。
     uploaded_reference = enterprise.get('industry_reference') or {}
@@ -834,9 +896,9 @@ def analyze_reference(context_id, factory=None, product=None, month=None, analys
     result={'snapshot_contract_version':SNAPSHOT_CONTRACT_VERSION,'report_template':report_template,'context_id':context_id,'analysis_context':context.model_dump(),'context_hash':context.context_hash,'data_version':context.data_snapshot,
         'snapshot_id':'','formula_version':FORMULA_VERSION,'factory':factory,'product':product,'month':month,'analysis_type':analysis_type,'basis':basis,
         'specification':enterprise['products'][product]['specification'],'period':{'start':months[0],'end':months[-1]},'metrics':metrics,'elements':elements,'trend':trend,
-        'alerts':alerts,'comparison':comparisons,'details':{'available':False,'reason':'当前数据仅含已归集成本与已接入驱动事实；不推算采购/BOM明细','materials':[],'expenses':[],'labor':[],'market':[]},
+        'alerts':alerts,'comparison':comparisons,'details':details,
         'industry':{'rows':reference_rows,'converted_unit_cost':metrics['unit_cost']['value'],'unit':money+'/'+unit,'notice':reference_notice},'budget_bridge':None,
-        'period_values':period_values,'period_changes':period_changes,'materials_summary':[],'expenses_summary':[],'labor_metrics':{},'source_hashes':[context.data_snapshot],
+        'period_values':period_values,'period_changes':period_changes,'materials_summary':materials_summary,'expenses_summary':[],'labor_metrics':{},'source_hashes':[context.data_snapshot],
         'quantity_unit':unit,'currency':currency,'data_label':_import_or_pack_label(enterprise, pack),'data_provenance':_data_provenance(enterprise, pack),'capabilities':capabilities(pack,ds),
         'limits':[_import_or_pack_label(enterprise, pack),'未支持联副产品分配和在制品计价；缺少实际价格/实耗不能严格价量分解','维修记录仅支持待验证假设；不是已证实净原因']}
     for capability in result['capabilities']:

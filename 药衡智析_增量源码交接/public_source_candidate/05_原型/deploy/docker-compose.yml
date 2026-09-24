@@ -35,7 +35,7 @@ x-app-base: &app-base
     PHARMA_API_TOKEN: ${PHARMA_API_TOKEN:-}
     PHARMA_DEPLOYMENT_MODE: ${PHARMA_DEPLOYMENT_MODE:-local}
     PHARMA_NETWORK_PROBE_URL: ${PHARMA_NETWORK_PROBE_URL-https://open.bigmodel.cn}
-    PHARMA_MODEL_MAX_CALLS: ${PHARMA_MODEL_MAX_CALLS:-200}
+    PHARMA_MODEL_MAX_CALLS: ${PHARMA_MODEL_MAX_CALLS:-300}
     # 首次拉取向量模型优先国内镜像（内容仍按固定哈希校验）。
     # 注：pip/npm 默认直连官方源——镜像内 pip 安装 requirements.lock、前端
     # 构建已在中国镜像 apt 源之外直连；如需全程国内镜像，在 build args

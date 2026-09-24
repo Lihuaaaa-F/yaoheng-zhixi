@@ -1,0 +1,170 @@
+{
+  "status": "PASS",
+  "scope": "只读工作台导航与浏览器合同；不包含模型、报告、RPA或真人验收",
+  "checks": [
+    {
+      "page": "analysis",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "heading": "成本分析",
+      "no_horizontal_overflow": true
+    },
+    {
+      "page": "benchmark",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "heading": "跨厂对标",
+      "no_horizontal_overflow": true
+    },
+    {
+      "page": "reports",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "heading": "分析报告",
+      "no_horizontal_overflow": true
+    },
+    {
+      "page": "actions",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "heading": "问题整改",
+      "no_horizontal_overflow": true
+    },
+    {
+      "page": "business",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "heading": "业务数据",
+      "no_horizontal_overflow": true
+    },
+    {
+      "page": "knowledge",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "heading": "知识库",
+      "no_horizontal_overflow": true
+    },
+    {
+      "page": "templates",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "heading": "报告模板",
+      "no_horizontal_overflow": true
+    },
+    {
+      "page": "models",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "heading": "模型连接",
+      "no_horizontal_overflow": true
+    },
+    {
+      "page": "settings",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "heading": "系统设置",
+      "no_horizontal_overflow": true
+    },
+    {
+      "page": "analysis",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "heading": "成本分析",
+      "no_horizontal_overflow": true
+    },
+    {
+      "page": "benchmark",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "heading": "跨厂对标",
+      "no_horizontal_overflow": true
+    },
+    {
+      "page": "reports",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "heading": "分析报告",
+      "no_horizontal_overflow": true
+    },
+    {
+      "page": "actions",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "heading": "问题整改",
+      "no_horizontal_overflow": true
+    },
+    {
+      "page": "business",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "heading": "业务数据",
+      "no_horizontal_overflow": true
+    },
+    {
+      "page": "knowledge",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "heading": "知识库",
+      "no_horizontal_overflow": true
+    },
+    {
+      "page": "templates",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "heading": "报告模板",
+      "no_horizontal_overflow": true
+    },
+    {
+      "page": "models",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "heading": "模型连接",
+      "no_horizontal_overflow": true
+    },
+    {
+      "page": "settings",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "heading": "系统设置",
+      "no_horizontal_overflow": true
+    }
+  ],
+  "errors": [],
+  "blockedWrites": []
+}

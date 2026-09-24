@@ -261,6 +261,8 @@ def get_benchmark(product:str,month:str,left:str,right:str,analysis_type:Literal
                 else:
                     result['narrative']=generate(snapshot,result['evidence'],allow_model=False)
                     result['narrative']={**result['narrative'],'model_status':'QUEUED','job_id':j['id']}
+    from .narrative import merge_rescued_evidence
+    result['evidence']=merge_rescued_evidence(result['evidence'],result['narrative'])
     result['hypotheses']=[{**f,'hypothesis':f['rendered_text']} for f in result['narrative']['findings']]
     return result
 def _generation_versions(snapshot,req):

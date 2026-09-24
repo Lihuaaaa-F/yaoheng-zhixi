@@ -1,0 +1,9 @@
+{
+  "checks": [
+    "official-data analysis renders",
+    "assistant connection UI persists independently, loopback provider connection test passes; not cloud inference",
+    "mobile drawer and no runtime/console errors"
+  ],
+  "errors": [],
+  "status": "PASS"
+}

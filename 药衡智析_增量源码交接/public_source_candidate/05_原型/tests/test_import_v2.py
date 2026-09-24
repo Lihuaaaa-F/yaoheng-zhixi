@@ -165,6 +165,9 @@ class _FakeKnowledge:
 
 def test_kb_build_pipeline_message_contract(isolated_runtime, tmp_path, monkeypatch):
     import pharma.knowledge as knowledge
+    # Load the service before replacing the class: otherwise its first import
+    # permanently captures this fake and contaminates later retrieval tests.
+    import pharma.context_services  # noqa: F401
     store = _store(tmp_path)
     doc = data_import.create_upload('knowledge', '设备清单.txt', ('车间设备清单：胶囊填充机 维修记录 ' * 10).encode('utf-8'), 'enterprise')
     job = store.enqueue('kb', {'import_ids': [doc['id']], 'rebuild': True})
@@ -184,6 +187,7 @@ def test_kb_build_pipeline_message_contract(isolated_runtime, tmp_path, monkeypa
 
 def test_kb_build_empty_document_fails_with_step(isolated_runtime, tmp_path, monkeypatch):
     import pharma.knowledge as knowledge
+    import pharma.context_services  # noqa: F401 Keep service imports outside the fake's lifetime.
     store = _store(tmp_path)
     doc = data_import.create_upload('knowledge', '空.txt', b'  \n ', 'enterprise')
     job = store.enqueue('kb', {'import_ids': [doc['id']], 'rebuild': True})

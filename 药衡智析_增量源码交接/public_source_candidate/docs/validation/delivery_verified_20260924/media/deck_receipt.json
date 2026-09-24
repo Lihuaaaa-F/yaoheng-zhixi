@@ -1,0 +1,69 @@
+{
+  "status": "PASS",
+  "created_at": "2026-09-24T13:34:22.868228+00:00",
+  "review_kind": "developer_ai_visual_inspection_not_human_scoring",
+  "tested_commit": "2087978854a7b091191aba94568418d6730204d3",
+  "slides": 10,
+  "editable_native_table_slides": [
+    3,
+    9
+  ],
+  "native_table_count": 2,
+  "authoring": "JavaScript ES modules with @oai/artifact-tool",
+  "package_geometry_font_and_first_party_import": "PASS",
+  "native_render": "LibreOffice Impress PDF export with project FONTCONFIG_FILE and independent profile; Poppler at 120 DPI, 1600x900 pages",
+  "full_size_visually_inspected_slides": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "visual_findings": [],
+  "source_notes_in_all_slides": true,
+  "human_scoring_entered": false,
+  "competition_ready_asserted": false,
+  "files": {
+    "pptx": {
+      "path": "/workspace/scratch/cd4db07786b4/delivery_audit_20260924/delivery_deck/output/药衡智析_答辩与离线验收_20260924_定稿.pptx",
+      "bytes": 1202574,
+      "sha256": "d258b65458fa1bb95c45fb7df27d60737c53d5ffaed03101495f22f1ebc0b3df"
+    },
+    "pdf": {
+      "path": "/workspace/scratch/cd4db07786b4/delivery_audit_20260924/delivery_deck/output/药衡智析_答辩与离线验收_20260924_定稿.pdf",
+      "bytes": 1030137,
+      "sha256": "590e9cccaf431a50647580734adef4a40c45c85764e19608cd3c075ddce85cf3"
+    }
+  },
+  "structural_receipt": "/workspace/scratch/cd4db07786b4/delivery_audit_20260924/delivery_deck/build/presentation-final.validation.json",
+  "page_images": [
+    "/workspace/scratch/cd4db07786b4/delivery_audit_20260924/delivery_deck/native_render/slide-01.png",
+    "/workspace/scratch/cd4db07786b4/delivery_audit_20260924/delivery_deck/native_render/slide-02.png",
+    "/workspace/scratch/cd4db07786b4/delivery_audit_20260924/delivery_deck/native_render/slide-03.png",
+    "/workspace/scratch/cd4db07786b4/delivery_audit_20260924/delivery_deck/native_render/slide-04.png",
+    "/workspace/scratch/cd4db07786b4/delivery_audit_20260924/delivery_deck/native_render/slide-05.png",
+    "/workspace/scratch/cd4db07786b4/delivery_audit_20260924/delivery_deck/native_render/slide-06.png",
+    "/workspace/scratch/cd4db07786b4/delivery_audit_20260924/delivery_deck/native_render/slide-07.png",
+    "/workspace/scratch/cd4db07786b4/delivery_audit_20260924/delivery_deck/native_render/slide-08.png",
+    "/workspace/scratch/cd4db07786b4/delivery_audit_20260924/delivery_deck/native_render/slide-09.png",
+    "/workspace/scratch/cd4db07786b4/delivery_audit_20260924/delivery_deck/native_render/slide-10.png"
+  ],
+  "claims": {
+    "regression": "601 passed, 1 skipped",
+    "independent_numeric_checks": 2160,
+    "max_absolute_error": "0",
+    "max_relative_error": "0",
+    "report_scenarios": 4,
+    "report_files": 8,
+    "report_visual_pages": 66,
+    "rpa": "4/4 simulated only",
+    "model_live": "not configured; failed live acceptance",
+    "retrieval": "lexical degradation; local vector model not configured",
+    "human_review": "PENDING"
+  }
+}

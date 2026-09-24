@@ -42,7 +42,7 @@ def source_contract():
     factories=value['factories'];specs=value['specifications']
     if not isinstance(factories,list) or not factories or any(not isinstance(x,str) or not x.strip() for x in factories) or len(set(factories))!=len(factories):
         raise ValueError('INVALID_MASTERDATA_FACTORIES')
-    designated=master.get('benchmark_factory') if isinstance(master,dict) else None
+    designated=value.get('benchmark_factory')
     if designated is not None and (not isinstance(designated,str) or designated not in factories):
         raise ValueError('INVALID_MASTERDATA_BENCHMARK_FACTORY')
     if designated is not None:

@@ -99,6 +99,8 @@ def process_job(store,job):
             except Exception as exc:  # noqa: BLE001
                 snapshot['attribution']={'status':'UNAVAILABLE','reason':type(exc).__name__+': '+str(exc)[:120]}
         if 'narrative' not in result:result['narrative']=generate(snapshot,result['evidence'])
+        from .narrative import merge_rescued_evidence
+        result['evidence']=merge_rescued_evidence(result['evidence'],result['narrative'])
         store.update(id,'RENDERING_DOCX',result,progress=70,detail='渲染 Word 报告（模板绑定与图表）')
         folder=ARTIFACTS/id;folder.mkdir(parents=True,exist_ok=True)
         output=folder/'report.docx'

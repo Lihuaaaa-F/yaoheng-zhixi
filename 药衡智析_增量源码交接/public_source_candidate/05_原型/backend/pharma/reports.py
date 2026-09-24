@@ -24,7 +24,7 @@ MAP_PATH = _TEMPLATE_DIR / 'placeholder_map.json'
 # 用户安装模板（数据中心“报告模板”解析后安装）：按报告类型存放；
 # 季度/专题未安装时回退月度模板（绑定合同一致，仅期间口径不同）。
 RUNTIME_TEMPLATES = RUNTIME / 'templates'
-RENDERER_VERSION='reader-20260924-layout-v10'
+RENDERER_VERSION='reader-20260924-delivery-v11'
 NA = 'N/A（无可用基期或明细）'
 
 
@@ -74,6 +74,17 @@ def install_template(source: Path, analysis_type: str) -> dict:
     source = Path(source)
     output = RUNTIME_TEMPLATES / f'{analysis_type}.docx'
     map_path = RUNTIME_TEMPLATES / f'{analysis_type}.placeholder_map.json'
+    # 编译和兼容检查全部完成后再发布，失败不能毁掉上一份可用模板。
+    with tempfile.TemporaryDirectory(prefix='template-stage-', dir=RUNTIME_TEMPLATES) as folder:
+        staged = Path(folder) / output.name
+        staged_map = Path(folder) / map_path.name
+        result = _compile_installed_template(source, analysis_type, staged, staged_map)
+        staged.replace(output)
+        staged_map.replace(map_path)
+    return result
+
+
+def _compile_installed_template(source, analysis_type, output, map_path):
     entries = []
     with ZipFile(source) as zin, ZipFile(output, 'w', ZIP_DEFLATED) as zout:
         for info in zin.infolist():
@@ -530,7 +541,7 @@ def build_bindings(snapshot,narrative,benchmark=None):
     highlights=[]
     mom_value=m['mom'].get('value')
     if mom_value is not None and Decimal(str(mom_value))<0:
-        highlights.append('单位成本环比下降 '+number(m['mom'])+'%（本期 '+number(m['unit_cost'])+' 元/盒）')
+        highlights.append('单位成本环比下降 '+number(abs(Decimal(str(mom_value))))+'%（本期 '+number(m['unit_cost'])+' 元/盒）')
     improving=[e for e in snapshot.get('elements',[]) if e.get('unit_mom') is not None and Decimal(str(e['unit_mom']))<0]
     if improving:
         best=min(improving,key=lambda e:Decimal(str(e['unit_mom'])))
@@ -555,7 +566,8 @@ def build_bindings(snapshot,narrative,benchmark=None):
                     highlights.append('单位成本 '+_shown+' 元/粒 不高于行业中位 '+str(row['行业P50'])+'（题包静态参考）')
             except Exception:pass
     values['本月亮点']=('；'.join(highlights)+'。') if highlights else ('本期单位成本 '+number(m['unit_cost'])+' 元/盒，产量 '+number(m['quantity'],0)+' 盒；本期无显著优于基期或行业中位的确定性亮点。')
-    values['需关注问题']='原料成本上涨不能直接等同采购价上涨。平均小时工资为题包折算口径，不能据此认定基础薪率上调。跨厂原料差异需核对二厂明细（当前为按汇总校准的合成明细）。'
+    detail_note='；'.join(synthetic_notes) if synthetic_notes else '缺失的工厂原料明细仍须补充，汇总差异不能替代真实下钻'
+    values['需关注问题']='原料成本变化不能直接等同采购价变化。平均小时工资为题包折算口径，不能据此认定基础薪率上调。跨厂原料差异需核对两厂明细：'+detail_note+'。'
     delta=changes.get('unit_cost',{}).get('mom',{}).get('delta')
     values['合计贡献度']='100.00' if delta is not None and Decimal(delta)!=0 else 'N/A（总变动为0或无基期）'
     return values
@@ -634,6 +646,8 @@ def explanation_presence(path, narrative, scoped=True):
 
 
 def render_docx(snapshot,narrative,evidence,output,benchmark=None):
+    from .narrative import merge_rescued_evidence
+    evidence=merge_rescued_evidence(evidence,narrative)
     if snapshot.get('context_id') and snapshot['context_id']!='pharmaceutical:competition':
         from .reference_report import render
         result=render(snapshot,narrative,evidence,output,benchmark)
@@ -792,7 +806,7 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
         # P1-1（2026-09-23 视觉审查）：contribution 是 Decimal 聚合值，str() 直出
         # 20+ 位原始浮点（"31.201353702460167…%"），统一走 number() 两位小数。
         return ('贡献材料变动 '+number(c)+'%（品种级），优先核查' if c is not None else '待核查（见4.2方向评估）')
-    _mat_note_tbl=table('原材料成本明细表格',['序号','原材料名称','本月单价(元/盒)','上月单价(元/盒)','环比变动（品种级）','变动原因初步判断'],[[
+    _mat_note_tbl=table('原材料成本明细表格',['序号','原材料名称','本期单位耗用成本(元/盒)','上期品种单位成本(元/盒)','环比变动（品种级）','变动原因初步判断'],[[
         str(i+1),r['原材料名称'],r['单位消耗成本(元/盒)'],_prev(r['原材料名称']),_delta_pct(r['原材料名称']),_reason(r['原材料名称'])]
         for i,r in enumerate(details.get('materials',[]))])
     # P2-1（视觉审查）：每味药材分批多行、单价逐行不同，环比与贡献列是品种级
@@ -804,7 +818,7 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
         _st=_OE2('w:rPr');_sz=_OE2('w:sz');_sz.set(_qn2('w:val'),'15');_st.append(_sz)
         _pPr.append(_st);_np.append(_pPr)
         _r=_OE2('w:r');_rt=_OE2('w:t');_rt.set(_qn2('xml:space'),'preserve')
-        _rt.text='注：环比变动与贡献占比为品种级聚合口径（该品种各批次均价环比）；同品种不同批次单价存在差异属正常，行级批次价以原始明细为准。'
+        _rt.text='注：本期列来自所选期间的原料明细；上期列、环比与贡献占比按品种聚合。单位耗用成本不等同采购单价，批次价格与用量见原始明细。'
         _r.append(_rt);_np.append(_r)
         _mat_note_tbl._tbl.addnext(_np)
     # 4.1 列结构按模板 md：月份/产量/三要素单位/单位成本/环比变动
@@ -829,7 +843,7 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
         except Exception:chg='—'
         impact=('主要材料，价格变动直接影响单位材料成本' if r['药材名称'] in _ms_names else '行情波动间接影响材料成本')
         _rows_m.append([r['药材名称'],first,cur,chg,str(r.get('趋势分析','—')),impact])
-    _price_tbl=table('原材料价格跟踪表格',['原材料','年初价(元/kg)','本月价(元/kg)','涨幅','市场趋势','对材料成本影响'],_rows_m)
+    _price_tbl=table('原材料价格跟踪表格',['原材料','年初价(元/kg)',('季末月价(元/kg)' if snapshot['analysis_type']=='quarterly' else '本月价(元/kg)'),'涨幅','市场趋势','对材料成本影响'],_rows_m)
     # 药材涨跌排行图（2026-09-23 用户反馈 #11）：材料明细表旁用横向条形图
     # 直观呈现涨跌幅前 8 的药材（涨红跌绿），回答"哪些药材在拉动成本"。
     # 2026-09-23 修正：按真实环比百分比绘制（delta 是元/盒绝对额，此前轴标
@@ -860,10 +874,10 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
         ax.axvline(0,color='#3A3A3A',lw=1,zorder=2)
         ax.set_yticks(ys,[str(r.get('name')) for r,v in _mv])
         ax.invert_yaxis()
-        vmax=max(abs(v) for v in vals) or 1;ax.set_xlim(min(min(vals)-vmax*0.38,-vmax*0.12),max(vals)+vmax*0.38)
+        vmax=max(abs(v) for v in vals) or 1;ax.set_xlim(min(min(vals)-vmax*0.38,-vmax*0.12),max(max(vals)+vmax*0.38,vmax*0.12))
         for y,v in zip(ys,vals):
             ax.text(v+(vmax*0.03 if v>=0 else -vmax*0.03),y,('+' if v>=0 else '−')+f'{abs(v):.1f}%',va='center',ha='left' if v>=0 else 'right',fontsize=8.5,color='#C0392B' if v>=0 else '#1F6E5E')
-        ax.set_xlabel('本月单价环比涨跌幅（%）');ax.grid(axis='x',alpha=.2)
+        ax.set_xlabel('本期单位耗用成本环比变动（%）');ax.grid(axis='x',alpha=.2)
         # 图插在价格表之后（w:tbl.addnext），图题在图下方；编号走 _number_and_caption
         _mv_path=output.with_name('movers.png') if 'output' in dir() else None
         from docx.enum.text import WD_ALIGN_PARAGRAPH as _AL2
@@ -871,7 +885,7 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
         _picp=doc.add_paragraph();_picp.alignment=_AL2.CENTER;_picp.paragraph_format.keep_with_next=True
         _picp.add_run().add_picture(str(output.with_name('movers.png')),width=_Cm(15))
         _price_tbl._tbl.addnext(_picp._p)
-        _capp=doc.add_paragraph('图｜'+snapshot['product']+' · '+snapshot['factory']+' · '+snapshot['month']+'｜药材单价涨跌排行（前'+str(len(_mv))+'，涨红跌绿）')
+        _capp=doc.add_paragraph('图｜'+snapshot['product']+' · '+snapshot['factory']+' · '+snapshot['month']+'｜原料单位耗用成本变动排行（前'+str(len(_mv))+'，涨红跌绿）')
         _picp._p.addnext(_capp._p)
     # 根因定位表（2026-09-22 方法论落地）：程序计算的多维归因（EP/JSD/Shapley/DiD），
     # 数字程序所有；插在 4.2 成本异常点排查标题之后。模板无对应占位符，独立锚定。
@@ -893,7 +907,7 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
             if _did.get('status')=='PASS':
                 _rk_rows.append(['附','对照厂反事实（DiD，'+str(_did.get('control'))+'）',str(_did.get('tau'))+' 元/盒',
                                  '—','平行趋势'+str(_did.get('parallel_trend')),
-                                 '安慰剂τ='+str(_did.get('placebo_tau') or '未检')+'；估计值，'+str(_did.get('assumption',''))[:40]])
+                                 '安慰剂τ='+str(_did.get('placebo_tau') or '未检')+'；估计值，'+str(_did.get('assumption',''))])
             table(None,['排序','根因集','解释力/估计','方向','可能性(评分)','依据'],_rk_rows,paragraph=cap,caption='根因定位')
     # 5.1 列结构按模板 md：对比维度/两厂/差异金额/差异率/方向
     _bl,_br,_bd=benchmark_labels(benchmark)
@@ -943,7 +957,7 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
     # 人工归因评分要有可填写的区域（表单）而非一行文字。内容先建齐，再统一
     # 走美化/编号/字体管线。
     doc.add_paragraph('七、编制说明').style=doc.styles['Heading 2']
-    doc.add_paragraph('本报告由成本智能分析系统自动生成，数据来源于ERP系统，分析文本由AI大模型结合行业知识库自动撰写。如有疑问请联系财务部。')
+    doc.add_paragraph(compilation_note(narrative))
     doc.add_paragraph('数据说明：本报告使用比赛模拟数据。事实、原因假设与缺失证据分别标注；整改任务确认后仅模拟发送。')
     doc.add_paragraph('八、知识库引用').style=doc.styles['Heading 2']
     def _kb_ref(keyword,default_doc):
@@ -1003,6 +1017,18 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
     validate_word_compat(temp)
     temp.replace(output)
     return {'status':'PASS','scope':'file_generation','path':str(output),'sha256':hashlib.sha256(output.read_bytes()).hexdigest(),'verification':check,'bindings':values}
+
+def compilation_note(narrative):
+    """导出说明与本次实际解释来源一致；失败或混合输出不冒称模型全量生成。"""
+    mode=narrative.get('generation_mode')
+    if mode=='llm' and narrative.get('model_live') and narrative.get('status')=='PASS':
+        explanation='分析文本采用已校验的模型辅助解释'+('（复用既有结果）' if narrative.get('cache_hit') else '（本次调用）')
+    elif mode=='mixed':
+        explanation='分析文本采用模型与规则混合解释，未通过校验的部分已降级为基础分析'
+    else:
+        explanation='分析文本采用程序规则生成的基础分析，本次未形成通过校验的完整模型解释'
+    return '本报告由成本智能分析系统自动生成，数值来自已接入的成本数据。'+explanation+'；原因假设与建议仍需财务及业务人员复核。'
+
 
 def verify_docx(path,snapshot,sections=None,narrative=None,placeholders=None):
     if snapshot.get('context_id') and snapshot['context_id']!='pharmaceutical:competition':
@@ -1103,21 +1129,29 @@ def convert_pdf(docx_path,timeout=90,converter='libreoffice',_toc_pass=0):
             import fitz
             with fitz.open(target) as doc:
                 text=''.join(p.get_text() for p in doc);pages=len(doc)
-                page_map={};entry_pages={};orphan_headings=[]
+                page_map={};entry_pages={};orphan_headings=[];detached_figure_captions=[]
                 headings=['一、封面与基本信息','二、总成本概览','三、成本要素明细分析','四、重点产品专项分析','五、对标分析','六、总结与建议']
                 for index,page in enumerate(doc,1):
                     lines=page.get_text().splitlines()
                     # 目录行（点线引导/页码结尾）不参与孤儿标题判定——原生目录
                     # 缓存条目以"一、/6.4"开头，会被误判为页尾孤儿标题。
                     meaningful=[line.strip() for line in lines if line.strip() and not re.match(r'^第\s*\d+\s*页',line.strip()) and not line.startswith(chr(0x3000)) and '.....' not in line and not re.search(r'第\s*\d+\s*页$',line)]
-                    if meaningful and (re.match(r'^[一二三四五六]、|^[2-6]\.\d+(?:\.\d+)?\s+',meaningful[-1]) or '｜' in meaningful[-1]):orphan_headings.append(meaningful[-1])
+                    if meaningful and (re.match(r'^[一二三四五六七八九十]+、|^[2-6]\.\d+(?:\.\d+)?\s+|^表\s*\d+[-－]\d+',meaningful[-1]) or '｜' in meaningful[-1]):orphan_headings.append(meaningful[-1])
                     # 章节标题按“≥13pt 大字号行”识别（2026-09-21 四轮 F 项）：目录行
                     # (10.5pt) 与表格单元格(9pt，含阅读指南引用)中的同名文本不再误判。
                     big=set()
-                    for b in page.get_text('dict')['blocks']:
+                    blocks=page.get_text('dict')['blocks']
+                    pictures=[b['bbox'] for b in blocks if b.get('type')==1 and b['bbox'][1]>60]
+                    for b in blocks:
                         for l in b.get('lines',[]):
                             ltext=''.join(sp['text'] for sp in l['spans']).strip()
                             sizes=[sp['size'] for sp in l['spans'] if sp['text'].strip()]
+                            # 图题位于新页首部，且上方没有正文图片：将前页图段移到
+                            # 图题同页，避免恢复用户已要求移除的 keepNext 编辑标记。
+                            if (re.match(r'^图\s*\d+[-－]\d+\s',ltext)
+                                    and l['bbox'][1]<page.rect.height*.35
+                                    and not any(rect[3]<=l['bbox'][1]+2 for rect in pictures)):
+                                detached_figure_captions.append(ltext)
                             if ltext and sizes and max(sizes)>=13:
                                 big.add(ltext)
                                 # 2026-09-22 原生目录：H2=14pt 同入大字号集，顺带收集子标题页码。
@@ -1133,6 +1167,14 @@ def convert_pdf(docx_path,timeout=90,converter='libreoffice',_toc_pass=0):
         paragraphs=d.paragraphs
         for index,paragraph in enumerate(paragraphs):
             if paragraph.text.startswith(chr(0x3000)):continue  # 静态目录行不是孤儿标题
+            if paragraph.text.strip() in detached_figure_captions:
+                from docx.text.paragraph import Paragraph
+                from docx.oxml.ns import qn
+                previous=paragraph._p.getprevious()
+                if previous is not None and previous.tag==qn('w:p') and previous.xpath('.//w:drawing'):
+                    picture=Paragraph(previous,paragraph._parent)
+                    if not picture.paragraph_format.page_break_before:
+                        picture.paragraph_format.page_break_before=True;layout_changed=True
             if paragraph.text.strip() in orphan_headings:
                 # Walk actual XML siblings: Document.paragraphs skips tables and
                 # could otherwise move a distant chapter across an entire table.
@@ -1179,7 +1221,7 @@ def convert_pdf(docx_path,timeout=90,converter='libreoffice',_toc_pass=0):
             return convert_pdf(path,timeout,converter,_toc_pass+1)
         _strip_keep_with_next(d)  # 兜底：多轮修复中任何残存的 keepNext/keepLines 一并摘除
         d.save(path)
-        return {'status':'PASS','scope':'file_conversion','toc_updated':bool(toc_verified) and len(toc_verified)>=len(toc_entry_paras) and not toc_updated,'orphan_headings':orphan_headings,'toc_pages':page_map,'path':str(pdf),'pages':pages,'sha256':hashlib.sha256(pdf.read_bytes()).hexdigest()}
+        return {'status':'PASS','scope':'file_conversion','toc_updated':bool(toc_verified) and len(toc_verified)>=len(toc_entry_paras) and not toc_updated,'orphan_headings':orphan_headings,'detached_figure_captions':detached_figure_captions,'toc_pages':page_map,'path':str(pdf),'pages':pages,'sha256':hashlib.sha256(pdf.read_bytes()).hexdigest()}
     except (OSError,subprocess.TimeoutExpired) as exc:return {'status':'FAILED','reason':type(exc).__name__}
 
 
@@ -1535,6 +1577,8 @@ def _beautify_native_tables(doc):
         delta_cols={i for i,h in enumerate(headers) if any(k in h for k in ('环比','同比','变动','偏差','涨幅','差异率'))}
         num_pat=re.compile(r'^[-+−]?[\d.,]+\s*(%|％|元|盒|万|h|kg|kWh|元/盒)?[。]?$')
         for i,row in enumerate(t.rows):
+            trpr=row._tr.get_or_add_trPr()
+            if trpr.find(_qn('w:cantSplit')) is None:trpr.append(_OE('w:cantSplit'))
             if i==0:continue
             if i%2==0:
                 for c in row.cells:
@@ -1747,7 +1791,7 @@ def _key_conclusion_lines(snapshot,narrative,benchmark=None):
             return ('上升' if v>0 else '下降' if v<0 else '持平')+f'{abs(v):.2f}%'
         except Exception:return '数据缺失'
     if m.get('unit_cost') is not None:
-        line='总量：本月总成本 '+number(m.get('total_cost'))+' 元（产量 '+number(m.get('quantity'),0)+' 盒），单位成本 '+number(m['unit_cost'])+' 元/盒，环比'+_rate((pc.get('unit_cost') or {}).get('mom'))
+        line='总量：本期总成本 '+number(m.get('total_cost'))+' 元（产量 '+number(m.get('quantity'),0)+' 盒），单位成本 '+number(m['unit_cost'])+' 元/盒，环比'+_rate((pc.get('unit_cost') or {}).get('mom'))
         yoy=_rate((pc.get('unit_cost') or {}).get('yoy'))
         if yoy!='数据缺失':line+='，同比'+yoy
         lines.append(line+'。')
@@ -2060,8 +2104,8 @@ def add_reader_charts(doc,snapshot,benchmark,anchors,output):
     _budget=[(n,a,float(b)) for n,a,b in _budget if b not in (None,'','0')]
     if _budget:
         fig,ax=plt.subplots(figsize=(6.8,2.9));pos=list(range(len(_budget)))
-        ax.bar([x-.17 for x in pos],[a for _,a,_ in _budget],width=.34,label='本月实际',color='#176C8C')
-        ax.bar([x+.17 for x in pos],[b for _,_,b in _budget],width=.34,label='本月预算',color='#B08968')
+        ax.bar([x-.17 for x in pos],[a for _,a,_ in _budget],width=.34,label='本期实际',color='#176C8C')
+        ax.bar([x+.17 for x in pos],[b for _,_,b in _budget],width=.34,label='本期预算',color='#B08968')
         peak=max(max(a,b) for _,a,b in _budget)
         for i,(n,a,b) in enumerate(_budget):
             dev=(a-b)/b*100 if b else 0
@@ -2078,16 +2122,16 @@ def add_reader_charts(doc,snapshot,benchmark,anchors,output):
         fig,ax=plt.subplots(figsize=(max(8.6,1.9*(len(els)+2)),3.4))
         xs=['上期\n单位成本']+[e['name'].replace('直接','直接\n').replace('制造费用','制造\n费用')+'\n变动' for e in els]+['本期\n单位成本']
         # 左右总量柱仍自 0 画（语义=水平总量），但被紧缩 y 轴截断可见部分一致。
-        ax.bar(0,float(base),width=.58,color='#82939F',zorder=3);ax.text(0,float(base)+abs(float(base))*0.012+0.02,f'{float(base):.2f}',ha='center',va='bottom',fontsize=9,zorder=6)
+        ax.bar(0,float(base),width=.58,color='#82939F',zorder=3);ax.annotate(f'{float(base):.2f}',(0,float(base)),xytext=(0,5),textcoords='offset points',ha='center',va='bottom',fontsize=9,zorder=6)
         run=float(base);levels=[run]
         for i,e in enumerate(els,1):
             v=deltas[i-1]
             b=min(run,run+v)
             ax.bar(i,abs(v) if abs(v)>0 else 1e-6,bottom=b,width=.58,color='#A56B3D' if v>=0 else '#1F6E5E',zorder=3)
             _bbox=dict(boxstyle='round,pad=0.15',facecolor='white',edgecolor='none',alpha=0.85)
-            ax.text(i,run+v+((run+v)*0.012+0.02)*(1 if v>=0 else -1),(('+' if v>=0 else '−')+number(e.get('unit_delta') or 0).lstrip('-')),ha='center',va='bottom' if v>=0 else 'top',fontsize=9,color='#5A3B28' if v>=0 else '#1F6E5E',zorder=6,bbox=_bbox)
+            ax.annotate(('+' if v>=0 else '−')+number(e.get('unit_delta') or 0).lstrip('-'),(i,run+v),xytext=(0,5 if v>=0 else -5),textcoords='offset points',ha='center',va='bottom' if v>=0 else 'top',fontsize=9,color='#5A3B28' if v>=0 else '#1F6E5E',zorder=6,bbox=_bbox)
             run+=v;levels.append(run)
-        ax.bar(len(els)+1,float(current),width=.58,color='#176C8C',zorder=3);ax.text(len(els)+1,float(current)+abs(float(current))*0.012+0.02,f'{float(current):.2f}',ha='center',va='bottom',fontsize=9,zorder=6)
+        ax.bar(len(els)+1,float(current),width=.58,color='#176C8C',zorder=3);ax.annotate(f'{float(current):.2f}',(len(els)+1,float(current)),xytext=(0,5),textcoords='offset points',ha='center',va='bottom',fontsize=9,zorder=6)
         # 桥接虚线：上一柱顶到下一柱浮动的视觉连续性
         for i in range(len(els)+1):
             y=levels[i] if i<len(levels) else run
@@ -2130,6 +2174,8 @@ def assess_report(result,review=None):
         return 10**9
     def verdict(ok,reason):return {'status':'PASS' if ok else 'FAIL','reason':reason}
     n=result.get('narrative',{});ev=result.get('evidence',{});dx=result.get('docx',{});pdf=result.get('pdf',{})
+    from .narrative import merge_rescued_evidence
+    ev=merge_rescued_evidence(ev,n)
     checks=dx.get('verification',{})
     snapshot=result.get('snapshot',{})
     findings=n.get('findings',[])

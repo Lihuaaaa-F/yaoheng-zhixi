@@ -1,0 +1,7 @@
+{
+  "status": "PASS",
+  "entrypoint": "scripts/manage.py start",
+  "seconds": 2.12,
+  "repeated_start": "PASS",
+  "scope": "Linux native services and real health endpoints; Windows/Docker not executed"
+}

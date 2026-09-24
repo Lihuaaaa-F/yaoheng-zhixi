@@ -2,8 +2,21 @@
 import json
 from decimal import Decimal
 
-from pharma import industry
+import pytest
+
+from pharma import data_import, industry
 from pharma.attribution import analyze_attribution_snapshot
+
+
+@pytest.fixture(autouse=True)
+def isolated_import_workspace(tmp_path, monkeypatch):
+    # The catalogue also inspects pending uploads. Isolate that storage along
+    # with the registry so earlier import tests cannot hide this test's default.
+    imports = tmp_path / 'imports'
+    monkeypatch.setattr(data_import, 'IMPORTS_ROOT', imports)
+    monkeypatch.setattr(data_import, 'IMPORT_DB', imports / 'imports.sqlite3')
+    monkeypatch.setattr(data_import, 'MAPPINGS_ROOT', imports / 'mappings')
+    monkeypatch.setattr(data_import, '_imports_db_ready', False)
 
 
 def test_generic_pack_has_no_demonstration_company_or_business_facts(tmp_path, monkeypatch):

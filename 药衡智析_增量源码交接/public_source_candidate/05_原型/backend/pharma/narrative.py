@@ -27,7 +27,7 @@ import httpx
 from .config import RUNTIME, MODEL_DEFAULT, MODEL_PROTOCOL_DEFAULT, MODEL_BASE_URL_DEFAULT, MODEL_CODING_BASE_URL_DEFAULT
 
 PROMPT_VERSION = 'v22-relaxed-contracts'
-VALIDATOR_VERSION = 'claim-contract-v11-relaxed-evidence-quote'
+VALIDATOR_VERSION = 'claim-contract-v12-scoped-literals-and-evidence'
 # Aliases may only be added after a live probe has verified that the upstream
 # really serves the requested model under that exact returned id.
 # 追加机制（2026-09-24 审批方案 C5）：环境变量 PHARMA_MODEL_VERIFIED_ALIASES，
@@ -155,6 +155,26 @@ def required_explanation_sections(snapshot):
             sections.append(element['key'])
             break
     return list(dict.fromkeys(sections + [a['element_key'] for a in required_alerts(snapshot)] + (['benchmark'] if comparable_benchmark(snapshot) else [])))
+
+
+def merge_rescued_evidence(evidence, generated):
+    """Attach validated source records without relabelling retrieval quality."""
+    import copy
+    result = copy.deepcopy(evidence)
+    rows = result.setdefault('evidence', []) if isinstance(result, dict) else result
+    if rows is None:
+        rows = []
+        result = rows
+    seen = {row.get('evidence_id') for row in rows}
+    for finding in (generated or {}).get('findings', []):
+        declared = set(finding.get('evidence_refs', []))
+        rescued = set(finding.get('evidence_rescued', []))
+        for row in finding.get('rescued_evidence', []):
+            ref = row.get('evidence_id')
+            if ref and ref in declared and ref in rescued and ref not in seen:
+                rows.append(copy.deepcopy(row))
+                seen.add(ref)
+    return result
 
 
 def _metric_role_validation(text, snapshot, *, alert_refs=()):
@@ -320,6 +340,19 @@ def _insufficient_contract(f):
         raise ValueError('insufficient evidence contradicts certain causality')
 
 
+def assert_uncertain_causality(text):
+    """A later disclaimer cannot qualify an earlier affirmative causal claim."""
+    uncertainty = r'可能|或许|尚不能|不能|无法|待核|假设|有待|是否|不确定|未证实|未确认|不足以'
+    for sentence in re.split(r'[；;。！!？?\n]', text):
+        prior_uncertain = False
+        for clause in re.split(r'[，,]', sentence):
+            qualified = bool(re.search(uncertainty, clause))
+            inherited = prior_uncertain and bool(re.match(r'\s*(?:从而|进而|因而|因此)', clause))
+            if re.search(r'导致|造成|引起|源于|原因(?:是|为)|是.*原因|因为|归因于', clause) and not (qualified or inherited):
+                raise ValueError('unsupported causality in affirmative clause')
+            prior_uncertain = qualified or inherited
+
+
 class Finding(BaseModel):
     model_config = ConfigDict(extra='forbid')
     claim_type: Literal['numeric_fact','document_fact','hypothesis','insufficient_evidence','recommendation']
@@ -480,8 +513,12 @@ def _quote_supported(quote, source_text):
     if len(normalized_quote) < 4:
         return False
     normalized_source = _normalized_text(source_text)
-    fragments = [f for f in re.split(r'…+|\.{3,}|。{3,}', normalized_quote) if len(f) >= 4]
-    if not fragments:
+    if normalized_quote in normalized_source:
+        return True
+    fragments = [f for f in re.split(r'…+|\.{3,}|。{3,}', normalized_quote) if f]
+    # A short fragment must not silently disappear: otherwise “真实片段……99%”
+    # would become a supported quote and bypass the numeric contract.
+    if not fragments or any(len(fragment) < 4 for fragment in fragments):
         return False
     position = 0
     for fragment in fragments:
@@ -489,6 +526,49 @@ def _quote_supported(quote, source_text):
         if position < 0:
             return False
         position += len(fragment)
+    return True
+
+
+def _literal_metric_compatible(text, match, metric):
+    """Rounding preserves a metric's subject, unit and comparison role."""
+    prefix = re.split(r'[，,；;。\n]', text[:match.start()])[-1]
+    suffix = re.split(r'[，,；;。\n]', text[match.end():])[0]
+    unit = str(metric.get('unit', ''))
+    key = str(metric.get('metric_id', ''))
+    label = str(metric.get('label', ''))
+    if unit != '%':
+        # Non-percent numbers require their complete unit, not just a matching
+        # magnitude (12.5 元 is not 12.5 元/盒, and neither is 12.5 元/吨).
+        if not unit or not re.match(r'\s*' + re.escape(unit) + r'(?![/／A-Za-z])', suffix):
+            return False
+        try:
+            _metric_role_validation(prefix + '[[metric:' + key + ']]' + suffix,
+                                    {'metrics': [metric]})
+        except ValueError:
+            return False
+    else:
+        role = metric.get('comparison_role') or ('base' if re.search(r'(?:^|[_:])(previous|base)(?:$|[_:])', key) else 'current')
+        if re.search(r'基期|上期|上月|去年同期', prefix) and role != 'base' and not re.search(r'环比|同比|差异率|变动率', prefix):
+            return False
+        if re.search(r'本期|当前', prefix) and role == 'base':
+            return False
+        if (re.search(r'总额|总成本|总费用', prefix)
+                and (re.search(r'(?:^|[_:])unit(?:$|[_:])', key) or '单位' in label)):
+            return False
+        if ('单位' in prefix
+                and (re.search(r'(?:^|[_:])total(?:$|[_:])', key) or re.search(r'总额|总成本|总费用', label))):
+            return False
+        for pattern, identity in ((r'贡献(?:度|率)', r'contribution|贡献'),
+                                  (r'同比', r'yoy|同比'), (r'环比', r'mom|环比'),
+                                  (r'预算', r'budget|预算')):
+            if re.search(pattern, prefix) and not re.search(identity, key + label, re.I):
+                return False
+    families = ((r'人工|工时|工资', r'labor|人工|工时|工资'),
+                (r'材料|原料', r'material|材料|原料'),
+                (r'制造费用', r'overhead|制造费用'), (r'产量', r'quantity|产量'))
+    for mentioned, identity in families:
+        if re.search(mentioned, prefix) and not re.search(identity, key + label, re.I):
+            return False
     return True
 
 
@@ -514,14 +594,14 @@ def _rounded_metric_bindings(checked_text, metrics):
     审计留痕（shown=模型原文、registered=程序注册值）。
     """
     registry = []
-    for m in metrics.values():
-        raw = m.get('display_value', m.get('value'))
+    for key, m in metrics.items():
+        raw = m.get('display_value', m.get('display', m.get('value')))
         try:
             value = Decimal(str(raw))
         except Exception:
             continue
         if value.is_finite():
-            registry.append((str(m.get('metric_id', m.get('label', ''))), value, str(m.get('unit', ''))))
+            registry.append((str(m.get('metric_id', key)), value, str(m.get('unit', '')), m))
     if not registry:
         return checked_text, []
     date_spans = [match.span() for match in re.finditer(r'\d{4}-\d{2}|\d{4}/\d{1,2}', checked_text)]
@@ -540,17 +620,18 @@ def _rounded_metric_bindings(checked_text, metrics):
             signed = None  # 方向词与数值符号矛盾，交由上层拒绝
         candidates = []
         if signed is not None:
-            for metric_id, value, unit in registry:
+            for metric_id, value, unit, metric in registry:
                 if (unit == '%') != pct:
                     continue
                 if (value < 0) != (signed < 0):
                     continue
                 exponent = Decimal(1).scaleb(-decimals)
-                if value.quantize(exponent, rounding=ROUND_HALF_UP) == signed:
+                if (value.quantize(exponent, rounding=ROUND_HALF_UP) == signed
+                        and _literal_metric_compatible(checked_text, match, {**metric, 'metric_id': metric_id})):
                     candidates.append(metric_id)
         if len(candidates) == 1:
             metric_id = candidates[0]
-            registered = next(value for mid, value, _ in registry if mid == metric_id)
+            registered = next(value for mid, value, _, _ in registry if mid == metric_id)
             bindings.append({'type': 'rounded_registered_metric', 'metric_id': metric_id,
                              'shown': token + ('%' if pct else ''), 'registered': str(registered)})
             out.append(checked_text[last:match.start()])
@@ -561,9 +642,10 @@ def _rounded_metric_bindings(checked_text, metrics):
     return ''.join(out), bindings
 
 
-def validate_findings(findings,snapshot,evidence):
+def validate_findings(findings,snapshot,evidence,*,excluded_evidence=()):
     metrics = metric_map(snapshot)
     sources = {e['evidence_id']:e for e in evidence}
+    excluded_ids = {row['evidence_id'] for row in excluded_evidence}
     result = []
     for value in findings:
         f = value if isinstance(value,Finding) else Finding.model_validate(value)
@@ -595,6 +677,8 @@ def validate_findings(findings,snapshot,evidence):
         # 库中不存在或不适用的引用照旧拒绝（防编造引用ID）。
         effective_sources, rescued_evidence = dict(sources), []
         for ref in f.evidence_refs:
+            if ref in excluded_ids:
+                raise ValueError('explicitly excluded evidence cannot be rescued: ' + str(ref))
             if ref in effective_sources:
                 continue
             chunk = Knowledge.evidence_in_library(ref, context=snapshot.get('analysis_context'))
@@ -628,7 +712,9 @@ def validate_findings(findings,snapshot,evidence):
         # registered. A coincidental matching number alone is never sufficient.
         numeric_bindings=[]
         if deadline: numeric_bindings.append({'type':'proposed_deadline',**deadline.model_dump()})
-        checked_text=plain + f.suggestion + ' '.join(f.missing_evidence) + f.verification_target + ' '.join(f.expected_evidence) + ('' if deadline else f.deadline_basis) + f.department + f.responsible_role
+        checked_text='\n'.join([plain, f.suggestion, *f.missing_evidence, f.verification_target,
+                               *f.expected_evidence, '' if deadline else f.deadline_basis,
+                               f.department, f.responsible_role])
         checked_text=re.sub(r'\[\[(?:context|metric|evidence):[^\]]+\]\]', '', checked_text)
         for key,value in context.items():
             if re.search(r'\d',value) and value in checked_text:
@@ -643,7 +729,8 @@ def validate_findings(findings,snapshot,evidence):
                 checked_text=checked_text.replace(quote,'')
                 numeric_bindings.append({'type':'positioned_document','value':quote,'evidence_id':evidence_id,'location':effective_sources[evidence_id].get('location') or effective_sources[evidence_id].get('page')})
         # 注册指标值的四舍五入简写：唯一匹配时绑定并扣除（见 _rounded_metric_bindings）。
-        checked_text,rounded_bindings=_rounded_metric_bindings(checked_text,metrics)
+        literal_metrics = {key: metrics[key] for key in f.metric_refs} if f.metric_refs else metrics
+        checked_text,rounded_bindings=_rounded_metric_bindings(checked_text,literal_metrics)
         numeric_bindings.extend(rounded_bindings)
         if any(x not in f.metric_refs for x in slots): raise ValueError('unbound metric slot')
         if f.claim_type != 'numeric_fact':
@@ -663,6 +750,7 @@ def validate_findings(findings,snapshot,evidence):
             _specific_missing(f.missing_evidence)
             if re.search(r'已证实|确定导致|直接导致|证明.*导致|必然',plain): raise ValueError('unsupported causality')
             if not re.search(r'可能|尚不能|待核|假设|有待', plain): raise ValueError('hypothesis must express uncertainty')
+            assert_uncertain_causality(plain)
             quantity_change = snapshot.get('period_changes',{}).get('quantity',{}).get('mom',{})
             quantity_delta = quantity_change.get('delta')
             if quantity_delta is not None and Decimal(str(quantity_delta)) > 0 and re.search(r'产量(?:减少|下降|降低)|减产', plain):
@@ -700,6 +788,7 @@ def validate_findings(findings,snapshot,evidence):
         if rescued_evidence:
             # C3 审计留痕：这些引用未进入本次检索命中集合，按全库存在+适用性核对放行。
             item['evidence_rescued'] = rescued_evidence
+            item['rescued_evidence'] = [effective_sources[ref] for ref in rescued_evidence]
         for field in ('suggestion','verification_target','responsible_role','department','deadline_basis'):
             item[field] = render_visible_text(item[field],snapshot,evidence,f.metric_refs,f.evidence_quotes)
         for field in ('missing_evidence','expected_evidence'):
@@ -793,11 +882,12 @@ class ModelGateway:
         # 耗尽（错误码 1113）后自动切换至此继续运行；主端点恢复后自动优先，
         # 无需改代码。置 PHARMA_MODEL_CODING_BASE_URL='' 可禁用。
         self.coding_base_url = '' if independent else os.getenv('PHARMA_MODEL_CODING_BASE_URL', MODEL_CODING_BASE_URL_DEFAULT).rstrip('/')
-        # 内网隔离（2026-09-24）：开启后仅本机/局域网端点可用，外网端点在网关解析期即拒绝；
-        # 公网备用端点（coding）一并禁用，杜绝敏感数据在不知情下发往外部 API。
+        # Reading/saving connections must remain possible while isolation is on.
+        # Block outbound I/O below, and report unavailable state without breaking
+        # the settings screen needed to change an old cloud connection to local.
+        self.network_blocked = bool(self.base_url and _settings.network_isolation()['isolation']
+                                    and not _settings._intranet_host(self.base_url))
         if _settings.network_isolation()['isolation']:
-            if not _settings._intranet_host(self.base_url):
-                raise ValueError('NETWORK_ISOLATION_BLOCKED: 内网隔离已开启，仅允许本机/局域网模型端点；如需外网模型（如 OpenAI）请先在系统设置关闭内网隔离')
             if self.coding_base_url and not _settings._intranet_host(self.coding_base_url):
                 self.coding_base_url = ''
         self.model = str(setting('model', model, '' if independent else MODEL_DEFAULT, 'PHARMA_MODEL') or '')
@@ -867,13 +957,15 @@ class ModelGateway:
             self.model, self.base_url, self.reasoning_effort, self.provider)
         if source == 'SETTINGS_ENDPOINT_MISMATCH':
             self.parameter_warnings.append('环境变量覆盖了已保存的服务地址或协议；为保护密钥，尚未发送旧凭据，请统一连接配置')
+        if self.network_blocked:
+            self.parameter_warnings.append('内网隔离已阻止该云端连接，请配置本机/局域网端点或关闭隔离')
         self.configured = bool(self.model and self.base_url)
-        self.available = self.configured and bool(self.key or (self.auth_mode != 'required' and self.provider == 'openai' and _settings._loopback_host(self.base_url)))
+        self.available = self.configured and not self.network_blocked and bool(self.key or (self.auth_mode != 'required' and self.provider == 'openai' and _settings._loopback_host(self.base_url)))
         self.generation_parameters = {'reasoning_effort': self.reasoning_effort, 'temperature': self.temperature,
              'top_p': self.top_p, 'max_tokens': self.max_tokens, 'timeout_seconds': self.timeout_seconds,
              'effective_reasoning_parameters': self.effort_parameters}
         self.generation_parameters['auth_mode'] = self.auth_mode
-        self.client = client or httpx.Client(timeout=httpx.Timeout(self.timeout_seconds, connect=min(15, self.timeout_seconds)), follow_redirects=False)
+        self.client = client or httpx.Client(timeout=httpx.Timeout(self.timeout_seconds, connect=min(15, self.timeout_seconds)), follow_redirects=False, trust_env=False)
         # 预算默认 300/天（2026-09-24 审批方案 A：一份完整报告消耗 20+ 次调用，
         # 旧默认 40 连两份报告都不够，长时服务必然全线降级）。按自然日窗口不变。
         self.max_calls = max_calls if max_calls is not None else int(os.getenv('PHARMA_MODEL_MAX_CALLS','300'))
@@ -930,6 +1022,8 @@ class ModelGateway:
         return self._complete(system,user,operation,prompt_version or PROMPT_VERSION)
 
     def _complete(self,system,user,operation='generate',prompt_version=None):
+        from .model_settings import assert_network_allowed
+        assert_network_allowed(self.base_url)
         if not self.configured: raise RuntimeError('MODEL_NOT_CONFIGURED: 请配置本角色的模型和服务地址')
         if not self.available: raise RuntimeError('MODEL_KEY_NOT_SET')
         if self.parameter_errors: raise RuntimeError('MODEL_PARAMETERS_UNSUPPORTED: ' + '；'.join(self.parameter_errors))
@@ -986,6 +1080,9 @@ class ModelGateway:
                     attempt_status, attempt_error, http_status = 'FAILED', None, None
                     used_endpoint = _safe_endpoint(endpoint, self.key)
                     try:
+                        # Includes retries and fallbacks: an isolation toggle on
+                        # a running worker takes effect before its next request.
+                        assert_network_allowed(endpoint)
                         response = self.client.post(endpoint,headers=self._headers(),json=body,follow_redirects=False)
                         http_status = response.status_code
                         response.raise_for_status()
@@ -1210,7 +1307,7 @@ recommendation可为null；提供时须有suggestion、verification_target、exp
                 # explanation while its independently validated action is repaired.
                 if attempt and unit in accepted_units:continue
                 try:
-                    accepted=validate_findings([normalize_finding(value)],snapshot,sources)[0]
+                    accepted=validate_findings([normalize_finding(value)],snapshot,sources,excluded_evidence=excluded)[0]
                     if accepted['claim_type']=='recommendation' and not (accepted['suggestion'].strip() and accepted['verification_target'] and accepted['expected_evidence'] and accepted['department'] and accepted['deadline_basis']):
                         raise ValueError('recommendation lacks executable action fields')
                     accepted['origin']='model'

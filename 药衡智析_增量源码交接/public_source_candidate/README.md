@@ -1,3 +1,13 @@
+> 本机接续（2026-09-24）：修复包已接入，正在配置共享环境；本机测试尚未执行，人工检查与评分待进行。下文修复包结果为历史结果。视频、PPT：用户暂缓。本轮状态见应用 `docs/current_run.json`。
+
+# 当前验收 · 2026-09-24
+
+当前代码已整合队友 `d8054ba`。离线回归 601 通过、1 跳过，原题四场景 Word/PDF 与模拟 RPA 通过。完整比赛验收仍待真实模型、本地向量模型与真人三场景评分，本轮规则降级报告不能作为模型效果证明。
+
+当前证据见 [评测报告](docs/evaluation_report.md)、[实现状态](docs/implementation_status.md)、[运行索引](docs/current_run.json) 和 [四场景报告](docs/validation/delivery_verified_20260924/README.md)。本环境尚未推送修复，GitHub 写入返回 403。
+
+---
+
 # 当前工作台
 
 页面由三块悬浮面板构成：左侧导航与运行状态、中间固定筛选/分区导航及滚动正文、右侧多聊天标签。业务数据解析后自动汇入同一工作区，无需选择数据范围；旧表修正可指定替代版本并保留原件。聊天支持固定、关闭、历史、归档、确认删除及按轮跳转。详见 [三栏与统一数据合同](docs/adr/0005-unified-workspace-and-chat-lifecycle.md)。
@@ -10,19 +20,12 @@
 
 ---
 
-历史执行记录（2026-09-19）：当前运行 `delivery_20260919_final`，应用受测修订 `04011c2`。本机用户明确选择 DeepSeek，七次真实调用通过；最终七份 Word/PDF 使用同输入的已验证叙事缓存，新增模型请求为零。数值、检索、模型、模拟 RPA、浏览器与文件关联自动检查通过；真人三场景0—5归因/可读性/版式仍 PENDING，不能据此宣称比赛验收或获奖水平。
-
-当前交付位于 `07_交付/delivery_20260919_final/`（应用根相对路径）：59.16秒实际闭环视频、十页PPT及原生渲染、七份报告共38页、待评表。源码修复和边界见 Git根 `docs/repository/FIXES_20260919.md`。旧运行、旧GLM/DeepSeek和失败回执保持原始来源；下方较早记录为历史背景。
-
----
-
 # 药衡智析 · 产品成本智能分析报告系统
 
 **基于 RAG 与大模型的制药企业产品成本智能分析报告系统**（2026 年第二届重庆市 AI 大模型创新应用大赛 · 创灵境企业出题）。2026-09-22 三模块改版：系统专注制药赛题定制，界面收敛为 **数据中心（业务数据/知识库数据/报告模板）· 工作台（数据分析/跨厂对标/报告生成/问题整改）· 模型配置（数据提取模型/数据分析模型/向量模型）**；不再出现行业包选择与合成演示数据——数据不足时按“证据支持假设/证据不足”合同输出归因推测。行业包架构（`industry_packs/`、受信策略、企业注册合同）在代码层完整保留，供其他行业改装复用（见 `docs/industry/development.md`）。
 
 > **English summary** — Yaoheng Zhixi is a RAG + LLM powered product-cost analysis and reporting system for a pharmaceutical contest scenario. A deterministic Decimal cost engine feeds an evidence-bound report pipeline (Word/PDF), an ECharts dashboard with attribution/waterfall/heatmap, a cross-factory three-step benchmark, and an RPA task loop against a local simulator. Bonus features implemented: knowledge-graph enhanced retrieval, multi-model routing, agent report-or-dashboard decision, and Holt-based cost forecasting. All numbers are program-owned; the model only picks references and wording under a strict validator contract.
 
-> 2026-09-19审计：功能存在不等于赛题全部通过。当前热力图缺产品×月份交叉；告警解释在生成报告后覆盖，页面阈值自动触发仍需补齐；预测与证据合同另有缺陷。当前记录和历史展示材料来自不同批次，见[本次审计](../../docs/repository/AUDIT_20260919.md)。
 
 ## 功能总览 / Feature Map
 

@@ -18,7 +18,7 @@ from .config import ROOT, PACKAGE, RUNTIME
 
 EMBEDDING_SHA = 'a48549b3259a6165364f226599cd91f39923d5d5'
 PARSER_VERSION = 'scope-prefilter-v9-workspace-source-provenance'
-RETRIEVER_VERSION = 'bm25-chroma-prefilter-rrf-v6-chunk-cache'
+RETRIEVER_VERSION = 'bm25-chroma-prefilter-rrf-v7-vector-completeness'
 # 分块解析与适用性进程内有界缓存（2026-09-23 审计 AUD-KB-01）：此前每次
 # search 全量 SELECT+反序列化所有 chunk 并逐个重算 evidence_applicability
 # （含产品子串匹配），知识库增长后线性劣化。键含知识版本指纹——增删文档、
@@ -270,10 +270,15 @@ def tokenize(text):
 class CpuEmbedding:
     def __init__(self, path):
         import onnxruntime as ort
+        ort.disable_telemetry_events()
         from tokenizers import Tokenizer
+        from .model_settings import embedding_onnx_path
         options = ort.SessionOptions()
         options.intra_op_num_threads = 4
-        self.session = ort.InferenceSession(str(path / 'model_quantized.onnx'), sess_options=options, providers=['CPUExecutionProvider'])
+        onnx_path = embedding_onnx_path(Path(path))
+        if onnx_path is None:
+            raise ValueError('EMBEDDING_ONNX_MISSING')
+        self.session = ort.InferenceSession(str(onnx_path), sess_options=options, providers=['CPUExecutionProvider'])
         self.tokenizer = Tokenizer.from_file(str(path / 'tokenizer.json'))
         self.tokenizer.enable_padding(pad_id=0, pad_token='[PAD]')
         self.tokenizer.enable_truncation(max_length=512)
@@ -457,7 +462,13 @@ class Knowledge:
             # 双重检查：同进程并发首建时，后到者在进程锁上等待，前者建完即已是
             # 新鲜索引——不再重复做一次全量嵌入（2026-09-24 审查修复）。
             if self._inputs_fresh():
-                return self.status()
+                record = self.status()
+                if record.get('status') == 'PASS' or (not self.vector_enabled and not record.get('failures')):
+                    return record
+                # Explicit rebuilds retry a failed vector stage even when the
+                # source files did not change (for example after a transient
+                # runtime failure). Ordinary BM25 searches can keep this index.
+                self._embedding, self._collection = None, None
             return self._build(progress)
 
     def _sources(self):
@@ -632,11 +643,18 @@ class Knowledge:
         by-id 映射随索引版本缓存（与 search 的分块缓存同一策略与上限）。
         """
         try:
-            instance = cls(context=context)
+            if context:
+                # Uploaded/industry workspaces use an explicit base knowledge
+                # entry, which is part of their index namespace. Resolve the
+                # same instance as ordinary retrieval, not a competing index.
+                from .context_services import knowledge_for_context
+                instance = knowledge_for_context(context)
+            else:
+                instance = cls()
         except Exception:
             return None
         version = instance.version
-        if not version:
+        if not version or not instance._inputs_fresh():
             return None
         target = instance.path / version
         index_key = (str(target), version, 'by-evidence-id')
@@ -657,7 +675,8 @@ class Knowledge:
             finally:
                 db.close()
             _cache_put(index_key, chunks_by_id, _CHUNK_CACHE)
-        return chunks_by_id.get(str(evidence_id))
+        import copy
+        return copy.deepcopy(chunks_by_id.get(str(evidence_id)))
 
     def _inputs_fresh(self):
         """当前来源/解析器/术语/向量指纹与已建索引一致（无索引时恒 False）。"""
@@ -689,6 +708,7 @@ class Knowledge:
             _manifest = json.loads((target/'manifest.json').read_text(encoding='utf-8'))
             embedding_label = (_manifest.get('embedding') or {}).get('sha') or EMBEDDING_SHA
         except (OSError, ValueError):
+            _manifest = {}
             embedding_label = EMBEDDING_SHA
         index_key = (str(target), version)
         db = sqlite3.connect(target/'fts.sqlite')
@@ -719,7 +739,13 @@ class Knowledge:
         finally:
             db.close()  # leaked handles block index replacement on Windows
         vec, error = [], None
-        if mode != 'bm25' and self.vector_enabled and eligible:
+        if mode != 'bm25' and not self.vector_enabled:
+            error = 'VECTOR_DISABLED'
+        elif mode != 'bm25' and _manifest.get('vector_error'):
+            # A failed batch may leave a queryable but incomplete collection.
+            # Its existence cannot turn a degraded build into a hybrid PASS.
+            error = 'VECTOR_INDEX_INCOMPLETE: ' + str(_manifest['vector_error'])
+        elif mode != 'bm25' and eligible:
             try:
                 import chromadb
                 if self._collection is None or self._collection[0] != version:
@@ -729,7 +755,6 @@ class Knowledge:
                 vec = [k for k in result['ids'][0] if k in eligible]
             except Exception as exc:
                 error = type(exc).__name__
-        elif mode != 'bm25' and not self.vector_enabled: error = 'VECTOR_DISABLED'
         rankings = [bm25[:20],vec[:20]] if mode == 'hybrid' else [vec if mode == 'vector' else bm25]
         # Exact document/parameter questions favour lexical anchors; semantic
         # candidates still contribute. These fixed weights are not fit on gold.

@@ -7,7 +7,7 @@ from pharma.revision import revision_record
 from pharma.local_validation import require_loopback,require_simulation,local_opener
 
 def main():
- p=argparse.ArgumentParser();p.add_argument('--run-id',required=True);p.add_argument('--output-dir',type=Path,required=True);p.add_argument('--private-scenarios',type=Path);p.add_argument('--base-url',default='http://127.0.0.1:8765');a=p.parse_args()
+ p=argparse.ArgumentParser();p.add_argument('--run-id',required=True);p.add_argument('--output-dir',type=Path,required=True);p.add_argument('--scenarios','--private-scenarios',dest='scenarios',type=Path,help='场景JSON；缺省使用比赛配置中的真实题包场景');p.add_argument('--include-synthetic',action='store_true',help='显式附加隔离合成回归场景，不作为比赛演示');p.add_argument('--base-url',default='http://127.0.0.1:8765');a=p.parse_args()
  base=require_loopback(a.base_url);opener=local_opener();revision=revision_record(ROOT)
  a.output_dir.mkdir(parents=True,exist_ok=True);path=a.output_dir/'manifest.json'
  if path.exists():p.error('Existing run manifest is immutable; use a new run/output directory')
@@ -16,8 +16,11 @@ def main():
   req=urllib.request.Request(base+route,data=json.dumps(data).encode() if data is not None else None,headers={'Content-Type':'application/json'})
   with opener.open(req,timeout=180) as response:return response.read() if raw else json.load(response)
  require_simulation(call('/health'))
- scenarios=[{'id':i,'context_id':c,'product':'DEMO-01','month':'2026-06','analysis_type':'monthly'} for i,c in [('mechanical','mechanical_demo:synthetic-mechanical'),('chemical','chemical_demo:synthetic-chemical'),('pharma_synthetic','pharmaceutical:synthetic-pharma')]]
- if a.private_scenarios:scenarios+=json.loads(a.private_scenarios.read_text())
+ scenario_file=a.scenarios or ROOT/'competition_configuration/scenarios.json'
+ scenarios=json.loads(scenario_file.read_text(encoding='utf-8'))
+ if not scenarios:raise ValueError('NO_ACCEPTANCE_SCENARIOS')
+ if a.include_synthetic:
+  scenarios += [{'id':i,'context_id':c,'product':'DEMO-01','month':'2026-06','analysis_type':'monthly'} for i,c in [('mechanical','mechanical_demo:synthetic-mechanical'),('chemical','chemical_demo:synthetic-chemical'),('pharma_synthetic','pharmaceutical:synthetic-pharma')]]
  if len({x['id'] for x in scenarios})!=len(scenarios):raise ValueError('DUPLICATE_SCENARIO')
  result=[]
  for row in scenarios:

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Button, Form, Input, InputNumber, Select, Space, Tag, Collapse, Switch } from 'antd';
 import { ApiOutlined, CheckCircleOutlined, SaveOutlined } from '@ant-design/icons';
 import { api } from './api';
@@ -13,15 +13,26 @@ const initial = { model: '', base_url: '', protocol: 'openai', api_key: '', key_
 /** Keys are ephemeral input state. Saving/testing sends only the chosen route; no browser persistence. */
 export default function ModelConfigForm({ route, onSaved }: { route: Route; onSaved?: () => void }) {
   const [form, setForm] = useState(initial);
+  const [loading, setLoading] = useState(true);
+  const activeRoute = useRef(route), loadSequence = useRef(0);
+  activeRoute.current = route;
   const [contextWindow,setContextWindow]=useState<number|undefined>(undefined);
   const [presets, setPresets] = useState<any>(null), [current, setCurrent] = useState<any>(null);
   const [vendor, setVendor] = useState(''), [busy, setBusy] = useState(''), [error, setError] = useState(''), [notice, setNotice] = useState('');
   const [result, setResult] = useState<any>(null), [models, setModels] = useState<string[]>([]);
   const load = async (signal?: AbortSignal) => {
-    const [status, options] = await Promise.all([api('/settings/models', undefined, signal), api('/settings/models/presets', undefined, signal)]);
-    const c = status.connections?.[route] ?? {};
-    setCurrent(c); setPresets(options); setVendor(c.vendor ?? ''); setContextWindow(c.model_context_windows?.[c.model]??undefined);
-    setForm({ ...initial, ...Object.fromEntries(Object.keys(initial).filter(k => !['api_key', 'key_file', 'clear_api_key'].includes(k)).map(k => [k, c[k] ?? (initial as any)[k]])) });
+    if (signal?.aborted || activeRoute.current !== route) return;
+    const request = ++loadSequence.current;
+    setLoading(true);
+    try {
+      const [status, options] = await Promise.all([api('/settings/models', undefined, signal), api('/settings/models/presets', undefined, signal)]);
+      if (signal?.aborted || request !== loadSequence.current || activeRoute.current !== route) return;
+      const c = status.connections?.[route] ?? {};
+      setCurrent(c); setPresets(options); setVendor(c.vendor ?? ''); setContextWindow(c.model_context_windows?.[c.model]??undefined);
+      setForm({ ...initial, ...Object.fromEntries(Object.keys(initial).filter(k => !['api_key', 'key_file', 'clear_api_key'].includes(k)).map(k => [k, c[k] ?? (initial as any)[k]])) });
+    } finally {
+      if (!signal?.aborted && request === loadSequence.current && activeRoute.current === route) setLoading(false);
+    }
   };
   useEffect(() => { const controller = new AbortController(); setError(''); setResult(null); setNotice(''); void load(controller.signal).catch(e => { if (!controller.signal.aborted) setError(e.message); }); return () => { controller.abort(); }; }, [route]);
   const vendors = useMemo(() => [...(presets?.api_vendors ?? []), ...(presets?.local_vendors ?? [])], [presets]);
@@ -38,6 +49,7 @@ export default function ModelConfigForm({ route, onSaved }: { route: Route; onSa
     return entry;
   };
   const run = async (action: 'save' | 'test' | 'list') => {
+    if (loading || busy) return;
     setBusy(action); setError(''); setNotice('');
     try {
       if (action === 'save') {
@@ -58,7 +70,8 @@ export default function ModelConfigForm({ route, onSaved }: { route: Route; onSa
     {notice && <Alert type="success" showIcon title={notice} />}
     {current?.parameter_warnings?.map((warning: any, i: number) => <Alert key={i} type="warning" showIcon title={typeof warning === 'string' ? warning : warning.message} />)}
     {current?.configured && current?.effective?.model && <p className="muted">当前生效型号：{current.effective.model}。修改表单后，保存才会用于新任务。</p>}
-    <Form layout="vertical" className="model-form" onFinish={() => run('save')}>
+    {loading && <p role="status">正在读取当前模型连接…</p>}
+    <Form layout="vertical" className="model-form" disabled={loading || !!busy} aria-busy={loading} onFinish={() => run('save')}>
       <Form.Item label="快速填写厂商或本地服务"><Select value={vendor || undefined} allowClear placeholder="也可以直接填写下方连接" options={vendors.map(v => ({ value: v.id, label: v.label }))} onChange={id => { setVendor(id ?? ''); const v = vendors.find(v => v.id === id); if (v) setForm(f => ({ ...f, base_url: v.base_url, protocol: v.protocol ?? 'openai' })); }} /></Form.Item>
       <div className="form-grid">
         <Form.Item label="模型名称" required><Input aria-label="模型名称" list={`models-${route}`} value={form.model} onChange={e => set('model', e.target.value)} placeholder="如 glm-5.3；支持自由输入" autoComplete="off" /><datalist id={`models-${route}`}>{modelOptions.map(model => <option key={model} value={model} />)}</datalist></Form.Item>
@@ -82,7 +95,7 @@ export default function ModelConfigForm({ route, onSaved }: { route: Route; onSa
         <Form.Item label="受控密钥文件名（可选）" extra="仅填写后端受控目录中的文件名，例如 assistant.key。留空保留现有密钥；不接受完整路径。"><Input value={form.key_file} onChange={e => set('key_file', e.target.value)} placeholder="assistant.key" /></Form.Item>
         <Space><Switch checked={form.clear_api_key} onChange={v => set('clear_api_key', v)} /><span>保存时解除此连接的已存密钥引用</span></Space>
       </> }]} />
-      <div className="button-row model-actions"><Button icon={<ApiOutlined />} loading={busy === 'list'} disabled={!!busy} onClick={() => run('list')}>读取模型列表</Button><Button loading={busy === 'test'} disabled={!!busy} onClick={() => run('test')}>测试连接</Button><Button type="primary" icon={<SaveOutlined />} htmlType="submit" loading={busy === 'save'} disabled={!!busy}>保存设置</Button></div>
+      <div className="button-row model-actions"><Button icon={<ApiOutlined />} loading={busy === 'list'} disabled={loading || !!busy} onClick={() => run('list')}>读取模型列表</Button><Button loading={busy === 'test'} disabled={loading || !!busy} onClick={() => run('test')}>测试连接</Button><Button type="primary" icon={<SaveOutlined />} htmlType="submit" loading={busy === 'save'} disabled={loading || !!busy}>保存设置</Button></div>
       <p className="muted">测试连接会使用当前填写的连接发起一次短请求，可能计入厂商用量；保存不会发起模型生成。</p>
     </Form>
     {result && <Alert showIcon type={result.status === 'PASS' ? 'success' : 'error'} title={result.status === 'PASS' ? '连接测试通过' : '连接测试未通过'} description={<><p>{result.reason ?? `${result.returned_model ?? result.model ?? form.model}${result.elapsed_seconds !== undefined ? ` · ${result.elapsed_seconds} 秒` : ''}`}</p>{result.parameter_warnings?.map((w: any, i: number) => <p key={i}>{typeof w === 'string' ? w : w.message}</p>)}</>} />}

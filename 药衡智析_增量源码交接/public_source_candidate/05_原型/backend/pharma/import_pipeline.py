@@ -136,7 +136,7 @@ def _mapping_for(record: dict[str, Any]) -> tuple[dict[str, str], str]:
     sample: list[list[str]] = record['meta'].get('preview', {}).get('sample_rows') or []
     data_type = record['meta'].get('data_type', 'cost_summary')
     if data_type in DETAIL_TYPE_MAPPINGS:
-        fixed = {h: DETAIL_TYPE_MAPPINGS[data_type].get(h.strip(), '') for h in headers}
+        fixed = {h: data_import.preset_mapping_role(h, DETAIL_TYPE_MAPPINGS[data_type]) for h in headers}
         missing = [role for role in ('factory_id', 'product_id', 'period') if role not in fixed.values()]
         note = '固定映射（' + DATA_TYPE_LABELS.get(data_type, data_type) + '）'
         if missing or not any(str(v).startswith('element:') for v in fixed.values()):
@@ -177,8 +177,8 @@ def _options_for(record: dict[str, Any]) -> dict[str, Any]:
     data_type = record['meta'].get('data_type', 'cost_summary')
     options: dict[str, Any] = {'scenario': 'budget'} if data_type == 'budget' else {'scenario': 'actual'}
     headers = record['meta'].get('preview', {}).get('headers') or []
-    if any('万元' in str(h) for h in headers):
-        options['amount_scale'] = '10000'
+    # Currency multipliers are column-specific in data_import._amount_scale;
+    # a mixed 元/万元 table or an unrelated note must not rescale all costs.
     for header in headers:
         m = re.search(r'产量\(([^)）]+)\)', str(header))
         if m:
@@ -196,45 +196,45 @@ def _attribution_overview(context_id: str) -> dict[str, Any]:
     from .industry import analyze_reference, catalog as scoped_catalog
     options = scoped_catalog(context_id)
     alerts: list[dict[str, Any]] = []
-    for product in options.get('products', []):
-        months = [m for m in options.get('months', [])]
-        if not months:
-            continue
-        try:
-            snapshot = analyze_reference(context_id, factory=options['factories'][0],
-                                         product=product, month=months[-1],
-                                         analysis_type='monthly', basis='unit')
-        except (ValueError, KeyError, IndexError):
-            continue
-        for alert in snapshot.get('alerts', []) or []:
-            alerts.append({'product': product, **alert})
+    for factory in options.get('factories', []):
+        for product in options.get('products', []):
+            for month in sorted(options.get('months', []), reverse=True):
+                try:
+                    snapshot = analyze_reference(context_id, factory=factory, product=product,
+                                                 month=month, analysis_type='monthly', basis='unit')
+                except (ValueError, KeyError, IndexError):
+                    continue
+                for alert in snapshot.get('alerts', []) or []:
+                    alerts.append({'product': product, 'factory': factory, 'month': month, **alert})
+                break  # latest available actual month for this factory/product
     overview = {'context_id': context_id, 'alert_count': len(alerts), 'alerts': alerts[:60],
                 'attribution_mode': 'rules', 'hypotheses': []}
     for alert in alerts[:12]:
         element = alert.get('element') or alert.get('name') or '成本要素'
         rate = alert.get('rate') or alert.get('change_rate')
         overview['hypotheses'].append({
-            'element': element, 'basis': 'unit',
-            'hypothesis': f'{element}环比波动{("+" + str(rate)) if rate is not None else ""}严格超过±10%，需要核查业务原因；现有导入数据不足以证实因果。',
+            'alert_id': alert['alert_id'], 'element': element, 'basis': alert.get('basis', 'unit'),
+            'hypothesis': f'{element}的{"总额" if alert.get("basis") == "total" else "单位成本"}环比变动率为{rate}%，严格超过±10%；需要核查业务原因，现有导入数据不足以证实因果。',
             'missing_evidence': ['经核实的业务原因记录（采购/工艺/设备/质量）', '对应期间的原始明细与责任部门确认'],
             'suggestion': '按“证据支持假设”处理：先核查口径与原始记录，再决定是否立项整改。'})
     if alerts:
         gateway_note = _analysis_hypotheses(alerts)
         if gateway_note:
-            overview['hypotheses'] = gateway_note
+            by_alert = {item['alert_id']: item for item in gateway_note}
+            overview['hypotheses'] = [by_alert.get(item['alert_id'], item) for item in overview['hypotheses']]
             overview['attribution_mode'] = 'analysis_model'
     return overview
 
 
 def _analysis_hypotheses(alerts: list[dict[str, Any]]) -> list[dict[str, Any]] | None:
     """数据分析模型（大模型）归因推测：定性假设 + 缺失证据，失败回退规则文本。"""
-    from .narrative import ModelGateway
+    from .narrative import ModelGateway, _specific_missing, assert_uncertain_causality
     gateway = ModelGateway.for_route('analysis')
     if not getattr(gateway, 'available', bool(gateway.key)):
         return None
     system = ('你是制造企业成本归因分析助手。输入是确定性计算得到的成本要素环比告警（JSON）。'
-              '对每条告警给出定性归因推测与待核查证据清单。禁止编造任何数字或因果结论；'
-              '数字只能原样引用输入。只返回JSON对象 {"hypotheses": [{"element": str, '
+              '对每条告警给出定性归因推测与待核查证据清单，不认定已证实原因。数字由程序展示，文本不要写数字。'
+              '只返回JSON对象 {"hypotheses": [{"alert_id": str, '
               '"hypothesis": str, "missing_evidence": [str], "suggestion": str}]}。')
     user = json.dumps({'alerts': alerts[:12],
                        '要求': '假设必须说明“证据不足时不认定因果”，missing_evidence 至少一条'},
@@ -243,13 +243,31 @@ def _analysis_hypotheses(alerts: list[dict[str, Any]]) -> list[dict[str, Any]] |
         raw, _usage, _identity = gateway.complete(system, user, operation='import_attribution')
         data = _parse_json_object(raw)
         result = []
+        known = {alert['alert_id']: alert for alert in alerts[:12]}
         for item in data.get('hypotheses', [])[:12]:
             if not isinstance(item, dict) or not item.get('hypothesis'):
                 continue
-            result.append({'element': str(item.get('element', '')), 'basis': 'unit',
-                           'hypothesis': str(item['hypothesis'])[:500],
-                           'missing_evidence': [str(x)[:200] for x in (item.get('missing_evidence') or ['待核查的业务原因记录'])][:5],
-                           'suggestion': str(item.get('suggestion', ''))[:300]})
+            alert = known.get(item.get('alert_id'))
+            if alert is None:
+                continue
+            hypothesis, suggestion = str(item['hypothesis']), str(item.get('suggestion', ''))
+            missing = item.get('missing_evidence')
+            if not isinstance(missing, list) or any(not isinstance(x, str) for x in missing):
+                continue
+            _specific_missing(missing)
+            text = ' '.join([hypothesis, suggestion, *missing])
+            for field in ('element', 'product', 'factory'):
+                if alert.get(field):
+                    text = text.replace(str(alert[field]), '')
+            if (len(hypothesis) > 500 or len(suggestion) > 300 or len(missing) > 5
+                    or not re.search(r'可能|假设|尚不能|不足|待核|需核', hypothesis)
+                    or re.search(r'\d|百分之[零一二三四五六七八九十百千万亿两]+|[零一二三四五六七八九十百千万亿两]+(?:元|盒|粒|袋|支|小时|个月|倍)|已证实|必然|确定导致', text)):
+                continue
+            assert_uncertain_causality(hypothesis)
+            assert_uncertain_causality(suggestion)
+            result.append({'alert_id': alert['alert_id'], 'element': alert['element'], 'basis': alert.get('basis', 'unit'),
+                           'hypothesis': hypothesis, 'missing_evidence': missing, 'suggestion': suggestion,
+                           'evidence_support': 'unverified_import_hypothesis'})
         return result or None
     except Exception:
         return None
@@ -302,6 +320,7 @@ def run_data_parse(store, job):
             if validation['status'] != 'VALID':
                 reasons = '；'.join(e.get('reason', str(e)) for e in validation['errors'][:3])
                 raise StepFailure('质量校验', f'{record["filename"]}：{reasons}（共 {validation["error_count"]} 个错误）')
+            data_import._require_complete_amounts(record, validation)
             for factory in validation['statistics']['factories']:
                 if factory not in factories_seen:
                     factories_seen.append(factory)

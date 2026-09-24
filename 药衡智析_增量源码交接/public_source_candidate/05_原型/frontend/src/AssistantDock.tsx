@@ -320,7 +320,7 @@ export default function AssistantDock({ selection, onEvidence, onApplied, onConf
     const container = scroll.current, element = document.getElementById('assistant-message-' + id);
     if (!container || !element) return;
     followLatest.current = false; setAtLatest(false); setJumpedMessage(id);
-    container.scrollTo({ top: container.scrollTop + element.getBoundingClientRect().top - container.getBoundingClientRect().top - 44, behavior: 'smooth' });
+    container.scrollTo({ top: container.scrollTop + element.getBoundingClientRect().top - container.getBoundingClientRect().top - 44, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
     element.focus({ preventScroll: true });
   };
 
@@ -392,10 +392,10 @@ export default function AssistantDock({ selection, onEvidence, onApplied, onConf
       {usage?.limit_exceeded&&<Alert type="warning" showIcon title="预估内容超过当前上下文窗口，请缩短问题或新建对话。"/>}
       {error && <Alert type="error" showIcon title={error} action={!busy && retryText && !loadingChat ? <Button size="small" onClick={() => send(retryText)}>重试</Button> : undefined} />}
       </div>
-      {!atLatest && !!conversation?.messages?.length && <button type="button" className="assistant-jump-latest" onClick={() => { followLatest.current = true; setAtLatest(true); setJumpedMessage(''); scroll.current?.scrollTo({ top: scroll.current.scrollHeight, behavior: 'smooth' }); }}>回到最新 <DownOutlined /></button>}
+      {!atLatest && !!conversation?.messages?.length && <button type="button" className="assistant-jump-latest" onClick={() => { followLatest.current = true; setAtLatest(true); setJumpedMessage(''); scroll.current?.scrollTo({ top: scroll.current.scrollHeight, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' }); }}>回到最新 <DownOutlined /></button>}
     </div>
     <div className="assistant-composer"><div className="assistant-context"><span title={validSelection ? scope(selection) : undefined}>{validSelection ? scope(selection) : '导入并解析业务数据后即可开始分析'}</span></div>
-      <div className="assistant-input-box"><Input.TextArea aria-label="向 AI 助手提问" title="Enter 发送；Shift + Enter 换行" variant="borderless" placeholder="询问当前数据，或提出下一步操作…" autoSize={{ minRows: 3, maxRows: 8 }} value={draft} maxLength={6000} onChange={e => changeDraft(e.target.value)} disabled={loadingChat || creating} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void send(); } }} />
+      <div className="assistant-input-box"><Input.TextArea key={loadingChat || creating ? 'loading' : 'ready'} aria-label="向 AI 助手提问" title="Enter 发送；Shift + Enter 换行" variant="borderless" placeholder="询问当前数据，或提出下一步操作…" autoSize={{ minRows: 3, maxRows: 8 }} value={draft} maxLength={6000} onChange={e => changeDraft(e.target.value)} disabled={loadingChat || creating} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void send(); } }} />
       <div className="assistant-input-toolbar">
       <Tooltip trigger={['hover','focus']} title={usage?.context_window ? <div>本轮输入估算：{usage.estimated_input_tokens??usage.used_tokens??'—'} tokens（圆环弧长仅表示输入占用）<br/>配置容量：{usage.context_window} tokens<br/>预留输出：{usage.max_output_tokens??'—'} tokens<br/>剩余：{usage.available_tokens??'—'} tokens（颜色按扣除输出预留后的余量变化）<br/>{usage.estimate_note??'输入量为估算，实际消耗以服务商返回为准。'}{usage.last_usage?.total_tokens?<><br/>上次服务端用量：{usage.last_usage.total_tokens} tokens（不是本轮估算）</>:null}</div> : '当前型号未配置上下文窗口，容量与剩余量未知。可在模型连接中按服务商说明填写。'}>
        <button type="button" className="assistant-context-indicator" aria-label={usage?.context_window ? `上下文：估算输入 ${usage.estimated_input_tokens??usage.used_tokens??'未知'} tokens，容量 ${usage.context_window}，预留输出 ${usage.max_output_tokens??'未知'}，剩余 ${usage.available_tokens??'未知'}` : '上下文窗口未知；聚焦查看说明'}>

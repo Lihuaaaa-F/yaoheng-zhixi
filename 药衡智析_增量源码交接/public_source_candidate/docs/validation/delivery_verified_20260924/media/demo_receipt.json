@@ -1,0 +1,117 @@
+{
+  "status": "RECORDED_AND_VERIFIED",
+  "commit": "2087978854a7b091191aba94568418d6730204d3",
+  "run_id": "delivery_verified_20260924",
+  "attempt_id": "b4384b62727447fa8941c6e55235660a",
+  "video": "/workspace/scratch/cd4db07786b4/delivery_audit_20260924/frontend_qa/delivery_demo/delivery-demo-2087978.webm",
+  "duration_seconds": 110.88,
+  "viewport": [
+    1440,
+    900
+  ],
+  "provider": "Local Playwright Chromium 138 recordVideo and system FFmpeg; real browser input/waits; no time acceleration",
+  "overlays": "Chinese step captions and pointer synchronized to real browser mousemove events; no changes to application data/status",
+  "original_actions_unchanged": true,
+  "original_report_jobs_unchanged": true,
+  "original_actions_sha256": "475abd2a0cfd42daae15e39d8a66320cd7a5174253f58b2db0caf496695fdc1f",
+  "original_jobs_sha256": "e12277850cc3bb2a53a2b9803fe8c5c22ace5a86e840884d098cf03c10cd9256",
+  "benchmark_explanation_jobs": [
+    "f1c7753bdbde4269b9e90330897cc0fd"
+  ],
+  "downloads": [
+    {
+      "scenario": "S1",
+      "job_id": "5151b00532ee4da6be6c24269de93371",
+      "artifact_id": "5151b00532ee4da6be6c24269de93371-docx",
+      "bytes": 264825,
+      "path": "/workspace/scratch/cd4db07786b4/delivery_audit_20260924/frontend_qa/delivery_demo/S1-downloaded.docx"
+    },
+    {
+      "scenario": "S1",
+      "job_id": "5151b00532ee4da6be6c24269de93371",
+      "artifact_id": "5151b00532ee4da6be6c24269de93371-pdf",
+      "bytes": 1362518,
+      "path": "/workspace/scratch/cd4db07786b4/delivery_audit_20260924/frontend_qa/delivery_demo/S1-downloaded.pdf"
+    }
+  ],
+  "scenes": [
+    {
+      "second": 1.49,
+      "title": "01  成本看板｜银黄口服液 · 中药一厂 · 2026 年 5 月",
+      "detail": "真实本地界面 · 原始赛题数据 · 模型降级公开 · 无真人签收或评分"
+    },
+    {
+      "second": 8.49,
+      "title": "02  重点分析｜成本要素环比严格超过 ±10% 自动提示",
+      "detail": "真实本地界面 · 原始赛题数据 · 模型降级公开 · 无真人签收或评分"
+    },
+    {
+      "second": 17.79,
+      "title": "03  跨厂对标 · 第一步｜同产品、同期间，先比较差异",
+      "detail": "真实本地界面 · 原始赛题数据 · 模型降级公开 · 无真人签收或评分"
+    },
+    {
+      "second": 27.46,
+      "title": "04  跨厂对标 · 第二步｜按成本要素拆解差异",
+      "detail": "真实本地界面 · 原始赛题数据 · 模型降级公开 · 无真人签收或评分"
+    },
+    {
+      "second": 36.82,
+      "title": "05  跨厂对标 · 第三步｜原因假设与建议，逐项核查证据",
+      "detail": "无有效模型密钥：保留规则分析；候选证据不代表因果已证实"
+    },
+    {
+      "second": 45.25,
+      "title": "06  报告历史｜查看正式终验的原始报告与逐项状态",
+      "detail": "真实本地界面 · 原始赛题数据 · 模型降级公开 · 无真人签收或评分"
+    },
+    {
+      "second": 55.79,
+      "title": "07  实际下载 Word 与 PDF｜模型未通过、人工待评如实保留",
+      "detail": "真实本地界面 · 原始赛题数据 · 模型降级公开 · 无真人签收或评分"
+    },
+    {
+      "second": 65.12,
+      "title": "08  整改任务看板｜已生成、模拟通知、责任人确认分别计数",
+      "detail": "真实本地界面 · 原始赛题数据 · 模型降级公开 · 无真人签收或评分"
+    },
+    {
+      "second": 75.57,
+      "title": "09  已有模拟送达回执｜接口接收与模拟通知可核查",
+      "detail": "只读展示最终 S1 原任务；没有重新发送、登记真人确认或声称整改完成"
+    },
+    {
+      "second": 88.87,
+      "title": "10  业务数据入口｜上传、解析与版本管理",
+      "detail": "真实本地界面 · 原始赛题数据 · 模型降级公开 · 无真人签收或评分"
+    },
+    {
+      "second": 96.8,
+      "title": "11  知识库入口｜导入文档、检索证据与适用性核查",
+      "detail": "真实本地界面 · 原始赛题数据 · 模型降级公开 · 无真人签收或评分"
+    },
+    {
+      "second": 104.76,
+      "title": "演示结束｜当前交付版本 2087978",
+      "detail": "数值计算、Word/PDF 下载与模拟 RPA 可复核；真实模型参与及人工验收仍待完成"
+    }
+  ],
+  "errors": [],
+  "limitations": [
+    "Models lack a valid key: rules/degraded analysis is shown openly; this is not live-model acceptance.",
+    "The RPA receipt is the official local simulator notification, not real external delivery or human acknowledgement.",
+    "No human scores/signatures were entered. Business/knowledge pages are entry demonstrations; earlier separate flow receipts verify import/search.",
+    "Cross-factory UI may create its own asynchronous explanation job; original four report/task records are unchanged."
+  ],
+  "scope": "Current genuine application screens: dashboard, focus, benchmark 3 steps, history and Word/PDF downloads, existing simulated RPA receipts, business/knowledge entrypoints.",
+  "video_bytes": 7674164,
+  "video_sha256": "cc232aae9b3f44f70a0c102814f9a94e47980a6d962dc4a8d24149219119be11",
+  "decode_validation": {
+    "status": "PASS",
+    "tool": "ffmpeg -v error -i VIDEO -f null -",
+    "exit_code": 0,
+    "sample_frame": "video-check-65s.png",
+    "codec": "vp8",
+    "fps": 25
+  }
+}

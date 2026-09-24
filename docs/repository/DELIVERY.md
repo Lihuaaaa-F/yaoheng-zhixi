@@ -1,27 +1,19 @@
-当前交付与运行已更新：见 [执行结果](FIXES_20260919.md)。以下旧审计来源保留，当前入口以应用 docs/current_run.json 为准。
+# 比赛交付导航 · 2026-09-24
 
-# 比赛交付导航
+本轮代码已整合队友 `d8054ba`，实测修订为本地 `2087978`。当前离线链路可供团队复验，完整比赛验收尚未通过。GitHub 写入返回 403，补丁尚需由有权限的连接应用并正常推送。
 
-开发审计基线：cdd9cb9（2026-09-19核验）；运行版本与媒体来源分别记录，不把日期相同当成同一次生成。
-
-| 交付项 | 当前入口 | 判断 |
+| 交付项 | 当前入口 | 状态 |
 |---|---|---|
-| 系统源码及启动依赖 | [应用README](../../药衡智析_增量源码交接/public_source_candidate/README.md) | 已存在；本次未整机复跑 |
-| 技术架构/RAG/Prompt/模板/API | [架构](../../药衡智析_增量源码交接/public_source_candidate/docs/architecture.md)、[文档索引](../../药衡智析_增量源码交接/public_source_candidate/README.md#文档索引--documentation) | 有实现说明，专业能力以审计边界为准 |
-| 最新自动运行 | [current_run](../../药衡智析_增量源码交接/public_source_candidate/docs/current_run.json) | 5974275存档七维PASS；本轮纠正七job映射，没有重新实调 |
-| 正式评测说明 | [evaluation_report](../../药衡智析_增量源码交接/public_source_candidate/docs/evaluation_report.md) | 真人归因0–5、可读性、版式仍PENDING；competition_ready=false |
-| 七份静态DOCX/PDF及页图 | [release_20260918](../../药衡智析_增量源码交接/public_source_candidate/07_交付/release_20260918/README.md) | 来源47c5806 DeepSeek解释，随6ff894f发布；不等于5974275 GLM报告 |
-| 演示视频 | [媒体目录](../../药衡智析_增量源码交接/public_source_candidate/07_交付/demo_20260918/README.md) | 实测100.56秒字幕视频；缺实际新RPA发送动作，需补录 |
-| 决赛PPT | 同上，10页PPTX与原生渲染 | 有可读稿，需增加实证结果与业务证据页 |
-| 第三方许可 | [third_party_reuse](../../药衡智析_增量源码交接/public_source_candidate/docs/third_party_reuse.md) | 保留各组件声明；项目自有代码总许可证待团队决定 |
+| 源码与启动依赖 | [应用 README](../../药衡智析_增量源码交接/public_source_candidate/README.md) | Linux 原生启动与依赖实测，Docker/Windows 本轮未实跑 |
+| 技术方案与 API | [架构](../../药衡智析_增量源码交接/public_source_candidate/docs/architecture.md)、[API](../../药衡智析_增量源码交接/public_source_candidate/docs/api_and_operations.md) | 既有实现说明与当前审计边界一起阅读 |
+| 当前验收 | [运行索引](../../药衡智析_增量源码交接/public_source_candidate/docs/current_run.json) | 五自动维度 PASS，模型/混合检索 FAIL，真人 PENDING |
+| 评测及逐条赛题 | [评测](../../药衡智析_增量源码交接/public_source_candidate/docs/evaluation_report.md)、[审计](DELIVERY_AUDIT_20260924.md) | 实测证据和外部缺口明确分开 |
+| 本轮四场景 Word/PDF | [报告与证据](../../药衡智析_增量源码交接/public_source_candidate/docs/validation/delivery_verified_20260924/README.md) | 规则降级，8 文件生成与实际下载通过 |
+| 本轮演示与答辩稿 | 当前媒体路径见运行索引 | 演示保留本轮模型与向量降级提示 |
+| 历史演示 | `07_交付/demo_20260920/yaoheng_full_demo_20260920.mp4`（应用根） | 2分50秒历史全流程，不记为本轮验证 |
+| 历史十页 PPT | `07_交付/delivery_20260919_final/deck/药衡智析_演示与答辩稿.pptx` | 保留旧来源，不将旧指标移用到当前代码 |
+| 真人待评 | [待评表](../../药衡智析_增量源码交接/public_source_candidate/docs/validation/delivery_verified_20260924/human_review_pending.csv) | S1/S2/S3 归因、可读性与版式由真人署名填写 |
 
-## 证据范围
+报告、检索、模型、模拟 RPA、浏览器回执已按同一 run/commit/attempt/job/snapshot/artifacts 关联。没有把历史失败改为通过，没有把旧调用记为新调用。模拟送达不等于真人确认或业务整改完成。
 
-manifest与verification的七个job一致；本轮已把current_run同步到这一映射，错误旧条目另存作来源未确认记录。模型/检索/RPA/浏览器回执多数只有run/commit级绑定，缺逐job及产物字节关联，不能据此声称完整链条已独立重验。
-
-本次审计修复文档不会把历史FAIL或PENDING改成实际运行PASS。旧47c/6ff报告、v18b、air2、5974275分别保留来源；air2为6/7、verify退出1。仓库检查CI只验证入口/索引/媒体哈希，不替代222项应用测试、模型API、浏览器和真人评分。
-
-正式提交前：修复AUDIT列出的业务问题；用同一次运行绑定报告、模型/检索、RPA与媒体；真人完成三场景归因评分；补录发送动作并更新答辩证据。清理待批准文件和整合main按CLEANUP_PROPOSAL执行，不先删除原件。
-
-
-2026-09-19 治理更新：C02 的 7 份知识 PDF 使用 PACKAGE 原件，路径映射见 `docs/repository/deduplication_mapping.json`（Git 根相对路径）；CSV 与原 ZIP 保留。C05 另绘阅读 PDF/10 张 PNG 已归档移除，当前阅读使用 `pptx_render` 原生渲染；旧阅读版身份保留于媒体历史清单。默认生成仅 PPTX，`--reading-preview` 可选预览输出到忽略的 `_reading_preview/`。
+原题资源保持原样，原有媒体清单不改写。仓库自有代码许可证仍由团队决定，各第三方声明继续保留。`tools/verify_repository.py` 仅检查导航、索引和既有媒体身份，不能代替应用或人工验收。

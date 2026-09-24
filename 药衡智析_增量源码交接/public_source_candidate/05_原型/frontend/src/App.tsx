@@ -86,7 +86,7 @@ export default function App() {
     scrollRef.current?.scrollTo({ top: 0, behavior: 'instant' });
     setActiveSection('g-overview');
     const content = contentRef.current;
-    if (!content) return;
+    if (!content || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const animation = content.animate([{ opacity: 0.3, transform: 'translateY(5px)' }, { opacity: 1, transform: 'translateY(0)' }], { duration: 190, easing: 'cubic-bezier(.22,.75,.2,1)' });
     return () => animation.cancel();
   }, [page, modelTab]);
@@ -176,7 +176,7 @@ export default function App() {
     if (section instanceof HTMLDetailsElement) section.open = true;
     setActiveSection(id);
     const top = section.getBoundingClientRect().top - scroll.getBoundingClientRect().top + scroll.scrollTop - 4;
-    scroll.scrollTo({ top, behavior: 'smooth' });
+    scroll.scrollTo({ top, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
   };
   const trackSection = () => {
     if (page !== 'analysis') return;

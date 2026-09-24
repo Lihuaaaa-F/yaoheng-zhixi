@@ -92,16 +92,39 @@ def _intranet_host(base: str) -> bool:
         return False
     if not host:
         return False
-    if host in ('localhost', '::1', '0.0.0.0', 'host.docker.internal') or host.endswith('.local') or host.endswith('.lan'):
-        return True
-    if '.' not in host:  # 局域网单标签主机名，如 http://ollama:11434
-        return True
     try:
         import ipaddress
         address = ipaddress.ip_address(host)
     except ValueError:
-        return False
+        # Parse IP literals first: a public IPv6 address also has no dot.
+        return (host in ('localhost', 'host.docker.internal')
+                or host.endswith(('.local', '.lan')) or ('.' not in host and ':' not in host))
     return address.is_private or address.is_loopback or address.is_link_local
+
+
+def assert_network_allowed(base: str) -> None:
+    """Check the current isolation policy immediately before outbound I/O."""
+    if not network_isolation()['isolation']:
+        return
+    reason = 'NETWORK_ISOLATION_BLOCKED: 内网隔离已开启，仅允许本机/局域网模型端点'
+    if not _intranet_host(base):
+        raise RuntimeError(reason)
+    from urllib.parse import urlsplit
+    import ipaddress
+    import socket
+    host = urlsplit(base).hostname or ''
+    try:
+        ipaddress.ip_address(host)
+        return
+    except ValueError:
+        pass
+    try:
+        addresses = socket.getaddrinfo(host, urlsplit(base).port or 443, type=socket.SOCK_STREAM)
+    except OSError:
+        raise RuntimeError(reason + '；无法确认该主机的内网地址') from None
+    if not addresses or any(not _intranet_host('https://[' + row[4][0] + ']' if ':' in row[4][0]
+                                              else 'https://' + row[4][0]) for row in addresses):
+        raise RuntimeError(reason + '；该主机解析到了非内网地址')
 
 
 def network_isolation() -> dict[str, Any]:
@@ -399,6 +422,7 @@ def status() -> dict[str, Any]:
             'effective_key_set': bool(gateway.key),
             'key_file': Path(configured['key_file']).name if configured.get('key_file') else '',
             'independent': route == 'assistant', 'available': gateway.available,
+            'network_blocked': gateway.network_blocked,
             'effective': {'model': gateway.model, 'base_url': gateway.base_url,
                           'protocol': gateway.provider, **gateway.generation_parameters},
             'parameter_warnings': gateway.parameter_warnings + gateway.parameter_errors,
@@ -431,6 +455,8 @@ def test_connection(route: str = 'analysis', overrides: dict[str, Any] | None = 
     from .narrative import ModelGateway
     route = canonical_route(route)
     gateway = _candidate_gateway(route, overrides)
+    if gateway.network_blocked:
+        return {'status': 'BLOCKED', 'reason': '内网隔离已阻止该云端连接，请配置本机/局域网端点或关闭隔离'}
     if not gateway.configured:
         return {'status': 'NOT_CONFIGURED', 'reason': '请填写本角色的模型型号和服务地址'}
     if not gateway.available:
@@ -475,6 +501,7 @@ def list_remote_models(route: str = 'analysis', overrides: dict[str, Any] | None
     if not base or (not gateway.key and not _loopback_host(base)):
         return {'status': 'UNAVAILABLE', 'reason': '请填写本角色服务地址与密钥', 'hint': '仍可手动填写模型 ID'}
     try:
+        assert_network_allowed(base)
         with httpx.Client(timeout=10, trust_env=False) as client:
             response = client.get(base + '/models', headers=gateway._headers(), follow_redirects=False)
         response.raise_for_status()
@@ -540,6 +567,11 @@ def clear_vector_model() -> None:
         _atomic_write(SETTINGS_PATH, json.dumps(data, ensure_ascii=False, indent=2))
 
 
+def embedding_onnx_path(directory: Path) -> Path | None:
+    return next((directory / name for name in ('model_quantized.onnx', 'onnx/model_quantized.onnx', 'model.onnx')
+                 if (directory / name).is_file()), None)
+
+
 def _probe_dimension_cached(directory: Path) -> int | None:
     """向量维度惰性探测（带缓存）：默认模型目录无 config.json（Xenova 布局
     常只有 onnx+tokenizer），从 ONNX 输出形状读最后一维；按资产指纹缓存到
@@ -555,12 +587,12 @@ def _probe_dimension_cached(directory: Path) -> int | None:
                 return data.get('dimension')
     except (OSError, ValueError):
         pass
-    onnx_path = next((directory / n for n in ('model_quantized.onnx', 'onnx/model_quantized.onnx', 'model.onnx')
-                      if (directory / n).is_file()), None)
+    onnx_path = embedding_onnx_path(directory)
     if onnx_path is None:
         return None
     try:
         import onnxruntime as ort
+        ort.disable_telemetry_events()
         options = ort.SessionOptions()
         options.inter_op_num_threads = 1
         options.intra_op_num_threads = 1

@@ -9,6 +9,7 @@
     "preview": "vite preview --host 127.0.0.1",
     "e2e": "node e2e-workbench.mjs",
     "e2e:live": "node e2e-workbench.mjs",
+    "e2e:contracts": "node e2e-delivery-contracts.mjs",
     "demo:record": "node -e \"console.error('当前演示录制流程待更新。历史流程仅供溯源：npm run demo:record:legacy'); process.exit(2)\"",
     "e2e:legacy": "node e2e-context.mjs",
     "e2e:live:legacy": "node e2e-live.mjs",

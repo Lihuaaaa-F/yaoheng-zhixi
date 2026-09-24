@@ -15,12 +15,17 @@ export default function Rectification({ selection, snapshot, jobs, actions, refr
   const [showHistory, setShowHistory] = useState(false);
   const [acknowledging, setAcknowledging] = useState<string | null>(null), [confirmationName, setConfirmationName] = useState(''), [confirmationComment, setConfirmationComment] = useState('');
   const [pending, setPending] = useState(false), [notice, setNotice] = useState(''), [name, setName] = useState('待分配'), [department, setDepartment] = useState('生产管理部'), [finding, setFinding] = useState(''), [suggestion, setSuggestion] = useState(''), [target, setTarget] = useState(''), [expected, setExpected] = useState(''), [role, setRole] = useState('待分配'), [priority, setPriority] = useState('medium'), [deadlineBasis, setDeadlineBasis] = useState(''), [deadline, setDeadline] = useState(''), [editing, setEditing] = useState<string | null>(null);
-  // 2026-09-24（AUD-FE-01）：默认按当前选择过滤（快照可能未随筛选刷新）；
-  // 历史任务用"查看全部任务"查看。
-  const matchesSelection = (a: any) => a.payload?.source?.analysis_month === selection.month
-    && a.payload?.source?.product === selection.product
-    && a.metadata?.context_id === selection.context_id;
+  // 新任务保存完整业务选择。旧任务缺少工厂/口径，只能按已绑定快照匹配，
+  // 不能把同产品同月份的另一工厂任务误列为当前分析。
+  const matchesSelection = (a: any) => {
+    if (a.metadata?.context_id !== selection.context_id) return false;
+    const source = a.metadata?.selection;
+    if (!source) return Boolean(snapshot?.snapshot_id && a.metadata?.snapshot_id === snapshot.snapshot_id);
+    return (['factory', 'product', 'month', 'analysis_type', 'basis', 'topic'] as const)
+      .every(key => String(source[key] ?? '') === String(selection[key] ?? ''));
+  };
   const visibleActions = showHistory ? actions : actions.filter(matchesSelection);
+  const editingAction = editing ? actions.find(action => action.id === editing) : null;
   const currentReport = snapshotReport(jobs, snapshot?.snapshot_id);
   // 按建议文本+核查对象去重：后端多要素偶有相同建议时，下拉不再出现重复项。
   const availableFindings = (currentReport?.result?.narrative?.findings ?? []).filter(isActionable)
@@ -32,14 +37,14 @@ export default function Rectification({ selection, snapshot, jobs, actions, refr
     catch (e) { onError(e instanceof Error ? e.message : String(e)); }
     finally { setPending(false); }
   };
-  const payload = () => ({ context_id: selection.context_id, snapshot_id: snapshot.snapshot_id, finding, assignee: { name, department }, suggestion, priority, verification_target: target, expected_evidence: expected.split(/[；\n]/).map(s => s.trim()).filter(Boolean), responsible_role: role, deadline_basis: deadlineBasis, ...(editing && deadline ? { deadline } : {}) });
+  const payload = () => ({ context_id: editingAction?.metadata?.context_id ?? selection.context_id, snapshot_id: editingAction?.metadata?.snapshot_id ?? snapshot?.snapshot_id, finding, assignee: { name, department }, suggestion, priority, verification_target: target, expected_evidence: expected.split(/[；\n]/).map(s => s.trim()).filter(Boolean), responsible_role: role, deadline_basis: deadlineBasis, ...(editing && deadline ? { deadline } : {}) });
   const uniqueActions = [...new Map(actions.map(a => [a.id, a])).values()];
   const delivered = uniqueActions.filter(a => a.delivery?.notification === 'SIMULATED_SENT').length;
   const ownerConfirmed = uniqueActions.filter(a => a.responsibility_confirmation?.status === 'CONFIRMED' && a.responsibility_confirmation?.confirmed_by && a.responsibility_confirmation?.confirmed_at).length;
   return <>
     <section className="panel"><h2>企业任务看板</h2>
       <div className="task-summary" aria-label="任务状态汇总"><div><span>已生成任务</span><strong>{uniqueActions.length}</strong></div><div><span>模拟通知送达</span><strong>{delivered}</strong></div><div><span>责任人确认</span><strong>{ownerConfirmed}</strong></div></div>
-      <p className="muted">汇总当前数据范围全部任务，以任务 ID 去重；模拟送达按通知回执统计。责任人确认须有署名与时间记录，发送前确认不计入，送达不等于整改完成。</p></section>
+      <p className="muted">汇总当前工作区全部任务，以任务 ID 去重；模拟送达按通知回执统计。责任人确认须有署名与时间记录，发送前确认不计入，送达不等于整改完成。</p></section>
     <section className="panel"><h2>建议转为模拟整改任务</h2>
       <p className="notice">仅将实际核查建议转为草稿。具体姓名未知时保留“待分配”；确认当前完整内容后，才会执行题包的模拟RPA送达。</p>
       <label className="finding-select">载入当前报告建议<Select aria-label="载入当前报告建议" placeholder="选择可执行建议，或手动填写" key={snapshot?.snapshot_id} options={availableFindings.map((f:any,i:number)=>({value:i,label:`${cleanText(f.rendered_text??f.text_template).slice(0,60)}｜建议：${cleanText(f.suggestion).slice(0,44)}`}))} onChange={index => {
@@ -61,7 +66,8 @@ export default function Rectification({ selection, snapshot, jobs, actions, refr
         <label className="full">期限依据<input aria-label="期限依据" placeholder="例如：在下次月度成本复盘前，具体日期由责任部门确认" value={deadlineBasis} onChange={e => setDeadlineBasis(e.target.value)} /></label>
         {editing && <label className="full">建议截止日期（确认前可调整）<input aria-label="建议截止日期" type="date" value={deadline} onChange={e => setDeadline(e.target.value)} /></label>}
       </div>
-      <button disabled={pending || !snapshot || ![name, department, role, finding, suggestion, target, expected, deadlineBasis].every(s => s.trim())} onClick={() => run(async () => {
+      {editingAction && <p className="notice" role="status">正在编辑：{editingAction.payload?.task_title}。保留该任务原分析来源与快照，保存后需重新确认发送。</p>}
+      <button disabled={pending || (!editingAction && !snapshot) || ![name, department, role, finding, suggestion, target, expected, deadlineBasis].every(s => s.trim())} onClick={() => run(async () => {
         if (editing) { await api(`/actions/${editing}`, payload(), undefined, 'PUT'); setEditing(null); setNotice('草稿已更新，须重新核对确认。'); }
         else { await api('/actions', payload()); setNotice('草稿已生成，尚未发送。请核对下方完整内容。'); }
       })}>{editing ? '保存草稿修改' : '生成任务草稿'}</button></section>
@@ -70,11 +76,12 @@ export default function Rectification({ selection, snapshot, jobs, actions, refr
         <div className="button-row"><label className="history-toggle"><input type="checkbox" checked={showHistory} onChange={e => setShowHistory(e.target.checked)} /> 查看全部任务</label>
           <button onClick={() => run(refresh)} disabled={pending}>刷新状态</button></div></div>
       <p className="muted">默认按当前分析筛选（{selection.factory} · {selection.product} · {selection.month}）；与上方企业汇总口径不同。</p>
-      {!visibleActions.length ? <p className="empty">当前分析暂无任务。当前数据范围共 {uniqueActions.length} 条任务（见上方汇总），可勾选“查看全部任务”。</p> : visibleActions.map(a => {
+      {!visibleActions.length ? <p className="empty">当前分析暂无任务。当前工作区共 {uniqueActions.length} 条任务（见上方汇总），可勾选“查看全部任务”查看历史版本及其他分析对象。</p> : visibleActions.map(a => {
         const p = a.payload ?? {}, m = a.metadata ?? {};
         return <article className="task" data-task-id={a.id} key={a.id}>
           <div className="panel-heading"><strong>{p.task_title ?? '核查任务'}</strong><span className="badge">{taskLabel(a.status)}</span></div>
           <dl className="task-details">
+            <dt>分析来源</dt><dd>{[m.selection?.factory, p.source?.product, p.source?.analysis_month, m.selection?.basis === 'total' ? '总成本' : m.selection?.basis === 'unit' ? '单位成本' : ''].filter(Boolean).join(' · ')}{!m.selection?.factory && '（历史记录未单独登记工厂，按原快照保留）'}</dd>
             <dt>责任人</dt><dd>{p.assignee?.name || '待分配'} · {p.assignee?.department}</dd>
             <dt>责任角色</dt><dd>{p.action_details?.responsible_role ?? p.responsible_role ?? m.responsible_role ?? '待分配'}</dd>
             <dt>业务问题</dt><dd>{p.source?.finding}</dd>

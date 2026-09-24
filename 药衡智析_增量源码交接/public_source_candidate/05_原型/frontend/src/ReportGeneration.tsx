@@ -45,6 +45,7 @@ export default function ReportGeneration({ selection, snapshot, jobs, refresh, o
       })}>{needsRetry ? '重新生成（忽略缓存）' : '生成报告'}</button>
     </div>
     <p role="status">{notice}</p>
+    {selection.context_id && selection.context_id !== 'pharmaceutical:competition' && <p className="muted">当前上传工作区使用通用报告模板；报告模板页安装的 Word 版式暂仅用于内置制药数据。</p>}
     <label className="history-toggle"><input type="checkbox" checked={showHistory} onChange={e => setShowHistory(e.target.checked)} /> 查看历史报告及失败记录</label>
     {!visibleJobs.length
       ? <p className="empty">{snapshot ? '尚无报告。生成后分别核验文件、业务内容与人工评审。' : '请先在上方筛选中选择有效的分析对象（产品/工厂/月份），再生成或查看报告。'}</p>

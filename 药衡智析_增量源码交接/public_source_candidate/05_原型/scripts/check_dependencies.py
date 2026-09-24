@@ -11,6 +11,11 @@ from pathlib import Path
 
 APP = Path(__file__).resolve().parents[1]
 
+def onnx_capability():
+    import onnxruntime
+    onnxruntime.disable_telemetry_events()
+    return bool(onnxruntime.InferenceSession)
+
 # import name → (distribution name, capability probe)
 PROBES = {
     'fastapi': ('fastapi', None),
@@ -24,10 +29,11 @@ PROBES = {
     'httpx': ('httpx', None),
     'pytest': ('pytest', None),
     'jieba': ('jieba', lambda: bool(list(__import__('jieba').cut('成本分析')))),
-    'onnxruntime': ('onnxruntime', lambda: bool(__import__('onnxruntime').InferenceSession)),
+    'onnxruntime': ('onnxruntime', onnx_capability),
     'tokenizers': ('tokenizers', None),
     'matplotlib': ('matplotlib', lambda: __import__('matplotlib').use('Agg') or True),
     'multipart': ('python-multipart', None),
+    'openpyxl': ('openpyxl', None),
 }
 
 

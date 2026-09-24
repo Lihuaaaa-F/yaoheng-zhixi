@@ -92,6 +92,14 @@ def action_identity(payload,meta):
 
 def now():return datetime.now().astimezone().isoformat()
 
+def _rpa_trust_environment(base_url):
+    # 本机/显式声明的容器模拟服务不经系统代理；外部服务仍沿用代理配置。
+    # httpx 会在创建客户端时初始化 SOCKS，即使 NO_PROXY 已排除 localhost。
+    from .local_validation import require_loopback
+    try:require_loopback(base_url)
+    except ValueError:return True
+    return False
+
 class ActionStore:
     def __init__(self,path=DB_PATH):
         self.path=Path(path);self.path.parent.mkdir(parents=True,exist_ok=True)
@@ -125,6 +133,7 @@ class ActionStore:
         if not finding.strip() or not suggestion.strip() or not assignee.get('name') or not assignee.get('department'):raise ValueError('REQUIRED_FIELDS')
         assignee={k:v for k,v in assignee.items() if k in ('name','department','role')};assignee.setdefault('role',None)
         action_meta={'verification_target':verification_target,'expected_evidence':expected_evidence,'responsible_role':responsible_role,'deadline_basis':deadline_basis}
+        selection={key:snapshot.get(key) for key in ('factory','product','month','analysis_type','basis','topic')}
         business=digest({'action_meta':action_meta,'context':snapshot.get('analysis_context'),'snapshot_id':snapshot['snapshot_id'],'finding':finding,'assignee':assignee,'suggestion':suggestion,'priority':priority})
         task_id='YH-'+business[:24]
         payload={'task_id':task_id,'task_title':finding[:100],'assignee':assignee,'source':{'analysis_type':snapshot['analysis_type'],'analysis_month':snapshot['month'],'product':snapshot['product'],'finding':finding+'；分析期间：'+snapshot.get('period',{}).get('start',snapshot['month'])+' 至 '+snapshot.get('period',{}).get('end',snapshot['month'])},'priority':priority,'deadline':(datetime.now()+timedelta(days=7)).strftime('%Y-%m-%d'),'created_at':now(),'suggestion':suggestion,'notify_method':'wechat'}
@@ -135,7 +144,7 @@ class ActionStore:
             if old:return self._decode(old)
             if c.execute('SELECT 1 FROM actions WHERE id=?',(task_id,)).fetchone():
                 task_id='YH-'+uuid.uuid4().hex[:24];payload['task_id']=task_id
-            c.execute('INSERT INTO actions VALUES(?,?,?,?,?,?,?,?)',(task_id,business,json.dumps(payload,ensure_ascii=False),action_identity(payload,action_meta),'DRAFT',json.dumps({'context_id':snapshot.get('context_id'),'analysis_context':snapshot.get('analysis_context'),'snapshot_id':snapshot['snapshot_id'],'period':snapshot.get('period'),'simulation':True,**action_meta,'deadline_policy':'草稿默认建议七日内复核，用户确认前可修改；非既定业务期限'},ensure_ascii=False),None,now()))
+            c.execute('INSERT INTO actions VALUES(?,?,?,?,?,?,?,?)',(task_id,business,json.dumps(payload,ensure_ascii=False),action_identity(payload,action_meta),'DRAFT',json.dumps({'context_id':snapshot.get('context_id'),'analysis_context':snapshot.get('analysis_context'),'snapshot_id':snapshot['snapshot_id'],'selection':selection,'period':snapshot.get('period'),'simulation':True,**action_meta,'deadline_policy':'草稿默认建议七日内复核，用户确认前可修改；非既定业务期限'},ensure_ascii=False),None,now()))
         return self.get(task_id)
     def edit(self,action_id,changes):
         validate_edit_types(changes)
@@ -220,7 +229,7 @@ class ActionStore:
     def deliver_one(self,action_id,client=None,base_url=RPA_BASE_URL):
         import httpx
         if client is None:
-            with httpx.Client(timeout=httpx.Timeout(10,connect=3)) as actual:return self.deliver_one(action_id,actual,base_url)
+            with httpx.Client(timeout=httpx.Timeout(10,connect=3),trust_env=_rpa_trust_environment(base_url)) as actual:return self.deliver_one(action_id,actual,base_url)
         with self.db() as c:
             c.execute('BEGIN IMMEDIATE');a=self._decode(c.execute('SELECT * FROM actions WHERE id=?',(action_id,)).fetchone())
             ob=c.execute('SELECT * FROM outbox WHERE action_id=?',(action_id,)).fetchone()
@@ -245,7 +254,7 @@ class ActionStore:
     def refresh(self,action_id,client=None,base_url=RPA_BASE_URL):
         import httpx
         if client is None:
-            with httpx.Client(timeout=8) as actual:return self.refresh(action_id,actual,base_url)
+            with httpx.Client(timeout=8,trust_env=_rpa_trust_environment(base_url)) as actual:return self.refresh(action_id,actual,base_url)
         a=self.get(action_id)
         if a['status'] not in ('SENT','REMOTE_UNKNOWN','DELIVERY_UNKNOWN','ACCEPTED'):return a
         return self._reconcile(a,client,base_url,a['status'] in ('SENT','REMOTE_UNKNOWN'))

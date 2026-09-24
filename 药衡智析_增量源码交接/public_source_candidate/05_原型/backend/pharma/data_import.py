@@ -32,6 +32,7 @@ IMPORTS_ROOT = RUNTIME / 'imports'
 MAPPINGS_ROOT = IMPORTS_ROOT / 'mappings'
 IMPORT_DB = IMPORTS_ROOT / 'imports.sqlite3'
 MAX_UPLOAD_BYTES = 50 * 1024 * 1024
+IMPORT_CONTRACT_VERSION = 'workspace-import-3-product-specifications'
 KINDS = ('business', 'knowledge', 'template')
 TEXT_ENCODINGS = ('utf-8-sig', 'utf-8', 'gb18030', 'big5')
 
@@ -303,6 +304,19 @@ def _build_preview(kind: str, suffix: str, payload: bytes, meta: dict[str, Any])
             'header_fingerprint': hashlib.sha256('|'.join(headers).encode()).hexdigest()[:12]}
 
 
+def preset_mapping_role(header: str, preset: dict[str, str]) -> str:
+    normalized = header.strip().replace('（', '(').replace('）', ')').replace('／', '/')
+    if normalized in preset:
+        return preset[normalized]
+    # Only recognized business names inherit a mapping after unit removal.
+    # A currency annotation changes scale, not the identity of 材料/人工/费用.
+    name = re.sub(r'\((?:万元|元)(?:/[^()]+)?\)$', '', normalized)
+    if name in preset:
+        return preset[name]
+    quantity_name = re.sub(r'\([^()]+\)$', '', normalized)
+    return 'quantity' if preset.get(quantity_name) == 'quantity' else ''
+
+
 def suggest_mapping(headers: list[str]) -> dict[str, str]:
     """按表头指纹给出建议映射（含保存过的复用方案与内置预设）。"""
     fingerprint = hashlib.sha256('|'.join(h.strip() for h in headers).encode()).hexdigest()[:12]
@@ -311,7 +325,7 @@ def suggest_mapping(headers: list[str]) -> dict[str, str]:
         cached = json.loads(saved.read_text(encoding='utf-8'))
         return {**{h: '' for h in headers}, **{k: v for k, v in cached['mapping'].items() if k in headers},
                 '_saved': saved.stem, '_saved_name': cached.get('name', '')}
-    return {header: PRESET_WIDE_MAPPING.get(header.strip(), '') for header in headers}
+    return {header: preset_mapping_role(header, PRESET_WIDE_MAPPING) for header in headers}
 
 
 def save_mapping(headers: list[str], mapping: dict[str, str], name: str = '') -> None:
@@ -337,11 +351,36 @@ def _is_unit_cost_column(header: str) -> bool:
     审计 AUD-IMP-01（P0）：此前题包《成本汇总》的 直接材料(元/盒) 等列被按
     绝对金额发布，总成本错 4.5 万倍且零警告。此类列必须乘以同行产量换算。
     """
-    return '元/' in str(header)
+    return '元/' in str(header).replace('／', '/')
 
 
 def _tolerance_label(tolerance: Decimal) -> str:
     return f'{tolerance.normalize():f}'
+
+
+def _row_scenario(row: list[str], options: dict[str, Any]) -> str:
+    """Validation and publication must classify the exact same business row."""
+    if options.get('scenario') in ('actual', 'budget'):
+        return options['scenario']
+    marker = str(options.get('budget_marker') or '')
+    return 'budget' if marker and marker in ' '.join(row) else 'actual'
+
+
+def _amount_scale(header: str, default: Decimal) -> Decimal:
+    """Explicit column units override a whole-file hint; notes cannot scale costs."""
+    if '万元' in header:
+        return Decimal(10000)
+    if re.search(r'[(（]元(?:[/／][^()（）]+)?[)）]', header):
+        return Decimal(1)
+    return default
+
+
+def _require_complete_amounts(record: dict[str, Any], validation: dict[str, Any]) -> None:
+    missing = validation.get('missing_cost_cells') or []
+    if missing:
+        locations = '；'.join(f'第 {cell["row"]} 行“{cell["column"]}”' for cell in missing[:5])
+        raise ValueError('INCOMPLETE_COST_AMOUNTS: ' + record['filename'] + '：' + locations
+                         + '缺少成本金额；不能把缺失成本当作 0。请补充实际金额，确无发生额时明确填 0 后重新上传')
 
 
 def _row_amount(header: str, number: Decimal, row_quantity: Decimal | None,
@@ -421,10 +460,13 @@ def validate_business(record: dict[str, Any], mapping: dict[str, str], options: 
     seen_quantity_rows: set[tuple[str, str, str, str]] = set()
     dimension_rows = 0
     numeric_empty: dict[str, int] = {}
+    missing_cost_cells: list[dict[str, Any]] = []
     seen_detail_rows: dict[tuple[str, ...], int] = {}
 
     def note_empty_cell(header: str, row_index: int) -> None:
         numeric_empty[header] = numeric_empty.get(header, 0) + 1
+        if mapping.get(header, '').startswith('element:'):
+            missing_cost_cells.append({'row': row_index, 'column': header})
         # 行级警告封顶交给外层 warnings[:100]，这里全部记录用于空值率判定
         warnings.append(f'第 {row_index} 行：列“{header}”为空（公式无缓存值或漏填），该单元格不参与聚合')
 
@@ -461,9 +503,7 @@ def validate_business(record: dict[str, Any], mapping: dict[str, str], options: 
                 if value.strip() and not period:
                     errors.append({'file': record['filename'], 'sheet': record['meta'].get('sheet', ''),
                                    'row': index, 'reason': f'期间“{value}”无法识别，需形如 2026-01 / 2026年1月'})
-        marker = str(options.get('budget_marker') or '')
-        scenario = options.get('scenario') if options.get('scenario') in ('actual', 'budget') \
-            else ('budget' if marker and marker in ' '.join(row) else 'actual')
+        scenario = _row_scenario(row, options)
         if not (factory and product and period):
             missing=[name for name,value in [('工厂',factory),('产品',product),('期间',period)] if not value]
             errors.append({'file':record['filename'],'sheet':record['meta'].get('sheet',''),
@@ -528,7 +568,7 @@ def validate_business(record: dict[str, Any], mapping: dict[str, str], options: 
                     continue
                 if amount_key in amounts:
                     warnings.append(f'第 {index} 行：{factory}/{product}/{period}/{element} 明细金额累加')
-                amounts[amount_key] = amounts.get(amount_key, Decimal(0)) + converted * scale
+                amounts[amount_key] = amounts.get(amount_key, Decimal(0)) + converted * _amount_scale(header, scale)
     # 金额侧硬校验：全空或关键列空值率超阈值一律 INVALID（防公式无缓存值静默丢失）
     if dimension_rows and not amounts:
         errors.append({'file': record['filename'], 'sheet': record['meta'].get('sheet', ''), 'row': '',
@@ -573,7 +613,9 @@ def validate_business(record: dict[str, Any], mapping: dict[str, str], options: 
                              'periods': sorted(periods),
                              'quantity_points': len(quantities), 'cost_cells': len(amounts)},
               'capabilities': capabilities,
-              'quantity_independent': quantity_is_independent}
+              'quantity_independent': quantity_is_independent,
+              'missing_cost_cells': missing_cost_cells,
+              'publishable': not errors and not missing_cost_cells}
     return result
 
 
@@ -615,6 +657,8 @@ def publish_business(record: dict[str, Any], mapping: dict[str, str], options: d
     validation = validate_business(record, mapping, options)
     if validation['status'] != 'VALID':
         raise ValueError('IMPORT_VALIDATION_FAILED:' + str(validation['error_count']))
+    _require_complete_amounts(record, validation)
+    specifications = _collect_product_specifications([(record, mapping, options, validation)])
     folder = IMPORTS_ROOT / record['id']
     payload = (folder / ('original' + record['meta']['suffix'])).read_bytes()
     headers, rows = _read_table(record['meta']['suffix'], payload, record['encoding'] or 'utf-8',
@@ -624,7 +668,8 @@ def publish_business(record: dict[str, Any], mapping: dict[str, str], options: d
     # 审计 AUD-IMP-03：企业目录名纳入数据指纹——同名重导不同数据得到新目录，
     # 不再覆盖旧注册条目指向的数据；同内容重导幂等落回同一目录。
     source_snapshot = record['sha256']
-    enterprise_id = 'imp-' + hashlib.sha256((enterprise_name + pack_id + source_snapshot).encode()).hexdigest()[:8]
+    enterprise_id = 'imp-' + hashlib.sha256((enterprise_name + pack_id + source_snapshot
+                                             + IMPORT_CONTRACT_VERSION).encode()).hexdigest()[:8]
     facts: list[dict[str, Any]] = []
     quantities: dict[tuple[str, str, str, str], Decimal] = {}
     amounts: dict[tuple[str, str, str, str, str], Decimal] = {}
@@ -640,7 +685,7 @@ def publish_business(record: dict[str, Any], mapping: dict[str, str], options: d
             if role == 'factory_id': factory = cells.get(header, '').strip()
             elif role == 'product_id': product = cells.get(header, '').strip()
             elif role == 'period': period = normalize_period(cells.get(header, '')) or ''
-        scenario = options.get('scenario', 'actual')
+        scenario = _row_scenario(row, options)
         if not (factory and product and period):
             continue
         periods.add(period); products.add(product); factories.add(factory)
@@ -667,7 +712,7 @@ def publish_business(record: dict[str, Any], mapping: dict[str, str], options: d
                     continue
                 element = role.split(':', 1)[1] if role.startswith('element:') else '__total__'
                 amounts[(factory, product, period, scenario, element)] = amounts.get(
-                    (factory, product, period, scenario, element), Decimal(0)) + converted * scale
+                    (factory, product, period, scenario, element), Decimal(0)) + converted * _amount_scale(header, scale)
     totals: dict[tuple[str, str, str, str], Decimal] = {}
     for (factory, product, period, scen, element), amount in amounts.items():
         totals.setdefault((factory, product, period, scen), Decimal(0))
@@ -709,12 +754,13 @@ def publish_business(record: dict[str, Any], mapping: dict[str, str], options: d
     existed_before = enterprise_dir.exists()  # 重复发布同企业时不得删除既有有效目录
     enterprise_dir.mkdir(parents=True, exist_ok=True)
     (enterprise_dir / 'facts.json').write_text(json.dumps(dataset, ensure_ascii=False), encoding='utf-8')
+    retained = _collect_business_details([(record, mapping, options, validation)])
+    (enterprise_dir / 'business_details.json').write_text(json.dumps(retained, ensure_ascii=False), encoding='utf-8')
     if not (enterprise_dir / 'knowledge.json').exists():
         (enterprise_dir / 'knowledge.json').write_text('[]', encoding='utf-8')
-    specification = options.get('specification') or '导入数据未声明规格'
     config = {'id': enterprise_id, 'name': enterprise_name, 'dataset_id': record['sha256'][:16],
               'policy_version': 'imported-v1', 'quantity_unit': quantity_unit, 'currency': 'CNY',
-              'products': {product: {'name': product, 'specification': specification,
+              'products': {product: {'name': product, 'specification': specifications.get(product, '导入数据未声明规格'),
                                      'version': '1'} for product in sorted(products)},
               'responsibilities': {}, 'source_mode': 'imported_cost'}
     config_path = enterprise_dir / 'enterprise.json'
@@ -915,6 +961,97 @@ def _collect_industry_reference(validations: list[tuple[dict[str, Any], dict[str
     return {'sources': sources, 'rows': rows_out}
 
 
+def _collect_product_specifications(validations) -> dict[str, str]:
+    """Retain source declarations per product before comparing factory costs.
+
+    A file-wide option cannot identify each product's physical specification.
+    Missing declarations remain unknown; conflicting declarations require
+    separate product identities or corrected source data before publication.
+    """
+    specifications, sources = {}, {}
+    for record, mapping, _options, _validation in validations:
+        if 'product_id' not in mapping.values():
+            continue
+        payload = (IMPORTS_ROOT / record['id'] / ('original' + record['meta']['suffix'])).read_bytes()
+        headers, rows = _read_table(record['meta']['suffix'], payload, record['encoding'] or 'utf-8',
+                                   record['meta'].get('sheet'))
+        specification_headers = [h for h in headers if h.strip() in ('产品规格', '规格', 'specification')]
+        for index, row in enumerate(rows, 2):
+            cells = dict(zip(headers, row))
+            dimensions = {role: cells.get(header, '').strip() for header, role in mapping.items()
+                          if role == 'product_id'}
+            product = dimensions.get('product_id')
+            if not product:
+                continue
+            for header in specification_headers:
+                declared = cells.get(header, '').strip()
+                if not declared:
+                    continue
+                source = f'{record["filename"]}:{index}:{header}'
+                if product in specifications and specifications[product] != declared:
+                    raise ValueError(f'PRODUCT_SPECIFICATION_CONFLICT: 产品“{product}”在 {sources[product]} '
+                                     f'声明“{specifications[product]}”，在 {source} 声明“{declared}”；'
+                                     '不同规格不能按同一产品合并或跨厂对标，请区分产品编号或修正原表')
+                specifications[product], sources[product] = declared, source
+    return specifications
+
+
+def _collect_business_details(validations) -> list[dict[str, Any]]:
+    """Preserve validated source rows beside normalized facts, never add them twice.
+
+    A second export of the same period is accepted only if its item breakdown
+    agrees. Equal totals alone cannot establish that two material lists agree.
+    """
+    kinds = {'material_detail': ('materials', ('原材料名称', '材料名称', '物料名称'), 'material'),
+             'manufacturing_detail': ('expenses', ('费用类别', '费用名称'), 'overhead'),
+             'labor_detail': ('labor', (), 'labor')}
+    accepted, signatures = {}, {}
+    for record, mapping, options, _validation in validations:
+        setting = kinds.get(record['meta'].get('data_type'))
+        if not setting:
+            continue
+        kind, name_fields, element = setting
+        payload = (IMPORTS_ROOT / record['id'] / ('original' + record['meta']['suffix'])).read_bytes()
+        headers, rows = _read_table(record['meta']['suffix'], payload, record['encoding'] or 'utf-8',
+                                    record['meta'].get('sheet'))
+        groups = {}
+        for index, row in enumerate(rows, 2):
+            cells = dict(zip(headers, row))
+            dimensions = {role: cells.get(header, '').strip() for header, role in mapping.items()
+                          if role in DIMENSION_ROLES}
+            month = normalize_period(dimensions.get('period', ''))
+            factory, product = dimensions.get('factory_id', ''), dimensions.get('product_id', '')
+            if not (factory and product and month):
+                continue  # validation has already rejected malformed business rows
+            quantity = next((parse_number(cells.get(header, '')) for header, role in mapping.items()
+                             if role == 'quantity'), None)
+            amount = Decimal(0)
+            for header, role in mapping.items():
+                if role != 'element:' + element:
+                    continue
+                number = parse_number(cells.get(header, ''))
+                if number is not None:
+                    converted = _row_amount(header, number, quantity, [], [], record, index)
+                    if converted is not None:
+                        amount += converted * _amount_scale(header, Decimal(str(options.get('amount_scale', '1'))))
+            name = next((cells[h].strip() for h in name_fields if cells.get(h, '').strip()), '')
+            key = (kind, factory, product, month, _row_scenario(row, options))
+            groups.setdefault(key, []).append({'kind': kind, 'factory': factory, 'product': product,
+                'month': month, 'scenario': key[-1], 'name': name, 'element': element,
+                'amount': str(amount), 'quantity': None if quantity is None else str(quantity),
+                'data': cells, 'row_key': f'{record["filename"]}:{index}', 'source_hash': record['sha256']})
+        for key, group in groups.items():
+            signature = sorted((item['name'], str(Decimal(item['amount']).normalize()),
+                                str(Decimal(item['quantity']).normalize()) if item['quantity'] is not None else '')
+                               for item in group)
+            if key in signatures and signatures[key] != signature:
+                raise ValueError(f'DETAIL_BREAKDOWN_CONFLICT: {key[1]}/{key[2]}/{key[3]} 的明细构成冲突；'
+                                 '即使合计相同也不能自动合并，请明确替换旧文件后重试')
+            if key not in accepted:
+                accepted[key], signatures[key] = group, signature
+    return [row for key in sorted(accepted) for row in accepted[key]]
+
+
 def publish_business_batch(entries: list[tuple[dict[str, Any], dict[str, str], dict[str, Any]]],
                            enterprise_name: str, pack_id: str, quantity_unit: str, *,
                            workspace_enterprise_id: str | None = None,
@@ -937,6 +1074,7 @@ def publish_business_batch(entries: list[tuple[dict[str, Any], dict[str, str], d
             failed = validation['errors'][:5]
             raise ValueError('IMPORT_VALIDATION_FAILED:' + record['filename'] + ':'
                              + '；'.join(e.get('reason', str(e)) for e in failed))
+        _require_complete_amounts(record, validation)
     from .import_pipeline import TYPE_PRIORITY
     # 审计 AUD-IMP-03：企业目录名纳入数据指纹——同名重导不同数据得到新目录，
     # 不再覆盖旧注册条目指向的数据；同内容重导幂等落回同一目录。
@@ -945,7 +1083,9 @@ def publish_business_batch(entries: list[tuple[dict[str, Any], dict[str, str], d
     # Mapping, scenario and unit are part of the immutable input version too.
     # Sorting makes upload order immaterial and preserves reproducible snapshots.
     validations.sort(key=lambda entry: entry[0]['id'])
-    source_snapshot = hashlib.sha256(json.dumps({'entries':[
+    business_details = _collect_business_details(validations)
+    specifications = _collect_product_specifications(validations)
+    source_snapshot = hashlib.sha256(json.dumps({'contract_version': IMPORT_CONTRACT_VERSION, 'entries':[
         {'sha256':r['sha256'],'mapping':m,'options':o,'data_type':r['meta'].get('data_type'),
          'sheet':r['meta'].get('sheet')} for r,m,o,_ in validations],
         'enterprise':enterprise_name,'pack':pack_id,'unit':quantity_unit},
@@ -981,7 +1121,7 @@ def publish_business_batch(entries: list[tuple[dict[str, Any], dict[str, str], d
                 if role == 'factory_id': factory = cells.get(header, '').strip()
                 elif role == 'product_id': product = cells.get(header, '').strip()
                 elif role == 'period': period = normalize_period(cells.get(header, '')) or ''
-            scenario = options.get('scenario', 'actual')
+            scenario = _row_scenario(row, options)
             if not (factory and product and period):
                 continue
             periods.add(period); products.add(product); factories.add(factory)
@@ -1006,7 +1146,7 @@ def publish_business_batch(entries: list[tuple[dict[str, Any], dict[str, str], d
                         continue
                     element = role.split(':', 1)[1] if role.startswith('element:') else '__total__'
                     key = (factory, product, period, scenario, element)
-                    file_amounts[key] = file_amounts.get(key, Decimal(0)) + converted * scale
+                    file_amounts[key] = file_amounts.get(key, Decimal(0)) + converted * _amount_scale(header, scale)
                     file_amount_sources.setdefault(key, []).append(f'{record["filename"]}:{index}:{header}')
         for key, number in file_quantities.items():
             if key in merged_quantities and merged_quantities[key] != number:
@@ -1086,12 +1226,12 @@ def publish_business_batch(entries: list[tuple[dict[str, Any], dict[str, str], d
     existed_before = enterprise_dir.exists()  # 重复发布同企业时不得删除既有有效目录
     enterprise_dir.mkdir(parents=True, exist_ok=True)
     (enterprise_dir / 'facts.json').write_text(json.dumps(dataset, ensure_ascii=False), encoding='utf-8')
+    (enterprise_dir / 'business_details.json').write_text(json.dumps(business_details, ensure_ascii=False), encoding='utf-8')
     if not (enterprise_dir / 'knowledge.json').exists():
         (enterprise_dir / 'knowledge.json').write_text('[]', encoding='utf-8')
-    specification = options.get('specification') or '导入数据未声明规格'
     config = {'id': enterprise_id, 'name': enterprise_name, 'dataset_id': source_snapshot[:16],
               'policy_version': 'imported-v1', 'quantity_unit': quantity_unit, 'currency': 'CNY',
-              'products': {product: {'name': product, 'specification': specification,
+              'products': {product: {'name': product, 'specification': specifications.get(product, '导入数据未声明规格'),
                                      'version': '1'} for product in sorted(products)},
               'responsibilities': {}, 'source_mode': 'imported_cost'}
     industry_reference = _collect_industry_reference(validations)
@@ -1188,7 +1328,7 @@ def _declared_quantity_units(record, mapping):
     for header in record['meta'].get('preview',{}).get('headers') or []:
         role=mapping.get(header,'')
         if role=='quantity' or (role.startswith('element:') and _is_unit_cost_column(header)):
-            match=re.search(r'(?:产量|数量)[(（]([^()（）]+)[)）]|元/([^()（）]+)',header)
+            match=re.search(r'(?:产量|数量)[(（]([^()（）]+)[)）]|元/([^()（）]+)',header.replace('／', '/'))
             if match:units.add((match.group(1) or match.group(2)).strip())
     return units
 
@@ -1256,6 +1396,7 @@ def publish_workspace(entries, enterprise_name='', pack_id='', quantity_unit='')
             by_id[record['id']]=(record,dict(mapping),dict(options))
         combined=[by_id[key] for key in sorted(by_id)]
         manifest={'workspace_id':'local-enterprise','enterprise_name':enterprise_name,
+                  'import_contract_version':IMPORT_CONTRACT_VERSION,
                   'industry_id':pack_id,'quantity_unit':quantity_unit,
                   'legacy_context_ids':legacy_contexts,
                   'superseded_sources':superseded,
@@ -1285,6 +1426,11 @@ def workspace_state() -> dict[str, Any]:
     records=_business_records();issues=[]
     try:
         current=_workspace_manifest()
+        if current and current.get('import_contract_version') != IMPORT_CONTRACT_VERSION:
+            # One-time upgrade from aggregate-only workspaces. All originals and
+            # saved mappings are retained; the registry moves only after success.
+            publish_workspace([])
+            current=_workspace_manifest()
         if current is None and any((r['meta'].get('published') or r['meta'].get('parsed')) for r in records):
             entries,binding,_contexts=_legacy_workspace_entries(records)
             if entries and binding:

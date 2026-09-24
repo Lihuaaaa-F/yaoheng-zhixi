@@ -1,4 +1,12 @@
 /* Three stable surfaces. Only the workspace body and conversation body scroll. */
+@media (prefers-reduced-motion: reduce) {
+  .three-panel-shell *, .ant-drawer *, .ant-modal *, .ant-dropdown * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 :root {
   --accent: #087f88;
   --bg: #eef2f5;

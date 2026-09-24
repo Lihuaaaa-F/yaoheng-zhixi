@@ -1,0 +1,9 @@
+{
+  "status": "NOT_PUSHED",
+  "repository": "Lihuaaaa-F/yaoheng-zhixi",
+  "upstream_commit": "d8054badfde39bab215bd3c4afdd64a642484491",
+  "operation": "create normal audit branch from main",
+  "error": "403 Resource not accessible by integration",
+  "workaround": "Deliver a normal Git patch; no force push or permission bypass",
+  "scope": "Narrative record of actual connector rejection, not a fabricated successful remote receipt"
+}

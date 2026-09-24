@@ -1,0 +1,6 @@
+{
+  "check": "repository_contracts",
+  "status": "PASS",
+  "scope": "navigation, scenario index, media identity; no app/model/human validation",
+  "errors": []
+}
