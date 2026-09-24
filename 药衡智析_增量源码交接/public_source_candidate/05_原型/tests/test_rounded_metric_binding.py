@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
-"""注册指标值四舍五入简写绑定（claim-contract-v10）单元与合同测试。
+"""注册指标值四舍五入简写绑定（claim-contract）单元与合同测试。
 
 背景（2026-09-21 审计问题 #1）：实测 glm-5.3-flash 与 DeepSeek 都会在
 suggestion/missing_evidence 等字段写出注册值的四舍五入简写（注册
 -15.2152% 被写成"下降15.2%"），旧合同一概拒收导致报告/对标全线
-DEGRADED。v10 合同按确定性规则唯一绑定这类简写；编造数字依然拒收。
+DEGRADED。v10 合同按确定性规则唯一绑定这类简写；v11（2026-09-24 用户
+审批方案 C1）进一步放开整数/一位小数简写，唯一性+方向符号为防洗白保障；
+编造数字依然拒收。
 """
 import pytest
 from pharma.narrative import _rounded_metric_bindings, validate_findings
@@ -47,9 +49,13 @@ def test_direction_word_contradiction_rejected():
     assert bindings == []
 
 
-def test_integer_shorthand_cannot_launder_fractional_value():
+def test_integer_shorthand_binds_when_unique():
+    # 2026-09-24 审批方案 C1 放宽：整数/一位小数简写在注册集内唯一对应时接受
+    # （77% ↔ 76.92% 是真实简写，旧政策一律拒收导致大量合法解释降级）；
+    # 防洗白保障=唯一性+方向符号，见 test_ambiguous_candidate_not_bound。
     stripped, bindings = _rounded_metric_bindings('贡献度77%', _metrics())
-    assert bindings == [] and '77' in stripped
+    assert bindings and bindings[0]['metric_id'] == 'contribution'
+    assert stripped != '贡献度77%'
 
 
 def test_exact_integer_value_binds():
@@ -72,8 +78,9 @@ def test_ambiguous_candidate_not_bound():
 
 
 def test_iso_date_digits_not_treated_as_number():
-    stripped, bindings = _rounded_metric_bindings('核查2026-06台账与77%占比', _metrics())
-    assert any(b['shown'] == '77%' for b in bindings) is False
+    # 日期段不参与数字绑定；33% 编造值原样保留待上层拒绝
+    stripped, bindings = _rounded_metric_bindings('核查2026-06台账与33%占比', _metrics())
+    assert any(b['shown'] == '33%' for b in bindings) is False
     assert '2026-06' in stripped
 
 
@@ -106,8 +113,9 @@ def test_validate_accepts_rounded_shorthand_in_suggestion():
 
 
 def test_validate_still_rejects_fabricated_number():
+    # 33% 不对应任何注册值的四舍五入（注册集：-15.2152/76.923/35000）——编造值照旧拒收
     with pytest.raises(ValueError, match='free business number forbidden'):
-        validate_findings([_insufficient_finding('重点核对下降77%的品项')], _snapshot(), [])
+        validate_findings([_insufficient_finding('重点核对下降33%的品项')], _snapshot(), [])
 
 
 def test_validate_still_rejects_unsigned_ambiguous_number():

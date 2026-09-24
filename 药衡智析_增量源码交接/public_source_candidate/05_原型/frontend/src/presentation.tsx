@@ -1,4 +1,5 @@
 import { fmt } from './api';
+import { elementLabel } from './labels';
 // Presentation only: original Decimal strings remain in API evidence and exact tables.
 export const displayNumber=(value:unknown)=>value==null?'暂无':Number(value).toLocaleString('zh-CN',{maximumFractionDigits:4});
 export function displayFocusRate(value:unknown){
@@ -17,11 +18,32 @@ export function sourceLabel(e: any) {
 }
 // Business views deliberately omit engineering hashes, raw paths and debug JSON.
 export function DeveloperDetails(_props: {value:any}) { return null }
+// 第9项审批方案 A/C6（2026-09-24）：把后端 failure_reasons 的机器标记分类翻译成
+// 可读原因，替代笼统的“部分解释未通过校验”一句话。
+export function readableFailureReasons(reasons: unknown): string[] {
+  if (!Array.isArray(reasons)) return [];
+  const out: string[] = []; const missingElements: string[] = []; let alerts = 0;
+  for (const raw of reasons) {
+    const reason = String(raw);
+    if (reason.includes('MODEL_CALL_BUDGET_REACHED')) out.push('模型调用预算已达当日上限——可重启应用服务重置，或调大 PHARMA_MODEL_MAX_CALLS');
+    else if (reason.includes('NECESSARY_EXPLANATION_MISSING')) { const match = reason.match(/^([\w-]+):/); if (match) missingElements.push(match[1]); else out.push('主要差异章节缺少实质解释'); }
+    else if (reason.startsWith('ALERT_EXPLANATION_MISSING')) alerts += 1;
+    else if (reason.includes('MISMATCH') || reason.includes('UNVERIFIED')) out.push('模型身份未通过核验（响应与请求型号不一致或未响应）');
+    else if (reason.includes('KNOWLEDGE')) out.push('知识库状态异常，证据检索受限');
+    else if (reason.includes('REASONING_EFFORT_INVALID') || reason.includes('MODEL_PARAMETERS_UNSUPPORTED')) out.push('推理参数被模型端点拒绝，请在模型连接页调整');
+    else if (reason.includes('MODEL_NOT_CONFIGURED') || reason.includes('MODEL_KEY_NOT_SET')) out.push('模型未配置或缺少密钥，请在模型连接页检查');
+    else out.push(reason.length > 50 ? reason.slice(0, 50) + '…' : reason);
+  }
+  if (missingElements.length) out.push('缺少实质解释的要素：' + [...new Set(missingElements)].map(elementLabel).join('、'));
+  if (alerts) out.push(`有 ${alerts} 条成本告警未被解释覆盖`);
+  return out.slice(0, 5);
+}
 export function AnalysisStatus({narrative,review}: {narrative:any;review?:any}) {
  const mode=narrative?.generation_mode;
  const generation=mode==='llm'&&narrative?.model_live===true?'模型解释':mode==='mixed'?'模型与规则混合解释':mode==='rules'?'规则分析':'解释来源待核验';
  const verified=Boolean(review?.readability?.reviewer&&review?.visual_quality?.reviewer); const reviewedScore=review?.human_attribution_score;
- return <p className={narrative?.status==='PASS'?'muted':'notice'}>解释来源：{generation}。{narrative?.status==='PASS'?'数字与证据自动校验已通过。':'部分解释未通过数字与证据自动校验，已降级为基础分析；可重新生成。'}人工审核：{verified?'已审核':review?.status==='STALE'?'原审核已失效，待重审':'待评'}{verified&&Number.isFinite(reviewedScore)?`；归因评分 ${reviewedScore}/5`:''}。</p>;
+ const failures=narrative?.status==='PASS'?[]:readableFailureReasons(narrative?.failure_reasons);
+ return <p className={narrative?.status==='PASS'?'muted':'notice'}>解释来源：{generation}。{narrative?.status==='PASS'?'数字与证据自动校验已通过。':`部分解释未通过数字与证据自动校验${failures.length?`（${failures.join('；')}）`:''}，已降级为基础分析；可重新生成。`}人工审核：{verified?'已审核':review?.status==='STALE'?'原审核已失效，待重审':'待评'}{verified&&Number.isFinite(reviewedScore)?`；归因评分 ${reviewedScore}/5`:''}。</p>;
 }
 const dimensions=[['file_openable','文件可打开'],['calculation_consistency','计算一致'],['section_completeness','章节实质完整'],['evidence_applicability','证据适用'],['readability','内容可读'],['visual_quality','视觉合格'],['task_actionability','任务可执行'],['model_participation','模型实际参与']];
 const statusText=(s:any)=>({PASS:'通过',FAIL:'未通过',FAILED:'未通过',PENDING:'待评',PENDING_HUMAN:'待人工评审',NOT_RUN:'未验证',DEGRADED:'未通过',NOT_APPLICABLE:'不适用',BLOCKED:'未通过',UNVERIFIED:'未验证'}[String(s)]??'待评');

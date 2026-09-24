@@ -1,7 +1,7 @@
 # 「部分解释未通过数字与证据自动校验」根因分析与解决方案（待审批）
 
 - 日期：2026-09-24
-- 状态：**仅诊断与方案，未实施任何修复**（用户要求审批后实施）
+- 状态：**已实施**（2026-09-24 用户审批通过，commit 见 git log）
 - 影响面：分析报告/跨厂对标页顶部"解释来源…部分解释未通过数字与证据自动校验，已降级为基础分析"；`narrative.status=DEGRADED`
 
 ## 一、现象
@@ -44,6 +44,25 @@
 | 5 | hypothesis 合同：须同时有 metric_refs+evidence_refs+missing_evidence；正文须含"可能/尚不能/待核"等词；与引文共享二字词；缺证项≥4 字无句读且含具体记录名词 | 句式稍自然的假设即被拒 |
 | 6 | insufficient_evidence 合同：**每个分句**都须含"不能/无法/不足/缺少/需核…"之一 | 正常书面语几乎必然违反 |
 | 7 | 身份白名单 `VERIFIED_ALIASES` 仅含 `glm-5.3-flash`（:32） | 换模型（如 glm-5.3、DeepSeek 做 analysis 路由）时返回 model 字段不在白名单 → MISMATCH → 整体降级 |
+
+## 二·五、实施记录（2026-09-24 已获批）
+
+### A 止血
+- `narrative.py` ModelGateway：`PHARMA_MODEL_MAX_CALLS` 默认 40→300（按自然日窗口保持不变，该窗口语义由并行审查轮已落地的"按日计数"实现，等价于方案 B 的"不再永久锁死"意图）。
+- 前端 `presentation.tsx` 新增 `readableFailureReasons`：failure_reasons 分类翻译（预算耗尽/缺解释要素/告警未覆盖/身份未核验/知识库异常/参数被拒），AnalysisStatus 展示可读原因列表。
+
+### C 校验合同放宽（narrative.py，PROMPT_VERSION v22 / VALIDATOR_VERSION claim-contract-v11-relaxed-evidence-quote）
+- C1：`_rounded_metric_bindings` 去掉整数简写守卫（旧政策"77% 不能洗白 76.92%"按审批反转）；唯一匹配+方向符号+单位一致保持，歧义仍拒。
+- C2：新增 `_normalized_text`/`_quote_supported`：引文比对去空白、统一引号破折号，支持"片段1……片段2"顺序省略拼接。
+- C3：`validate_findings` 证据未进本次检索命中集合时查全库（新增 `Knowledge.evidence_in_library`，按上下文命名空间+版本缓存 by-id 映射）；库内存在且适用性通过→放行并写 `evidence_rescued` 留痕；库内不存在或不适用照旧拒绝。
+- C4：`_insufficient_contract` 分句级→句级（逗号从句不再单独要求限定词，纯肯定因果句仍拒）；系统提示词同步。
+- C5：身份白名单支持环境变量 `PHARMA_MODEL_VERIFIED_ALIASES`（"请求名:返回名,…"），静态探测白名单优先。
+- C6：见 A 的前端分类翻译。
+
+### 测试与验证
+- 新增 `tests/test_relaxed_contracts_20260924.py`（13 项：简写绑定/引文归一化/句级合同/全库救援 monkeypatch/别名环境变量/预算默认值），改写 `tests/test_rounded_metric_binding.py` 三处 v10 断言为 v11 语义。
+- 全量回归 548 passed + 1 skipped；前端 tsc 干净、`vite build` 成功。
+- 端到端验证进行中（生成报告观察 narrative 状态与模型解释恢复）。
 
 ## 三、解决方案（供审批，按优先级）
 
