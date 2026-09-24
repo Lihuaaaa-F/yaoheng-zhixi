@@ -51,7 +51,10 @@ export default function AssistantDock({ selection, onEvidence, onApplied, onConf
   const followLatest = useRef(true), previousRendered = useRef('');
   const sendAttempts = useRef(new Map<string, { fingerprint: string; requestId: string }>());
   const busy = running(turn) || pendingSends.has(activeId);
-  const validSelection = Boolean(selection.context_id && selection.product && selection.factory && selection.month);
+  // 2026-09-24 审查：benchmark_right 由对标页注入，未选右厂时后端 min_length=1
+  // 必然 422——空值视为选择未完成，不发上下文预取。
+  const validSelection = Boolean(selection.context_id && selection.product && selection.factory && selection.month
+    && (selection.benchmark_right === undefined || Boolean(selection.benchmark_right)));
 
   const loadModel = useCallback(() => Promise.all([api('/settings/models'), api('/settings/models/presets')]).then(([value, presets]) => {
     if (!alive.current) return;

@@ -65,10 +65,10 @@ try {
       assert.equal(await page.getByRole('combobox', { name: '数据范围', exact: true }).count(), 0, '不应出现数据范围选择器');
       if (key === 'analysis') {
         assert.equal(await page.getByRole('heading', { level: 1, name: '成本分析', exact: true }).count(), 0, '不应保留多余的成本分析标题');
-        const tabs = page.getByRole('navigation', { name: '工作台分区导航', exact: true });
+        const tabs = page.getByRole('navigation', { name: '分析分区导航', exact: true });
         const before = (await tabs.boundingBox()).y;
         await page.locator('.workspace-scroll').evaluate(node => { node.scrollTop = 500; });
-        assert.ok(Math.abs((await tabs.boundingBox()).y - before) < 1, '工作区分区导航应保持固定');
+        assert.ok(Math.abs((await tabs.boundingBox()).y - before) < 1, '分析分区导航应保持固定');
         await page.locator('.workspace-scroll').evaluate(node => { node.scrollTop = 0; });
       }
       if (key === 'analysis' && viewport.width === 390) await page.getByRole('button', { name: '打开对话', exact: true }).click();

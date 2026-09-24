@@ -3,6 +3,7 @@
 All network responses are in-memory fixtures; no external model call is made.
 """
 import json
+import os
 from pathlib import Path
 
 import httpx
@@ -46,7 +47,12 @@ def test_partial_saves_keep_other_routes_and_blank_preserves_key(settings):
     assert Path(original).read_text() == 'assistant-secret'
     assert 'assistant-secret' not in json.dumps(result)
     assert result['connections']['assistant']['key_file'] == Path(original).name
-    assert (Path(original).stat().st_mode & 0o777) == 0o600
+    # 0600 权限位仅在 POSIX 语义成立；Windows NTFS 用 ACL 表达，st_mode 恒为
+    # 通用的读写位（2026-09-24 审查：该断言使 Windows 本地全量必红，改为平台感知）。
+    if os.name == 'posix':
+        assert (Path(original).stat().st_mode & 0o777) == 0o600
+    else:
+        assert Path(original).is_file()
 
 
 def test_clear_key_revokes_reference_without_deleting_file(settings, monkeypatch):
@@ -158,7 +164,12 @@ def test_key_file_paths_and_symlinks_are_rejected_on_save(settings, tmp_path):
     with pytest.raises(ValueError, match='KEY_FILE_OVERRIDE_RESTRICTED'):
         _save(key_file=str(external))
     model_settings.KEYS_DIR.mkdir()
-    (model_settings.KEYS_DIR / 'linked.key').symlink_to(external)
+    try:
+        (model_settings.KEYS_DIR / 'linked.key').symlink_to(external)
+    except OSError:
+        # Windows 需要管理员/开发者模式特权才能建符号链接（WinError 1314）；
+        # 符号链接拒绝逻辑由 POSIX CI 覆盖，此处跳过而非误报。
+        pytest.skip('当前平台无特权创建符号链接，符号链接拒绝路径由 POSIX CI 覆盖')
     with pytest.raises(ValueError, match='KEY_FILE_OVERRIDE_RESTRICTED'):
         _save(key_file='linked.key')
 

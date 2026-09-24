@@ -103,8 +103,11 @@ def _extraction_mapping(headers: list[str], sample_rows: list[list[str]]) -> tup
               '无法判断的列留空。只返回JSON对象 {"mapping": {"列名": "角色"}}，不要输出其他文字。')
     user = json.dumps({'表头': headers, '样例行': sample_rows[:3], '可选角色': list(MAPPING_ROLES)},
                       ensure_ascii=False)
-    raw, _usage, _identity = gateway.complete(system, user, operation='import_mapping')
-    data = _parse_json_object(raw)
+    try:
+        raw, _usage, _identity = gateway.complete(system, user, operation='import_mapping')
+        data = _parse_json_object(raw)
+    except Exception as exc:  # 映射建议属尽力而为：预算耗尽/超时/空返回都回退预设映射，不阻塞导入
+        return None, f'数据提取模型建议不可用（{_assist_reason(exc)}），已回退预设映射'
     from .data_import import parse_number
     def _mostly_numeric(header: str) -> bool:
         index = headers.index(header) if header in headers else -1
@@ -154,6 +157,20 @@ def _mapping_for(record: dict[str, Any]) -> tuple[dict[str, str], str]:
         merged = {**{h: '' for h in headers}, **suggested, **assisted}
         return merged, note
     return suggested, '预设映射不完整且未配置数据提取模型；缺失角色将无法通过质检'
+
+
+def _assist_reason(exc: Exception) -> str:
+    """把提取模型辅助映射的失败原因转成一句用户可读的中文。"""
+    text = str(exc)
+    if 'MODEL_CALL_BUDGET_REACHED' in text:
+        return '模型调用预算已达上限'
+    if 'MODEL_NOT_CONFIGURED' in text or 'MODEL_KEY_NOT_SET' in text:
+        return '模型未配置或密钥缺失'
+    if isinstance(exc, json.JSONDecodeError):
+        return '模型返回内容无法解析'
+    if isinstance(exc, TimeoutError) or 'timeout' in text.lower():
+        return '模型响应超时'
+    return '服务异常'
 
 
 def _options_for(record: dict[str, Any]) -> dict[str, Any]:
@@ -324,8 +341,20 @@ def run_data_parse(store, job):
         store.update(job_id, 'SUCCEEDED', result, progress=100, detail='数据处理成功')
     except StepFailure as exc:
         _fail(store, job_id, result, f'数据处理失败，{exc.step}报错：{exc.reason}', records)
+    except json.JSONDecodeError as exc:
+        # 2026-09-24 审查：异常类名与英文定位串直接透出（JSONDecodeError报错:
+        # Expecting value...），用户无法据此处理；统一转成可行动的中文。
+        _fail(store, job_id, result, '数据处理失败：模型返回内容无法解析，已保留原始数据；请重试，若持续出现请检查模型连接与预算配置', records)
+        import traceback
+        traceback.print_exc()
     except Exception as exc:  # noqa: BLE001
-        _fail(store, job_id, result, f'数据处理失败，{type(exc).__name__}报错：{str(exc)[:300]}', records)
+        text = str(exc)
+        if 'MODEL_CALL_BUDGET_REACHED' in text:
+            _fail(store, job_id, result, '数据处理失败：模型调用预算已达上限，已保留原始数据；可调整 PHARMA_MODEL_MAX_CALLS 或明日预算刷新后重试', records)
+        elif 'MODEL_NOT_CONFIGURED' in text or 'MODEL_KEY_NOT_SET' in text:
+            _fail(store, job_id, result, '数据处理失败：所需模型未配置或密钥缺失，已保留原始数据；请在「模型与设置」完成连接配置后重试', records)
+        else:
+            _fail(store, job_id, result, f'数据处理失败，{type(exc).__name__}报错：{text[:300]}', records)
         import traceback
         traceback.print_exc()
 

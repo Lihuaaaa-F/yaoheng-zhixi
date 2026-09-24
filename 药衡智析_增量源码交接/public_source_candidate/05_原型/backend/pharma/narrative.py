@@ -20,16 +20,32 @@ import re
 import sqlite3
 import threading
 import time
+import datetime
 from urllib.parse import urlsplit, urlunsplit
 from pydantic import BaseModel, Field, ConfigDict
 import httpx
 from .config import RUNTIME, MODEL_DEFAULT, MODEL_PROTOCOL_DEFAULT, MODEL_BASE_URL_DEFAULT, MODEL_CODING_BASE_URL_DEFAULT
 
-PROMPT_VERSION = 'v21-attribution-directions'
-VALIDATOR_VERSION = 'claim-contract-v10-rounded-metric-binding'
+PROMPT_VERSION = 'v22-relaxed-contracts'
+VALIDATOR_VERSION = 'claim-contract-v11-relaxed-evidence-quote'
 # Aliases may only be added after a live probe has verified that the upstream
 # really serves the requested model under that exact returned id.
+# 追加机制（2026-09-24 审批方案 C5）：环境变量 PHARMA_MODEL_VERIFIED_ALIASES，
+# 形如 "请求名:返回名,请求名2:返回名2"；仅对既有网关记录核验过的别名组合放行，
+# 静态探测白名单优先于环境变量。
 VERIFIED_ALIASES = {'glm-5.3-flash': {'glm-5.3-flash'}}
+
+
+def _configured_aliases():
+    aliases = {}
+    for pair in str(os.getenv('PHARMA_MODEL_VERIFIED_ALIASES', '')).split(','):
+        if ':' not in pair:
+            continue
+        requested, _, returned = pair.partition(':')
+        if requested.strip() and returned.strip():
+            aliases.setdefault(requested.strip(), set()).add(returned.strip())
+    return aliases
+
 _CALL_LOCK = threading.Lock()
 
 
@@ -40,7 +56,8 @@ def classify_identity(requested, returned):
     returned = str(returned).strip()
     if returned == requested:
         return 'VERIFIED_EXACT', '响应model与请求一致'
-    if returned in VERIFIED_ALIASES.get(requested, set()):
+    merged = {**_configured_aliases(), **VERIFIED_ALIASES}
+    if returned in merged.get(requested, set()):
         return 'VERIFIED_ALIAS', '响应model为已核实别名:' + returned
     return 'MISMATCH', '响应model为' + returned + '，与请求' + requested + '不一致'
 
@@ -292,10 +309,13 @@ def _insufficient_contract(f):
     _specific_missing(f.missing_evidence)
     # Constructive clause grammar. Merely attaching a claim_type or adding a
     # disclaimer to a separate affirmative causal clause cannot satisfy it.
-    clauses = [c.strip() for c in re.split(r'[。；;！!？?\n，,]', f.text_template) if c.strip()]
+    # 2026-09-24 审批方案 C4：分句级放宽为句级——同一句内逗号分隔的从句不再
+    # 单独要求限定词（旧规则下正常书面语几乎必然违约）；每句仍须表达证据局限，
+    # 纯肯定因果句依旧拒绝。
+    clauses = [c.strip() for c in re.split(r'[。；;！!？?\n]', f.text_template) if c.strip()]
     uncertainty = r'不能|无法|不足|尚未|尚不能|缺少|缺乏|未提供|未取得|待核|需核|需要|需补|有待|没有.*(?:证据|记录|数据)'
     if not clauses or any(not re.search(uncertainty,c) for c in clauses):
-        raise ValueError('insufficient evidence text must state an evidence limitation in every clause')
+        raise ValueError('insufficient evidence text must state an evidence limitation in every sentence')
     if re.search(r'已证实|确定导致|直接导致|证明.*导致|必然',f.text_template):
         raise ValueError('insufficient evidence contradicts certain causality')
 
@@ -443,6 +463,35 @@ def quote_matches_product(quote, product):
     return not mentioned or product in mentioned
 
 
+def _normalized_text(value):
+    """引文比对归一化（2026-09-24 审批方案 C2）：去全部空白、统一引号与破折号。"""
+    text = re.sub(r'\s+', '', str(value))
+    for old, new in (('“', '"'), ('”', '"'), ('‘', "'"), ('’', "'"),
+                     ('–', '-'), ('—', '-'), ('－', '-')):
+        text = text.replace(old, new)
+    return text
+
+
+def _quote_supported(quote, source_text):
+    """引文支持判定：归一化后逐字包含即通过；允许“片段1……片段2”式省略拼接，
+    片段须按原文顺序出现且单片段≥4字。旧规则要求与原文逐字节相等，
+    模型任何转述边界差异（空白/标点宽度）都会误拒真实引用。"""
+    normalized_quote = _normalized_text(quote)
+    if len(normalized_quote) < 4:
+        return False
+    normalized_source = _normalized_text(source_text)
+    fragments = [f for f in re.split(r'…+|\.{3,}|。{3,}', normalized_quote) if len(f) >= 4]
+    if not fragments:
+        return False
+    position = 0
+    for fragment in fragments:
+        position = normalized_source.find(fragment, position)
+        if position < 0:
+            return False
+        position += len(fragment)
+    return True
+
+
 def _rounded_metric_bindings(checked_text, metrics):
     """把已扣槽位/上下文/期间/引文后残留的自由数字绑定到注册指标。
 
@@ -454,9 +503,12 @@ def _rounded_metric_bindings(checked_text, metrics):
     - 百分号须与注册单位一致（% 标记 ↔ unit=='%'，无标记 ↔ 非 %）；
     - 数值在自身小数位下等于注册值的 ROUND_HALF_UP 四舍五入，且符号一致；
       中文方向词（下降/降低/减少等紧邻负值）视作已携带符号；
-    - 整数简写仅接受注册值本身即整数（"77%" 不能洗白 76.92%）；
-    - 唯一匹配才绑定；歧义或无匹配的数字原样保留（上层照旧拒绝），
-      不以放松合同换取通过率——编造的数字依然整体拒收。
+    - 整数与一位小数简写均接受（2026-09-24 审批方案 C1 放宽：旧规则仅接受
+      注册值本身为整数的整数简写，"77%" 洗白 "76.92%" 一律拒收，导致模型
+      即使写真实值也频繁被拒）；防洗白保障改为**注册集内唯一匹配**——
+      多个注册值四舍五入到同一 token 时仍歧义拒绝；
+    - 歧义或无匹配的数字原样保留（上层照旧拒绝），不以放松合同换取通过
+      率——编造的数字依然整体拒收。
 
     返回 (扣除后的 checked_text, bindings)；bindings 进入 numeric_bindings
     审计留痕（shown=模型原文、registered=程序注册值）。
@@ -494,7 +546,7 @@ def _rounded_metric_bindings(checked_text, metrics):
                 if (value < 0) != (signed < 0):
                     continue
                 exponent = Decimal(1).scaleb(-decimals)
-                if value.quantize(exponent, rounding=ROUND_HALF_UP) == signed and (decimals > 0 or value == signed):
+                if value.quantize(exponent, rounding=ROUND_HALF_UP) == signed:
                     candidates.append(metric_id)
         if len(candidates) == 1:
             metric_id = candidates[0]
@@ -537,15 +589,29 @@ def validate_findings(findings,snapshot,evidence):
                 raise ValueError('benchmark explanation requires scoped cross-factory metric references')
             if f.claim_type=='hypothesis' and not cross_refs:
                 raise ValueError('benchmark numeric evidence unavailable; explicit insufficient evidence required')
-        if any(x not in sources for x in f.evidence_refs): raise ValueError('unknown evidence')
+        from .knowledge import Knowledge
+        # 2026-09-24 审批方案 C3：引用未进入本次检索命中集合时查全库——
+        # 库中存在且适用性通过则放行并留痕（evidence_rescued，降为警告）；
+        # 库中不存在或不适用的引用照旧拒绝（防编造引用ID）。
+        effective_sources, rescued_evidence = dict(sources), []
+        for ref in f.evidence_refs:
+            if ref in effective_sources:
+                continue
+            chunk = Knowledge.evidence_in_library(ref, context=snapshot.get('analysis_context'))
+            if chunk is None:
+                raise ValueError('unknown evidence: ' + str(ref))
+            outcome = Knowledge.evidence_applicability(chunk, product=snapshot.get('product'), factory=snapshot.get('factory'), period=snapshot.get('period'), specification=snapshot.get('specification'), context=snapshot.get('analysis_context'))
+            if not outcome['applicable']:
+                raise ValueError('evidence found in library but inapplicable: ' + '、'.join(outcome['reasons']))
+            effective_sources[ref] = chunk
+            rescued_evidence.append(ref)
         if any(x not in f.evidence_refs for x in f.evidence_quotes): raise ValueError('unbound evidence quote')
         for key in f.evidence_refs:
-            ev = sources[key]
+            ev = effective_sources[key]
             quote = f.evidence_quotes.get(key,'')
             if not ev.get('location') and not ev.get('page'): raise ValueError('missing evidence position')
-            if len(quote)<4 or quote not in ev['text']: raise ValueError('unsupported quote')
+            if not _quote_supported(quote, ev['text']): raise ValueError('unsupported quote')
             if len(quote)>180: raise ValueError('quote must be a short positioned excerpt')
-            from .knowledge import Knowledge
             applicability = Knowledge.evidence_applicability(ev, product=snapshot.get('product'), factory=snapshot.get('factory'), period=snapshot.get('period'), specification=snapshot.get('specification'),context=snapshot.get('analysis_context'))
             if not applicability['applicable']: raise ValueError('evidence belongs to a different product or inapplicable scope: ' + '、'.join(applicability['reasons']))
         slots = re.findall(r'\[\[metric:([^\]]+)\]\]',f.text_template)
@@ -575,7 +641,7 @@ def validate_findings(findings,snapshot,evidence):
         for evidence_id,quote in f.evidence_quotes.items():
             if evidence_id in f.evidence_refs and re.search(r'\d',quote) and quote in checked_text:
                 checked_text=checked_text.replace(quote,'')
-                numeric_bindings.append({'type':'positioned_document','value':quote,'evidence_id':evidence_id,'location':sources[evidence_id].get('location') or sources[evidence_id].get('page')})
+                numeric_bindings.append({'type':'positioned_document','value':quote,'evidence_id':evidence_id,'location':effective_sources[evidence_id].get('location') or effective_sources[evidence_id].get('page')})
         # 注册指标值的四舍五入简写：唯一匹配时绑定并扣除（见 _rounded_metric_bindings）。
         checked_text,rounded_bindings=_rounded_metric_bindings(checked_text,metrics)
         numeric_bindings.extend(rounded_bindings)
@@ -592,8 +658,7 @@ def validate_findings(findings,snapshot,evidence):
         if f.claim_type == 'numeric_fact' and not f.metric_refs: raise ValueError('numeric fact requires nonempty metric references')
         if f.claim_type == 'hypothesis':
             if any(not quote_matches_product(q,snapshot.get('product')) for q in f.evidence_quotes.values()):raise ValueError('evidence equipment belongs to a different product')
-            from .knowledge import Knowledge
-            if any(not Knowledge.product_matches(sources[x],snapshot.get('product')) for x in f.evidence_refs):raise ValueError('evidence belongs to a different product')
+            if any(not Knowledge.product_matches(effective_sources[x],snapshot.get('product')) for x in f.evidence_refs):raise ValueError('evidence belongs to a different product')
             if not (f.hypothesis and f.metric_refs and f.evidence_refs and f.missing_evidence): raise ValueError('hypothesis requires both evidence kinds and missing evidence')
             _specific_missing(f.missing_evidence)
             if re.search(r'已证实|确定导致|直接导致|证明.*导致|必然',plain): raise ValueError('unsupported causality')
@@ -632,6 +697,9 @@ def validate_findings(findings,snapshot,evidence):
             text = '；'.join(str(metrics[k].get('label', k)) + '：' + str(metrics[k].get('display_value', metrics[k].get('display', metrics[k].get('value', 'N/A')))) + str(metrics[k].get('unit', '')) for k in f.metric_refs)
         item = f.model_dump()
         if deadline: item['deadline_proposal']=deadline.model_dump()
+        if rescued_evidence:
+            # C3 审计留痕：这些引用未进入本次检索命中集合，按全库存在+适用性核对放行。
+            item['evidence_rescued'] = rescued_evidence
         for field in ('suggestion','verification_target','responsible_role','department','deadline_basis'):
             item[field] = render_visible_text(item[field],snapshot,evidence,f.metric_refs,f.evidence_quotes)
         for field in ('missing_evidence','expected_evidence'):
@@ -806,7 +874,9 @@ class ModelGateway:
              'effective_reasoning_parameters': self.effort_parameters}
         self.generation_parameters['auth_mode'] = self.auth_mode
         self.client = client or httpx.Client(timeout=httpx.Timeout(self.timeout_seconds, connect=min(15, self.timeout_seconds)), follow_redirects=False)
-        self.max_calls = max_calls if max_calls is not None else int(os.getenv('PHARMA_MODEL_MAX_CALLS','40'))
+        # 预算默认 300/天（2026-09-24 审批方案 A：一份完整报告消耗 20+ 次调用，
+        # 旧默认 40 连两份报告都不够，长时服务必然全线降级）。按自然日窗口不变。
+        self.max_calls = max_calls if max_calls is not None else int(os.getenv('PHARMA_MODEL_MAX_CALLS','300'))
         self.max_repairs = max(0,min(2,max_repairs if max_repairs is not None else int(os.getenv('PHARMA_MODEL_MAX_REPAIRS','2'))))
         self.dbpath = self.runtime/'model_gateway.sqlite3'
         with sqlite3.connect(self.dbpath) as db:
@@ -866,7 +936,11 @@ class ModelGateway:
         from .locks import exclusive
         with _CALL_LOCK, exclusive(self.runtime/'model-call.lock'), sqlite3.connect(self.dbpath) as db:
             db.execute('BEGIN IMMEDIATE')
-            count = db.execute("SELECT count(*) FROM calls WHERE operation=?",(operation,)).fetchone()[0]
+            # 2026-09-24 审查：预算原按 operation 全历史计数，长期运行实例累计
+            # 超限后被永久锁死（演示机 generate 已累计200+，全部走规则兜底）。
+            # 护栏语义明确为"按自然日"：跨日自动恢复，单日成本上限不变。
+            midnight = time.mktime(datetime.datetime.combine(datetime.date.today(), datetime.time.min).timetuple())
+            count = db.execute("SELECT count(*) FROM calls WHERE operation=? AND created_at>=?",(operation,midnight)).fetchone()[0]
             if count >= self.max_calls: raise RuntimeError('MODEL_CALL_BUDGET_REACHED')
             rowid = db.execute('INSERT INTO calls(created_at,model,protocol,operation,status,cost,prompt_version,requested_model,endpoint) VALUES(?,?,?,?,?,?,?,?,?)',(time.time(),self.model,self.provider,operation,'STARTED','UNKNOWN',prompt_version or PROMPT_VERSION,self.model,_safe_endpoint(self.base_url,self.key))).lastrowid
         start, usage, error, status = time.monotonic(), {}, None, 'FAILED'
@@ -1080,10 +1154,10 @@ def generate(snapshot,evidence,gateway=None,use_cache=True,allow_model=True):
 输入tasks是程序创建的解释任务。benchmark是独立的同期间跨厂任务，按comparison_contract的左右方向、分母、期间与限制解释差异，不用单厂环比代替跨厂归因；没有两厂同口径明细就具体说明缺什么，并提出两厂可核查的建议。只有左厂证据不能证明右厂的原因，不编造缺失工厂明细。每个task_id只输出一条，不输出summary数字事实，不重复按单位/总额各写一条；数值事实、告警本期/基期/环比以及章节、指标、告警绑定由程序完成。
 每条只能有这些字段：task_id, claim_type, text_template, evidence_refs, evidence_quotes, missing_evidence, recommendation。
 claim_type仅hypothesis或insufficient_evidence。text_template只写定性机制或缺证说明，不写数字，不写任何[[metric:...]]插槽；不要输出metric_refs、alert_refs、section或hypothesis字段，它们由任务合同绑定，不需模型复制。
-有证据支持的机制可选hypothesis，须说“可能”、说明与原文主题有关的机制，并给具体missing_evidence。没有充分证据则选insufficient_evidence，写作语法与程序校验逐条对应：（1）text_template以逗号、分号、句号、问号、感叹号或换行切分后的每个片段，都必须至少含有下列词语之一：不能、无法、不足、尚未、尚不能、缺少、缺乏、未提供、未取得、待核、需核、需要、需补、有待、没有证据、没有记录、没有数据。推荐模板：“未提供｛具体记录｝，尚不能确认｛机制｝，需核查｛对象｝。”禁止先写背景或机制铺垫分句再补限定（如“现有证据仅支持…”“该差异体现在…”开头），这类文本整体拒绝。（2）只说明具体缺什么，不夹带肯定因果；仅复述数字或告警不算原因分析。
+有证据支持的机制可选hypothesis，须说“可能”、说明与原文主题有关的机制，并给具体missing_evidence。没有充分证据则选insufficient_evidence，写作语法与程序校验逐条对应：（1）text_template以句号、分号、问号、感叹号或换行切分后的每一句，都必须至少含有下列词语之一：不能、无法、不足、尚未、尚不能、缺少、缺乏、未提供、未取得、待核、需核、需要、需补、有待、没有证据、没有记录、没有数据（2026-09-24 放宽：同一句内逗号分隔的从句不再单独要求限定词，可先写背景从句再在同句内补限定）。推荐模板：“未提供｛具体记录｝，尚不能确认｛机制｝，需核查｛对象｝。”纯肯定因果句仍然整体拒绝。（2）只说明具体缺什么，不夹带肯定因果；仅复述数字或告警不算原因分析。
 evidence_quotes是对象，键为evidence_refs中的ID，值必须从对应allowed_quotes逐字选择短句；不引用则两个字段分别为空数组、空对象。不得把行情当采购价、维修事件当本期净原因、工单局部损失当月度净减产，不能额外计入费用。
 missing_evidence是具体记录或测量名称的非空数组，不写未绑定的日期、指标数值、空词或确定因果；每一项长度4—120字、不带句读标点，且必须含记录/合同/台账/凭证/单价/耗用/投料/工时/收率/明细/批次/日志/计量/采购价/检验报告等业务对象名词之一（如“对应车间期间批生产记录”“对应月份采购合同台账”），“相关数据”“详细信息”“进一步资料”等泛称不合格。确需日期时，只能使用输入实际/比较期间内的年月，中文年月会规范为ISO；未知日期仍拒绝。
-数字纪律：除 deadline_basis 的1—30工作日建议窗口外，text_template、suggestion、verification_target、expected_evidence、missing_evidence 各字段一律不得手写数字、中文数词或百分比（包括年份、数量、金额、比率）。表达程度只用定性词（“明显下降”“大幅高于”）。确需引用数值程度时：只能引用输入 metrics 的 display 值，且写法必须能在自身小数位下与注册值唯一对应——符号由方向词承担（写“下降15.2%”而不是“-15.2%下降”），百分号必须与注册单位一致；无法唯一对应的数字（如整数简写77%对应76.92%、或编造值）会被整体拒绝，不要尝试绕过。
+数字纪律：除 deadline_basis 的1—30工作日建议窗口外，text_template、suggestion、verification_target、expected_evidence、missing_evidence 各字段一律不得手写数字、中文数词或百分比（包括年份、数量、金额、比率）。表达程度只用定性词（“明显下降”“大幅高于”）。确需引用数值程度时：只能引用输入 metrics 的 display 值，且写法必须能在自身小数位下与注册值唯一对应——符号由方向词承担（写“下降15.2%”而不是“-15.2%下降”），百分号必须与注册单位一致；整数或一位小数简写在唯一对应注册值时会被接受，但无法唯一对应（多个注册值四舍五入到同一写法）或编造的数字仍会被整体拒绝，优先写全精度值。
 写作风格（人类可读性要求，2026-09-21 真人评审反馈）：面向企业成本会计的书面中文。每句只说一件事，句子以15—40字为主；主语用具体名称（如“直接材料”“山茱萸”），少用“该”“其”“上述”；不写“体现了”“反映了”“综上所述”等空泛词；专业词第一次出现时用括号加一句白话解释；全文不出现英文。
 程序已计算确定性根因排序（attribution_directions，含要素/药材/两因子根因、行情同向、对照厂反事实方向）。假设优先与这些方向对齐或显式讨论分歧；只能引用其名称与方向定性词，不得复述其中的数值。归因深度要求：对每个主要差异，优先输出2—3条按可能性排序的方向假设（hypothesis），每条写明“可能性较高/中等/较低”及排序依据（与哪条证据或市场趋势同向）、并给出能证实或证伪它的具体记录；行情、工艺、设备、事件类证据都可以作为方向依据。只有当连一条适用证据都没有时，才输出insufficient_evidence。不要用“证据不足”替代方向判断。
 recommendation可为null；提供时须有suggestion、verification_target、expected_evidence(具体记录数组)、responsible_role(未知写待分配)、department、priority(high/medium/low)、deadline_basis。建议须可核查，生产工艺或质量控制变更须人工批准。deadline_basis可写月度成本结账后、月度成本分析完成后或报告完成后的一至三十个工作日建议窗口（数字形式如“月度成本结账后5个工作日内”），程序绑定为待责任人确认的期限提议，不是已确认日期；金额与比例不能放在期限字段。仅将输入中的适用证据用于本任务，不编造来源。

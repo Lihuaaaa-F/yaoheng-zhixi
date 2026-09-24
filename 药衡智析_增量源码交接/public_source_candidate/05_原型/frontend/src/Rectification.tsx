@@ -41,7 +41,7 @@ export default function Rectification({ selection, snapshot, jobs, actions, refr
       <div className="task-summary" aria-label="任务状态汇总"><div><span>已生成任务</span><strong>{uniqueActions.length}</strong></div><div><span>模拟通知送达</span><strong>{delivered}</strong></div><div><span>责任人确认</span><strong>{ownerConfirmed}</strong></div></div>
       <p className="muted">汇总当前数据范围全部任务，以任务 ID 去重；模拟送达按通知回执统计。责任人确认须有署名与时间记录，发送前确认不计入，送达不等于整改完成。</p></section>
     <section className="panel"><h2>建议转为模拟整改任务</h2>
-      <p className="notice">仅将实际核查建议转为草稿。具体姓名未知时保留“待分配”；确认当前完整内容后才发送题包模拟通知。</p>
+      <p className="notice">仅将实际核查建议转为草稿。具体姓名未知时保留“待分配”；确认当前完整内容后，才会执行题包的模拟RPA送达。</p>
       <label className="finding-select">载入当前报告建议<Select aria-label="载入当前报告建议" placeholder="选择可执行建议，或手动填写" key={snapshot?.snapshot_id} options={availableFindings.map((f:any,i:number)=>({value:i,label:`${cleanText(f.rendered_text??f.text_template).slice(0,60)}｜建议：${cleanText(f.suggestion).slice(0,44)}`}))} onChange={index => {
         const f = availableFindings[index]; if (!f) return;
         setFinding(cleanText(f.rendered_text ?? f.text_template)); setSuggestion(cleanText(f.suggestion)); setTarget(f.verification_target ?? '');

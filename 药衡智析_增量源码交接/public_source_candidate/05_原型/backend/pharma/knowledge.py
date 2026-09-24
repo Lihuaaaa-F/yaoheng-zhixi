@@ -454,6 +454,10 @@ class Knowledge:
     def build(self, progress=None):
         from .locks import exclusive
         with exclusive(self.path / 'build.lock'):
+            # 双重检查：同进程并发首建时，后到者在进程锁上等待，前者建完即已是
+            # 新鲜索引——不再重复做一次全量嵌入（2026-09-24 审查修复）。
+            if self._inputs_fresh():
+                return self.status()
             return self._build(progress)
 
     def _sources(self):
@@ -620,25 +624,62 @@ class Knowledge:
             if effective and end and effective[:7] > end: reasons.append('文档尚未生效')
         return {'applicable':not reasons, 'reasons':reasons, 'limits':limits, 'scope':chunk.get('scope','unknown')}
 
+    @classmethod
+    def evidence_in_library(cls, evidence_id, context=None):
+        """全库证据查找（2026-09-24 审批方案 C3）：按上下文命名空间定位当前
+        知识索引，按 evidence_id 返回证据条目（含 text/location/page）；
+        索引未构建或不存在该 ID 返回 None。只读 fts 库，不做向量加载；
+        by-id 映射随索引版本缓存（与 search 的分块缓存同一策略与上限）。
+        """
+        try:
+            instance = cls(context=context)
+        except Exception:
+            return None
+        version = instance.version
+        if not version:
+            return None
+        target = instance.path / version
+        index_key = (str(target), version, 'by-evidence-id')
+        chunks_by_id = _cache_get(index_key, _CHUNK_CACHE)
+        if chunks_by_id is None:
+            fts_path = target / 'fts.sqlite'
+            if not fts_path.is_file():
+                return None
+            chunks_by_id = {}
+            db = sqlite3.connect(fts_path)
+            try:
+                for row_id, body in db.execute('SELECT id,body FROM chunks'):
+                    try:
+                        chunk = json.loads(body)
+                    except ValueError:
+                        continue
+                    chunks_by_id[str(chunk.get('evidence_id') or row_id)] = chunk
+            finally:
+                db.close()
+            _cache_put(index_key, chunks_by_id, _CHUNK_CACHE)
+        return chunks_by_id.get(str(evidence_id))
+
+    def _inputs_fresh(self):
+        """当前来源/解析器/术语/向量指纹与已建索引一致（无索引时恒 False）。"""
+        if not self.version:
+            return False
+        record = self.status()
+        return (record.get('terminology_hash') == terminology_hash()
+                and record.get('parser_version') == PARSER_VERSION
+                and record.get('sources') == {p.name: file_fingerprint(p) for p in self._sources()}
+                and (record.get('embedding') or {}).get('sha') == embedding_fingerprint_cached(self.model_dir))
+
     def search(self, query, product=None, mode='hybrid', limit=5, factory=None, period=None, specification=None, document_version=None, context=None, event_only=False, keyword_query=None):
         if context is not None and dict(context) != self.context:
             raise ValueError('KNOWLEDGE_CONTEXT_MISMATCH')
         if mode not in ('hybrid','bm25','vector'):
             raise ValueError('mode must be hybrid, bm25 or vector')
-        def current_inputs_match():
-            if not self.version:
-                return False
-            record = self.status()
-            return (record.get('terminology_hash') == terminology_hash()
-                    and record.get('parser_version') == PARSER_VERSION
-                    and record.get('sources') == {p.name: file_fingerprint(p) for p in self._sources()}
-                    and (record.get('embedding') or {}).get('sha') == embedding_fingerprint_cached(self.model_dir))
-        if not current_inputs_match():
+        if not self._inputs_fresh():
             self._embedding, self._collection = None, None
             self.build()
         if not (self.path/'CURRENT').exists():
             return {'status':'FAILED','mode':mode,'evidence':[],'reason':'No valid knowledge snapshot'}
-        if not current_inputs_match():
+        if not self._inputs_fresh():
             return {'status':'FAILED','mode':mode,'evidence':[],'reason':'KNOWLEDGE_REBUILD_FAILED: 当前来源尚未形成有效索引，旧版仍保留'}
         version = (self.path/'CURRENT').read_text().strip()
         target = self.path/version
