@@ -1011,10 +1011,10 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
     # 人工归因评分（2026-09-23 用户反馈 #8）：赛题要求真人 0—5 分评分，此前
     # 只有一行文字无处可填——改为评分表单，空格留待真人署名填写，系统不代填。
     doc.add_paragraph('十、人工归因评分').style=doc.styles['Heading 2']
-    doc.add_paragraph('以下评分由真人评审填写（系统与模型不代填），0—5 分，5 为最好。引用只说明依据来源，不等于已证实因果。')
+    doc.add_paragraph('以下记录由真人评审填写，系统与模型不代填。归因合理性为0—5整数，重点考察具体成本要素、适用知识引用及建议可执行性；章节完整性、内容可读性、视觉版式分别填写通过或不通过，并保留原始意见。引用不等于已证实因果。')
     _score=doc.add_table(rows=1,cols=4)
-    for c,h in zip(_score.rows[0].cells,['评审维度','评分（0—5）','评审人（署名）','评审说明']):c.text=h
-    for dim in ('归因准确性与证据支撑','内容可读性与结构完整性','逐页版式与图表质量','总体评价'):
+    for c,h in zip(_score.rows[0].cells,['评审维度','评分或结论','评审人（署名）','原始意见']):c.text=h
+    for dim in ('归因合理性（0—5整数）','章节完整性（通过/不通过）','内容可读性（通过/不通过）','视觉版式（通过/不通过）'):
         _score.add_row().cells[0].text=dim
     _spec_i=len(dynamic_tbl_specs);dynamic_tbl_specs.append('人工归因评分表')
     _cp=_score.rows[0].cells[0].paragraphs[0]._p
