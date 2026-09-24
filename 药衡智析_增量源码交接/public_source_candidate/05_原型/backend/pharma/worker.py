@@ -138,7 +138,10 @@ def dispatch_loop(stop):
     """Outbox and heartbeat remain responsive while report/model work blocks."""
     actions=ActionStore()
     while not stop.is_set():
-        (RUNTIME/'worker.heartbeat').write_text(str(time.time()))
+        heartbeat=RUNTIME/'worker.heartbeat'
+        staged=heartbeat.with_suffix('.tmp')
+        staged.write_text(str(time.time()))
+        staged.replace(heartbeat)
         for item in actions.pending():
             try:actions.deliver_one(item['action_id'])
             except Exception as exc:

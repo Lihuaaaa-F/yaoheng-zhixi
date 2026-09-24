@@ -83,7 +83,12 @@ async def value_error(request,exc):return JSONResponse(status_code=422,content={
 async def key_error(request,exc):return JSONResponse(status_code=404,content={'error':{'code':'NOT_FOUND','message':str(exc)},'status':'FAILED'})
 @app.get('/health')
 def health():
-    h=RUNTIME/'worker.heartbeat';age=time.time()-float(h.read_text()) if h.exists() else None
+    import math
+    h=RUNTIME/'worker.heartbeat'
+    try:
+        age=time.time()-float(h.read_text())
+        if not math.isfinite(age) or age<0:age=None
+    except (OSError,ValueError):age=None
     from .config import RPA_BASE_URL
     from .local_validation import require_loopback
     simulation=os.getenv('PHARMA_RPA_SIMULATION')=='1'
