@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from './api';
+import { stageLabel } from './labels';
 
 /** 解析流水线进度：轮询 /api/jobs/{id}，实时显示百分比与当前进度内容。
  * 终态（SUCCEEDED/DEGRADED/FAILED）后停止轮询并回调 onDone。 */
@@ -40,7 +41,7 @@ export default function JobProgress({ jobId, onDone, label = '处理进度' }: {
     <div className="progress-track"><div className="progress-fill" data-status={job.status} style={{ width: `${percent}%` }} /></div>
     <p className="muted progress-detail">{job.detail || (terminal ? '已完成' : '排队等待处理…')}</p>
     <details className="progress-history"><summary>步骤时间线</summary>
-      <ul>{(job.history ?? []).map((h: any, i: number) => <li key={i}><span className="muted">{String(h.at ?? '').slice(11, 19)}</span> {h.stage}{h.detail ? ` · ${h.detail}` : ''}</li>)}</ul>
+      <ul>{(job.history ?? []).map((h: any, i: number) => <li key={i}><span className="muted">{String(h.at ?? '').slice(11, 19)}</span> {stageLabel(h.stage)}{h.detail ? ` · ${h.detail}` : ''}</li>)}</ul>
     </details>
   </div>;
 }

@@ -724,6 +724,34 @@ def model_presets():
     from .model_registry import presets_payload
     return presets_payload()
 
+# ---- 系统设置：内网隔离（开启后模型调用仅允许本机/局域网端点，防止敏感数据外发） ----
+class NetworkIsolationPayload(BaseModel):
+    model_config=ConfigDict(extra='forbid')
+    isolation:bool
+
+@app.get('/api/settings/network')
+def get_network_isolation():
+    from . import model_settings
+    return model_settings.network_isolation()
+@app.put('/api/settings/network')
+def put_network_isolation(req:NetworkIsolationPayload):
+    from . import model_settings
+    result=model_settings.save_network_isolation(req.isolation)
+    if req.isolation:
+        # 立即生效校验：开启隔离时，若有已配置外网端点的路由，提示哪些路由会被拦截。
+        from .narrative import ModelGateway
+        blocked=[]
+        for route in ('extraction','analysis','assistant'):
+            try:
+                gateway=ModelGateway.for_route(route)
+            except ValueError as exc:
+                if 'NETWORK_ISOLATION_BLOCKED' in str(exc): blocked.append(route)
+                continue
+            if gateway.base_url and not model_settings._intranet_host(gateway.base_url):
+                blocked.append(route)
+        result['blocked_routes']=blocked
+    return result
+
 @app.get('/api/settings/vector-model')
 def vector_model_status():
     from . import model_settings

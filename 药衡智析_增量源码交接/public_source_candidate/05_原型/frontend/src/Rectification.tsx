@@ -22,7 +22,9 @@ export default function Rectification({ selection, snapshot, jobs, actions, refr
     && a.metadata?.context_id === selection.context_id;
   const visibleActions = showHistory ? actions : actions.filter(matchesSelection);
   const currentReport = snapshotReport(jobs, snapshot?.snapshot_id);
-  const availableFindings = (currentReport?.result?.narrative?.findings ?? []).filter(isActionable);
+  // 按建议文本+核查对象去重：后端多要素偶有相同建议时，下拉不再出现重复项。
+  const availableFindings = (currentReport?.result?.narrative?.findings ?? []).filter(isActionable)
+    .filter((f: any, index: number, list: any[]) => list.findIndex((x: any) => cleanText(x.suggestion) === cleanText(f.suggestion) && cleanText(x.verification_target) === cleanText(f.verification_target)) === index);
   useEffect(() => { setFinding(''); setSuggestion(''); setTarget(''); setExpected(''); setDeadlineBasis(''); setEditing(null); }, [snapshot?.snapshot_id]);
   const run = async (fn: () => Promise<void>) => {
     setPending(true); onError('');
@@ -40,7 +42,7 @@ export default function Rectification({ selection, snapshot, jobs, actions, refr
       <p className="muted">汇总当前数据范围全部任务，以任务 ID 去重；模拟送达按通知回执统计。责任人确认须有署名与时间记录，发送前确认不计入，送达不等于整改完成。</p></section>
     <section className="panel"><h2>建议转为模拟整改任务</h2>
       <p className="notice">仅将实际核查建议转为草稿。具体姓名未知时保留“待分配”；确认当前完整内容后才发送题包模拟通知。</p>
-      <label className="finding-select">载入当前报告建议<Select aria-label="载入当前报告建议" placeholder="选择可执行建议，或手动填写" key={snapshot?.snapshot_id} options={availableFindings.map((f:any,i:number)=>({value:i,label:cleanText(f.suggestion).slice(0,100)}))} onChange={index => {
+      <label className="finding-select">载入当前报告建议<Select aria-label="载入当前报告建议" placeholder="选择可执行建议，或手动填写" key={snapshot?.snapshot_id} options={availableFindings.map((f:any,i:number)=>({value:i,label:`${cleanText(f.rendered_text??f.text_template).slice(0,60)}｜建议：${cleanText(f.suggestion).slice(0,44)}`}))} onChange={index => {
         const f = availableFindings[index]; if (!f) return;
         setFinding(cleanText(f.rendered_text ?? f.text_template)); setSuggestion(cleanText(f.suggestion)); setTarget(f.verification_target ?? '');
         setExpected(Array.isArray(f.expected_evidence) ? f.expected_evidence.join('；') : f.expected_evidence ?? '');

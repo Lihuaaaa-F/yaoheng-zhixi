@@ -12,6 +12,7 @@ export default function BusinessData({ onPublished }: { onPublished?: (value: an
       { id: 'manufacturing_detail', label: '制造费用明细', accept: '.csv,.xlsx', note: '按费用类别的制造费用明细（按要素归集到制造费用口径）。' },
       { id: 'labor_detail', label: '人工工时明细', accept: '.csv,.xlsx', note: '直接人工与工时记录（人工要素按期间归集）。' },
       { id: 'budget', label: '预算数据', accept: '.csv,.xlsx', note: '预算口径的成本与产量（启用预算差异分析）。' },
+      { id: 'industry_reference', label: '行业参考数据', accept: '.csv,.xlsx', note: '外部行业基准行（如 产品类别/行业P25/P50/P75），原样进入分析页“行业参考数据”区块；请上传标注“测试数据”的文件，不参与成本计算。' },
     ]}
     parsePath="/data/parse"
     parseLabel="解析数据"

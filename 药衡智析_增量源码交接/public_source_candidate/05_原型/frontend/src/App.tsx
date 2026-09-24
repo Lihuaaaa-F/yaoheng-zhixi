@@ -21,10 +21,10 @@ const ReportGeneration = lazy(() => import('./ReportGeneration'));
 const Rectification = lazy(() => import('./Rectification'));
 
 const PAGES = [
-  { key: 'analysis', title: '成本分析', group: '工作台', icon: <BarChartOutlined />, intro: '从成本变化出发，核对数据、证据与可执行的建议。' },
-  { key: 'benchmark', title: '跨厂对标', group: '工作台', icon: <SwapOutlined />, intro: '同产品、同规格、同期间，依次找差异、拆结构、查原因。' },
-  { key: 'reports', title: '分析报告', group: '工作台', icon: <FileTextOutlined />, intro: '生成并核验正式报告，下载 Word 与 PDF。' },
-  { key: 'actions', title: '问题整改', group: '工作台', icon: <CheckSquareOutlined />, intro: '将建议转为整改草稿，确认下发并追踪送达和处理状态。' },
+  { key: 'analysis', title: '成本分析', group: '分析决策', icon: <BarChartOutlined />, intro: '从成本变化出发，核对数据、证据与可执行的建议。' },
+  { key: 'benchmark', title: '跨厂对标', group: '分析决策', icon: <SwapOutlined />, intro: '同产品、同规格、同期间，依次找差异、拆结构、查原因。' },
+  { key: 'reports', title: '分析报告', group: '分析决策', icon: <FileTextOutlined />, intro: '生成并核验正式报告，下载 Word 与 PDF。' },
+  { key: 'actions', title: '问题整改', group: '分析决策', icon: <CheckSquareOutlined />, intro: '将建议转为整改草稿，确认下发并追踪送达和处理状态。' },
   { key: 'business', title: '业务数据', group: '数据中心', icon: <DatabaseOutlined />, intro: '导入成本汇总、明细与预算，完成校验后进入分析。' },
   { key: 'knowledge', title: '知识库', group: '数据中心', icon: <BookOutlined />, intro: '管理企业知识资料，检索并核对分析依据。' },
   { key: 'templates', title: '报告模板', group: '数据中心', icon: <FileTextOutlined />, intro: '维护月度、季度和专题报告模板。' },
@@ -71,7 +71,7 @@ export default function App() {
   const previousJobs = useRef(new Map<string, string>());
   const [notifications, notificationHolder] = notification.useNotification();
   const pageInfo = PAGES.find(p => p.key === page)!;
-  const inWorkspace = pageInfo.group === '工作台', currentContext = useRef(contextId); currentContext.current = contextId;
+  const inWorkspace = pageInfo.group === '分析决策', currentContext = useRef(contextId); currentContext.current = contextId;
   const { jobs, actions, refresh, jobsError } = useJobsActions(page === 'reports' || page === 'actions' || preferences.taskNotifications ? 2 : -1, contextId, page === 'reports' || page === 'actions' ? 2000 : 5000);
   const selectionRef = useRef(selection); selectionRef.current = selection;
   const navigate = (next: string) => { if (next !== page) { window.history.pushState(null, '', urlFor(next, selection, left, right)); setPage(next); } setNavOpen(false); };
@@ -80,18 +80,16 @@ export default function App() {
   useEffect(() => { const pop = () => { const value = readLocation(); setPage(value.page); setSelection({ ...value.selection, context_id: currentContext.current }); setLeft(value.left); setRight(value.right); setModelTab(value.modelTab); }; window.addEventListener('popstate', pop); return () => window.removeEventListener('popstate', pop); }, []);
   useEffect(() => { setStorageWarning(!saveUiPreferences(preferences)); }, [preferences]);
   useEffect(() => {
-    const root = document.documentElement;
-    root.dataset.motion = preferences.motion;
-    root.dataset.density = preferences.density;
-  }, [preferences.motion, preferences.density]);
+    document.documentElement.dataset.density = preferences.density;
+  }, [preferences.density]);
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: 0, behavior: 'instant' });
     setActiveSection('g-overview');
     const content = contentRef.current;
-    if (!content || preferences.motion === 'reduce' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (!content) return;
     const animation = content.animate([{ opacity: 0.3, transform: 'translateY(5px)' }, { opacity: 1, transform: 'translateY(0)' }], { duration: 190, easing: 'cubic-bezier(.22,.75,.2,1)' });
     return () => animation.cancel();
-  }, [page, modelTab, preferences.motion]);
+  }, [page, modelTab]);
   useEffect(() => { previousJobs.current = new Map(); }, [contextId, preferences.taskNotifications]);
   useEffect(() => {
     for (const job of jobs) {
@@ -160,7 +158,7 @@ export default function App() {
   };
   const onPublished = () => { setWorkspaceLoading(true); setSnapshot(null); setBenchmark(null); navigate('analysis'); setReload(n => n + 1); };
   const onError = (message: string) => { if (currentContext.current === contextId) setError(message); };
-  const nav = <Menu mode="inline" selectedKeys={[page]} inlineCollapsed={!mobile && collapsed} onClick={({ key }) => navigate(key)} items={['工作台', '数据中心', '模型与设置'].map(group => ({ type: 'group', key: group, label: collapsed && !mobile ? undefined : group, children: PAGES.filter(p => p.group === group).map(p => ({ key: p.key, icon: p.icon, label: p.title, title: p.title })) }))} />;
+  const nav = <Menu mode="inline" selectedKeys={[page]} inlineCollapsed={!mobile && collapsed} onClick={({ key }) => navigate(key)} items={['分析决策', '数据中心', '模型与设置'].map(group => ({ type: 'group', key: group, label: collapsed && !mobile ? undefined : group, children: PAGES.filter(p => p.group === group).map(p => ({ key: p.key, icon: p.icon, label: p.title, title: p.title })) }))} />;
   const assistant = <AssistantDock selection={page==='benchmark'?{...selection,factory:left,benchmark_right:right}:selection} onConfigure={()=>{setModelTab('assistant');navigate('models');setAssistantOpen(false)}} onClose={() => setAssistantOpen(false)} onEvidence={setDrawer} onApplied={value => { void refresh().catch(e=>onError(e.message)); if (value.job_id) navigate('reports'); else if (value.action_id) navigate('actions'); }} />;
   const resizeAssistant = (event: React.PointerEvent<HTMLDivElement>) => {
     event.currentTarget.setPointerCapture(event.pointerId); const start = event.clientX, width = assistantWidth;
@@ -178,8 +176,7 @@ export default function App() {
     if (section instanceof HTMLDetailsElement) section.open = true;
     setActiveSection(id);
     const top = section.getBoundingClientRect().top - scroll.getBoundingClientRect().top + scroll.scrollTop - 4;
-    const reduce = preferences.motion === 'reduce' || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    scroll.scrollTo({ top, behavior: reduce ? 'instant' : 'smooth' });
+    scroll.scrollTo({ top, behavior: 'smooth' });
   };
   const trackSection = () => {
     if (page !== 'analysis') return;
@@ -220,7 +217,7 @@ export default function App() {
             {page === 'analysis' && <Tooltip title="生成报告"><Button className="generate-report-button" type="primary" aria-label="生成报告" icon={<FileTextOutlined />} onClick={() => navigate('reports')}><span>生成报告</span></Button></Tooltip>}
             {analysis_type === 'special' && <label className="topic-field"><span>专题主题</span><Input key={`${contextId}:${selection.topic ?? ''}`} aria-label="专题主题" defaultValue={selection.topic ?? ''} maxLength={120} placeholder="例如：原材料成本变动与核查建议" onBlur={event => { if (event.target.value !== (selection.topic ?? '')) changeSelection({ topic: event.target.value }); }} onPressEnter={event => event.currentTarget.blur()} /></label>}
           </section>}
-          {page === 'analysis' && <nav className="workspace-section-tabs" aria-label="工作台分区导航">{ANALYSIS_SECTIONS.map(([id, label]) => <button key={id} type="button" aria-current={activeSection === id ? 'location' : undefined} onClick={() => jumpToSection(id)}>{label}</button>)}</nav>}
+          {page === 'analysis' && <nav className="workspace-section-tabs" aria-label="分析分区导航">{ANALYSIS_SECTIONS.map(([id, label]) => <button key={id} type="button" aria-current={activeSection === id ? 'location' : undefined} onClick={() => jumpToSection(id)}>{label}</button>)}</nav>}
           {page === 'models' && <div className="workspace-section-tabs" role="tablist" aria-label="模型用途">{MODEL_TABS.map((item, index) => <button type="button" key={item.key} id={`model-tab-${item.key}`} role="tab" aria-selected={modelTab === item.key} aria-controls="model-settings-panel" tabIndex={modelTab === item.key ? 0 : -1} onClick={() => setModelTab(item.key)} onKeyDown={event => {
             if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
             event.preventDefault();
@@ -231,7 +228,7 @@ export default function App() {
         <div className="workspace-scroll" ref={scrollRef} onScroll={trackSection}>
           <div className="business-main" ref={contentRef}>
             {workspaceLoading && inWorkspace && <div className="business-loading" role="status"><Spin /><span>正在汇集已发布的数据…</span></div>}
-            {!workspaceLoading && workspaceState.status === 'EMPTY' && !contextId && inWorkspace && !error && <section className="panel onboarding"><Empty description="尚无可分析的数据" /><p>导入业务文件并完成解析后，工作台会自动汇集数据。</p><Button type="primary" icon={<UploadOutlined />} onClick={() => navigate('business')}>导入业务数据</Button></section>}
+            {!workspaceLoading && workspaceState.status === 'EMPTY' && !contextId && inWorkspace && !error && <section className="panel onboarding"><Empty description="尚无可分析的数据" /><p>导入业务文件并完成解析后，这里会自动汇集数据。</p><Button type="primary" icon={<UploadOutlined />} onClick={() => navigate('business')}>导入业务数据</Button></section>}
             {!workspaceLoading && ['BLOCKED', 'PENDING'].includes(workspaceState.status) && inWorkspace && <Alert className="workspace-data-warning" type="warning" showIcon title={workspaceState.status === 'PENDING' ? '还有文件待解析，分析将在全部通过后更新' : '部分文件未通过校验，暂不能生成新分析'} description={workspaceState.issues.slice(0, 3).map((item, index) => <p key={index}>{item.filename ? `${item.filename}：` : ''}{item.message}</p>)} action={<Button size="small" onClick={() => navigate('business')}>检查数据</Button>} />}
             {analysis_type === 'quarterly' && inWorkspace && <p className="scope-note">季度单位成本按总成本 ÷ 可比产量计算；趋势图保留月度明细，缺月不补零。</p>}
             {error && <Alert type="error" showIcon title={error} action={<Button size="small" onClick={() => { setError(''); setReload(value => value + 1); }}>重试</Button>} />}

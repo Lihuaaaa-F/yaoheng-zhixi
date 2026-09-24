@@ -725,6 +725,13 @@ class ModelGateway:
         # 耗尽（错误码 1113）后自动切换至此继续运行；主端点恢复后自动优先，
         # 无需改代码。置 PHARMA_MODEL_CODING_BASE_URL='' 可禁用。
         self.coding_base_url = '' if independent else os.getenv('PHARMA_MODEL_CODING_BASE_URL', MODEL_CODING_BASE_URL_DEFAULT).rstrip('/')
+        # 内网隔离（2026-09-24）：开启后仅本机/局域网端点可用，外网端点在网关解析期即拒绝；
+        # 公网备用端点（coding）一并禁用，杜绝敏感数据在不知情下发往外部 API。
+        if _settings.network_isolation()['isolation']:
+            if not _settings._intranet_host(self.base_url):
+                raise ValueError('NETWORK_ISOLATION_BLOCKED: 内网隔离已开启，仅允许本机/局域网模型端点；如需外网模型（如 OpenAI）请先在系统设置关闭内网隔离')
+            if self.coding_base_url and not _settings._intranet_host(self.coding_base_url):
+                self.coding_base_url = ''
         self.model = str(setting('model', model, '' if independent else MODEL_DEFAULT, 'PHARMA_MODEL') or '')
         self.auth_mode = setting('auth_mode', auth_mode, 'auto', 'PHARMA_MODEL_AUTH_MODE')
         if self.auth_mode not in ('auto', 'required', 'none'):
@@ -982,11 +989,28 @@ def rule_findings(snapshot,evidence):
             if share in by_key and e.get('unit_contribution') is not None:text+='，占单位成本环比变动的'+number(share)
             fact(k,text+'。',[delta,share])
     if snapshot.get('analysis_context') and snapshot['analysis_context'].get('enterprise_id') != 'competition':
+        # 按要素差异化核查建议（此前三要素共用一句模板，整改“载入报告建议”下拉会出现多条重复项）；
+        # 差异为零的要素不生成建议，方向词跟随差异正负。
+        playbooks = {
+            'material': ('原材料消耗明细与采购合同台账',
+                         '重点核对主要原材料单价与单位耗量变化，区分价差与量差后再分析差异'),
+            'materials': ('原材料消耗明细与采购合同台账',
+                          '重点核对主要原材料单价与单位耗量变化，区分价差与量差后再分析差异'),
+            'labor': ('人工工时台账与工资分配表',
+                      '核对单位工时与工资率变化，确认产量口径一致后再分析差异'),
+            'overhead': ('制造费用归集与分摊口径说明',
+                         '核对费用归集范围与分摊基准是否变化，剔除一次性费用后再分析差异'),
+        }
         for element in elements:
-            if element.get('unit_delta') is not None and Decimal(str(element['unit_delta'])) != 0:
-                action(element['key'],element['name']+'存在期间差异；当前数据仅支持成本比较，尚不足以确认原因。',
-                       element['name']+'成本归集与生产记录',['对应成本归集明细','对应生产计量记录'],'成本核算与生产部门',
-                       '核对成本归集和生产计量记录，确认口径一致后分析差异；缺少明细时保留待核查状态。')
+            if element.get('unit_delta') is None or Decimal(str(element['unit_delta'])) == 0:
+                continue
+            name = element.get('name') or element['key']
+            direction = '上升' if Decimal(str(element['unit_delta'])) > 0 else '下降'
+            expected_detail, suggestion = playbooks.get(
+                element['key'], ('对应成本归集明细', '核对成本归集和生产计量记录，确认口径一致后分析差异'))
+            action(element['key'], name+'单位成本较上期'+direction+'；当前数据仅支持成本比较，尚不足以确认原因。',
+                   name+'：'+expected_detail, [expected_detail, '对应生产计量记录'], '成本核算与生产部门',
+                   suggestion+'；缺少明细时保留待核查状态。')
         return findings
     from .industry_rules import pharmaceutical_rules
     pharmaceutical_rules()(snapshot,evidence,findings,elements=elements,metric_id=metric_id,number=number,fact=fact,action=action)

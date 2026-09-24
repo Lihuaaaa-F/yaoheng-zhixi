@@ -29,6 +29,7 @@
   },
   "elements": {
     "materials": "材料",
+    "material": "材料",
     "labor": "人工",
     "overhead": "制造费用"
   },

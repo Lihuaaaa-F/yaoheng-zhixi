@@ -1,6 +1,6 @@
 import { fmt } from './api';
 // Presentation only: original Decimal strings remain in API evidence and exact tables.
-export const displayNumber=(value:unknown)=>value==null?'N/A':Number(value).toLocaleString('zh-CN',{maximumFractionDigits:4});
+export const displayNumber=(value:unknown)=>value==null?'暂无':Number(value).toLocaleString('zh-CN',{maximumFractionDigits:4});
 export function displayFocusRate(value:unknown){
  const raw=String(value), number=Number(value);
  // Do not round a just-over-threshold rate back onto the strict ±10% boundary.
@@ -31,7 +31,7 @@ export function Acceptance({result}:{result:any}) {
  const humanAllPass=(['section_completeness','readability','visual_quality'] as const).every(k=>(values[k]?.status??values[k])==='PASS');
  const allPass=dimensions.every(([key])=>(values[key]?.status??values[key])==='PASS');
  const overall=acceptance.overall==='PASS'&&allPass?'合格':humanAllPass?'人工验收已通过 · 系统分项存在未通过项':'尚未合格／待评';
- return <div className="acceptance"><p><strong>报告验收：{overall}</strong> · 文件生成成功仅代表产生文件；人工验收以上传的验收文档为准。</p><dl>{dimensions.map(([key,label])=>{const item=values[key];let state=item?.status??item;return <div key={key}><dt>{label}</dt><dd data-status={String(state)} title={typeof item?.reason==='string'?item.reason:undefined}>{statusText(state)}</dd></div>})}</dl><p className="muted">人工归因评分：{Number.isFinite(acceptance.human_attribution_score)&&values.readability?.reviewer?`${acceptance.human_attribution_score}/5（${values.readability.reviewer}）`:"待真人评审"}。可读性与版式以绑定当前产物的实际审核记录为准。</p></div>;
+ return <div className="acceptance"><p><strong>报告验收：{overall}</strong> · 文件生成成功仅代表产生文件。合格标准：8 个分项全部通过；「章节实质完整/内容可读/视觉与版式」三项须由验收负责人在下方「报告评定」登记（姓名、评分、验收文档），其余由系统自动核验。</p><dl>{dimensions.map(([key,label])=>{const item=values[key];let state=item?.status??item;return <div key={key}><dt>{label}</dt><dd data-status={String(state)} title={typeof item?.reason==='string'?item.reason:undefined}>{statusText(state)}</dd></div>})}</dl><p className="muted">人工归因评分：{Number.isFinite(acceptance.human_attribution_score)&&values.readability?.reviewer?`${acceptance.human_attribution_score}/5（${values.readability.reviewer}）`:"待真人评审"}。可读性与版式以绑定当前产物的实际审核记录为准。</p></div>;
 }
 export function periodLabel(period:any){ if(!Array.isArray(period)) return String(period ?? ''); const p=period.map(String); return p.length>2 ? `${p[0]}–${p[p.length-1]}（${p.length}个月）` : p.join(' 至 '); }
 export function MetricDetails({value}:{value:any}) {return <><p className="muted">{value.product} {value.factory} {value.period?.start}{value.period?.end&&value.period?.end!==value.period?.start?` 至 ${value.period.end}`:""}</p>{value.row_keys?.length>0&&<p>数据来源：{[...new Set(value.row_keys.map((key:string)=>key.replace(/:\d+$/,'')))].join("；")} · {value.product} · {value.period?.end??"所选期间"}</p>}<dl className="task-details">{value.value!==undefined&&<><dt>指标数值</dt><dd>{fmt(value.value)} {value.unit}</dd></>}{value.formula&&<><dt>计算口径</dt><dd>{cleanText(value.formula)}</dd></>}{value.comparison_period&&<><dt>比较期间</dt><dd>{periodLabel(value.comparison_period)}</dd></>}{value.numerator!==undefined&&<><dt>分子</dt><dd>{fmt(value.numerator)}</dd></>}{value.denominator!==undefined&&<><dt>分母</dt><dd>{fmt(value.denominator)}</dd></>}</dl></>}

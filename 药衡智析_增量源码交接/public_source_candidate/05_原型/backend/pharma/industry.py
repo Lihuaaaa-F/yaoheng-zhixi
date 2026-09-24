@@ -11,7 +11,7 @@ from collections import defaultdict
 from decimal import Decimal
 from hashlib import sha256
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 import csv
 import json
 import os
@@ -232,6 +232,9 @@ class EnterpriseConfig(Contract):
     products: dict[str, ProductConfig] = Field(min_length=1)
     responsibilities: dict[str,str] = {}
     source_mode: Literal['imported_cost','driver_rebuilt'] = 'imported_cost'
+    # 上传的行业参考数据（通常为测试数据集）：原样列名行集，仅供行业参考区块展示，
+    # 不参与成本事实建模与快照指纹。形如 {'sources': [文件名], 'rows': [{列: 值}]}。
+    industry_reference: dict[str, list[Any]] | None = None
     facts_entry: str = 'facts.json'
     knowledge_entry: str = 'knowledge.json'
 
@@ -819,11 +822,20 @@ def analyze_reference(context_id, factory=None, product=None, month=None, analys
     period_changes = {key: {label: change(current[key], base[key] if base else None)
                            for label, base in bases.items()}
                       for key in ('quantity', 'unit_cost', 'total_cost')}
+    # 行业参考：随企业文档上传的结构化基准行（通常为测试数据集），原样展示；
+    # 无上传时保持空行并沿用包标签，不虚构基准。
+    uploaded_reference = enterprise.get('industry_reference') or {}
+    reference_rows = [dict(row) for row in uploaded_reference.get('rows', [])]
+    reference_notice = _import_or_pack_label(enterprise, pack)
+    if reference_rows:
+        reference_notice = ('行业参考来自上传文件（' + '、'.join(uploaded_reference.get('sources', [])) + '）；'
+                            '为外部基准参考（通常为测试数据，与现实存在差别），不是本厂实测值，'
+                            '缺收入口径时毛利率和费用收入比不可独立计算。')
     result={'snapshot_contract_version':SNAPSHOT_CONTRACT_VERSION,'report_template':report_template,'context_id':context_id,'analysis_context':context.model_dump(),'context_hash':context.context_hash,'data_version':context.data_snapshot,
         'snapshot_id':'','formula_version':FORMULA_VERSION,'factory':factory,'product':product,'month':month,'analysis_type':analysis_type,'basis':basis,
         'specification':enterprise['products'][product]['specification'],'period':{'start':months[0],'end':months[-1]},'metrics':metrics,'elements':elements,'trend':trend,
         'alerts':alerts,'comparison':comparisons,'details':{'available':False,'reason':'当前数据仅含已归集成本与已接入驱动事实；不推算采购/BOM明细','materials':[],'expenses':[],'labor':[],'market':[]},
-        'industry':{'rows':[],'converted_unit_cost':metrics['unit_cost']['value'],'unit':money+'/'+unit,'notice':_import_or_pack_label(enterprise, pack)},'budget_bridge':None,
+        'industry':{'rows':reference_rows,'converted_unit_cost':metrics['unit_cost']['value'],'unit':money+'/'+unit,'notice':reference_notice},'budget_bridge':None,
         'period_values':period_values,'period_changes':period_changes,'materials_summary':[],'expenses_summary':[],'labor_metrics':{},'source_hashes':[context.data_snapshot],
         'quantity_unit':unit,'currency':currency,'data_label':_import_or_pack_label(enterprise, pack),'data_provenance':_data_provenance(enterprise, pack),'capabilities':capabilities(pack,ds),
         'limits':[_import_or_pack_label(enterprise, pack),'未支持联副产品分配和在制品计价；缺少实际价格/实耗不能严格价量分解','维修记录仅支持待验证假设；不是已证实净原因']}

@@ -78,7 +78,7 @@ export function ImportUploadPanel({ kind, types, onUploaded, hint, processingNot
 export const KIND_LABELS: Record<string, string> = { business: '业务数据', knowledge: '知识资料', template: '报告模板' };
 export const DATA_TYPE_LABELS: Record<string, string> = {
   cost_summary: '成本汇总数据', material_detail: '原材料消耗明细', manufacturing_detail: '制造费用明细',
-  labor_detail: '人工工时明细', budget: '预算数据',
+  labor_detail: '人工工时明细', budget: '预算数据', industry_reference: '行业参考数据',
   product: '产品知识', industry: '行业知识', enterprise: '企业内部知识',
   monthly: '月度成本分析', quarterly: '季度成本分析', special: '专题分析',
 };

@@ -44,6 +44,7 @@ desktop.ini
 /药衡智析_增量源码交接/public_source_candidate/06_评测/
 /药衡智析_增量源码交接/public_source_candidate/07_交付/*
 *.docx
+!测试数据集/报告模板/*.docx
 *.pdf
 *.zip
 frontend/dist/

@@ -33,7 +33,10 @@ ROUTE_ALIASES = {'narrative': 'analysis', 'decision': 'extraction'}  # 旧名兼
 FIELDS = ('model', 'base_url', 'protocol', 'key_file', 'vendor', 'reasoning_effort',
           'temperature', 'top_p', 'max_tokens', 'timeout_seconds', 'auth_mode')
 METADATA_FIELDS = ('model_context_windows',)
-EFFORTS = ('', 'none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max')
+# 推理强度三挡（2026-09-24 收窄）：历史 8 挡实际使用中易选错且各上游端点支持不一，
+# 统一收敛为 低/中/高；空串=跟随模型服务默认。旧档位写入/读取时自动归一化。
+EFFORTS = ('', 'low', 'medium', 'high')
+EFFORT_ALIASES = {'none': '', 'minimal': 'low', 'xhigh': 'high', 'max': 'high'}
 DEFAULT_EMBEDDING_SUBDIR = 'models/bge-large-zh-v1.5'
 
 
@@ -74,6 +77,49 @@ def _loopback_host(base: str) -> bool:
     except ValueError:
         return False
     return host in ('localhost', '127.0.0.1', '::1', '0.0.0.0', 'host.docker.internal')
+
+
+def _intranet_host(base: str) -> bool:
+    """内网端点判定：回环、私网地址（RFC1918/ULA/链路本地）、无点单标签主机名。
+
+    内网隔离开启时仅允许这类端点承接模型调用；公网域名/公网 IP 一律拒绝，
+    防止敏感数据在不知情下发往外部 API。
+    """
+    try:
+        from urllib.parse import urlsplit
+        host = (urlsplit(base).hostname or '').lower()
+    except ValueError:
+        return False
+    if not host:
+        return False
+    if host in ('localhost', '::1', '0.0.0.0', 'host.docker.internal') or host.endswith('.local') or host.endswith('.lan'):
+        return True
+    if '.' not in host:  # 局域网单标签主机名，如 http://ollama:11434
+        return True
+    try:
+        import ipaddress
+        address = ipaddress.ip_address(host)
+    except ValueError:
+        return False
+    return address.is_private or address.is_loopback or address.is_link_local
+
+
+def network_isolation() -> dict[str, Any]:
+    """内网隔离开关状态（存设置文件顶层 network 键，缺省关闭）。"""
+    data = _load().get('network')
+    return {'isolation': bool(isinstance(data, dict) and data.get('isolation') is True)}
+
+
+def save_network_isolation(enabled: bool) -> dict[str, Any]:
+    from .locks import exclusive
+    SETTINGS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with exclusive(SETTINGS_PATH.parent / 'model-settings.lock'):
+        value = _load()
+        network = value.get('network') if isinstance(value.get('network'), dict) else {}
+        network['isolation'] = bool(enabled)
+        value['network'] = network
+        _atomic_write(SETTINGS_PATH, json.dumps(value, ensure_ascii=False, indent=1) + '\n')
+    return network_isolation()
 
 
 def _validate_base_url(base: str) -> str | None:
@@ -130,6 +176,8 @@ def _sanitize_overrides(overrides: dict[str, Any] | None) -> dict[str, Any]:
                 raise ValueError('MODEL_PARAMETER_INVALID:' + k) from None
         elif v is not None:
             value = str(v).strip()
+            if k == 'reasoning_effort':
+                value = EFFORT_ALIASES.get(value, value)
             if value or k == 'reasoning_effort':
                 cleaned[k] = value
     if 'key_file' in cleaned:
@@ -281,8 +329,10 @@ def resolve(route: str | None = None) -> dict[str, Any]:
     except ValueError:
         return {}
     data = _migrated().get('connections', {})
-    section = data.get(route)
-    return {k: v for k, v in (section or {}).items() if k in (*FIELDS, *METADATA_FIELDS, 'key_disabled')}
+    section = dict(data.get(route) or {})
+    if section.get('reasoning_effort'):
+        section['reasoning_effort'] = EFFORT_ALIASES.get(section['reasoning_effort'], section['reasoning_effort'])
+    return {k: v for k, v in section.items() if k in (*FIELDS, *METADATA_FIELDS, 'key_disabled')}
 
 
 def context_window_metadata(route: str, model: str, base_url: str | None = None,

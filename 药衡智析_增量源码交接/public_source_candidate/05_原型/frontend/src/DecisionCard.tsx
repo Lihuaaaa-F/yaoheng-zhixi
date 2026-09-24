@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { api, Selection } from './api';
+import { boolLabel } from './labels';
 
 // Agent 自主决策卡（赛题加分项）：展示“生成报告/仅更新看板”的确定性决策、
 // 模型选择说明依据与信号依据；REPORT_NEEDED 时可一键按决策入队报告任务。
@@ -46,13 +47,13 @@ export default function DecisionCard({ selection, onApplied, onError }: {
         <div className="panel-heading"><h2>分析决策建议</h2><span className={needed ? 'outline-label increase' : 'outline-label'}>{needed ? '建议生成正式报告' : '看板更新即可'}</span></div>
         <p>{data.rationale || data.reason}</p>
         <ul className="decision-signals">
-            {(data.signals ?? []).map((s: any) => <li key={s.id}><strong>{s.label}</strong>：{String(s.value)}</li>)}
+            {(data.signals ?? []).map((s: any) => <li key={s.id}><strong>{s.label}</strong>：{boolLabel(s.value)}</li>)}
         </ul>
         <p className="muted">决策由确定性规则作出{data.advisory_status === 'PASS' ? `，说明依据由 ${data.advisory_model} 选择，文字由规则生成` : '，未使用模型说明（结论不受影响）'}。决策仅是系统建议；正式发送与人工审核流程不变。</p>
         <details><summary>查看决策依据</summary><div className="decision-basis">
             <dl>
                 <dt>决策结论</dt><dd>{needed ? '系统判断当前数据版本需要出具一份正式报告' : '系统判断本次仅更新看板即可，无需出具新报告'}。</dd>
-                <dt>触发信号</dt><dd><ul>{(data.signals ?? []).map((s: any) => <li key={s.id}><strong>{s.label}</strong>：{String(s.value)}——{signalExplain[s.id] ?? '按决策规则参与判断'}。</li>)}</ul></dd>
+                <dt>触发信号</dt><dd><ul>{(data.signals ?? []).map((s: any) => <li key={s.id}><strong>{s.label}</strong>：{boolLabel(s.value)}——{signalExplain[s.id] ?? '按决策规则参与判断'}。</li>)}</ul></dd>
                 <dt>说明依据</dt><dd>{data.advisory_status === 'PASS' ? `由模型 ${data.advisory_model} 提供说明依据；决策结论仍由规则决定，模型不改变结论。` : '本次决策未使用模型说明；结论完全由确定性规则得出。'}</dd>
                 <dt>规则版本</dt><dd>决策规则 {data.policy_version}。</dd>
                 {applied && <><dt>已执行</dt><dd>已按此决策入队报告，进度见「分析报告」页。</dd></>}

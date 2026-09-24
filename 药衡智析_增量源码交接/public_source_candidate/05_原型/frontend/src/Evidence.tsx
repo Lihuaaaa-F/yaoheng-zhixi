@@ -1,6 +1,6 @@
 import { Suspense, lazy, useState, useEffect, useRef } from 'react';
 import { api, contextQuery, openApiFile } from './api';
-import { Drawer, Button, Alert, Empty } from 'antd';
+import { Drawer, Button, Alert } from 'antd';
 import { FileTextOutlined, LinkOutlined } from '@ant-design/icons';
 import { cleanText, sourceLabel, DeveloperDetails, MetricDetails } from './presentation';
 // 2026-09-23 审查 SSE-2：Chart3D（echarts-gl 栈）改为动态加载——知识图谱仅在
@@ -157,7 +157,12 @@ export function EvidenceDrawer({value,onClose}:{value:any;onClose:()=>void}) {
   {value.reason&&<Alert type="info" showIcon title={cleanText(value.reason)}/>}
   {value.missing_evidence?.length>0&&<Alert type="warning" showIcon title="仍需补充的证据" description={Array.isArray(value.missing_evidence)?value.missing_evidence.join('；'):value.missing_evidence}/>}
   {error&&<Alert type="error" showIcon title={error}/>}
-  {!sources.length&&value.value===undefined&&<Empty description="当前结论没有可展示的文档证据，请补充资料后核查。"/>}
+  {!sources.length&&value.value===undefined&&<div className="evidence-none">
+    <p>{value.claim_type==='numeric_fact'
+      ?'本条为数值事实：数字由程序按注册口径计算并绑定指标与来源行，不引用文档证据。'
+      :'当前结论没有可展示的文档证据，请补充资料后核查。'}</p>
+    {value.claim_type==='recommendation'&&<p className="muted">本条为规则生成的改进建议；落实情况请在「问题整改」页跟踪。</p>}
+  </div>}
   {sources.map((source:any,index:number)=>{
    const quote=quotes[source.evidence_id]??source.supporting_excerpt;
    const excerpt=source.text??source.excerpt??source.content;

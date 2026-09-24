@@ -5,7 +5,9 @@ import { api } from './api';
 
 type Route = 'extraction' | 'analysis' | 'assistant';
 const LABELS: Record<Route, string> = { extraction: '数据提取模型', analysis: '分析与报告模型', assistant: 'AI 助手独立模型' };
-const EFFORTS = [ ['', '由模型默认决定'], ['none', '关闭推理（none）'], ['minimal', '最少（minimal）'], ['low', '低（low）'], ['medium', '中（medium）'], ['high', '高（high）'], ['xhigh', '最高（xhigh）'], ['max', '最大（max，支持的模型）'] ];
+// 推理强度三挡（2026-09-24 收窄）：历史 8 挡实际使用中易选错，收敛为 低/中/高 + 模型默认；
+// 旧档位（none/minimal/xhigh/max）由后端读取时自动归一化。
+const EFFORTS = [ ['', '由模型默认决定'], ['low', '低'], ['medium', '中'], ['high', '高'] ];
 const initial = { model: '', base_url: '', protocol: 'openai', api_key: '', key_file: '', reasoning_effort: '', temperature: undefined as number | undefined, top_p: undefined as number | undefined, max_tokens: undefined as number | undefined, timeout_seconds: undefined as number | undefined, auth_mode: 'auto', clear_api_key: false };
 
 /** Keys are ephemeral input state. Saving/testing sends only the chosen route; no browser persistence. */

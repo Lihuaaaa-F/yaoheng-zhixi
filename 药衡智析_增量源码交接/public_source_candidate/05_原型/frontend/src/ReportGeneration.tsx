@@ -1,5 +1,5 @@
 import { snapshotReport } from './NarrativePanel';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button, Input, Select } from 'antd';
 import FilePicker from './FilePicker';
 import { api, apiHeaders, openApiFile, Selection } from './api';
@@ -53,7 +53,7 @@ export default function ReportGeneration({ selection, snapshot, jobs, refresh, o
         <p>执行状态：{jobLabel(j.status)}{j.detail && j.detail !== '排队等待处理' ? ` · ${j.detail}` : ''}{typeof j.progress === 'number' && !['SUCCEEDED', 'DEGRADED', 'FAILED'].includes(j.status) ? `（${j.progress}%）` : ''}</p>
         {j.result?.narrative && <AnalysisStatus narrative={j.result.narrative} review={j.result.acceptance} />}
         <Acceptance result={j.result} />
-        {['SUCCEEDED', 'DEGRADED'].includes(j.status) && <AcceptanceUpload jobId={j.id} onDone={refresh} onError={onError} />}
+        {['SUCCEEDED', 'DEGRADED'].includes(j.status) && <ReportAcceptance job={j} onError={onError} />}
         {j.error && <p className="error">本次生成未通过：{j.error}</p>}
         <div className="downloads">{['docx', 'pdf'].map(kind => {
           const a = j.result?.[kind];
@@ -68,6 +68,15 @@ export default function ReportGeneration({ selection, snapshot, jobs, refresh, o
 }
 
 const HUMAN_DIMS = ['section_completeness', 'readability', 'visual_quality'] as const;
+const HUMAN_DIM_SHORT: Record<string, string> = { section_completeness: '章节', readability: '可读', visual_quality: '版式' };
+/** 人工验收区（2026-09-24）：评定标准说明 + 负责人评审登记 + 可追踪的评审历史。 */
+function ReportAcceptance({ job, onError }: { job: any; onError: (s: string) => void }) {
+  const [version, setVersion] = useState(0);
+  return <>
+    <AcceptanceUpload jobId={job.id} onDone={() => setVersion(value => value + 1)} onError={onError} />
+    <ReviewHistory jobId={job.id} version={version} />
+  </>;
+}
 /** 人工验收：上传已签署的验收文档，登记审核记录并重算验收状态（2026-09-23 反馈）。 */
 function AcceptanceUpload({ jobId, onDone, onError }: { jobId: string; onDone: () => void; onError: (s: string) => void }) {
   const [file, setFile] = useState<File | null>(null);
@@ -77,7 +86,7 @@ function AcceptanceUpload({ jobId, onDone, onError }: { jobId: string; onDone: (
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState('');
   const submit = async () => {
-    if (!reviewer.trim()) { onError('人工验收：请填写验收人姓名。'); return; }
+    if (!reviewer.trim()) { onError('人工验收：请填写验收负责人姓名（评定必须可追踪到人）。'); return; }
     if (!file) { onError('人工验收：请选择验收文档（Word/PDF/截图）。'); return; }
     if(score===''||HUMAN_DIMS.some(key=>!['PASS','FAIL'].includes(dimensions[key]))){onError('人工验收：请人工填写归因评分，并逐项选择通过或未通过。');return;}
     setBusy(true); onError('');
@@ -88,22 +97,54 @@ function AcceptanceUpload({ jobId, onDone, onError }: { jobId: string; onDone: (
       const r = await fetch(`/api/reports/${encodeURIComponent(jobId)}/acceptance-doc`, { method: 'POST', body: fd, headers: apiHeaders() });
       const data = await r.json();
       if (!r.ok) throw new Error(data.error?.message ?? data.detail ?? `HTTP ${r.status}`);
-      setDone(`已登记人工验收（验收人 ${reviewer.trim()}；已按各项实际评审结果记录），验收文档已存档。`);
+      setDone(`已登记人工验收（验收负责人 ${reviewer.trim()}；按各项实际评审结果记录，绑定当前报告版本），验收文档已存档。`);
       onDone();
     } catch (e) { onError(e instanceof Error ? e.message : String(e)); }
     finally { setBusy(false); }
   };
   return <details className="acceptance-upload">
-    <summary>人工验收 · 上传验收文档</summary>
+    <summary>报告评定（人工验收）· 由负责人逐项评定</summary>
     {done ? <p className="notice" role="status">{done}</p> : <>
-      <p className="muted">请依据实际审阅逐项填写结果和归因评分，并上传已签署的验收文档（Word / PDF / 截图）。系统按所填结果登记，上传文件本身不代表验收通过。</p>
+      <p className="muted">评定标准：报告合格需 8 个分项全部「通过」。「文件可打开 / 计算一致 / 证据适用 / 任务可执行 / 模型参与」五项由系统自动核验；「章节实质完整 / 内容可读 / 视觉与版式」三项必须由验收负责人在此逐项评定——填写负责人姓名、人工归因评分（0–5），并上传已签署的验收文档。评定记录会保存负责人、时间与所评报告版本；报告重新生成后原评定自动失效，需重新评定。</p>
       <div className="acceptance-form">
-        <label>验收人<Input aria-label="验收人" value={reviewer} onChange={e => setReviewer(e.target.value)} placeholder="如：张三（质量部）" /></label>
+        <label>验收负责人（必填）<Input aria-label="验收负责人" value={reviewer} onChange={e => setReviewer(e.target.value)} placeholder="如：张三（质量部）" /></label>
         <label>人工归因评分（0–5）<Select aria-label="人工归因评分" value={score||undefined} placeholder="请人工评分" onChange={setScore} options={[0,1,2,3,4,5].map(n=>({value:String(n),label:String(n)}))}/></label>
         {([['section_completeness','章节实质完整'],['readability','内容可读'],['visual_quality','视觉与版式']] as const).map(([key,label])=><label key={key}>{label}<Select aria-label={label} value={dimensions[key]||undefined} placeholder="请人工评审" onChange={choice=>setDimensions(value=>({...value,[key]:choice}))} options={[{value:'PASS',label:'通过'},{value:'FAIL',label:'未通过'}]}/></label>)}
         <div className="upload-field grow"><span>验收文档</span><FilePicker file={file} onChange={setFile} accept=".docx,.pdf,.png,.jpg,.jpeg" disabled={busy}/></div>
-        <Button type="primary" loading={busy} onClick={() => void submit()}>提交人工验收</Button>
+        <Button type="primary" loading={busy} onClick={() => void submit()}>提交评定</Button>
       </div>
     </>}
+  </details>;
+}
+/** 评审历史：展示历次评定的负责人、时间、分项结果与版本有效性，确保可追踪。 */
+function ReviewHistory({ jobId, version }: { jobId: string; version: number }) {
+  const [data, setData] = useState<any>(null);
+  useEffect(() => {
+    const controller = new AbortController();
+    api(`/reports/${encodeURIComponent(jobId)}/reviews`, undefined, controller.signal)
+      .then(value => { if (!controller.signal.aborted) setData(value); })
+      .catch(() => { if (!controller.signal.aborted) setData({ reviews: [] }); });
+    return () => controller.abort();
+  }, [jobId, version]);
+  const reviews = data?.reviews ?? [];
+  if (!reviews.length) return null;
+  return <details className="review-history">
+    <summary>评审历史（{reviews.length} 条）</summary>
+    <div className="table-scroll"><table>
+      <thead><tr><th>验收负责人</th><th>评审时间</th><th>人工分项结果</th><th>归因评分</th><th>绑定报告版本</th><th>备注</th></tr></thead>
+      <tbody>{reviews.map((review: any, index: number) => <tr key={review.id ?? index}>
+        <td>{review.reviewer}</td>
+        <td className="muted">{String(review.reviewed_at ?? '').slice(0, 19).replace('T', ' ')}</td>
+        <td>{HUMAN_DIMS.map(key => {
+          const item = review.dimensions?.[key];
+          const status = typeof item === 'object' && item ? item.status : item;
+          return `${HUMAN_DIM_SHORT[key]}${status === 'PASS' ? '通过' : status === 'FAIL' ? '未通过' : '待评'}`;
+        }).join(' / ')}</td>
+        <td>{review.attribution_score ?? '—'}/5</td>
+        <td>{review.valid_for_current_artifacts ? <span className="badge" data-status="PASS">当前版本有效</span> : <span className="badge" data-status="FAIL">已失效（报告已更新）</span>}</td>
+        <td>{review.comment || '—'}</td>
+      </tr>)}</tbody>
+    </table></div>
+    <p className="muted">每条评审绑定当次报告文件版本（文件哈希）；报告重新生成后旧评审自动标记失效，须由负责人重新评定。</p>
   </details>;
 }

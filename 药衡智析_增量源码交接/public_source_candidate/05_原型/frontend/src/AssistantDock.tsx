@@ -10,7 +10,8 @@ type Conversation = ChatSummary & { messages: Message[]; active_turn_id?: string
 type HistoryMode = 'history' | 'archived';
 const stages: Record<string, string> = { queued: '等待处理', running: '分析中', completed: '已完成', failed: '未完成', cancelled: '已取消', context: '读取当前数据', analysis: '核对成本指标', retrieval: '检索适用证据', planning: '组织查询步骤', model: '生成解释', answering: '整理结果', tools: '查询系统数据' };
 const labelStage = (stage: string) => stages[stage?.toLowerCase()] ?? '正在处理请求';
-const effortLabels: Record<string, string> = { '': '默认', none: '关闭', minimal: '最少', low: '低', medium: '中', high: '高', xhigh: '最高', max: '最大' };
+// 推理强度三挡（2026-09-24 收窄）：旧 8 挡与后端 EFFORTS 对齐为 低/中/高 + 模型默认。
+const effortLabels: Record<string, string> = { '': '跟随模型默认', low: '低', medium: '中', high: '高' };
 const chatTitle = (chat: ChatSummary) => chat.title?.trim() || '新对话';
 const chatDate = (chat: ChatSummary) => {
   const date = new Date(chat.updated_at || chat.created_at || '');
@@ -316,8 +317,7 @@ export default function AssistantDock({ selection, onEvidence, onApplied, onConf
     const container = scroll.current, element = document.getElementById('assistant-message-' + id);
     if (!container || !element) return;
     followLatest.current = false; setAtLatest(false); setJumpedMessage(id);
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.dataset.motion === 'reduce' || document.querySelector('.reduce-motion');
-    container.scrollTo({ top: container.scrollTop + element.getBoundingClientRect().top - container.getBoundingClientRect().top - 44, behavior: reduced ? 'auto' : 'smooth' });
+    container.scrollTo({ top: container.scrollTop + element.getBoundingClientRect().top - container.getBoundingClientRect().top - 44, behavior: 'smooth' });
     element.focus({ preventScroll: true });
   };
 
@@ -389,7 +389,7 @@ export default function AssistantDock({ selection, onEvidence, onApplied, onConf
       {usage?.limit_exceeded&&<Alert type="warning" showIcon title="预估内容超过当前上下文窗口，请缩短问题或新建对话。"/>}
       {error && <Alert type="error" showIcon title={error} action={!busy && retryText && !loadingChat ? <Button size="small" onClick={() => send(retryText)}>重试</Button> : undefined} />}
       </div>
-      {!atLatest && !!conversation?.messages?.length && <button type="button" className="assistant-jump-latest" onClick={() => { followLatest.current = true; setAtLatest(true); setJumpedMessage(''); scroll.current?.scrollTo({ top: scroll.current.scrollHeight, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.dataset.motion === 'reduce' ? 'auto' : 'smooth' }); }}>回到最新 <DownOutlined /></button>}
+      {!atLatest && !!conversation?.messages?.length && <button type="button" className="assistant-jump-latest" onClick={() => { followLatest.current = true; setAtLatest(true); setJumpedMessage(''); scroll.current?.scrollTo({ top: scroll.current.scrollHeight, behavior: 'smooth' }); }}>回到最新 <DownOutlined /></button>}
     </div>
     <div className="assistant-composer"><div className="assistant-context"><span title={validSelection ? scope(selection) : undefined}>{validSelection ? scope(selection) : '导入并解析业务数据后即可开始分析'}</span></div>
       <div className="assistant-input-box"><Input.TextArea aria-label="向 AI 助手提问" title="Enter 发送；Shift + Enter 换行" variant="borderless" placeholder="询问当前数据，或提出下一步操作…" autoSize={{ minRows: 3, maxRows: 8 }} value={draft} maxLength={6000} onChange={e => changeDraft(e.target.value)} disabled={loadingChat || creating} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void send(); } }} />

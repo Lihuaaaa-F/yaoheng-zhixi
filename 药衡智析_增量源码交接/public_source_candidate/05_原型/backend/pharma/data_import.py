@@ -39,13 +39,13 @@ TEXT_ENCODINGS = ('utf-8-sig', 'utf-8', 'gb18030', 'big5')
 # 列表按类型展示；类型同时决定解析流水线（业务→数据解析，知识→知识索引，
 # 模板→模板解析）。
 DATA_TYPES = {
-    'business': ('cost_summary', 'material_detail', 'manufacturing_detail', 'labor_detail', 'budget'),
+    'business': ('cost_summary', 'material_detail', 'manufacturing_detail', 'labor_detail', 'budget', 'industry_reference'),
     'knowledge': ('product', 'industry', 'enterprise'),
     'template': ('monthly', 'quarterly', 'special'),
 }
 DATA_TYPE_LABELS = {
     'cost_summary': '成本汇总数据', 'material_detail': '原材料消耗明细', 'manufacturing_detail': '制造费用明细',
-    'labor_detail': '人工工时明细', 'budget': '预算数据',
+    'labor_detail': '人工工时明细', 'budget': '预算数据', 'industry_reference': '行业参考数据',
     'product': '产品知识', 'industry': '行业知识', 'enterprise': '企业内部知识',
     'monthly': '月度成本分析', 'quarterly': '季度成本分析', 'special': '专题分析',
 }
@@ -366,6 +366,35 @@ def _row_amount(header: str, number: Decimal, row_quantity: Decimal | None,
     return number * row_quantity
 
 
+def _validate_industry_reference(record: dict[str, Any]) -> dict[str, Any]:
+    """行业参考数据走旁路校验：不参与成本事实建模，只要求可读出结构化行。
+
+    行业参考是外部基准（通常为测试数据集），列结构因来源而异（如 产品类别/
+    行业P25/行业P50/行业P75），不套用 工厂/产品/期间+要素 的成本合同；
+    发布时原样随企业文档存储，供分析快照的“行业参考数据”区块展示。
+    """
+    folder = IMPORTS_ROOT / record['id']
+    payload = (folder / ('original' + record['meta']['suffix'])).read_bytes()
+    headers, rows = _read_table(record['meta']['suffix'], payload, record['encoding'] or 'utf-8',
+                                record['meta'].get('sheet'))
+    errors: list[dict[str, Any]] = []
+    if len(headers) < 2:
+        errors.append({'file': record['filename'], 'sheet': record['meta'].get('sheet', ''), 'row': '',
+                       'reason': '行业参考数据至少需要两列（如 产品类别 与 基准值），当前未识别出足够列'})
+    if not rows:
+        errors.append({'file': record['filename'], 'sheet': record['meta'].get('sheet', ''), 'row': '',
+                       'reason': '行业参考数据没有有效数据行'})
+    empty_rows = sum(1 for row in rows if not any(str(cell).strip() for cell in row))
+    if empty_rows:
+        errors.append({'file': record['filename'], 'sheet': record['meta'].get('sheet', ''), 'row': '',
+                       'reason': f'行业参考数据含 {empty_rows} 个全空行，请清理后重新上传'})
+    return {'status': 'INVALID' if errors else 'VALID', 'errors': errors[:200],
+            'error_count': len(errors), 'warnings': [],
+            'statistics': {'factories': [], 'products': [], 'periods': [],
+                           'quantity_points': 0, 'cost_cells': 0},
+            'capabilities': [], 'quantity_independent': True}
+
+
 def validate_business(record: dict[str, Any], mapping: dict[str, str], options: dict[str, Any]) -> dict[str, Any]:
     """执行字段映射与口径检查，返回质检错误（含文件/表/行号/原因）与能力预览。
 
@@ -373,6 +402,8 @@ def validate_business(record: dict[str, Any], mapping: dict[str, str], options: 
     金额全空或关键数值列空值率超过 EMPTY_NUMERIC_INVALID_RATIO 时判 INVALID，
     不允许"看起来通过、数据无声消失"的发布。
     """
+    if record['meta'].get('data_type') == 'industry_reference':
+        return _validate_industry_reference(record)
     folder = IMPORTS_ROOT / record['id']
     payload = (folder / ('original' + record['meta']['suffix'])).read_bytes()
     headers, rows = _read_table(record['meta']['suffix'], payload, record['encoding'] or 'utf-8',
@@ -866,6 +897,24 @@ def mark_import_status(record: dict[str, Any], status: str, extra_meta: dict[str
     return _save(record, {**record['meta'], **(extra_meta or {})})
 
 
+def _collect_industry_reference(validations: list[tuple[dict[str, Any], dict[str, str], dict[str, Any], dict[str, Any]]]) -> dict[str, Any]:
+    """汇集本批行业参考文件的结构化行（原样保留列名，供快照行业参考区块展示）。"""
+    rows_out: list[dict[str, Any]] = []
+    sources: list[str] = []
+    for record, _mapping, _options, _validation in validations:
+        if record['meta'].get('data_type') != 'industry_reference':
+            continue
+        payload = (IMPORTS_ROOT / record['id'] / ('original' + record['meta']['suffix'])).read_bytes()
+        headers, rows = _read_table(record['meta']['suffix'], payload, record['encoding'] or 'utf-8',
+                                    record['meta'].get('sheet'))
+        sources.append(record['filename'])
+        for row in rows:
+            cells = {header: cell for header, cell in zip(headers, row) if str(cell).strip() != ''}
+            if cells:
+                rows_out.append(cells)
+    return {'sources': sources, 'rows': rows_out}
+
+
 def publish_business_batch(entries: list[tuple[dict[str, Any], dict[str, str], dict[str, Any]]],
                            enterprise_name: str, pack_id: str, quantity_unit: str, *,
                            workspace_enterprise_id: str | None = None,
@@ -1045,6 +1094,9 @@ def publish_business_batch(entries: list[tuple[dict[str, Any], dict[str, str], d
               'products': {product: {'name': product, 'specification': specification,
                                      'version': '1'} for product in sorted(products)},
               'responsibilities': {}, 'source_mode': 'imported_cost'}
+    industry_reference = _collect_industry_reference(validations)
+    if industry_reference['rows']:
+        config['industry_reference'] = industry_reference
     config_path = enterprise_dir / 'enterprise.json'
     config_path.write_text(json.dumps(config, ensure_ascii=False), encoding='utf-8')
     if workspace_enterprise_id:
