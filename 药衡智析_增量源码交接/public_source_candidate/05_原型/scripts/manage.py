@@ -60,6 +60,9 @@ def worker_ready(api_port):
 
 def occupied(port):
     with socket.socket() as s:
+        # 与 uvicorn 的监听选项一致：已关闭连接的 TIME_WAIT 不代表他人占用。
+        # 活跃 LISTEN 端口仍会拒绝绑定，不能因此终止或接管其他服务。
+        if os.name != 'nt':s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:s.bind(('127.0.0.1',port));return False
         except OSError:return True
 
