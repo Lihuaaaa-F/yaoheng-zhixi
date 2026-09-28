@@ -19,6 +19,8 @@ export default function ReportGeneration({ selection, snapshot, jobs, refresh, o
   useEffect(() => {
     const controller = new AbortController();
     setReadiness(null);
+    const selected = JSON.parse(selectionKey);
+    if (![selected.context_id, selected.factory, selected.product, selected.month].every(value => typeof value === 'string' && value.trim())) return () => controller.abort();
     api('/reports/preflight', JSON.parse(selectionKey), controller.signal)
       .then(value => { if (!controller.signal.aborted) setReadiness(value); })
       .catch(error => { if (!controller.signal.aborted) setReadiness({ready:false,message:error.message}); });
