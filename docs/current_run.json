@@ -47,12 +47,33 @@
   },
   "known_limits": [
     "S3/Q2新增模型解释合同未通过；按用户要求不再修改报告生成部分。",
-    "专题未填主题时默认主题与当前列表筛选不一致，可经历史入口找到报告；报告模块未修改。",
-    "Docker核心部署已测，容器云模型及向量完整链路未配置。"
+    "专题未填主题时默认主题与当前列表筛选不一致，可经历史入口找到报告；报告模块未修改。"
   ],
-  "directory_migration": "HISTORICAL_ARTIFACT_DOWNLOADS_PASS",
-  "clean_install": "PENDING",
+  "directory_migration": "PASS：历史8份文件哈希一致，真实混合检索及来源打开、正式入口启停、32快照/31报告/14任务/0业务评分保留",
+  "clean_install": {
+    "status": "PASS_CORE",
+    "scope": "独立提交目录、共享兼容Python、全新npm缓存安装、无旧dist重建、独立运行数据；原题分析及Word/PDF生成下载、模拟RPA",
+    "model_mode": "无密钥规则降级，不计真实模型或向量验收",
+    "browser_checks": 18
+  },
   "github_delivery": "PENDING",
   "video": "用户暂缓",
-  "ppt": "用户暂缓"
+  "ppt": "用户暂缓",
+  "tested_code_commit": "62c4ab46d1ce1d90929520b6ebfd79957a2dac9f",
+  "windows_launcher": "PASS：新根目录批处理入口实调，普通PowerShell及WSL Docker路径可用",
+  "docker": {
+    "status": "PASS_TESTED_SCOPE",
+    "image_id": "sha256:8928ebb68f055ceead568c407b16a65f6666f278dd74dfff536be0dd9d3a4627",
+    "scope": "独立源码构建、三服务健康、普通用户、容器卷向量资产180片段、真实混合检索5条证据、S1新增授权模型调用、Word/PDF下载及模拟RPA",
+    "model": "deepseek-flash",
+    "narrative_status": "PASS",
+    "business_human_review": "PENDING",
+    "fresh_report_job": "1830b2b1ef4e4274889dd69574209d81",
+    "host_opt_mount": false,
+    "restart_persistence": "PASS"
+  },
+  "frontend_node_tests": {
+    "passed": 2,
+    "failed": 0
+  }
 }

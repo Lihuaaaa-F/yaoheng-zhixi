@@ -1,4 +1,4 @@
-# 药衡智析正式运行镜像（构建上下文 = public_source_candidate/）
+# 药衡智析正式运行镜像（构建上下文 = 仓库根目录）
 # 分两阶段：Node 构建前端静态产物；Python 运行时安装依赖、LibreOffice 与中文字体。
 # 赛题原件不烧入镜像——运行期以只读卷挂载（见 docker-compose.yml）。
 
