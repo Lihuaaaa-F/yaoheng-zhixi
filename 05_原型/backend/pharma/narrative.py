@@ -27,7 +27,7 @@ import httpx
 from .config import RUNTIME, MODEL_DEFAULT, MODEL_PROTOCOL_DEFAULT, MODEL_BASE_URL_DEFAULT, MODEL_CODING_BASE_URL_DEFAULT
 
 PROMPT_VERSION='ranked-diagnostic-paths-v6-bounded-batches'
-VALIDATOR_VERSION='useful-bounded-attribution-v7'
+VALIDATOR_VERSION='useful-bounded-attribution-v8'
 # Aliases may only be added after a live probe has verified that the upstream
 # really serves the requested model under that exact returned id.
 # 追加机制（2026-09-24 审批方案 C5）：环境变量 PHARMA_MODEL_VERIFIED_ALIASES，
@@ -315,7 +315,7 @@ def _specific_missing(items):
     # Cost worksheets and allocation bases are concrete evidence artifacts too.
     # Require the business object and document kind together; accepting any
     # "table" or "explanation" would let vague missing-evidence labels through.
-    cost_document = r'成本(?:核算|归集|对比|对照|差异分析)表|成本核算(?:口径)?说明|成本计算单|(?:制造费用|费用|成本)(?:归集与|归集和)?分摊口径(?:说明|依据)'
+    cost_document = r'成本(?:核算|归集|对比|对照|差异分析)表|成本核算(?:口径)?说明|成本计算单|(?:折旧|摊销)(?:与摊销|和摊销)?分摊表|(?:制造费用|费用|成本)(?:归集与|归集和)?分摊口径(?:说明|依据)'
     if not items or any(
         len(x.strip()) < 4 or len(x) > 120
         or re.search(r'[。；;！!?？]|已证实|导致|证明|必然|是.*原因', x)

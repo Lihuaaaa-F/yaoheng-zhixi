@@ -160,3 +160,11 @@ def test_large_report_batches_tasks_without_repeating_frozen_explanations(tmp_pa
     assert len(requested)==2
     assert sorted(s for batch in requested for s in batch)==['benchmark','labor','materials','overhead']
     assert all(v['status']=='PASS' for v in result['unit_validation'].values())
+
+
+def test_named_depreciation_allocation_schedule_is_specific_evidence():
+    from pharma.narrative import _specific_missing
+    _specific_missing(['折旧与摊销分摊表'])
+    for vague in ['相关分摊表','其他表格资料']:
+        with pytest.raises(ValueError,match='specific records'):
+            _specific_missing([vague])
