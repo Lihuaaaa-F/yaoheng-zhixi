@@ -1,19 +1,21 @@
 {
-  "status": "PENDING",
+  "status": "REVISION_REQUIRED",
   "run_id": "candidate_61d47bd",
   "code_commit": "61d47bdd46f9482b366a84c495748ee4e8114f40",
   "scope": "比赛评测候选，独立于网站业务验收",
   "records": [
     {
       "scenario": "S1",
-      "status": "PENDING",
-      "attribution_score": null,
-      "reviewer": null,
+      "status": "REVISION_REQUIRED",
+      "attribution_score": 2,
+      "reviewer": "胡珺杰",
       "artifact_hashes": {
         "docx": "a465a074ef64b6025f7cd27c7c80daa0c57342ec3d5460f8cc422d719296b340",
         "pdf": "60c8a2740d31d36f97373ca9e0d4c0d820a790796ff30cf3e6eba557bcf72381"
       },
-      "job_id": "26d38b79c3db4cd6b4b8b5ce1a4db128"
+      "job_id": "26d38b79c3db4cd6b4b8b5ce1a4db128",
+      "review_source": "用户本轮明确评分",
+      "feedback": "归因过度保守，缺证清单不能辅助判断根因；需要几种较大可能性的推测、排序依据，以及补齐数据后可达到的归因效果。"
     },
     {
       "scenario": "S2",
@@ -49,5 +51,9 @@
       "job_id": "a662033ea6b547d69da5ae9585bdbbe1"
     }
   ],
-  "historical_scores": "原 A4 S1/S2/S3 各4分，不迁移；Q2不计必测分母"
+  "historical_scores": "原 A4 S1/S2/S3 各4分，不迁移；Q2不计必测分母",
+  "web_check": {
+    "status": "PASS",
+    "source": "用户本轮明确反馈"
+  }
 }

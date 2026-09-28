@@ -198,7 +198,7 @@ def test_reference_pack_end_to_end_mock_explanation(tmp_path,monkeypatch):
 def test_legitimate_domain_missing_evidence_phrases_remain_accepted(text,missing):
     finding={'claim_type':'insufficient_evidence','text_template':text,'missing_evidence':missing}
     out=validate_findings([finding],{},[])[0]
-    assert out['missing_evidence']==missing and '证据不足' in out['text']
+    assert out['missing_evidence']==missing and out['text']==text
 
 
 def _semantic_snapshot():
