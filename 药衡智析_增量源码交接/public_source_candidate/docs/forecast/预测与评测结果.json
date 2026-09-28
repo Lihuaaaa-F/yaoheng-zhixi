@@ -1,0 +1,2326 @@
+{
+  "model_version": "holt-alpha0.6-beta0.3-v4-scoped-coverage",
+  "config": {
+    "alpha": 0.6,
+    "beta": 0.3,
+    "residual_scale": 1.0,
+    "horizon": 3
+  },
+  "source": {
+    "name": "中药一厂_成本汇总_2026年1-6月.csv",
+    "sha256": "08b6be09c9297d8df82b346cfa83507f34a278d7a000187960768d9bb4931c26"
+  },
+  "results": [
+    {
+      "factory": "中药一厂",
+      "product": "六味地黄胶囊",
+      "target": "unit_cost",
+      "unit": "元/盒",
+      "history": [
+        [
+          "2026-01",
+          17.33
+        ],
+        [
+          "2026-02",
+          17.6
+        ],
+        [
+          "2026-03",
+          17.02
+        ],
+        [
+          "2026-04",
+          17.64
+        ],
+        [
+          "2026-05",
+          18.09
+        ],
+        [
+          "2026-06",
+          17.57
+        ]
+      ],
+      "forecast": {
+        "status": "PASS",
+        "forecast_version": "holt-alpha0.6-beta0.3-v4-scoped-coverage",
+        "method": "Holt双参数指数平滑(α=0.6,β=0.3，OLS初始化)",
+        "observations": 6,
+        "history_months": [
+          "2026-01",
+          "2026-06"
+        ],
+        "residual_std": 0.5929,
+        "interval": "实验性波动范围（±样本内一步残差均方根；覆盖率仅针对当前序列的一步滚动留出；小样本结果不能推断总体覆盖率，也不代表多步预测覆盖率）",
+        "one_step_mae": 0.5643,
+        "holdout": {
+          "origins": 3,
+          "mae": 0.2824,
+          "baseline_mae": 0.53,
+          "interval_coverage": {
+            "covered": 3,
+            "tested": 3,
+            "rate": 1.0,
+            "horizon": 1,
+            "scope": "current_series_rolling_origin"
+          }
+        },
+        "baseline": {
+          "method": "last_observation",
+          "points": [
+            {
+              "month": "2026-07",
+              "point": 17.57
+            },
+            {
+              "month": "2026-08",
+              "point": 17.57
+            },
+            {
+              "month": "2026-09",
+              "point": 17.57
+            }
+          ],
+          "one_step_mae": 0.53
+        },
+        "evaluation_notice": "滚动原点留出验证（3 个原点，留出一步MAE：Holt 0.2824，上期值基线 0.53）；波动范围按样本内残差估计，当前序列一步范围覆盖 3/3（100.0%）；覆盖率仅针对当前序列的一步滚动留出；小样本结果不能推断总体覆盖率，也不代表多步预测覆盖率。",
+        "points": [
+          {
+            "month": "2026-07",
+            "point": 17.7323,
+            "low": 17.1395,
+            "high": 18.3252,
+            "negative_warning": false
+          },
+          {
+            "month": "2026-08",
+            "point": 17.7686,
+            "low": 17.1757,
+            "high": 18.3615,
+            "negative_warning": false
+          },
+          {
+            "month": "2026-09",
+            "point": 17.8048,
+            "low": 17.2119,
+            "high": 18.3977,
+            "negative_warning": false
+          }
+        ],
+        "caveat": "预测基于历史成本趋势的统计外推，仅供管理参考，不构成预算承诺；实际成本受采购、工艺与产量影响。"
+      },
+      "rolling_evaluation": {
+        "origins": 3,
+        "horizon": 1,
+        "holt": {
+          "MAE": 0.282368888888886,
+          "RMSE": 0.2955261750643189
+        },
+        "naive_last_value": {
+          "MAE": 0.5299999999999999,
+          "RMSE": 0.5345714794736685
+        },
+        "experimental_range": {
+          "covered": 3,
+          "tested": 3
+        },
+        "checks": [
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-03",
+            "test_month": "2026-04",
+            "actual": 17.64,
+            "prediction": 17.477000000000004,
+            "naive_last_value": 17.02,
+            "error": -0.1629999999999967,
+            "baseline_error": -0.620000000000001,
+            "range_half_width": 0.850000000000005,
+            "covered": true
+          },
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-04",
+            "test_month": "2026-05",
+            "actual": 18.09,
+            "prediction": 17.721140000000005,
+            "naive_last_value": 17.64,
+            "error": -0.3688599999999944,
+            "baseline_error": -0.4499999999999993,
+            "range_half_width": 0.6119922385128783,
+            "covered": true
+          },
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-05",
+            "test_month": "2026-06",
+            "actual": 17.57,
+            "prediction": 17.885246666666667,
+            "naive_last_value": 18.09,
+            "error": 0.3152466666666669,
+            "baseline_error": 0.5199999999999996,
+            "range_half_width": 0.6910655620931425,
+            "covered": true
+          }
+        ]
+      }
+    },
+    {
+      "factory": "中药一厂",
+      "product": "六味地黄胶囊",
+      "target": "materials",
+      "unit": "元/盒",
+      "history": [
+        [
+          "2026-01",
+          12.18
+        ],
+        [
+          "2026-02",
+          12.35
+        ],
+        [
+          "2026-03",
+          11.99
+        ],
+        [
+          "2026-04",
+          12.54
+        ],
+        [
+          "2026-05",
+          12.89
+        ],
+        [
+          "2026-06",
+          12.49
+        ]
+      ],
+      "forecast": {
+        "status": "PASS",
+        "forecast_version": "holt-alpha0.6-beta0.3-v4-scoped-coverage",
+        "method": "Holt双参数指数平滑(α=0.6,β=0.3，OLS初始化)",
+        "observations": 6,
+        "history_months": [
+          "2026-01",
+          "2026-06"
+        ],
+        "residual_std": 0.4867,
+        "interval": "实验性波动范围（±样本内一步残差均方根；覆盖率仅针对当前序列的一步滚动留出；小样本结果不能推断总体覆盖率，也不代表多步预测覆盖率）",
+        "one_step_mae": 0.4682,
+        "holdout": {
+          "origins": 3,
+          "mae": 0.2924,
+          "baseline_mae": 0.4333,
+          "interval_coverage": {
+            "covered": 3,
+            "tested": 3,
+            "rate": 1.0,
+            "horizon": 1,
+            "scope": "current_series_rolling_origin"
+          }
+        },
+        "baseline": {
+          "method": "last_observation",
+          "points": [
+            {
+              "month": "2026-07",
+              "point": 12.49
+            },
+            {
+              "month": "2026-08",
+              "point": 12.49
+            },
+            {
+              "month": "2026-09",
+              "point": 12.49
+            }
+          ],
+          "one_step_mae": 0.4333
+        },
+        "evaluation_notice": "滚动原点留出验证（3 个原点，留出一步MAE：Holt 0.2924，上期值基线 0.4333）；波动范围按样本内残差估计，当前序列一步范围覆盖 3/3（100.0%）；覆盖率仅针对当前序列的一步滚动留出；小样本结果不能推断总体覆盖率，也不代表多步预测覆盖率。",
+        "points": [
+          {
+            "month": "2026-07",
+            "point": 12.659,
+            "low": 12.1724,
+            "high": 13.1457,
+            "negative_warning": false
+          },
+          {
+            "month": "2026-08",
+            "point": 12.7159,
+            "low": 12.2292,
+            "high": 13.2026,
+            "negative_warning": false
+          },
+          {
+            "month": "2026-09",
+            "point": 12.7728,
+            "low": 12.2861,
+            "high": 13.2594,
+            "negative_warning": false
+          }
+        ],
+        "caveat": "预测基于历史成本趋势的统计外推，仅供管理参考，不构成预算承诺；实际成本受采购、工艺与产量影响。"
+      },
+      "rolling_evaluation": {
+        "origins": 3,
+        "horizon": 1,
+        "holt": {
+          "MAE": 0.29236844444444365,
+          "RMSE": 0.2938824501155616
+        },
+        "naive_last_value": {
+          "MAE": 0.43333333333333357,
+          "RMSE": 0.4415880433163924
+        },
+        "experimental_range": {
+          "covered": 3,
+          "tested": 3
+        },
+        "checks": [
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-03",
+            "test_month": "2026-04",
+            "actual": 12.54,
+            "prediction": 12.276600000000002,
+            "naive_last_value": 11.99,
+            "error": -0.2633999999999972,
+            "baseline_error": -0.5499999999999989,
+            "range_half_width": 0.5300000000000011,
+            "covered": true
+          },
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-04",
+            "test_month": "2026-05",
+            "actual": 12.89,
+            "prediction": 12.556652,
+            "naive_last_value": 12.54,
+            "error": -0.33334800000000087,
+            "baseline_error": -0.3500000000000014,
+            "range_half_width": 0.4184970489740637,
+            "covered": true
+          },
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-05",
+            "test_month": "2026-06",
+            "actual": 12.49,
+            "prediction": 12.770357333333333,
+            "naive_last_value": 12.89,
+            "error": 0.2803573333333329,
+            "baseline_error": 0.40000000000000036,
+            "range_half_width": 0.5620926060515087,
+            "covered": true
+          }
+        ]
+      }
+    },
+    {
+      "factory": "中药一厂",
+      "product": "六味地黄胶囊",
+      "target": "labor",
+      "unit": "元/盒",
+      "history": [
+        [
+          "2026-01",
+          2.1
+        ],
+        [
+          "2026-02",
+          2.15
+        ],
+        [
+          "2026-03",
+          2.05
+        ],
+        [
+          "2026-04",
+          2.08
+        ],
+        [
+          "2026-05",
+          2.12
+        ],
+        [
+          "2026-06",
+          2.08
+        ]
+      ],
+      "forecast": {
+        "status": "PASS",
+        "forecast_version": "holt-alpha0.6-beta0.3-v4-scoped-coverage",
+        "method": "Holt双参数指数平滑(α=0.6,β=0.3，OLS初始化)",
+        "observations": 6,
+        "history_months": [
+          "2026-01",
+          "2026-06"
+        ],
+        "residual_std": 0.0449,
+        "interval": "实验性波动范围（±样本内一步残差均方根；覆盖率仅针对当前序列的一步滚动留出；小样本结果不能推断总体覆盖率，也不代表多步预测覆盖率）",
+        "one_step_mae": 0.0354,
+        "holdout": {
+          "origins": 3,
+          "mae": 0.021,
+          "baseline_mae": 0.0367,
+          "interval_coverage": {
+            "covered": 3,
+            "tested": 3,
+            "rate": 1.0,
+            "horizon": 1,
+            "scope": "current_series_rolling_origin"
+          }
+        },
+        "baseline": {
+          "method": "last_observation",
+          "points": [
+            {
+              "month": "2026-07",
+              "point": 2.08
+            },
+            {
+              "month": "2026-08",
+              "point": 2.08
+            },
+            {
+              "month": "2026-09",
+              "point": 2.08
+            }
+          ],
+          "one_step_mae": 0.0367
+        },
+        "evaluation_notice": "滚动原点留出验证（3 个原点，留出一步MAE：Holt 0.021，上期值基线 0.0367）；波动范围按样本内残差估计，当前序列一步范围覆盖 3/3（100.0%）；覆盖率仅针对当前序列的一步滚动留出；小样本结果不能推断总体覆盖率，也不代表多步预测覆盖率。",
+        "points": [
+          {
+            "month": "2026-07",
+            "point": 2.0743,
+            "low": 2.0294,
+            "high": 2.1192,
+            "negative_warning": false
+          },
+          {
+            "month": "2026-08",
+            "point": 2.0668,
+            "low": 2.0219,
+            "high": 2.1117,
+            "negative_warning": false
+          },
+          {
+            "month": "2026-09",
+            "point": 2.0592,
+            "low": 2.0143,
+            "high": 2.1041,
+            "negative_warning": false
+          }
+        ],
+        "caveat": "预测基于历史成本趋势的统计外推，仅供管理参考，不构成预算承诺；实际成本受采购、工艺与产量影响。"
+      },
+      "rolling_evaluation": {
+        "origins": 3,
+        "horizon": 1,
+        "holt": {
+          "MAE": 0.020995999999999793,
+          "RMSE": 0.030871343259836207
+        },
+        "naive_last_value": {
+          "MAE": 0.03666666666666677,
+          "RMSE": 0.03696845502136482
+        },
+        "experimental_range": {
+          "covered": 3,
+          "tested": 3
+        },
+        "checks": [
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-03",
+            "test_month": "2026-04",
+            "actual": 2.08,
+            "prediction": 2.132999999999999,
+            "naive_last_value": 2.05,
+            "error": 0.05299999999999905,
+            "baseline_error": -0.03000000000000025,
+            "range_half_width": 0.1499999999999999,
+            "covered": true
+          },
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-04",
+            "test_month": "2026-05",
+            "actual": 2.12,
+            "prediction": 2.1146599999999993,
+            "naive_last_value": 2.08,
+            "error": -0.0053400000000007886,
+            "baseline_error": -0.040000000000000036,
+            "range_half_width": 0.1124922219533419,
+            "covered": true
+          },
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-05",
+            "test_month": "2026-06",
+            "actual": 2.08,
+            "prediction": 2.0846479999999996,
+            "naive_last_value": 2.12,
+            "error": 0.004647999999999541,
+            "baseline_error": 0.040000000000000036,
+            "range_half_width": 0.05489335114565347,
+            "covered": true
+          }
+        ]
+      }
+    },
+    {
+      "factory": "中药一厂",
+      "product": "六味地黄胶囊",
+      "target": "overhead",
+      "unit": "元/盒",
+      "history": [
+        [
+          "2026-01",
+          3.05
+        ],
+        [
+          "2026-02",
+          3.1
+        ],
+        [
+          "2026-03",
+          2.98
+        ],
+        [
+          "2026-04",
+          3.02
+        ],
+        [
+          "2026-05",
+          3.08
+        ],
+        [
+          "2026-06",
+          3.0
+        ]
+      ],
+      "forecast": {
+        "status": "PASS",
+        "forecast_version": "holt-alpha0.6-beta0.3-v4-scoped-coverage",
+        "method": "Holt双参数指数平滑(α=0.6,β=0.3，OLS初始化)",
+        "observations": 6,
+        "history_months": [
+          "2026-01",
+          "2026-06"
+        ],
+        "residual_std": 0.0687,
+        "interval": "实验性波动范围（±样本内一步残差均方根；覆盖率仅针对当前序列的一步滚动留出；小样本结果不能推断总体覆盖率，也不代表多步预测覆盖率）",
+        "one_step_mae": 0.0607,
+        "holdout": {
+          "origins": 3,
+          "mae": 0.0359,
+          "baseline_mae": 0.06,
+          "interval_coverage": {
+            "covered": 3,
+            "tested": 3,
+            "rate": 1.0,
+            "horizon": 1,
+            "scope": "current_series_rolling_origin"
+          }
+        },
+        "baseline": {
+          "method": "last_observation",
+          "points": [
+            {
+              "month": "2026-07",
+              "point": 3.0
+            },
+            {
+              "month": "2026-08",
+              "point": 3.0
+            },
+            {
+              "month": "2026-09",
+              "point": 3.0
+            }
+          ],
+          "one_step_mae": 0.06
+        },
+        "evaluation_notice": "滚动原点留出验证（3 个原点，留出一步MAE：Holt 0.0359，上期值基线 0.06）；波动范围按样本内残差估计，当前序列一步范围覆盖 3/3（100.0%）；覆盖率仅针对当前序列的一步滚动留出；小样本结果不能推断总体覆盖率，也不代表多步预测覆盖率。",
+        "points": [
+          {
+            "month": "2026-07",
+            "point": 2.999,
+            "low": 2.9303,
+            "high": 3.0677,
+            "negative_warning": false
+          },
+          {
+            "month": "2026-08",
+            "point": 2.9859,
+            "low": 2.9172,
+            "high": 3.0546,
+            "negative_warning": false
+          },
+          {
+            "month": "2026-09",
+            "point": 2.9728,
+            "low": 2.9041,
+            "high": 3.0415,
+            "negative_warning": false
+          }
+        ],
+        "caveat": "预测基于历史成本趋势的统计外推，仅供管理参考，不构成预算承诺；实际成本受采购、工艺与产量影响。"
+      },
+      "rolling_evaluation": {
+        "origins": 3,
+        "horizon": 1,
+        "holt": {
+          "MAE": 0.03593777777777799,
+          "RMSE": 0.03684041180451089
+        },
+        "naive_last_value": {
+          "MAE": 0.06000000000000005,
+          "RMSE": 0.062182527020592154
+        },
+        "experimental_range": {
+          "covered": 3,
+          "tested": 3
+        },
+        "checks": [
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-03",
+            "test_month": "2026-04",
+            "actual": 3.02,
+            "prediction": 3.0674000000000006,
+            "naive_last_value": 2.98,
+            "error": 0.04740000000000055,
+            "baseline_error": -0.040000000000000036,
+            "range_half_width": 0.17000000000000082,
+            "covered": true
+          },
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-04",
+            "test_month": "2026-05",
+            "actual": 3.08,
+            "prediction": 3.049828,
+            "naive_last_value": 3.02,
+            "error": -0.030171999999999866,
+            "baseline_error": -0.06000000000000005,
+            "range_half_width": 0.12479334918175794,
+            "covered": true
+          },
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-05",
+            "test_month": "2026-06",
+            "actual": 3.0,
+            "prediction": 3.0302413333333336,
+            "naive_last_value": 3.08,
+            "error": 0.030241333333333564,
+            "baseline_error": 0.08000000000000007,
+            "range_half_width": 0.08142127759034777,
+            "covered": true
+          }
+        ]
+      }
+    },
+    {
+      "factory": "中药一厂",
+      "product": "六味地黄胶囊",
+      "target": "total_cost",
+      "unit": "元",
+      "history": [
+        [
+          "2026-01",
+          554560.0
+        ],
+        [
+          "2026-02",
+          492800.0
+        ],
+        [
+          "2026-03",
+          595700.0
+        ],
+        [
+          "2026-04",
+          670320.0
+        ],
+        [
+          "2026-05",
+          723600.0
+        ],
+        [
+          "2026-06",
+          614950.0
+        ]
+      ],
+      "forecast": {
+        "status": "PASS",
+        "forecast_version": "holt-alpha0.6-beta0.3-v4-scoped-coverage",
+        "method": "Holt双参数指数平滑(α=0.6,β=0.3，OLS初始化)",
+        "observations": 6,
+        "history_months": [
+          "2026-01",
+          "2026-06"
+        ],
+        "residual_std": 94564.8659,
+        "interval": "实验性波动范围（±样本内一步残差均方根；覆盖率仅针对当前序列的一步滚动留出；小样本结果不能推断总体覆盖率，也不代表多步预测覆盖率）",
+        "one_step_mae": 88293.3964,
+        "holdout": {
+          "origins": 3,
+          "mae": 142909.2889,
+          "baseline_mae": 78850.0,
+          "interval_coverage": {
+            "covered": 1,
+            "tested": 3,
+            "rate": 0.3333333333333333,
+            "horizon": 1,
+            "scope": "current_series_rolling_origin"
+          }
+        },
+        "baseline": {
+          "method": "last_observation",
+          "points": [
+            {
+              "month": "2026-07",
+              "point": 614950.0
+            },
+            {
+              "month": "2026-08",
+              "point": 614950.0
+            },
+            {
+              "month": "2026-09",
+              "point": 614950.0
+            }
+          ],
+          "one_step_mae": 78850.0
+        },
+        "evaluation_notice": "滚动原点留出验证（3 个原点，留出一步MAE：Holt 142909.2889，上期值基线 78850.0）；波动范围按样本内残差估计，当前序列一步范围覆盖 1/3（33.3%）；覆盖率仅针对当前序列的一步滚动留出；小样本结果不能推断总体覆盖率，也不代表多步预测覆盖率。",
+        "points": [
+          {
+            "month": "2026-07",
+            "point": 688508.367,
+            "low": 593943.5011,
+            "high": 783073.2329,
+            "negative_warning": false
+          },
+          {
+            "month": "2026-08",
+            "point": 708967.4049,
+            "low": 614402.539,
+            "high": 803532.2708,
+            "negative_warning": false
+          },
+          {
+            "month": "2026-09",
+            "point": 729426.4428,
+            "low": 634861.5769,
+            "high": 823991.3088,
+            "negative_warning": false
+          }
+        ],
+        "caveat": "预测基于历史成本趋势的统计外推，仅供管理参考，不构成预算承诺；实际成本受采购、工艺与产量影响。"
+      },
+      "rolling_evaluation": {
+        "origins": 3,
+        "horizon": 1,
+        "holt": {
+          "MAE": 142909.28888888887,
+          "RMSE": 144494.40703741647
+        },
+        "naive_last_value": {
+          "MAE": 78850.0,
+          "RMSE": 82080.70276664708
+        },
+        "experimental_range": {
+          "covered": 1,
+          "tested": 3
+        },
+        "checks": [
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-03",
+            "test_month": "2026-04",
+            "actual": 670320.0,
+            "prediction": 497714.8,
+            "naive_last_value": 595700.0,
+            "error": -172605.2,
+            "baseline_error": -74620.0,
+            "range_half_width": 164660.0,
+            "covered": false
+          },
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-04",
+            "test_month": "2026-05",
+            "actual": 723600.0,
+            "prediction": 600225.6560000001,
+            "naive_last_value": 670320.0,
+            "error": -123374.34399999992,
+            "baseline_error": -53280.0,
+            "range_half_width": 168679.3862139651,
+            "covered": true
+          },
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-05",
+            "test_month": "2026-06",
+            "actual": 614950.0,
+            "prediction": 747698.3226666667,
+            "naive_last_value": 723600.0,
+            "error": 132748.3226666667,
+            "baseline_error": 108650.0,
+            "range_half_width": 67843.29162094397,
+            "covered": false
+          }
+        ]
+      }
+    },
+    {
+      "factory": "中药一厂",
+      "product": "板蓝根颗粒",
+      "target": "unit_cost",
+      "unit": "元/盒",
+      "history": [
+        [
+          "2026-01",
+          7.12
+        ],
+        [
+          "2026-02",
+          7.25
+        ],
+        [
+          "2026-03",
+          6.96
+        ],
+        [
+          "2026-04",
+          7.24
+        ],
+        [
+          "2026-05",
+          7.47
+        ],
+        [
+          "2026-06",
+          7.26
+        ]
+      ],
+      "forecast": {
+        "status": "PASS",
+        "forecast_version": "holt-alpha0.6-beta0.3-v4-scoped-coverage",
+        "method": "Holt双参数指数平滑(α=0.6,β=0.3，OLS初始化)",
+        "observations": 6,
+        "history_months": [
+          "2026-01",
+          "2026-06"
+        ],
+        "residual_std": 0.2792,
+        "interval": "实验性波动范围（±样本内一步残差均方根；覆盖率仅针对当前序列的一步滚动留出；小样本结果不能推断总体覆盖率，也不代表多步预测覆盖率）",
+        "one_step_mae": 0.2546,
+        "holdout": {
+          "origins": 3,
+          "mae": 0.1153,
+          "baseline_mae": 0.24,
+          "interval_coverage": {
+            "covered": 3,
+            "tested": 3,
+            "rate": 1.0,
+            "horizon": 1,
+            "scope": "current_series_rolling_origin"
+          }
+        },
+        "baseline": {
+          "method": "last_observation",
+          "points": [
+            {
+              "month": "2026-07",
+              "point": 7.26
+            },
+            {
+              "month": "2026-08",
+              "point": 7.26
+            },
+            {
+              "month": "2026-09",
+              "point": 7.26
+            }
+          ],
+          "one_step_mae": 0.24
+        },
+        "evaluation_notice": "滚动原点留出验证（3 个原点，留出一步MAE：Holt 0.1153，上期值基线 0.24）；波动范围按样本内残差估计，当前序列一步范围覆盖 3/3（100.0%）；覆盖率仅针对当前序列的一步滚动留出；小样本结果不能推断总体覆盖率，也不代表多步预测覆盖率。",
+        "points": [
+          {
+            "month": "2026-07",
+            "point": 7.3215,
+            "low": 7.0423,
+            "high": 7.6007,
+            "negative_warning": false
+          },
+          {
+            "month": "2026-08",
+            "point": 7.343,
+            "low": 7.0638,
+            "high": 7.6221,
+            "negative_warning": false
+          },
+          {
+            "month": "2026-09",
+            "point": 7.3645,
+            "low": 7.0853,
+            "high": 7.6436,
+            "negative_warning": false
+          }
+        ],
+        "caveat": "预测基于历史成本趋势的统计外推，仅供管理参考，不构成预算承诺；实际成本受采购、工艺与产量影响。"
+      },
+      "rolling_evaluation": {
+        "origins": 3,
+        "horizon": 1,
+        "holt": {
+          "MAE": 0.11527866666666646,
+          "RMSE": 0.12748451838033747
+        },
+        "naive_last_value": {
+          "MAE": 0.2399999999999999,
+          "RMSE": 0.24179881444429507
+        },
+        "experimental_range": {
+          "covered": 3,
+          "tested": 3
+        },
+        "checks": [
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-03",
+            "test_month": "2026-04",
+            "actual": 7.24,
+            "prediction": 7.1824,
+            "naive_last_value": 6.96,
+            "error": -0.057599999999999874,
+            "baseline_error": -0.28000000000000025,
+            "range_half_width": 0.41999999999999993,
+            "covered": true
+          },
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-04",
+            "test_month": "2026-05",
+            "actual": 7.47,
+            "prediction": 7.281728,
+            "naive_last_value": 7.24,
+            "error": -0.18827199999999955,
+            "baseline_error": -0.22999999999999954,
+            "range_half_width": 0.29976470772924546,
+            "covered": true
+          },
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-05",
+            "test_month": "2026-06",
+            "actual": 7.26,
+            "prediction": 7.359964,
+            "naive_last_value": 7.47,
+            "error": 0.09996399999999994,
+            "baseline_error": 0.20999999999999996,
+            "range_half_width": 0.3345343330661294,
+            "covered": true
+          }
+        ]
+      }
+    },
+    {
+      "factory": "中药一厂",
+      "product": "板蓝根颗粒",
+      "target": "materials",
+      "unit": "元/盒",
+      "history": [
+        [
+          "2026-01",
+          4.42
+        ],
+        [
+          "2026-02",
+          4.49
+        ],
+        [
+          "2026-03",
+          4.34
+        ],
+        [
+          "2026-04",
+          4.57
+        ],
+        [
+          "2026-05",
+          4.75
+        ],
+        [
+          "2026-06",
+          4.6
+        ]
+      ],
+      "forecast": {
+        "status": "PASS",
+        "forecast_version": "holt-alpha0.6-beta0.3-v4-scoped-coverage",
+        "method": "Holt双参数指数平滑(α=0.6,β=0.3，OLS初始化)",
+        "observations": 6,
+        "history_months": [
+          "2026-01",
+          "2026-06"
+        ],
+        "residual_std": 0.2134,
+        "interval": "实验性波动范围（±样本内一步残差均方根；覆盖率仅针对当前序列的一步滚动留出；小样本结果不能推断总体覆盖率，也不代表多步预测覆盖率）",
+        "one_step_mae": 0.199,
+        "holdout": {
+          "origins": 3,
+          "mae": 0.126,
+          "baseline_mae": 0.1867,
+          "interval_coverage": {
+            "covered": 3,
+            "tested": 3,
+            "rate": 1.0,
+            "horizon": 1,
+            "scope": "current_series_rolling_origin"
+          }
+        },
+        "baseline": {
+          "method": "last_observation",
+          "points": [
+            {
+              "month": "2026-07",
+              "point": 4.6
+            },
+            {
+              "month": "2026-08",
+              "point": 4.6
+            },
+            {
+              "month": "2026-09",
+              "point": 4.6
+            }
+          ],
+          "one_step_mae": 0.1867
+        },
+        "evaluation_notice": "滚动原点留出验证（3 个原点，留出一步MAE：Holt 0.126，上期值基线 0.1867）；波动范围按样本内残差估计，当前序列一步范围覆盖 3/3（100.0%）；覆盖率仅针对当前序列的一步滚动留出；小样本结果不能推断总体覆盖率，也不代表多步预测覆盖率。",
+        "points": [
+          {
+            "month": "2026-07",
+            "point": 4.6711,
+            "low": 4.4578,
+            "high": 4.8845,
+            "negative_warning": false
+          },
+          {
+            "month": "2026-08",
+            "point": 4.7054,
+            "low": 4.492,
+            "high": 4.9187,
+            "negative_warning": false
+          },
+          {
+            "month": "2026-09",
+            "point": 4.7396,
+            "low": 4.5262,
+            "high": 4.953,
+            "negative_warning": false
+          }
+        ],
+        "caveat": "预测基于历史成本趋势的统计外推，仅供管理参考，不构成预算承诺；实际成本受采购、工艺与产量影响。"
+      },
+      "rolling_evaluation": {
+        "origins": 3,
+        "horizon": 1,
+        "holt": {
+          "MAE": 0.12601955555555536,
+          "RMSE": 0.13077206609862688
+        },
+        "naive_last_value": {
+          "MAE": 0.18666666666666684,
+          "RMSE": 0.1895608961081726
+        },
+        "experimental_range": {
+          "covered": 3,
+          "tested": 3
+        },
+        "checks": [
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-03",
+            "test_month": "2026-04",
+            "actual": 4.57,
+            "prediction": 4.4584,
+            "naive_last_value": 4.34,
+            "error": -0.11160000000000014,
+            "baseline_error": -0.23000000000000043,
+            "range_half_width": 0.22000000000000064,
+            "covered": true
+          },
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-04",
+            "test_month": "2026-05",
+            "actual": 4.75,
+            "prediction": 4.575848000000001,
+            "naive_last_value": 4.57,
+            "error": -0.17415199999999942,
+            "baseline_error": -0.17999999999999972,
+            "range_half_width": 0.17443417096429287,
+            "covered": true
+          },
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-05",
+            "test_month": "2026-06",
+            "actual": 4.6,
+            "prediction": 4.692306666666666,
+            "naive_last_value": 4.75,
+            "error": 0.09230666666666654,
+            "baseline_error": 0.15000000000000036,
+            "range_half_width": 0.25304764593078355,
+            "covered": true
+          }
+        ]
+      }
+    },
+    {
+      "factory": "中药一厂",
+      "product": "板蓝根颗粒",
+      "target": "labor",
+      "unit": "元/盒",
+      "history": [
+        [
+          "2026-01",
+          1.05
+        ],
+        [
+          "2026-02",
+          1.08
+        ],
+        [
+          "2026-03",
+          1.02
+        ],
+        [
+          "2026-04",
+          1.04
+        ],
+        [
+          "2026-05",
+          1.06
+        ],
+        [
+          "2026-06",
+          1.04
+        ]
+      ],
+      "forecast": {
+        "status": "PASS",
+        "forecast_version": "holt-alpha0.6-beta0.3-v4-scoped-coverage",
+        "method": "Holt双参数指数平滑(α=0.6,β=0.3，OLS初始化)",
+        "observations": 6,
+        "history_months": [
+          "2026-01",
+          "2026-06"
+        ],
+        "residual_std": 0.0255,
+        "interval": "实验性波动范围（±样本内一步残差均方根；覆盖率仅针对当前序列的一步滚动留出；小样本结果不能推断总体覆盖率，也不代表多步预测覆盖率）",
+        "one_step_mae": 0.0198,
+        "holdout": {
+          "origins": 3,
+          "mae": 0.0101,
+          "baseline_mae": 0.02,
+          "interval_coverage": {
+            "covered": 3,
+            "tested": 3,
+            "rate": 1.0,
+            "horizon": 1,
+            "scope": "current_series_rolling_origin"
+          }
+        },
+        "baseline": {
+          "method": "last_observation",
+          "points": [
+            {
+              "month": "2026-07",
+              "point": 1.04
+            },
+            {
+              "month": "2026-08",
+              "point": 1.04
+            },
+            {
+              "month": "2026-09",
+              "point": 1.04
+            }
+          ],
+          "one_step_mae": 0.02
+        },
+        "evaluation_notice": "滚动原点留出验证（3 个原点，留出一步MAE：Holt 0.0101，上期值基线 0.02）；波动范围按样本内残差估计，当前序列一步范围覆盖 3/3（100.0%）；覆盖率仅针对当前序列的一步滚动留出；小样本结果不能推断总体覆盖率，也不代表多步预测覆盖率。",
+        "points": [
+          {
+            "month": "2026-07",
+            "point": 1.0357,
+            "low": 1.0102,
+            "high": 1.0612,
+            "negative_warning": false
+          },
+          {
+            "month": "2026-08",
+            "point": 1.0314,
+            "low": 1.0059,
+            "high": 1.0569,
+            "negative_warning": false
+          },
+          {
+            "month": "2026-09",
+            "point": 1.0271,
+            "low": 1.0016,
+            "high": 1.0526,
+            "negative_warning": false
+          }
+        ],
+        "caveat": "预测基于历史成本趋势的统计外推，仅供管理参考，不构成预算承诺；实际成本受采购、工艺与产量影响。"
+      },
+      "rolling_evaluation": {
+        "origins": 3,
+        "horizon": 1,
+        "holt": {
+          "MAE": 0.010074666666666602,
+          "RMSE": 0.0172063104702897
+        },
+        "naive_last_value": {
+          "MAE": 0.020000000000000018,
+          "RMSE": 0.020000000000000018
+        },
+        "experimental_range": {
+          "covered": 3,
+          "tested": 3
+        },
+        "checks": [
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-03",
+            "test_month": "2026-04",
+            "actual": 1.04,
+            "prediction": 1.0698,
+            "naive_last_value": 1.02,
+            "error": 0.02980000000000005,
+            "baseline_error": -0.020000000000000018,
+            "range_half_width": 0.09000000000000008,
+            "covered": true
+          },
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-04",
+            "test_month": "2026-05",
+            "actual": 1.06,
+            "prediction": 1.0603559999999999,
+            "naive_last_value": 1.04,
+            "error": 0.0003559999999998009,
+            "baseline_error": -0.020000000000000018,
+            "range_half_width": 0.06703745221889036,
+            "covered": true
+          },
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-05",
+            "test_month": "2026-06",
+            "actual": 1.04,
+            "prediction": 1.039932,
+            "naive_last_value": 1.06,
+            "error": -6.799999999995698e-05,
+            "baseline_error": 0.020000000000000018,
+            "range_half_width": 0.03124387940061228,
+            "covered": true
+          }
+        ]
+      }
+    },
+    {
+      "factory": "中药一厂",
+      "product": "板蓝根颗粒",
+      "target": "overhead",
+      "unit": "元/盒",
+      "history": [
+        [
+          "2026-01",
+          1.65
+        ],
+        [
+          "2026-02",
+          1.68
+        ],
+        [
+          "2026-03",
+          1.6
+        ],
+        [
+          "2026-04",
+          1.63
+        ],
+        [
+          "2026-05",
+          1.66
+        ],
+        [
+          "2026-06",
+          1.62
+        ]
+      ],
+      "forecast": {
+        "status": "PASS",
+        "forecast_version": "holt-alpha0.6-beta0.3-v4-scoped-coverage",
+        "method": "Holt双参数指数平滑(α=0.6,β=0.3，OLS初始化)",
+        "observations": 6,
+        "history_months": [
+          "2026-01",
+          "2026-06"
+        ],
+        "residual_std": 0.0424,
+        "interval": "实验性波动范围（±样本内一步残差均方根；覆盖率仅针对当前序列的一步滚动留出；小样本结果不能推断总体覆盖率，也不代表多步预测覆盖率）",
+        "one_step_mae": 0.0358,
+        "holdout": {
+          "origins": 3,
+          "mae": 0.0155,
+          "baseline_mae": 0.0333,
+          "interval_coverage": {
+            "covered": 3,
+            "tested": 3,
+            "rate": 1.0,
+            "horizon": 1,
+            "scope": "current_series_rolling_origin"
+          }
+        },
+        "baseline": {
+          "method": "last_observation",
+          "points": [
+            {
+              "month": "2026-07",
+              "point": 1.62
+            },
+            {
+              "month": "2026-08",
+              "point": 1.62
+            },
+            {
+              "month": "2026-09",
+              "point": 1.62
+            }
+          ],
+          "one_step_mae": 0.0333
+        },
+        "evaluation_notice": "滚动原点留出验证（3 个原点，留出一步MAE：Holt 0.0155，上期值基线 0.0333）；波动范围按样本内残差估计，当前序列一步范围覆盖 3/3（100.0%）；覆盖率仅针对当前序列的一步滚动留出；小样本结果不能推断总体覆盖率，也不代表多步预测覆盖率。",
+        "points": [
+          {
+            "month": "2026-07",
+            "point": 1.6147,
+            "low": 1.5723,
+            "high": 1.657,
+            "negative_warning": false
+          },
+          {
+            "month": "2026-08",
+            "point": 1.6062,
+            "low": 1.5639,
+            "high": 1.6486,
+            "negative_warning": false
+          },
+          {
+            "month": "2026-09",
+            "point": 1.5978,
+            "low": 1.5554,
+            "high": 1.6401,
+            "negative_warning": false
+          }
+        ],
+        "caveat": "预测基于历史成本趋势的统计外推，仅供管理参考，不构成预算承诺；实际成本受采购、工艺与产量影响。"
+      },
+      "rolling_evaluation": {
+        "origins": 3,
+        "horizon": 1,
+        "holt": {
+          "MAE": 0.015467111111111246,
+          "RMSE": 0.01688071237745539
+        },
+        "naive_last_value": {
+          "MAE": 0.033333333333333215,
+          "RMSE": 0.0336650164612068
+        },
+        "experimental_range": {
+          "covered": 3,
+          "tested": 3
+        },
+        "checks": [
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-03",
+            "test_month": "2026-04",
+            "actual": 1.63,
+            "prediction": 1.6542000000000001,
+            "naive_last_value": 1.6,
+            "error": 0.02420000000000022,
+            "baseline_error": -0.029999999999999805,
+            "range_half_width": 0.1100000000000001,
+            "covered": true
+          },
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-04",
+            "test_month": "2026-05",
+            "actual": 1.66,
+            "prediction": 1.6455239999999998,
+            "naive_last_value": 1.63,
+            "error": -0.014476000000000155,
+            "baseline_error": -0.030000000000000027,
+            "range_half_width": 0.07964182318355109,
+            "covered": true
+          },
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-05",
+            "test_month": "2026-06",
+            "actual": 1.62,
+            "prediction": 1.6277253333333335,
+            "naive_last_value": 1.66,
+            "error": 0.007725333333333362,
+            "baseline_error": 0.039999999999999813,
+            "range_half_width": 0.05158414915886886,
+            "covered": true
+          }
+        ]
+      }
+    },
+    {
+      "factory": "中药一厂",
+      "product": "板蓝根颗粒",
+      "target": "total_cost",
+      "unit": "元",
+      "history": [
+        [
+          "2026-01",
+          605200.0
+        ],
+        [
+          "2026-02",
+          522000.0
+        ],
+        [
+          "2026-03",
+          661200.0
+        ],
+        [
+          "2026-04",
+          709520.0
+        ],
+        [
+          "2026-05",
+          761940.0
+        ],
+        [
+          "2026-06",
+          653400.0
+        ]
+      ],
+      "forecast": {
+        "status": "PASS",
+        "forecast_version": "holt-alpha0.6-beta0.3-v4-scoped-coverage",
+        "method": "Holt双参数指数平滑(α=0.6,β=0.3，OLS初始化)",
+        "observations": 6,
+        "history_months": [
+          "2026-01",
+          "2026-06"
+        ],
+        "residual_std": 89272.4623,
+        "interval": "实验性波动范围（±样本内一步残差均方根；覆盖率仅针对当前序列的一步滚动留出；小样本结果不能推断总体覆盖率，也不代表多步预测覆盖率）",
+        "one_step_mae": 77717.1396,
+        "holdout": {
+          "origins": 3,
+          "mae": 151484.7484,
+          "baseline_mae": 69760.0,
+          "interval_coverage": {
+            "covered": 2,
+            "tested": 3,
+            "rate": 0.6666666666666666,
+            "horizon": 1,
+            "scope": "current_series_rolling_origin"
+          }
+        },
+        "baseline": {
+          "method": "last_observation",
+          "points": [
+            {
+              "month": "2026-07",
+              "point": 653400.0
+            },
+            {
+              "month": "2026-08",
+              "point": 653400.0
+            },
+            {
+              "month": "2026-09",
+              "point": 653400.0
+            }
+          ],
+          "one_step_mae": 69760.0
+        },
+        "evaluation_notice": "滚动原点留出验证（3 个原点，留出一步MAE：Holt 151484.7484，上期值基线 69760.0）；波动范围按样本内残差估计，当前序列一步范围覆盖 2/3（66.7%）；覆盖率仅针对当前序列的一步滚动留出；小样本结果不能推断总体覆盖率，也不代表多步预测覆盖率。",
+        "points": [
+          {
+            "month": "2026-07",
+            "point": 728916.0428,
+            "low": 639643.5805,
+            "high": 818188.5051,
+            "negative_warning": false
+          },
+          {
+            "month": "2026-08",
+            "point": 748944.2114,
+            "low": 659671.7491,
+            "high": 838216.6737,
+            "negative_warning": false
+          },
+          {
+            "month": "2026-09",
+            "point": 768972.3801,
+            "low": 679699.9178,
+            "high": 858244.8424,
+            "negative_warning": false
+          }
+        ],
+        "caveat": "预测基于历史成本趋势的统计外推，仅供管理参考，不构成预算承诺；实际成本受采购、工艺与产量影响。"
+      },
+      "rolling_evaluation": {
+        "origins": 3,
+        "horizon": 1,
+        "holt": {
+          "MAE": 151484.74844444447,
+          "RMSE": 152869.31795885076
+        },
+        "naive_last_value": {
+          "MAE": 69760.0,
+          "RMSE": 74974.68550562028
+        },
+        "experimental_range": {
+          "covered": 2,
+          "tested": 3
+        },
+        "checks": [
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-03",
+            "test_month": "2026-04",
+            "actual": 709520.0,
+            "prediction": 529072.0,
+            "naive_last_value": 661200.0,
+            "error": -180448.0,
+            "baseline_error": -48320.0,
+            "range_half_width": 222400.0,
+            "covered": true
+          },
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-04",
+            "test_month": "2026-05",
+            "actual": 761940.0,
+            "prediction": 626653.4400000001,
+            "naive_last_value": 709520.0,
+            "error": -135286.55999999994,
+            "baseline_error": -52420.0,
+            "range_half_width": 202513.25969427286,
+            "covered": true
+          },
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-05",
+            "test_month": "2026-06",
+            "actual": 653400.0,
+            "prediction": 792119.6853333334,
+            "naive_last_value": 761940.0,
+            "error": 138719.68533333344,
+            "baseline_error": 108540.0,
+            "range_half_width": 48298.89478781519,
+            "covered": false
+          }
+        ]
+      }
+    },
+    {
+      "factory": "中药一厂",
+      "product": "银黄口服液",
+      "target": "unit_cost",
+      "unit": "元/盒",
+      "history": [
+        [
+          "2026-01",
+          10.7
+        ],
+        [
+          "2026-02",
+          10.87
+        ],
+        [
+          "2026-03",
+          10.53
+        ],
+        [
+          "2026-04",
+          10.9
+        ],
+        [
+          "2026-05",
+          11.21
+        ],
+        [
+          "2026-06",
+          10.93
+        ]
+      ],
+      "forecast": {
+        "status": "PASS",
+        "forecast_version": "holt-alpha0.6-beta0.3-v4-scoped-coverage",
+        "method": "Holt双参数指数平滑(α=0.6,β=0.3，OLS初始化)",
+        "observations": 6,
+        "history_months": [
+          "2026-01",
+          "2026-06"
+        ],
+        "residual_std": 0.3598,
+        "interval": "实验性波动范围（±样本内一步残差均方根；覆盖率仅针对当前序列的一步滚动留出；小样本结果不能推断总体覆盖率，也不代表多步预测覆盖率）",
+        "one_step_mae": 0.3344,
+        "holdout": {
+          "origins": 3,
+          "mae": 0.1652,
+          "baseline_mae": 0.32,
+          "interval_coverage": {
+            "covered": 3,
+            "tested": 3,
+            "rate": 1.0,
+            "horizon": 1,
+            "scope": "current_series_rolling_origin"
+          }
+        },
+        "baseline": {
+          "method": "last_observation",
+          "points": [
+            {
+              "month": "2026-07",
+              "point": 10.93
+            },
+            {
+              "month": "2026-08",
+              "point": 10.93
+            },
+            {
+              "month": "2026-09",
+              "point": 10.93
+            }
+          ],
+          "one_step_mae": 0.32
+        },
+        "evaluation_notice": "滚动原点留出验证（3 个原点，留出一步MAE：Holt 0.1652，上期值基线 0.32）；波动范围按样本内残差估计，当前序列一步范围覆盖 3/3（100.0%）；覆盖率仅针对当前序列的一步滚动留出；小样本结果不能推断总体覆盖率，也不代表多步预测覆盖率。",
+        "points": [
+          {
+            "month": "2026-07",
+            "point": 11.0318,
+            "low": 10.672,
+            "high": 11.3917,
+            "negative_warning": false
+          },
+          {
+            "month": "2026-08",
+            "point": 11.071,
+            "low": 10.7111,
+            "high": 11.4308,
+            "negative_warning": false
+          },
+          {
+            "month": "2026-09",
+            "point": 11.1101,
+            "low": 10.7503,
+            "high": 11.4699,
+            "negative_warning": false
+          }
+        ],
+        "caveat": "预测基于历史成本趋势的统计外推，仅供管理参考，不构成预算承诺；实际成本受采购、工艺与产量影响。"
+      },
+      "rolling_evaluation": {
+        "origins": 3,
+        "horizon": 1,
+        "holt": {
+          "MAE": 0.16523600000000074,
+          "RMSE": 0.17828050624414024
+        },
+        "naive_last_value": {
+          "MAE": 0.3200000000000009,
+          "RMSE": 0.32218007387174113
+        },
+        "experimental_range": {
+          "covered": 3,
+          "tested": 3
+        },
+        "checks": [
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-03",
+            "test_month": "2026-04",
+            "actual": 10.9,
+            "prediction": 10.812199999999999,
+            "naive_last_value": 10.53,
+            "error": -0.08780000000000143,
+            "baseline_error": -0.370000000000001,
+            "range_half_width": 0.5100000000000016,
+            "covered": true
+          },
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-04",
+            "test_month": "2026-05",
+            "actual": 11.21,
+            "prediction": 10.958884,
+            "naive_last_value": 10.9,
+            "error": -0.25111600000000145,
+            "baseline_error": -0.3100000000000005,
+            "range_half_width": 0.3659295287347018,
+            "covered": true
+          },
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-05",
+            "test_month": "2026-06",
+            "actual": 10.93,
+            "prediction": 11.086791999999999,
+            "naive_last_value": 11.21,
+            "error": 0.15679199999999938,
+            "baseline_error": 0.28000000000000114,
+            "range_half_width": 0.42653074918463013,
+            "covered": true
+          }
+        ]
+      }
+    },
+    {
+      "factory": "中药一厂",
+      "product": "银黄口服液",
+      "target": "materials",
+      "unit": "元/盒",
+      "history": [
+        [
+          "2026-01",
+          6.83
+        ],
+        [
+          "2026-02",
+          6.92
+        ],
+        [
+          "2026-03",
+          6.77
+        ],
+        [
+          "2026-04",
+          7.08
+        ],
+        [
+          "2026-05",
+          7.3
+        ],
+        [
+          "2026-06",
+          7.13
+        ]
+      ],
+      "forecast": {
+        "status": "PASS",
+        "forecast_version": "holt-alpha0.6-beta0.3-v4-scoped-coverage",
+        "method": "Holt双参数指数平滑(α=0.6,β=0.3，OLS初始化)",
+        "observations": 6,
+        "history_months": [
+          "2026-01",
+          "2026-06"
+        ],
+        "residual_std": 0.2616,
+        "interval": "实验性波动范围（±样本内一步残差均方根；覆盖率仅针对当前序列的一步滚动留出；小样本结果不能推断总体覆盖率，也不代表多步预测覆盖率）",
+        "one_step_mae": 0.2468,
+        "holdout": {
+          "origins": 3,
+          "mae": 0.1672,
+          "baseline_mae": 0.2333,
+          "interval_coverage": {
+            "covered": 2,
+            "tested": 3,
+            "rate": 0.6666666666666666,
+            "horizon": 1,
+            "scope": "current_series_rolling_origin"
+          }
+        },
+        "baseline": {
+          "method": "last_observation",
+          "points": [
+            {
+              "month": "2026-07",
+              "point": 7.13
+            },
+            {
+              "month": "2026-08",
+              "point": 7.13
+            },
+            {
+              "month": "2026-09",
+              "point": 7.13
+            }
+          ],
+          "one_step_mae": 0.2333
+        },
+        "evaluation_notice": "滚动原点留出验证（3 个原点，留出一步MAE：Holt 0.1672，上期值基线 0.2333）；波动范围按样本内残差估计，当前序列一步范围覆盖 2/3（66.7%）；覆盖率仅针对当前序列的一步滚动留出；小样本结果不能推断总体覆盖率，也不代表多步预测覆盖率。",
+        "points": [
+          {
+            "month": "2026-07",
+            "point": 7.2383,
+            "low": 6.9766,
+            "high": 7.4999,
+            "negative_warning": false
+          },
+          {
+            "month": "2026-08",
+            "point": 7.2967,
+            "low": 7.0351,
+            "high": 7.5584,
+            "negative_warning": false
+          },
+          {
+            "month": "2026-09",
+            "point": 7.3552,
+            "low": 7.0936,
+            "high": 7.6168,
+            "negative_warning": false
+          }
+        ],
+        "caveat": "预测基于历史成本趋势的统计外推，仅供管理参考，不构成预算承诺；实际成本受采购、工艺与产量影响。"
+      },
+      "rolling_evaluation": {
+        "origins": 3,
+        "horizon": 1,
+        "holt": {
+          "MAE": 0.1672213333333333,
+          "RMSE": 0.17082582811741298
+        },
+        "naive_last_value": {
+          "MAE": 0.2333333333333334,
+          "RMSE": 0.24041630560342628
+        },
+        "experimental_range": {
+          "covered": 2,
+          "tested": 3
+        },
+        "checks": [
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-03",
+            "test_month": "2026-04",
+            "actual": 7.08,
+            "prediction": 6.9128,
+            "naive_last_value": 6.77,
+            "error": -0.16720000000000024,
+            "baseline_error": -0.3100000000000005,
+            "range_half_width": 0.2400000000000002,
+            "covered": true
+          },
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-04",
+            "test_month": "2026-05",
+            "actual": 7.3,
+            "prediction": 7.090016000000001,
+            "naive_last_value": 7.08,
+            "error": -0.20998399999999862,
+            "baseline_error": -0.21999999999999975,
+            "range_half_width": 0.20682823791736005,
+            "covered": false
+          },
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-05",
+            "test_month": "2026-06",
+            "actual": 7.13,
+            "prediction": 7.254480000000001,
+            "naive_last_value": 7.3,
+            "error": 0.12448000000000103,
+            "baseline_error": 0.16999999999999993,
+            "range_half_width": 0.3081038785864277,
+            "covered": true
+          }
+        ]
+      }
+    },
+    {
+      "factory": "中药一厂",
+      "product": "银黄口服液",
+      "target": "labor",
+      "unit": "元/盒",
+      "history": [
+        [
+          "2026-01",
+          1.52
+        ],
+        [
+          "2026-02",
+          1.55
+        ],
+        [
+          "2026-03",
+          1.48
+        ],
+        [
+          "2026-04",
+          1.5
+        ],
+        [
+          "2026-05",
+          1.53
+        ],
+        [
+          "2026-06",
+          1.5
+        ]
+      ],
+      "forecast": {
+        "status": "PASS",
+        "forecast_version": "holt-alpha0.6-beta0.3-v4-scoped-coverage",
+        "method": "Holt双参数指数平滑(α=0.6,β=0.3，OLS初始化)",
+        "observations": 6,
+        "history_months": [
+          "2026-01",
+          "2026-06"
+        ],
+        "residual_std": 0.0346,
+        "interval": "实验性波动范围（±样本内一步残差均方根；覆盖率仅针对当前序列的一步滚动留出；小样本结果不能推断总体覆盖率，也不代表多步预测覆盖率）",
+        "one_step_mae": 0.0268,
+        "holdout": {
+          "origins": 3,
+          "mae": 0.015,
+          "baseline_mae": 0.0267,
+          "interval_coverage": {
+            "covered": 3,
+            "tested": 3,
+            "rate": 1.0,
+            "horizon": 1,
+            "scope": "current_series_rolling_origin"
+          }
+        },
+        "baseline": {
+          "method": "last_observation",
+          "points": [
+            {
+              "month": "2026-07",
+              "point": 1.5
+            },
+            {
+              "month": "2026-08",
+              "point": 1.5
+            },
+            {
+              "month": "2026-09",
+              "point": 1.5
+            }
+          ],
+          "one_step_mae": 0.0267
+        },
+        "evaluation_notice": "滚动原点留出验证（3 个原点，留出一步MAE：Holt 0.015，上期值基线 0.0267）；波动范围按样本内残差估计，当前序列一步范围覆盖 3/3（100.0%）；覆盖率仅针对当前序列的一步滚动留出；小样本结果不能推断总体覆盖率，也不代表多步预测覆盖率。",
+        "points": [
+          {
+            "month": "2026-07",
+            "point": 1.4946,
+            "low": 1.46,
+            "high": 1.5292,
+            "negative_warning": false
+          },
+          {
+            "month": "2026-08",
+            "point": 1.4883,
+            "low": 1.4537,
+            "high": 1.5229,
+            "negative_warning": false
+          },
+          {
+            "month": "2026-09",
+            "point": 1.4821,
+            "low": 1.4475,
+            "high": 1.5167,
+            "negative_warning": false
+          }
+        ],
+        "caveat": "预测基于历史成本趋势的统计外推，仅供管理参考，不构成预算承诺；实际成本受采购、工艺与产量影响。"
+      },
+      "rolling_evaluation": {
+        "origins": 3,
+        "horizon": 1,
+        "holt": {
+          "MAE": 0.015010222222222222,
+          "RMSE": 0.019565354247107716
+        },
+        "naive_last_value": {
+          "MAE": 0.02666666666666669,
+          "RMSE": 0.027080128015453224
+        },
+        "experimental_range": {
+          "covered": 3,
+          "tested": 3
+        },
+        "checks": [
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-03",
+            "test_month": "2026-04",
+            "actual": 1.5,
+            "prediction": 1.532,
+            "naive_last_value": 1.48,
+            "error": 0.03200000000000003,
+            "baseline_error": -0.020000000000000018,
+            "range_half_width": 0.10000000000000031,
+            "covered": true
+          },
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-04",
+            "test_month": "2026-05",
+            "actual": 1.53,
+            "prediction": 1.51904,
+            "naive_last_value": 1.5,
+            "error": -0.01096000000000008,
+            "baseline_error": -0.030000000000000027,
+            "range_half_width": 0.07424284477308256,
+            "covered": true
+          },
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-05",
+            "test_month": "2026-06",
+            "actual": 1.5,
+            "prediction": 1.5020706666666666,
+            "naive_last_value": 1.53,
+            "error": 0.002070666666666554,
+            "baseline_error": 0.030000000000000027,
+            "range_half_width": 0.04233278214864285,
+            "covered": true
+          }
+        ]
+      }
+    },
+    {
+      "factory": "中药一厂",
+      "product": "银黄口服液",
+      "target": "overhead",
+      "unit": "元/盒",
+      "history": [
+        [
+          "2026-01",
+          2.35
+        ],
+        [
+          "2026-02",
+          2.4
+        ],
+        [
+          "2026-03",
+          2.28
+        ],
+        [
+          "2026-04",
+          2.32
+        ],
+        [
+          "2026-05",
+          2.38
+        ],
+        [
+          "2026-06",
+          2.3
+        ]
+      ],
+      "forecast": {
+        "status": "PASS",
+        "forecast_version": "holt-alpha0.6-beta0.3-v4-scoped-coverage",
+        "method": "Holt双参数指数平滑(α=0.6,β=0.3，OLS初始化)",
+        "observations": 6,
+        "history_months": [
+          "2026-01",
+          "2026-06"
+        ],
+        "residual_std": 0.0687,
+        "interval": "实验性波动范围（±样本内一步残差均方根；覆盖率仅针对当前序列的一步滚动留出；小样本结果不能推断总体覆盖率，也不代表多步预测覆盖率）",
+        "one_step_mae": 0.0607,
+        "holdout": {
+          "origins": 3,
+          "mae": 0.0359,
+          "baseline_mae": 0.06,
+          "interval_coverage": {
+            "covered": 3,
+            "tested": 3,
+            "rate": 1.0,
+            "horizon": 1,
+            "scope": "current_series_rolling_origin"
+          }
+        },
+        "baseline": {
+          "method": "last_observation",
+          "points": [
+            {
+              "month": "2026-07",
+              "point": 2.3
+            },
+            {
+              "month": "2026-08",
+              "point": 2.3
+            },
+            {
+              "month": "2026-09",
+              "point": 2.3
+            }
+          ],
+          "one_step_mae": 0.06
+        },
+        "evaluation_notice": "滚动原点留出验证（3 个原点，留出一步MAE：Holt 0.0359，上期值基线 0.06）；波动范围按样本内残差估计，当前序列一步范围覆盖 3/3（100.0%）；覆盖率仅针对当前序列的一步滚动留出；小样本结果不能推断总体覆盖率，也不代表多步预测覆盖率。",
+        "points": [
+          {
+            "month": "2026-07",
+            "point": 2.299,
+            "low": 2.2303,
+            "high": 2.3677,
+            "negative_warning": false
+          },
+          {
+            "month": "2026-08",
+            "point": 2.2859,
+            "low": 2.2172,
+            "high": 2.3546,
+            "negative_warning": false
+          },
+          {
+            "month": "2026-09",
+            "point": 2.2728,
+            "low": 2.2041,
+            "high": 2.3415,
+            "negative_warning": false
+          }
+        ],
+        "caveat": "预测基于历史成本趋势的统计外推，仅供管理参考，不构成预算承诺；实际成本受采购、工艺与产量影响。"
+      },
+      "rolling_evaluation": {
+        "origins": 3,
+        "horizon": 1,
+        "holt": {
+          "MAE": 0.0359377777777777,
+          "RMSE": 0.03684041180451051
+        },
+        "naive_last_value": {
+          "MAE": 0.06000000000000005,
+          "RMSE": 0.062182527020592154
+        },
+        "experimental_range": {
+          "covered": 3,
+          "tested": 3
+        },
+        "checks": [
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-03",
+            "test_month": "2026-04",
+            "actual": 2.32,
+            "prediction": 2.3673999999999995,
+            "naive_last_value": 2.28,
+            "error": 0.047399999999999665,
+            "baseline_error": -0.040000000000000036,
+            "range_half_width": 0.16999999999999993,
+            "covered": true
+          },
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-04",
+            "test_month": "2026-05",
+            "actual": 2.38,
+            "prediction": 2.3498279999999996,
+            "naive_last_value": 2.32,
+            "error": -0.03017200000000031,
+            "baseline_error": -0.06000000000000005,
+            "range_half_width": 0.12479334918175716,
+            "covered": true
+          },
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-05",
+            "test_month": "2026-06",
+            "actual": 2.3,
+            "prediction": 2.330241333333333,
+            "naive_last_value": 2.38,
+            "error": 0.03024133333333312,
+            "baseline_error": 0.08000000000000007,
+            "range_half_width": 0.08142127759034794,
+            "covered": true
+          }
+        ]
+      }
+    },
+    {
+      "factory": "中药一厂",
+      "product": "银黄口服液",
+      "target": "total_cost",
+      "unit": "元",
+      "history": [
+        [
+          "2026-01",
+          481500.0
+        ],
+        [
+          "2026-02",
+          413060.0
+        ],
+        [
+          "2026-03",
+          547560.0
+        ],
+        [
+          "2026-04",
+          599500.0
+        ],
+        [
+          "2026-05",
+          650180.0
+        ],
+        [
+          "2026-06",
+          546500.0
+        ]
+      ],
+      "forecast": {
+        "status": "PASS",
+        "forecast_version": "holt-alpha0.6-beta0.3-v4-scoped-coverage",
+        "method": "Holt双参数指数平滑(α=0.6,β=0.3，OLS初始化)",
+        "observations": 6,
+        "history_months": [
+          "2026-01",
+          "2026-06"
+        ],
+        "residual_std": 87884.7299,
+        "interval": "实验性波动范围（±样本内一步残差均方根；覆盖率仅针对当前序列的一步滚动留出；小样本结果不能推断总体覆盖率，也不代表多步预测覆盖率）",
+        "one_step_mae": 73917.1244,
+        "holdout": {
+          "origins": 3,
+          "mae": 141230.0676,
+          "baseline_mae": 68766.6667,
+          "interval_coverage": {
+            "covered": 2,
+            "tested": 3,
+            "rate": 0.6666666666666666,
+            "horizon": 1,
+            "scope": "current_series_rolling_origin"
+          }
+        },
+        "baseline": {
+          "method": "last_observation",
+          "points": [
+            {
+              "month": "2026-07",
+              "point": 546500.0
+            },
+            {
+              "month": "2026-08",
+              "point": 546500.0
+            },
+            {
+              "month": "2026-09",
+              "point": 546500.0
+            }
+          ],
+          "one_step_mae": 68766.6667
+        },
+        "evaluation_notice": "滚动原点留出验证（3 个原点，留出一步MAE：Holt 141230.0676，上期值基线 68766.6667）；波动范围按样本内残差估计，当前序列一步范围覆盖 2/3（66.7%）；覆盖率仅针对当前序列的一步滚动留出；小样本结果不能推断总体覆盖率，也不代表多步预测覆盖率。",
+        "points": [
+          {
+            "month": "2026-07",
+            "point": 625035.9155,
+            "low": 537151.1856,
+            "high": 712920.6453,
+            "negative_warning": false
+          },
+          {
+            "month": "2026-08",
+            "point": 647665.1483,
+            "low": 559780.4184,
+            "high": 735549.8781,
+            "negative_warning": false
+          },
+          {
+            "month": "2026-09",
+            "point": 670294.3811,
+            "low": 582409.6512,
+            "high": 758179.1109,
+            "negative_warning": false
+          }
+        ],
+        "caveat": "预测基于历史成本趋势的统计外推，仅供管理参考，不构成预算承诺；实际成本受采购、工艺与产量影响。"
+      },
+      "rolling_evaluation": {
+        "origins": 3,
+        "horizon": 1,
+        "holt": {
+          "MAE": 141230.06755555555,
+          "RMSE": 142483.91877729274
+        },
+        "naive_last_value": {
+          "MAE": 68766.66666666667,
+          "RMSE": 73065.65175694163
+        },
+        "experimental_range": {
+          "covered": 2,
+          "tested": 3
+        },
+        "checks": [
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-03",
+            "test_month": "2026-04",
+            "actual": 599500.0,
+            "prediction": 434473.2,
+            "naive_last_value": 547560.0,
+            "error": -165026.8,
+            "baseline_error": -51940.0,
+            "range_half_width": 202940.0,
+            "covered": true
+          },
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-04",
+            "test_month": "2026-05",
+            "actual": 650180.0,
+            "prediction": 531283.304,
+            "naive_last_value": 599500.0,
+            "error": -118896.696,
+            "baseline_error": -50680.0,
+            "range_half_width": 184957.41174421748,
+            "covered": true
+          },
+          {
+            "train_start": "2026-01",
+            "train_end": "2026-05",
+            "test_month": "2026-06",
+            "actual": 546500.0,
+            "prediction": 686266.7066666667,
+            "naive_last_value": 650180.0,
+            "error": 139766.70666666667,
+            "baseline_error": 103680.0,
+            "range_half_width": 42640.61998975982,
+            "covered": false
+          }
+        ]
+      }
+    }
+  ],
+  "limits": "固定参数、不随机划分；每个原点仅使用过去数据。范围为残差RMS实验性波动范围，不是已验证置信区间；一步评测不能代表多步性能。"
+}

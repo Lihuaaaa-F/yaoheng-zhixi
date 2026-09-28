@@ -37,7 +37,7 @@ export default function Rectification({ selection, snapshot, jobs, actions, refr
     catch (e) { onError(e instanceof Error ? e.message : String(e)); }
     finally { setPending(false); }
   };
-  const payload = () => ({ context_id: editingAction?.metadata?.context_id ?? selection.context_id, snapshot_id: editingAction?.metadata?.snapshot_id ?? snapshot?.snapshot_id, finding, assignee: { name, department }, suggestion, priority, verification_target: target, expected_evidence: expected.split(/[；\n]/).map(s => s.trim()).filter(Boolean), responsible_role: role, deadline_basis: deadlineBasis, ...(editing && deadline ? { deadline } : {}) });
+  const payload = () => ({ ...(!editing ? { context_id: selection.context_id } : {}), snapshot_id: editingAction?.metadata?.snapshot_id ?? snapshot?.snapshot_id, finding, assignee: { name, department }, suggestion, priority, verification_target: target, expected_evidence: expected.split(/[；\n]/).map(s => s.trim()).filter(Boolean), responsible_role: role, deadline_basis: deadlineBasis, ...(editing && deadline ? { deadline } : {}) });
   const uniqueActions = [...new Map(actions.map(a => [a.id, a])).values()];
   const delivered = uniqueActions.filter(a => a.delivery?.notification === 'SIMULATED_SENT').length;
   const ownerConfirmed = uniqueActions.filter(a => a.responsibility_confirmation?.status === 'CONFIRMED' && a.responsibility_confirmation?.confirmed_by && a.responsibility_confirmation?.confirmed_at).length;
