@@ -168,7 +168,7 @@ def test_fresh_request_does_not_attach_to_ordinary_running_job(service):
 def test_semantic_guards_run_at_finding_validation_boundary():
     snap=s3_direction_snapshot()
     snap['metrics']['material']={'value':'11.99','display':'11.99','unit':'元/盒'}
-    ev={'evidence_id':'independent-fixture','source':'独立设备记录.txt','text':'计量盘磨损可能影响批次合格产出'}
+    ev={'evidence_id':'independent-fixture','source':'独立设备记录.txt','location':'第1行','text':'计量盘磨损可能影响批次合格产出'}
     finding={'claim_type':'hypothesis','hypothesis':True,'section':'materials',
         'text_template':'计量盘磨损可能影响产出，属事件损失，不能直接等同当月净减产。',
         'metric_refs':['material'],'evidence_refs':[ev['evidence_id']],
