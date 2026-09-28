@@ -92,3 +92,10 @@ def test_meeting_yield_standard_does_not_exclude_period_deterioration():
     entries[1]['verification']='若收率低于同口径基期则支持该推测，若收率未下降则降低该推测'
     rows=compile_task_explanations([explanation('benchmark',diagnostic_paths=entries)],snap())
     assert '同口径基期' in validate_findings(rows,snap(),[])[0]['rendered_text']
+
+
+def test_counter_observation_can_redirect_to_another_mechanism():
+    entries=paths()
+    entries[0]['verification']='若本期采购单价高于基期则支持该推测，若采购单价持平则应转向耗用机制'
+    rows=compile_task_explanations([explanation('benchmark',diagnostic_paths=entries)],snap())
+    assert '转向耗用机制' in validate_findings(rows,snap(),[])[0]['rendered_text']
