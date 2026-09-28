@@ -9,11 +9,12 @@
 ④ 两条评审阻断的护栏：缺要素快照响亮失败（IMPORT_ELEMENTS_INCOMPLETE），
    要素 unit=None 不崩（图表统一过滤）。
 """
-import json, re
+import json, re, shutil
 import pytest
 from docx import Document
 
 from pharma.reports import (build_bindings, render_docx, verify_docx, working_template,
+                            TEMPLATE, MAP_PATH,
                             _full_template_context, _is_import, _import_template_view)
 
 def _installed_placeholders():
@@ -221,18 +222,36 @@ def test_competition_bindings_untouched_by_adapter():
     assert direct==adapted  # 回归哨兵：竞赛形快照过适配器后绑定逐键相等
 
 
-def test_import_report_has_no_header_branding(tmp_path):
-    """导入报告版式对齐 69485c9d 样张（2026-09-28）：样张分节无正文页眉，
-    新归一化模板的活页眉（logo/"整体解决方案"/创灵境水印）不得出现在导入报告；
-    页脚页码不受影响；linked 页眉不被凭空实例化。"""
+def test_import_report_keeps_header_branding(tmp_path, monkeypatch):
+    """页眉水印保留（2026-09-28 裁定反转，取代 has_no_header_branding）：全部
+    报告（导入与竞赛）统一完整模板版式，页眉（创灵境水印艺术字/"整体解决方案"）
+    原样保留，无一节页眉被清空；页眉文字不进正文段落（正文残留"整体解决方案"
+    仍按 2026-09-23 清理改写）；页脚页码不受影响。模板来源确定性：临时 runtime
+    装入已知带页眉的工作模板（1 节、rId8→header4），不依赖生产已装模板状态。"""
+    rt=tmp_path/'rt-templates';rt.mkdir()
+    shutil.copyfile(TEMPLATE,rt/'monthly.docx')
+    shutil.copyfile(MAP_PATH,rt/'monthly.placeholder_map.json')
+    monkeypatch.setattr('pharma.reports.RUNTIME_TEMPLATES',rt)
     s=import_snapshot();path=tmp_path/'import.docx'
     render_docx(s,import_narrative(),{'evidence':[]},path)
     doc=Document(path)
+    nonlinked=0;branded=0
     for section in doc.sections:
         for hdr in (section.header,section.first_page_header,section.even_page_header):
             if hdr.is_linked_to_previous:continue
-            assert '整体解决方案' not in ''.join(p.text for p in hdr.paragraphs)
-            assert not hdr._element.xpath('.//w:pict')  # VML 水印/logo 形状已清空
+            nonlinked+=1
+            hxml=hdr._element.xml
+            # 水印形状（textpath 艺术字，含"创灵境"）原样保留
+            if 'textpath' in hxml.lower() and '创灵境' in hxml:branded+=1
+    assert nonlinked>0 and branded==nonlinked
+    assert any('整体解决方案' in ''.join(p.text for p in h.paragraphs)
+               for sec in doc.sections
+               for h in (sec.header,sec.first_page_header,sec.even_page_header)
+               if not h.is_linked_to_previous)  # 正文节页眉"整体解决方案"文字保留
+    # 页眉文字不在正文段落里：正文副标题仍被残留清理改写为"产品成本智能分析报告"
+    body='\n'.join(p.text for p in doc.paragraphs)
+    assert '整体解决方案' not in body
+    assert '产品成本智能分析报告' in body
     footer=''.join(x.text or '' for x in doc.sections[0].footer._element.iter('{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t'))
     assert '第' in footer and '页' in footer
 

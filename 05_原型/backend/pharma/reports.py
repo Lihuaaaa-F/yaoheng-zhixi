@@ -24,7 +24,7 @@ MAP_PATH = _TEMPLATE_DIR / 'placeholder_map.json'
 # 用户安装模板（数据中心“报告模板”解析后安装）：按报告类型存放；
 # 季度/专题未安装时回退月度模板（绑定合同一致，仅期间口径不同）。
 RUNTIME_TEMPLATES = RUNTIME / 'templates'
-RENDERER_VERSION='reader-20260924-delivery-v11'
+RENDERER_VERSION='reader-20260928-branding-v12'
 NA = 'N/A（无可用基期或明细）'
 
 
@@ -220,7 +220,21 @@ def _relayout_front_section(path, entries):
     from docx import Document
     from docx.oxml import OxmlElement
     from docx.oxml.ns import qn
+    import copy as _copymod
     d = Document(path)
+    # 2026-09-28 裁定反转（全部报告保留页眉水印）：前置区手术会删除携带正文
+    # 页眉引用的 sectPr（题包原件 3 节结构，正文水印页眉 header4 挂在前置区尾
+    # 段），install 路径此前不回挂导致已装模板页眉被摘。镜像 compact_working_
+    # template 的 2026-09-24 修复：手术前摘存带水印页眉（textpath 艺术字/"整体
+    # 解决方案"）分节的 headerReference，术后回挂到 body 级 sectPr 首部
+    # （OOXML 要求 headerReference 位于 sectPr 子元素最前）。
+    _saved_hdr_refs = []
+    for _sec in d.sections:
+        if _sec.header is None or _sec.header.is_linked_to_previous:
+            continue
+        _hxml = _sec.header._element.xml
+        if 'textpath' in _hxml.lower() or '整体解决方案' in _hxml:
+            _saved_hdr_refs = [_copymod.deepcopy(el) for el in _sec._sectPr.findall(qn('w:headerReference'))]
     paras = _all_paragraphs(d)
     body_start = next((pp for pp in paras if pp.text.strip() == '一、封面与基本信息'), None)
     in_front = True
@@ -246,6 +260,12 @@ def _relayout_front_section(path, entries):
             pp._p.getparent().remove(pp._p)
     if body_start is not None:
         body_start.paragraph_format.page_break_before = True
+    if _saved_hdr_refs:
+        _final = d.sections[-1]._sectPr
+        for _existing in _final.findall(qn('w:headerReference')):
+            _final.remove(_existing)
+        for _ref in reversed(_saved_hdr_refs):
+            _final.insert(0, _ref)
     overview = next((t for t in d.tables if any('去年同月' in c.text for c in t.rows[0].cells)), None)
     if overview is None:
         d.save(path)
@@ -508,9 +528,10 @@ def _import_template_view(snapshot,narrative=None):
 def build_bindings(snapshot,narrative,benchmark=None):
     m=snapshot['metrics']; els={e['key']:e for e in snapshot['elements']}; quarterly=snapshot['analysis_type']=='quarterly'
     period=snapshot.get('period',{}); label=(period.get('start','')+' 至 '+period.get('end','')) if quarterly else snapshot['month']
-    values={'报告标题':f"{snapshot['product']} {'季度成本分析' if quarterly else '专题分析' if snapshot['analysis_type']=='special' else '月度成本分析'}报告",'报告类型':{'monthly':'月度成本分析','quarterly':'季度成本分析','special':'专题分析'}[snapshot['analysis_type']],'分析月份':label,'产品名称':snapshot['product'],'产品规格':snapshot.get('specification') or '未提供规格','编制日期':datetime.now().strftime('%Y-%m-%d'),'本月产量':number(m['quantity'],0),'本月单位成本':number(m['unit_cost'],4 if quarterly else 2),'单位成本':number(m['unit_cost'],4 if quarterly else 2),'本月总成本':number(m['total_cost'])}
-    if snapshot['analysis_type']=='special' and snapshot.get('topic'):
-        values['报告标题']=f"{snapshot['product']} · {snapshot['topic']}专题分析报告"
+    values={'报告标题':f"{snapshot['product']} {'季度成本分析' if quarterly else '专题分析' if snapshot['analysis_type']=='special' else '月度成本分析'}报告",'报告类型':{'monthly':'月度成本分析','quarterly':'季度成本分析','special':('专题分析（'+str(snapshot['topic'])+'）' if snapshot.get('topic') else '专题分析')}[snapshot['analysis_type']],'分析月份':label,'产品名称':snapshot['product'],'产品规格':snapshot.get('specification') or '未提供规格','编制日期':datetime.now().strftime('%Y-%m-%d'),'本月产量':number(m['quantity'],0),'本月单位成本':number(m['unit_cost'],4 if quarterly else 2),'单位成本':number(m['unit_cost'],4 if quarterly else 2),'本月总成本':number(m['total_cost'])}
+    # 专题名不进封面主标题：带 topic 的标题超长换行会把封面落款第三行（编制单位）
+    # 挤出版面（2026-09-28 视觉抽查 11 份专题全部命中）；主标题与月度/季度同构
+    # 一行式，专题名保留在表1-1 报告类型格，信息不丢。
     # Comparison metric snapshots are the sole source of calculated fields.
     for key,cn in [('mom','单位成本环比'),('yoy','单位成本同比'),('budget','单位成本预算偏差')]:values[cn]=number(m.get(key))
     for key,prefix in [('mom','上月'),('yoy','去年'),('budget','预算')]:
@@ -673,21 +694,9 @@ def sanitize_template_identity(doc,snapshot=None):
     parts = [doc.part] + [section.header.part for section in doc.sections] + [section.footer.part for section in doc.sections]
     for part in parts:
         # 2026-09-21 四轮（用户裁定）：模板水印文字原样保留，不再改写。
+        # 2026-09-28 再裁定：导入报告同样保留页眉（创灵境 logo/"整体解决方案"/
+        # 水印）与公司名大字水印，全部报告统一完整模板版式。
         pass
-    # 导入报告版式对齐 69485c9d 样张（2026-09-28）：样张与主runtime已装模板的
-    # 分节均无正文页眉（logo/"整体解决方案"/创灵境水印），而新归一化模板按
-    # 2026-09-24 修复保留活页眉引用，导入报告会每页出现样张没有的页眉水印并与
-    # 表格正文叠压。导入分支确定性地清空各节页眉内容（页脚页码保留）；竞赛
-    # 路径不触发，维持 2b4c575 的水印原样裁定。
-    if snapshot is not None and _is_import(snapshot):
-        for section in doc.sections:
-            for hdr in (section.header, section.first_page_header, section.even_page_header):
-                # linked 页眉无自有内容（继承前节）；读取会触发 python-docx 凭空
-                # 建定义，必须先跳过（2026-09-28 实测 headerReference 0→1 副作用）。
-                if hdr.is_linked_to_previous:continue
-                for p in hdr.paragraphs:
-                    for r in list(p.runs):r._element.getparent().remove(r._element)
-                for tbl in list(hdr.tables):tbl._element.getparent().remove(tbl._element)
     doc.core_properties.author = '药衡智析演示团队'
     doc.core_properties.last_modified_by = '药衡智析'
 
