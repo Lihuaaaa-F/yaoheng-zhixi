@@ -1,82 +1,34 @@
-"""Read-only repository contracts; not an application or human acceptance test."""
-from __future__ import annotations
-
+"""核验正式交付入口、人工记录和样本关联，不替代业务验收。"""
 import hashlib
 import json
-import re
 from pathlib import Path
-from urllib.parse import unquote, urlsplit
-
-
-ROOT = Path(__file__).resolve().parents[1]
-APP = ROOT / "药衡智析_增量源码交接/public_source_candidate"
-
-
-def read_json(path: Path) -> dict:
-    return json.loads(path.read_text(encoding="utf-8"))
-
-
-def scenario_ids(record: dict) -> dict[str, str]:
-    rows = record["scenarios"]
-    result = {row["id"]: row["job_id"] for row in rows}
-    if len(result) != len(rows):
-        raise ValueError("duplicate scenario id")
-    return result
-
-
-def verify() -> list[str]:
-    errors: list[str] = []
-    docs = APP / "docs"
-    current = read_json(docs / "current_run.json")
-    manifest = read_json(docs / current["public_manifest"])
-    verification = read_json(docs / current["verification_receipt"])
-    for label, other in [("manifest", manifest), ("verification", verification)]:
-        for key in ("run_id", "commit"):
-            if current[key] != other[key]:
-                errors.append(f"{label}: {key} differs from current index")
-        if scenario_ids(current) != scenario_ids(other):
-            errors.append(f"{label}: scenario/job mapping differs from current index")
-    if set(current["required_scenarios"]) != set(scenario_ids(current)):
-        errors.append("required scenario coverage differs from index")
-    if current.get("competition_ready") and current.get("human_review") != "PASS":
-        errors.append("competition_ready requires recorded human acceptance")
-
-    facts = read_json(ROOT / "docs/repository/media_facts.json")
-    collections = [{"directory": facts["directory"], "files": facts["files"]}]
-    collections += facts.get("additional_collections", [])
-    for collection in collections:
-        for entry in collection["files"]:
-            path = APP / collection["directory"] / entry["name"]
-            if not path.is_file():
-                errors.append(f"missing media: {entry['name']}")
-                continue
-            if hashlib.sha256(path.read_bytes()).hexdigest() != entry["sha256"]:
-                errors.append(f"media checksum differs: {entry['name']}")
-
-    # Current entry points only: historical audit prose is not a navigation contract.
-    documents = [ROOT / "README.md", ROOT / "CONTRIBUTING.md"]
-    documents += sorted((ROOT / "docs/repository").glob("*.md"))
-    documents += [APP / "README.md", docs / "evaluation_report.md",
-                  APP / "07_交付/demo_20260918/README.md"]
-    for document in documents:
-        content = document.read_text(encoding="utf-8")
-        content = re.sub(r"```.*?```", "", content, flags=re.S)
-        for target in re.findall(r"\[[^\]\n]+\]\(([^)\n]+)\)", content):
-            parsed = urlsplit(target)
-            if parsed.scheme or parsed.netloc or not parsed.path:
-                continue
-            path = (document.parent / unquote(parsed.path)).resolve()
-            if not path.is_relative_to(ROOT) or not path.exists():
-                errors.append(f"{document.relative_to(ROOT)}: broken local link {target}")
+import re
+from urllib.parse import unquote,urlsplit
+ROOT=Path(__file__).resolve().parents[1]
+def verify():
+    errors=[];docs=ROOT/'docs'
+    current=json.loads((docs/'current_run.json').read_text())
+    record=json.loads((docs/current['human_review_record']).read_text())
+    rows=[r for r in record['records'] if r['scenario'] in current['required_scenarios']]
+    if {r['scenario'] for r in rows}!=set(current['required_scenarios']):errors.append('必测场景不完整')
+    for row in rows:
+        score=row.get('attribution_score')
+        if type(score) is not int or not 0<=score<=5 or not row.get('reviewer'):errors.append('人工评价字段不完整')
+        for fmt,relative in row['files'].items():
+            file=docs/'evaluation'/relative
+            if not file.is_file() or hashlib.sha256(file.read_bytes()).hexdigest()!=row['hashes'][fmt]:errors.append('评测样本不匹配:'+relative)
+    if current['video']!='用户暂缓' or current['ppt']!='用户暂缓':errors.append('媒体范围与用户要求不一致')
+    if current.get('competition_ready') and current['status']!='PASS':errors.append('未完成验证不能声称全部交付通过')
+    paths=[ROOT/'README.md',ROOT/'CONTRIBUTING.md',docs/'技术方案.md',docs/'环境与部署.md',docs/'evaluation_report.md',docs/'forecast/README.md']
+    for document in paths:
+        content=re.sub(r'```.*?```','',document.read_text(),flags=re.S)
+        for link in re.findall(r'\[[^\]\n]+\]\(([^)\n]+)\)',content):
+            target=urlsplit(link)
+            if target.scheme or target.netloc or not target.path:continue
+            if not (document.parent/unquote(target.path)).exists():errors.append(f'{document.name}:断链:{link}')
     return errors
-
-
-if __name__ == "__main__":
-    try:
-        failures = verify()
-    except (OSError, ValueError, KeyError, TypeError) as exc:
-        failures = [f"repository contract cannot be read: {exc}"]
-    print(json.dumps({"check": "repository_contracts", "status": "FAIL" if failures else "PASS",
-                      "scope": "navigation, scenario index, media identity; no app/model/human validation",
-                      "errors": failures}, ensure_ascii=False, indent=2))
-    raise SystemExit(1 if failures else 0)
+if __name__=='__main__':
+    try:errors=verify()
+    except (OSError,KeyError,ValueError,TypeError) as e:errors=[str(e)]
+    print(json.dumps({'status':'FAIL' if errors else 'PASS','scope':'交付导航与评测关联','errors':errors},ensure_ascii=False,indent=2))
+    raise SystemExit(bool(errors))

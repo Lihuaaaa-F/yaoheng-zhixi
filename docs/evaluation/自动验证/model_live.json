@@ -1,0 +1,211 @@
+{
+  "run_id": "local_wsl_20260924_a4",
+  "attempt_id": "c6bcc43de5d64cf5a541039d3d0ee5c8",
+  "revision": "6ae54c29311ea9c4345024eef3076935acb6676c",
+  "revision_kind": "git",
+  "commit": "6ae54c29311ea9c4345024eef3076935acb6676c",
+  "status": "PASS",
+  "scenarios": [
+    {
+      "id": "S1",
+      "job_id": "dd4b107847e845548b7176c8b64ca183",
+      "attempt_id": "c6bcc43de5d64cf5a541039d3d0ee5c8",
+      "snapshot_id": "3b617e7576ec1b1d2326895a36cfb59207b50a9c2b2b390cd3fedd83e5984fa8",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "dd4b107847e845548b7176c8b64ca183-docx",
+          "sha256": "87ab5e5bfe79e144c458241785c189ca1d25d45f87a0b16dc49bcdac89d955df",
+          "bytes": 265982
+        },
+        "pdf": {
+          "artifact_id": "dd4b107847e845548b7176c8b64ca183-pdf",
+          "sha256": "682723d5655ec838b1c267f31916a0e5a6cb09e937190783c030df0d7e73065c",
+          "bytes": 1163025
+        }
+      },
+      "status": "PASS",
+      "generation_mode": "llm",
+      "model_live": true,
+      "identity": {
+        "status": "VERIFIED",
+        "requested": "deepseek-flash",
+        "returned": [
+          "deepseek-flash"
+        ],
+        "reason": "全部调用响应model经核验一致"
+      },
+      "usage": {
+        "prompt_tokens": 22001,
+        "completion_tokens": 8092,
+        "total_tokens": 30093,
+        "calls": 1
+      },
+      "cache_hit": true,
+      "generated_at": 1790260459.1141667,
+      "cache_source_time": 1790260459.1142888,
+      "usage_scope": "原始模型生成用量；缓存复用不表示本次新增调用",
+      "alert_coverage": {},
+      "failures": []
+    },
+    {
+      "id": "S2",
+      "job_id": "fe4853d495144eccb969fb4e66d00fe7",
+      "attempt_id": "c6bcc43de5d64cf5a541039d3d0ee5c8",
+      "snapshot_id": "f91f313c775769093a5f2c20213d7b59024b6ab65b1e714160e44f858d2ec434",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "fe4853d495144eccb969fb4e66d00fe7-docx",
+          "sha256": "04bb9cf62e6c79b8d21daba8895c66b7ec895ac177a4101e0509d65b019a8c25",
+          "bytes": 263767
+        },
+        "pdf": {
+          "artifact_id": "fe4853d495144eccb969fb4e66d00fe7-pdf",
+          "sha256": "a0fe2ee4dee7ebe260b00fcffa31266218330c096c63661902043115547859f4",
+          "bytes": 1152687
+        }
+      },
+      "status": "PASS",
+      "generation_mode": "llm",
+      "model_live": true,
+      "identity": {
+        "status": "VERIFIED",
+        "requested": "deepseek-flash",
+        "returned": [
+          "deepseek-flash"
+        ],
+        "reason": "全部调用响应model经核验一致"
+      },
+      "usage": {
+        "prompt_tokens": 21025,
+        "completion_tokens": 6337,
+        "total_tokens": 27362,
+        "calls": 1
+      },
+      "cache_hit": true,
+      "generated_at": 1790260503.5989385,
+      "cache_source_time": 1790260503.599092,
+      "usage_scope": "原始模型生成用量；缓存复用不表示本次新增调用",
+      "alert_coverage": {},
+      "failures": []
+    },
+    {
+      "id": "S3",
+      "job_id": "1e2dc6f121734c22aa55a0d4b4128e11",
+      "attempt_id": "c6bcc43de5d64cf5a541039d3d0ee5c8",
+      "snapshot_id": "1b356d2cbd63c41b5bba2aaec9c9c095eece39e1ac717f466dc4c6d9ef762e6e",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "1e2dc6f121734c22aa55a0d4b4128e11-docx",
+          "sha256": "946d0f8ac4a163a641509f6eb5795e23a782a904d294d3fa4c30323d91fff42a",
+          "bytes": 274823
+        },
+        "pdf": {
+          "artifact_id": "1e2dc6f121734c22aa55a0d4b4128e11-pdf",
+          "sha256": "f133bd2fe1cd10496d1ed2381420552fc972b48e1e947e4257a9913f63a9ee4b",
+          "bytes": 1233883
+        }
+      },
+      "status": "PASS",
+      "generation_mode": "llm",
+      "model_live": true,
+      "identity": {
+        "status": "VERIFIED",
+        "requested": "deepseek-flash",
+        "returned": [
+          "deepseek-flash"
+        ],
+        "reason": "全部调用响应model经核验一致"
+      },
+      "usage": {
+        "prompt_tokens": 55093,
+        "completion_tokens": 15660,
+        "total_tokens": 70753,
+        "calls": 2
+      },
+      "cache_hit": true,
+      "generated_at": 1790260601.068752,
+      "cache_source_time": 1790260601.0688918,
+      "usage_scope": "原始模型生成用量；缓存复用不表示本次新增调用",
+      "alert_coverage": {
+        "alert-ae6cfac6295472537aa5": {
+          "covered": true,
+          "element_key": "materials",
+          "basis": "total"
+        },
+        "alert-a3392a1012a3bdbfd2a9": {
+          "covered": true,
+          "element_key": "labor",
+          "basis": "total"
+        },
+        "alert-918366df38ec19897ded": {
+          "covered": true,
+          "element_key": "overhead",
+          "basis": "total"
+        }
+      },
+      "failures": [
+        "JSONDecodeError: Expecting value: line 1 column 1 (char 0)"
+      ]
+    },
+    {
+      "id": "Q2",
+      "job_id": "9233c702a3a44920818534c3e4ec3f42",
+      "attempt_id": "c6bcc43de5d64cf5a541039d3d0ee5c8",
+      "snapshot_id": "8a373af91790e8f220b47ec4ce9b2ee46ac1ea10406515dc1056480827a7434d",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "9233c702a3a44920818534c3e4ec3f42-docx",
+          "sha256": "947c1eef5377e73628acb3cadabc7fc2632620032f7eed98d6334ce5e5d4736c",
+          "bytes": 271826
+        },
+        "pdf": {
+          "artifact_id": "9233c702a3a44920818534c3e4ec3f42-pdf",
+          "sha256": "6580d14f5cca99087f3338f464c5b67119b45d5b82f59df1a01e65e5d90cb66e",
+          "bytes": 1248902
+        }
+      },
+      "status": "PASS",
+      "generation_mode": "llm",
+      "model_live": true,
+      "identity": {
+        "status": "VERIFIED",
+        "requested": "deepseek-flash",
+        "returned": [
+          "deepseek-flash"
+        ],
+        "reason": "全部调用响应model经核验一致"
+      },
+      "usage": {
+        "prompt_tokens": 86913,
+        "completion_tokens": 16804,
+        "total_tokens": 103717,
+        "calls": 3
+      },
+      "cache_hit": true,
+      "generated_at": 1790260697.6662972,
+      "cache_source_time": 1790260697.6664064,
+      "usage_scope": "原始模型生成用量；缓存复用不表示本次新增调用",
+      "alert_coverage": {
+        "alert-f63295afdd8152cfe65f": {
+          "covered": true,
+          "element_key": "materials",
+          "basis": "total"
+        },
+        "alert-4dfbe0c1984e3bac496f": {
+          "covered": true,
+          "element_key": "labor",
+          "basis": "total"
+        },
+        "alert-0c80378a697b26dda64c": {
+          "covered": true,
+          "element_key": "overhead",
+          "basis": "total"
+        }
+      },
+      "failures": [
+        "JSONDecodeError: Expecting value: line 1 column 1 (char 0)",
+        "overhead: ValueError: missing evidence must name specific records or measurements"
+      ]
+    }
+  ]
+}

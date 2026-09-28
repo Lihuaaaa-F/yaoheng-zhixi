@@ -1,8 +1,0 @@
-{
-  "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ ''\n- 'delivery-local-model'\n",
-  "checks": [
-    "official-data analysis renders",
-    "TXT upload/build/hybrid search/evidence drawer, isolated workspace and honest vector fallback"
-  ],
-  "errors": []
-}

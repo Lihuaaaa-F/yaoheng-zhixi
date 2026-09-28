@@ -1,0 +1,111 @@
+{
+  "evaluation_id": "competition_scenarios_a4",
+  "status": "REVIEWED",
+  "scope": "交付评测报告中的归因合理性；不写入网站reviews表",
+  "required_scenarios": [
+    "S1",
+    "S2",
+    "S3"
+  ],
+  "supplemental_scenarios": [
+    "Q2"
+  ],
+  "reviewer": "胡珺杰",
+  "records": [
+    {
+      "scenario": "S1",
+      "job_id": "dd4b107847e845548b7176c8b64ca183",
+      "run_id": "local_wsl_20260924_a4",
+      "hashes": {
+        "docx": "87ab5e5bfe79e144c458241785c189ca1d25d45f87a0b16dc49bcdac89d955df",
+        "pdf": "682723d5655ec838b1c267f31916a0e5a6cb09e937190783c030df0d7e73065c"
+      },
+      "attribution_score": 4,
+      "reviewer": "胡珺杰",
+      "comment": null,
+      "status": "REVIEWED",
+      "files": {
+        "docx": "评测样本/S1_银黄口服液_2026年05月_月度成本分析样本.docx",
+        "pdf": "评测样本/S1_银黄口服液_2026年05月_月度成本分析样本.pdf"
+      },
+      "user_entered_metrics": {
+        "报告结构完整度": "100%",
+        "归因合理性（0–5整数）": "4",
+        "本地模拟RPA触发成功率": "100%",
+        "对标分析三步法输出格式正确率": "100%"
+      }
+    },
+    {
+      "scenario": "S2",
+      "job_id": "fe4853d495144eccb969fb4e66d00fe7",
+      "run_id": "local_wsl_20260924_a4",
+      "hashes": {
+        "docx": "04bb9cf62e6c79b8d21daba8895c66b7ec895ac177a4101e0509d65b019a8c25",
+        "pdf": "a0fe2ee4dee7ebe260b00fcffa31266218330c096c63661902043115547859f4"
+      },
+      "attribution_score": 4,
+      "reviewer": "胡珺杰",
+      "comment": null,
+      "status": "REVIEWED",
+      "files": {
+        "docx": "评测样本/S2_板蓝根颗粒_2026年05月_专题成本分析样本.docx",
+        "pdf": "评测样本/S2_板蓝根颗粒_2026年05月_专题成本分析样本.pdf"
+      },
+      "user_entered_metrics": {
+        "报告结构完整度": "100%",
+        "归因合理性（0–5整数）": "4",
+        "本地模拟RPA触发成功率": "100%",
+        "对标分析三步法输出格式正确率": "100%"
+      }
+    },
+    {
+      "scenario": "S3",
+      "job_id": "1e2dc6f121734c22aa55a0d4b4128e11",
+      "run_id": "local_wsl_20260924_a4",
+      "hashes": {
+        "docx": "946d0f8ac4a163a641509f6eb5795e23a782a904d294d3fa4c30323d91fff42a",
+        "pdf": "f133bd2fe1cd10496d1ed2381420552fc972b48e1e947e4257a9913f63a9ee4b"
+      },
+      "attribution_score": 4,
+      "reviewer": "胡珺杰",
+      "comment": null,
+      "status": "REVIEWED",
+      "files": {
+        "docx": "评测样本/S3_六味地黄胶囊_2026年03月_月度成本分析样本.docx",
+        "pdf": "评测样本/S3_六味地黄胶囊_2026年03月_月度成本分析样本.pdf"
+      },
+      "user_entered_metrics": {
+        "报告结构完整度": "100%",
+        "归因合理性（0–5整数）": "4",
+        "本地模拟RPA触发成功率": "100%",
+        "对标分析三步法输出格式正确率": "100%"
+      }
+    },
+    {
+      "scenario": "Q2",
+      "job_id": "9233c702a3a44920818534c3e4ec3f42",
+      "run_id": "local_wsl_20260924_a4",
+      "hashes": {
+        "docx": "947c1eef5377e73628acb3cadabc7fc2632620032f7eed98d6334ce5e5d4736c",
+        "pdf": "6580d14f5cca99087f3338f464c5b67119b45d5b82f59df1a01e65e5d90cb66e"
+      },
+      "attribution_score": null,
+      "reviewer": null,
+      "comment": null,
+      "status": "NOT_SCORED_SUPPLEMENTAL",
+      "files": {
+        "docx": "评测样本/Q2_银黄口服液_2026年第二季度_季度成本分析样本.docx",
+        "pdf": "评测样本/Q2_银黄口服液_2026年第二季度_季度成本分析样本.pdf"
+      }
+    }
+  ],
+  "review_date_as_written": "2026年9月24日",
+  "source_document": "评测报告.docx",
+  "source_document_sha256": "f02c9385229c7cd6ef726e1b6e9c1328936b5175705d04aeb7947cb7692ead37",
+  "required_scenario_total": "12/15",
+  "required_scenario_mean": "4/5",
+  "source": "用户直接填写并修改的评测Word",
+  "supplemental_review_required": false,
+  "source_user_document_sha256": "f02c9385229c7cd6ef726e1b6e9c1328936b5175705d04aeb7947cb7692ead37",
+  "formatted_document_sha256": "ffaa66ced6773eea4035df2f2c8ea588b7af1cbe00a0c44012d7e1e4a6815070"
+}

@@ -1,7 +1,0 @@
-{
-  "status": "PASS",
-  "scope": "Original contest resource bytes in local baseline, no source substitutions",
-  "baseline_commit": "8d76c07ae65079a44028de2d7c48df2e719582fc",
-  "files_compared": 68,
-  "mismatches": []
-}

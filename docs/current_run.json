@@ -1,0 +1,58 @@
+{
+  "schema_version": 2,
+  "delivery_version": "2026-09-24",
+  "status": "PARTIAL",
+  "competition_ready": false,
+  "required_scenarios": [
+    "S1",
+    "S2",
+    "S3"
+  ],
+  "supplemental_scenarios": [
+    "Q2"
+  ],
+  "report_generation_code_changes": false,
+  "human_web_check": "PASS",
+  "human_review": "PASS",
+  "human_review_record": "evaluation/人工评分记录.json",
+  "evaluation_report": "evaluation/评测报告.md",
+  "human_review_scope": "交付评测中的A4三场景；不登记网站业务报告验收",
+  "attribution_scores": {
+    "S1": 4,
+    "S2": 4,
+    "S3": 4
+  },
+  "backend": {
+    "passed": 613,
+    "skipped": 1,
+    "scope": "正式目录迁移后全量源码测试，含新增预测CLI",
+    "warnings": 2
+  },
+  "frontend_build": "PASS",
+  "workflow_checks": {
+    "business_upload_mapping_accumulation_replacement": "PASS",
+    "three_knowledge_formats_real_vector_hybrid": "PASS",
+    "bad_knowledge_preserves_index": "PASS",
+    "template_install_failure_preserves_previous": "PASS",
+    "assistant_real_two_turns_and_lifecycle": "PASS",
+    "draft_edit_simulated_rpa_receipt_idempotence": "PASS",
+    "forecast_graph_routes_agent_decision": "PASS"
+  },
+  "fresh_model_reports": {
+    "S1": "PASS",
+    "S2": "PASS",
+    "S3": "DEGRADED_AFTER_RETRY",
+    "Q2": "DEGRADED_AFTER_RETRY",
+    "scope": "独立复测新增调用；没有用A4缓存通过替代新调用结果"
+  },
+  "known_limits": [
+    "S3/Q2新增模型解释合同未通过；按用户要求不再修改报告生成部分。",
+    "专题未填主题时默认主题与当前列表筛选不一致，可经历史入口找到报告；报告模块未修改。",
+    "Docker核心部署已测，容器云模型及向量完整链路未配置。"
+  ],
+  "directory_migration": "HISTORICAL_ARTIFACT_DOWNLOADS_PASS",
+  "clean_install": "PENDING",
+  "github_delivery": "PENDING",
+  "video": "用户暂缓",
+  "ppt": "用户暂缓"
+}

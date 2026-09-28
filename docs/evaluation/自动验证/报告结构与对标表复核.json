@@ -1,0 +1,192 @@
+[
+  {
+    "scenario": "S1",
+    "job_id": "dd4b107847e845548b7176c8b64ca183",
+    "source_hashes": {
+      "docx": "87ab5e5bfe79e144c458241785c189ca1d25d45f87a0b16dc49bcdac89d955df",
+      "pdf": "682723d5655ec838b1c267f31916a0e5a6cb09e937190783c030df0d7e73065c"
+    },
+    "section_checks": {
+      "一、封面与基本信息": true,
+      "二、总成本概览": true,
+      "三、成本要素明细分析": true,
+      "四、重点产品专项分析": true,
+      "五、对标分析": true,
+      "六、总结与建议": true
+    },
+    "benchmark_display_checks": [
+      {
+        "element": "单位成本",
+        "difference_within_display_rounding": true,
+        "rate_within_display_rounding": true
+      },
+      {
+        "element": "直接材料",
+        "difference_within_display_rounding": true,
+        "rate_within_display_rounding": true
+      },
+      {
+        "element": "直接人工",
+        "difference_within_display_rounding": true,
+        "rate_within_display_rounding": true
+      },
+      {
+        "element": "制造费用",
+        "difference_within_display_rounding": true,
+        "rate_within_display_rounding": true
+      }
+    ]
+  },
+  {
+    "scenario": "S2",
+    "job_id": "fe4853d495144eccb969fb4e66d00fe7",
+    "source_hashes": {
+      "docx": "04bb9cf62e6c79b8d21daba8895c66b7ec895ac177a4101e0509d65b019a8c25",
+      "pdf": "a0fe2ee4dee7ebe260b00fcffa31266218330c096c63661902043115547859f4"
+    },
+    "section_checks": {
+      "一、封面与基本信息": true,
+      "二、总成本概览": true,
+      "三、成本要素明细分析": true,
+      "四、重点产品专项分析": true,
+      "五、对标分析": true,
+      "六、总结与建议": true
+    },
+    "benchmark_display_checks": [
+      {
+        "element": "单位成本",
+        "difference_within_display_rounding": true,
+        "rate_within_display_rounding": true
+      },
+      {
+        "element": "直接材料",
+        "difference_within_display_rounding": true,
+        "rate_within_display_rounding": true
+      },
+      {
+        "element": "直接人工",
+        "difference_within_display_rounding": true,
+        "rate_within_display_rounding": true
+      },
+      {
+        "element": "制造费用",
+        "difference_within_display_rounding": true,
+        "rate_within_display_rounding": true
+      }
+    ]
+  },
+  {
+    "scenario": "S3",
+    "job_id": "1e2dc6f121734c22aa55a0d4b4128e11",
+    "source_hashes": {
+      "docx": "946d0f8ac4a163a641509f6eb5795e23a782a904d294d3fa4c30323d91fff42a",
+      "pdf": "f133bd2fe1cd10496d1ed2381420552fc972b48e1e947e4257a9913f63a9ee4b"
+    },
+    "section_checks": {
+      "一、封面与基本信息": true,
+      "二、总成本概览": true,
+      "三、成本要素明细分析": true,
+      "四、重点产品专项分析": true,
+      "五、对标分析": true,
+      "六、总结与建议": true
+    },
+    "benchmark_display_checks": [
+      {
+        "element": "单位成本",
+        "difference_within_display_rounding": true,
+        "rate_within_display_rounding": true
+      },
+      {
+        "element": "直接材料",
+        "difference_within_display_rounding": true,
+        "rate_within_display_rounding": true
+      },
+      {
+        "element": "直接人工",
+        "difference_within_display_rounding": true,
+        "rate_within_display_rounding": true
+      },
+      {
+        "element": "制造费用",
+        "difference_within_display_rounding": true,
+        "rate_within_display_rounding": true
+      }
+    ]
+  },
+  {
+    "scenario": "Q2",
+    "job_id": "9233c702a3a44920818534c3e4ec3f42",
+    "source_hashes": {
+      "docx": "947c1eef5377e73628acb3cadabc7fc2632620032f7eed98d6334ce5e5d4736c",
+      "pdf": "6580d14f5cca99087f3338f464c5b67119b45d5b82f59df1a01e65e5d90cb66e"
+    },
+    "section_checks": {
+      "一、封面与基本信息": true,
+      "二、总成本概览": true,
+      "三、成本要素明细分析": true,
+      "四、重点产品专项分析": true,
+      "五、对标分析": true,
+      "六、总结与建议": true
+    },
+    "benchmark_display_checks": [
+      {
+        "element": "单位成本",
+        "difference_within_display_rounding": true,
+        "rate_within_display_rounding": true
+      },
+      {
+        "element": "直接材料",
+        "difference_within_display_rounding": true,
+        "rate_within_display_rounding": true
+      },
+      {
+        "element": "直接人工",
+        "difference_within_display_rounding": true,
+        "rate_within_display_rounding": true
+      },
+      {
+        "element": "制造费用",
+        "difference_within_display_rounding": true,
+        "rate_within_display_rounding": true
+      }
+    ]
+  },
+  {
+    "scenario": "LATEST",
+    "job_id": "8e9861f7b7cd47319d4757da2c9a078e",
+    "source_hashes": {
+      "docx": "036f33583fd976e9bd9fedfc7bd7e53109f9ff5d5b15d5b6d3f1a7bacfd6699d",
+      "pdf": "8450db29336d166197eb182b27d5a5aa6f2f1b38e5a94759c39ad9998bd0d549"
+    },
+    "section_checks": {
+      "一、封面与基本信息": true,
+      "二、总成本概览": true,
+      "三、成本要素明细分析": true,
+      "四、重点产品专项分析": true,
+      "五、对标分析": true,
+      "六、总结与建议": true
+    },
+    "benchmark_display_checks": [
+      {
+        "element": "单位成本",
+        "difference_within_display_rounding": true,
+        "rate_within_display_rounding": true
+      },
+      {
+        "element": "直接材料",
+        "difference_within_display_rounding": true,
+        "rate_within_display_rounding": true
+      },
+      {
+        "element": "直接人工",
+        "difference_within_display_rounding": true,
+        "rate_within_display_rounding": true
+      },
+      {
+        "element": "制造费用",
+        "difference_within_display_rounding": true,
+        "rate_within_display_rounding": true
+      }
+    ]
+  }
+]

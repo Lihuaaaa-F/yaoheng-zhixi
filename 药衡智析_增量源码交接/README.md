@@ -1,3 +1,0 @@
-# 工作区入口
-
-进入public_source_candidate阅读README。当前为完整Git源码，无需再次prepare。原赛题资源按用户最新授权在00_赛题原始资料等目录保留；competition_configuration为可复现比赛企业配置，最新静态交付在07_交付/release_20260918。密钥、环境、队列与备份不发布，也不复制旧源码/runtime覆盖新代码。

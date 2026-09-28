@@ -1,0 +1,109 @@
+{
+  "status": "PASS",
+  "source": "Independent Decimal arithmetic directly from official CSV source cells",
+  "official_answer_key_available": false,
+  "uploaded_files": 10,
+  "upload_parse_status": "SUCCEEDED",
+  "workspace_status": "READY",
+  "analysis_routes": [
+    "original package",
+    "cumulative uploaded workspace"
+  ],
+  "scenario_basis_combinations": [
+    {
+      "scenario": {
+        "id": "S1",
+        "context_id": "pharmaceutical:competition",
+        "product": "银黄口服液",
+        "month": "2026-05",
+        "analysis_type": "monthly"
+      },
+      "basis": "unit",
+      "status": "PASS"
+    },
+    {
+      "scenario": {
+        "id": "S1",
+        "context_id": "pharmaceutical:competition",
+        "product": "银黄口服液",
+        "month": "2026-05",
+        "analysis_type": "monthly"
+      },
+      "basis": "total",
+      "status": "PASS"
+    },
+    {
+      "scenario": {
+        "id": "S2",
+        "context_id": "pharmaceutical:competition",
+        "product": "板蓝根颗粒",
+        "month": "2026-05",
+        "analysis_type": "special"
+      },
+      "basis": "unit",
+      "status": "PASS"
+    },
+    {
+      "scenario": {
+        "id": "S2",
+        "context_id": "pharmaceutical:competition",
+        "product": "板蓝根颗粒",
+        "month": "2026-05",
+        "analysis_type": "special"
+      },
+      "basis": "total",
+      "status": "PASS"
+    },
+    {
+      "scenario": {
+        "id": "S3",
+        "context_id": "pharmaceutical:competition",
+        "product": "六味地黄胶囊",
+        "month": "2026-03",
+        "analysis_type": "monthly"
+      },
+      "basis": "unit",
+      "status": "PASS"
+    },
+    {
+      "scenario": {
+        "id": "S3",
+        "context_id": "pharmaceutical:competition",
+        "product": "六味地黄胶囊",
+        "month": "2026-03",
+        "analysis_type": "monthly"
+      },
+      "basis": "total",
+      "status": "PASS"
+    },
+    {
+      "scenario": {
+        "id": "Q2",
+        "context_id": "pharmaceutical:competition",
+        "product": "银黄口服液",
+        "month": "2026-06",
+        "analysis_type": "quarterly"
+      },
+      "basis": "unit",
+      "status": "PASS"
+    },
+    {
+      "scenario": {
+        "id": "Q2",
+        "context_id": "pharmaceutical:competition",
+        "product": "银黄口服液",
+        "month": "2026-06",
+        "analysis_type": "quarterly"
+      },
+      "basis": "total",
+      "status": "PASS"
+    }
+  ],
+  "numeric_checks": 2160,
+  "source_specification_checks": 32,
+  "max_absolute_error": "0",
+  "max_relative_error": "0",
+  "difference_requirement_relative": "0.01",
+  "external_model_calls": 0,
+  "second_factory_detail": "Unavailable in original supplied data; no fabricated detail"
+}
