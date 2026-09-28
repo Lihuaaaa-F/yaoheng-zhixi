@@ -317,7 +317,7 @@
     "explanation_validation": "PASS",
     "current_fresh_model_validation": "DEGRADED_SEPARATE_RUN",
     "source_response_sha256": "1022ba0e7b1a6579f4c1b93a5f9190c0bd6c474884e1237f28e44d14a634eb6c",
-    "human_review": "PENDING",
+    "human_review": "PASS",
     "artifacts": {
       "docx": {
         "sha256": "058394afc1f15e71d0660de44fc6b50ac594151250487b88b140ae0ba761e85b",
@@ -347,8 +347,10 @@
         }
       ],
       "new_model_calls": 0
-    }
+    },
+    "attribution_score": 4,
+    "reviewer": "胡珺杰"
   },
   "current_new_call_status": "DEGRADED",
-  "model_budget": "existing rolling-day cap exhausted; no increase"
+  "model_budget": "per operation, process-local calendar day cap 45; prior rolling-day exhaustion statement was incorrect"
 }

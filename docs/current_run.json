@@ -15,10 +15,10 @@
   "tested_code_commit": "c5a2f3430f8c0346b3952c85b55dcd889dbb246e",
   "baseline_commit": "3aba221e81d582970a7261204d2b255e822b0e88",
   "historical_run_index": "validation/baseline_3aba221_current_run.json",
-  "human_review": "PENDING_CONTENT_REVIEW",
+  "human_review": "PARTIAL_S1_CONTENT_PASS",
   "human_web_check": "PASS",
   "human_review_record": "evaluation/人工评分记录.json",
-  "human_review_scope": "网页检查通过；61d47bd S1为2分。当前只复评既有响应重校验的S1内容，不计新增调用通过。",
+  "human_review_scope": "网页检查通过；61d47bd S1为2分；s1_revalidated_c5a2f34 S1内容复评4分通过，均只绑定各自文件，不替代新增调用验证。",
   "candidate_review_record": "validation/candidate_review.json",
   "evaluation_report": "evaluation/评测报告.md",
   "candidate_notes": "交付候选说明.md",
@@ -107,8 +107,9 @@
     "run_id": "s1_revalidated_c5a2f34",
     "source_call_id": 79,
     "new_model_calls": 0,
-    "status": "PENDING",
-    "record": "validation/candidate_review.json"
+    "status": "PASS",
+    "record": "validation/candidate_review.json",
+    "attribution_score": 4
   },
-  "model_budget": "EXHAUSTED_EXISTING_ROLLING_DAY_CAP"
+  "model_budget": "PER_OPERATION_LOCAL_CALENDAR_DAY_CAP_45"
 }
