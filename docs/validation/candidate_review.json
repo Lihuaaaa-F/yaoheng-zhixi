@@ -1,5 +1,5 @@
 {
-  "status": "PARTIAL_PENDING_S2",
+  "status": "S1_S2_PASS_S3_USER_ASSIGNED_PENDING_ARTIFACT",
   "run_id": "sequential_delivery_review",
   "code_commit": "4b04be55dc66fb39343f1e28d266415e264f3a81",
   "scope": "比赛评测候选，独立于网站业务验收",
@@ -30,9 +30,9 @@
     },
     {
       "scenario": "S2",
-      "status": "PENDING",
-      "attribution_score": null,
-      "reviewer": null,
+      "status": "PASS",
+      "attribution_score": 4,
+      "reviewer": "胡珺杰",
       "code_commit": "4b04be55dc66fb39343f1e28d266415e264f3a81",
       "run_id": "s2_current_4b04be5",
       "mode": "FRESH_MODEL",
@@ -41,7 +41,9 @@
       "artifact_hashes": {
         "docx": "09ca50165074d92a01db27ca562650570bac7874375f413392dc98859f572dd7",
         "pdf": "4793186e1f6153844d634d53db6a6829466e8c4b2652d4661be9552fb2fc92d9"
-      }
+      },
+      "review_source": "用户明确评分",
+      "feedback": "4分，通过"
     },
     {
       "scenario": "S3",
@@ -60,10 +62,18 @@
   "previous_S1_score": 2,
   "historical_scores": "原A4 S1/S2/S3各4分只对应原件；61d47bd S1=2分只对应已评文件；均不迁移；Q2不计必测分母",
   "mode": "PER_ARTIFACT_PROVENANCE",
-  "active_review_scenario": "S2",
+  "active_review_scenario": null,
   "fresh_model_validation": {
     "S1_on_c5a2f34": "DEGRADED",
     "S1_on_4b04be5": "NOT_RUN",
     "S2_on_4b04be5": "PASS"
+  },
+  "remaining_review_instruction": {
+    "source": "用户：不用继续下一份了，我也打4分，完成既定任务并推送到main分支",
+    "S3_attribution_score": 4,
+    "S3_basis": "USER_ASSIGNED_WITHOUT_OPENING",
+    "artifact_binding": "PENDING_FINAL_S3_ARTIFACT",
+    "Q2": "SUPPLEMENTAL_MACHINE_CHECK_SEPARATE",
+    "manual_opening_sequence": "WAIVED_BY_USER"
   }
 }
