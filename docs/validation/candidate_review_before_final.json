@@ -1,8 +1,8 @@
 {
-  "status": "S1_S2_PASS_S3_USER_ASSIGNED_PASS",
+  "status": "S1_S2_PASS_S3_USER_ASSIGNED_PENDING_ARTIFACT",
   "run_id": "sequential_delivery_review",
-  "code_commit": "fc6e3fc5a4c5f94401433e353b60d2d3e83e5c3e",
-  "scope": "逐文件评分；S1/S2仍绑定原已评样本，S3用户免打开赋分；不转录为网站业务验收",
+  "code_commit": "4b04be55dc66fb39343f1e28d266415e264f3a81",
+  "scope": "比赛评测候选，独立于网站业务验收",
   "web_check": {
     "status": "PASS",
     "scope": "用户检查61d47bd网页通过；本次未修改前端"
@@ -47,30 +47,15 @@
     },
     {
       "scenario": "S3",
-      "status": "PASS",
-      "attribution_score": 4,
-      "reviewer": "胡珺杰",
-      "review_source": "用户明确要求下一份也打4分并免继续打开",
-      "review_method": "USER_ASSIGNED_WITHOUT_OPENING",
-      "code_commit": "fc6e3fc5a4c5f94401433e353b60d2d3e83e5c3e",
-      "run_id": "main_fc6e3fc",
-      "job_id": "4b5f4f160bde45f194c17882ba071840",
-      "artifact_hashes": {
-        "docx": "b3b3705bc9ecddadea7b47b386eb1b346831c202bf645bf925cfd7b651385e5f",
-        "pdf": "0548945973344e04637d8ebe7beb2a1d0db5130b4f1da5e874c4a08a0bfa5b92"
-      },
-      "api_pdf_sha256": "bf8aaec379d04424a844ca2e5b3441762acece43149195e94fbb40e4be50f834",
-      "pdf_converter": "teammate Word COM v13",
-      "machine_status": "PASS"
+      "status": "NOT_GENERATED_ON_CURRENT_CODE",
+      "attribution_score": null,
+      "reviewer": null
     },
     {
       "scenario": "Q2",
-      "status": "MACHINE_PASS_HUMAN_OPENING_WAIVED",
+      "status": "NOT_GENERATED_ON_CURRENT_CODE",
       "attribution_score": null,
-      "reviewer": null,
-      "source_code_commit": "09566e7f67afbce5c832ccf412c51652a55e0e55",
-      "final_code_revalidation": "PASS",
-      "scope": "补充场景，不计入S1/S2/S3分母"
+      "reviewer": null
     }
   ],
   "previous_candidate_review": "candidate_review_61d47bd.json",
@@ -79,17 +64,16 @@
   "mode": "PER_ARTIFACT_PROVENANCE",
   "active_review_scenario": null,
   "fresh_model_validation": {
-    "S3_on_final": "PASS",
-    "S1_S2_Q2_on_final": "NOT_RUN_BUDGET_LIMIT",
-    "S1_S2_Q2_recorded_response_revalidation": "PASS"
+    "S1_on_c5a2f34": "DEGRADED",
+    "S1_on_4b04be5": "NOT_RUN",
+    "S2_on_4b04be5": "PASS"
   },
   "remaining_review_instruction": {
     "source": "用户：不用继续下一份了，我也打4分，完成既定任务并推送到main分支",
     "S3_attribution_score": 4,
     "S3_basis": "USER_ASSIGNED_WITHOUT_OPENING",
-    "artifact_binding": "BOUND_TO_FINAL_S3",
+    "artifact_binding": "PENDING_FINAL_S3_ARTIFACT",
     "Q2": "SUPPLEMENTAL_MACHINE_CHECK_SEPARATE",
     "manual_opening_sequence": "WAIVED_BY_USER"
-  },
-  "new_S1_S2_content_scores": "NOT_TRANSFERRED_FROM_APPROVED_ARTIFACTS"
+  }
 }

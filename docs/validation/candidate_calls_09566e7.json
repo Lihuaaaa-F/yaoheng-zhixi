@@ -1,0 +1,634 @@
+{
+  "code_commit": "09566e7f67afbce5c832ccf412c51652a55e0e55",
+  "mode": "FRESH_MODEL",
+  "scope": "historical candidate; not final-code validation",
+  "required_scenarios": [
+    "S1",
+    "S2",
+    "S3"
+  ],
+  "supplemental_scenarios": [
+    "Q2"
+  ],
+  "scenarios": [
+    {
+      "id": "S1",
+      "job_id": "8ca928f243bc46f8b29a4b0d9731903d",
+      "status": "DEGRADED",
+      "error": null,
+      "narrative_status": "PASS",
+      "model_identity": {
+        "status": "VERIFIED",
+        "requested": "deepseek-flash",
+        "returned": [
+          "deepseek-flash"
+        ],
+        "reason": "全部调用响应model经核验一致"
+      },
+      "usage": {
+        "prompt_tokens": 6444,
+        "completion_tokens": 7723,
+        "total_tokens": 14167,
+        "calls": 1
+      },
+      "calls": [
+        {
+          "requested_model": "deepseek-flash",
+          "returned_model": "deepseek-flash",
+          "identity_status": "VERIFIED_EXACT",
+          "reason": "响应model与请求一致",
+          "call_id": 95,
+          "endpoint": "https://api.deepseek.com/chat/completions"
+        }
+      ],
+      "cache_hit": false,
+      "unit_validation": {
+        "benchmark/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "benchmark/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "materials/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "materials/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        }
+      },
+      "alert_coverage": {},
+      "failures": [],
+      "versions": {
+        "renderer": "reader-20260928-wordpdf-v13",
+        "model": "deepseek-flash",
+        "protocol": "openai",
+        "endpoint": "https://api.deepseek.com",
+        "prompt": "ranked-diagnostic-paths-v6-bounded-batches",
+        "attribution": "attribution-v2-bound-snapshot",
+        "reasoning_effort": "",
+        "retrieval_policy": "af76d98f09fa02205fc7a1ae51be3cd861bf457e0cd701509ccec953a8315496",
+        "validator": "useful-bounded-attribution-v7",
+        "parser": "scope-prefilter-v9-workspace-source-provenance",
+        "terminology": "540ade4b03b05c3ca9661b1add0a965587c1b34df111814bbc43c3f50f317705",
+        "retriever": "bm25-chroma-prefilter-rrf-v7-vector-completeness",
+        "embedding": "a48549b3259a6165364f226599cd91f39923d5d5",
+        "snapshot": "1ce027b520eed8e5c447d71f90670b4a07688e23dc1887165b83e83406e2992f",
+        "knowledge": "d3750f7c0d029b72f2447853100178c2d7fdefd151d2b1742cba3086e1cb98c7",
+        "template": "166fadc89f8800fc7e170eaba74c037e4aaa6f39b9c2a88669a2008a3eaadc1e",
+        "context": {
+          "enterprise_id": "competition",
+          "dataset_id": "competition-private",
+          "industry_id": "pharmaceutical",
+          "industry_version": "1.0.0",
+          "policy_version": "pharmaceutical-original-1",
+          "data_snapshot": "032991a5cd0fdb500668e91da237d3a28634189c6932cd839d80dd5ff0ef7c67",
+          "knowledge_snapshot": "d3750f7c0d029b72f2447853100178c2d7fdefd151d2b1742cba3086e1cb98c7",
+          "template_version": "58ebcdd6e159f5f2f331790606a83aed894c6a40bcf2a555abe5b2e65ff9a856",
+          "formula_version": "normalized-cost-5-uploaded-details",
+          "enterprise_config_version": "2ec73c117b283831bf092f7a26467be2b99c5c1e66c6a638944851d82bf23903"
+        },
+        "model_available": true,
+        "generation_parameters": {
+          "reasoning_effort": "",
+          "temperature": null,
+          "top_p": null,
+          "max_tokens": 8192,
+          "timeout_seconds": 90.0,
+          "effective_reasoning_parameters": {},
+          "auth_mode": "auto",
+          "max_repairs": 2
+        },
+        "retrieval_parameters": {
+          "mode": "hybrid",
+          "weight_policy": "lexical-anchor:0.75/0.25;otherwise:0.5/0.5",
+          "reranker": "none",
+          "limit": 8
+        },
+        "run_id": "main_09566e7"
+      },
+      "retrieval": {
+        "status": "PASS",
+        "mode": "hybrid",
+        "recall_status": "RECALLED",
+        "knowledge_version": "1af4930746dec54294bc",
+        "framework": "llama-index-core BaseRetriever/TextNode"
+      },
+      "downloads": {
+        "docx": {
+          "sha256": "e2df72326dfbce7bd7a028fe112c160cbc97fdb6dd628b4bc604f9cb7cac8cf3",
+          "bytes": 266557
+        },
+        "pdf": {
+          "sha256": "45cc0a788445b554d5964dc7b2b7ab5a7255ce649cef9d6cd5a7b8b2a56b5131",
+          "bytes": 1202452
+        }
+      },
+      "rpa": {
+        "action_id": "YH-46903d9d53d9bdeb61f98780",
+        "notification": "SIMULATED_SENT",
+        "idempotent": true,
+        "edited_before_confirm": true,
+        "human_acknowledgement": "NOT_ENTERED",
+        "remote": {
+          "task_id": "YH-46903d9d53d9bdeb61f98780",
+          "status": "sent",
+          "created_at": "2026-09-29T04:06:22.731909+08:00"
+        }
+      }
+    },
+    {
+      "id": "S2",
+      "job_id": "0a73e598626f40f18a5f14ce93d85f2e",
+      "status": "DEGRADED",
+      "error": null,
+      "narrative_status": "PASS",
+      "model_identity": {
+        "status": "VERIFIED",
+        "requested": "deepseek-flash",
+        "returned": [
+          "deepseek-flash"
+        ],
+        "reason": "全部调用响应model经核验一致"
+      },
+      "usage": {
+        "prompt_tokens": 6377,
+        "completion_tokens": 7795,
+        "total_tokens": 14172,
+        "calls": 1
+      },
+      "calls": [
+        {
+          "requested_model": "deepseek-flash",
+          "returned_model": "deepseek-flash",
+          "identity_status": "VERIFIED_EXACT",
+          "reason": "响应model与请求一致",
+          "call_id": 96,
+          "endpoint": "https://api.deepseek.com/chat/completions"
+        }
+      ],
+      "cache_hit": false,
+      "unit_validation": {
+        "benchmark/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "benchmark/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "materials/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "materials/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        }
+      },
+      "alert_coverage": {},
+      "failures": [],
+      "versions": {
+        "renderer": "reader-20260928-wordpdf-v13",
+        "model": "deepseek-flash",
+        "protocol": "openai",
+        "endpoint": "https://api.deepseek.com",
+        "prompt": "ranked-diagnostic-paths-v6-bounded-batches",
+        "attribution": "attribution-v2-bound-snapshot",
+        "reasoning_effort": "",
+        "retrieval_policy": "af76d98f09fa02205fc7a1ae51be3cd861bf457e0cd701509ccec953a8315496",
+        "validator": "useful-bounded-attribution-v7",
+        "parser": "scope-prefilter-v9-workspace-source-provenance",
+        "terminology": "540ade4b03b05c3ca9661b1add0a965587c1b34df111814bbc43c3f50f317705",
+        "retriever": "bm25-chroma-prefilter-rrf-v7-vector-completeness",
+        "embedding": "a48549b3259a6165364f226599cd91f39923d5d5",
+        "snapshot": "52203a1defd095ba7e1bff9c03b81cd74de3119300ee5d7d7228dce0b9871df3",
+        "knowledge": "d3750f7c0d029b72f2447853100178c2d7fdefd151d2b1742cba3086e1cb98c7",
+        "template": "166fadc89f8800fc7e170eaba74c037e4aaa6f39b9c2a88669a2008a3eaadc1e",
+        "context": {
+          "enterprise_id": "competition",
+          "dataset_id": "competition-private",
+          "industry_id": "pharmaceutical",
+          "industry_version": "1.0.0",
+          "policy_version": "pharmaceutical-original-1",
+          "data_snapshot": "032991a5cd0fdb500668e91da237d3a28634189c6932cd839d80dd5ff0ef7c67",
+          "knowledge_snapshot": "d3750f7c0d029b72f2447853100178c2d7fdefd151d2b1742cba3086e1cb98c7",
+          "template_version": "58ebcdd6e159f5f2f331790606a83aed894c6a40bcf2a555abe5b2e65ff9a856",
+          "formula_version": "normalized-cost-5-uploaded-details",
+          "enterprise_config_version": "2ec73c117b283831bf092f7a26467be2b99c5c1e66c6a638944851d82bf23903"
+        },
+        "model_available": true,
+        "generation_parameters": {
+          "reasoning_effort": "",
+          "temperature": null,
+          "top_p": null,
+          "max_tokens": 8192,
+          "timeout_seconds": 90.0,
+          "effective_reasoning_parameters": {},
+          "auth_mode": "auto",
+          "max_repairs": 2
+        },
+        "retrieval_parameters": {
+          "mode": "hybrid",
+          "weight_policy": "lexical-anchor:0.75/0.25;otherwise:0.5/0.5",
+          "reranker": "none",
+          "limit": 8
+        },
+        "run_id": "main_09566e7"
+      },
+      "retrieval": {
+        "status": "PASS",
+        "mode": "hybrid",
+        "recall_status": "RECALLED",
+        "knowledge_version": "1af4930746dec54294bc",
+        "framework": "llama-index-core BaseRetriever/TextNode"
+      },
+      "downloads": {
+        "docx": {
+          "sha256": "b3b47d62a7cf30931037431fecba4dab090457ea9b28e35ff9e714b0a9f7c52c",
+          "bytes": 264271
+        },
+        "pdf": {
+          "sha256": "cb3f61f239881c940695a5519e20446d900b1471e4b228d11c348f265c46b341",
+          "bytes": 1177104
+        }
+      },
+      "rpa": {
+        "action_id": "YH-ad3319e6f52fdae24c4217fc",
+        "notification": "SIMULATED_SENT",
+        "idempotent": true,
+        "edited_before_confirm": true,
+        "human_acknowledgement": "NOT_ENTERED",
+        "remote": {
+          "task_id": "YH-ad3319e6f52fdae24c4217fc",
+          "status": "sent",
+          "created_at": "2026-09-29T04:07:05.973206+08:00"
+        }
+      }
+    },
+    {
+      "id": "S3",
+      "job_id": "071b434f10ad49d9b455fe621eeafde4",
+      "status": "DEGRADED",
+      "error": null,
+      "narrative_status": "DEGRADED",
+      "model_identity": {
+        "status": "VERIFIED",
+        "requested": "deepseek-flash",
+        "returned": [
+          "deepseek-flash"
+        ],
+        "reason": "全部调用响应model经核验一致"
+      },
+      "usage": {
+        "prompt_tokens": 17677,
+        "completion_tokens": 16081,
+        "total_tokens": 33758,
+        "calls": 3
+      },
+      "calls": [
+        {
+          "requested_model": "deepseek-flash",
+          "returned_model": "deepseek-flash",
+          "identity_status": "VERIFIED_EXACT",
+          "reason": "响应model与请求一致",
+          "call_id": 97,
+          "endpoint": "https://api.deepseek.com/chat/completions"
+        },
+        {
+          "requested_model": "deepseek-flash",
+          "returned_model": "deepseek-flash",
+          "identity_status": "VERIFIED_EXACT",
+          "reason": "响应model与请求一致",
+          "call_id": 98,
+          "endpoint": "https://api.deepseek.com/chat/completions"
+        },
+        {
+          "requested_model": "deepseek-flash",
+          "returned_model": "deepseek-flash",
+          "identity_status": "VERIFIED_EXACT",
+          "reason": "响应model与请求一致",
+          "call_id": 99,
+          "endpoint": "https://api.deepseek.com/chat/completions"
+        }
+      ],
+      "cache_hit": false,
+      "unit_validation": {
+        "benchmark/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "benchmark/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "labor/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "labor/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "materials/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "materials/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "overhead/explanation": {
+          "status": "FAILED",
+          "reason": "ValueError: missing evidence must name specific records or measurements"
+        },
+        "overhead/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        }
+      },
+      "alert_coverage": {
+        "alert-ae6cfac6295472537aa5": {
+          "covered": true,
+          "element_key": "materials",
+          "basis": "total"
+        },
+        "alert-a3392a1012a3bdbfd2a9": {
+          "covered": true,
+          "element_key": "labor",
+          "basis": "total"
+        },
+        "alert-918366df38ec19897ded": {
+          "covered": false,
+          "element_key": "overhead",
+          "basis": "total"
+        }
+      },
+      "failures": [
+        "overhead: ValueError: event loss is not monthly net decline; explicitly distinguish event and monthly output",
+        "overhead: ValueError: missing evidence must name specific records or measurements",
+        "overhead: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代",
+        "ALERT_EXPLANATION_MISSING:alert-918366df38ec19897ded"
+      ],
+      "versions": {
+        "renderer": "reader-20260928-wordpdf-v13",
+        "model": "deepseek-flash",
+        "protocol": "openai",
+        "endpoint": "https://api.deepseek.com",
+        "prompt": "ranked-diagnostic-paths-v6-bounded-batches",
+        "attribution": "attribution-v2-bound-snapshot",
+        "reasoning_effort": "",
+        "retrieval_policy": "af76d98f09fa02205fc7a1ae51be3cd861bf457e0cd701509ccec953a8315496",
+        "validator": "useful-bounded-attribution-v7",
+        "parser": "scope-prefilter-v9-workspace-source-provenance",
+        "terminology": "540ade4b03b05c3ca9661b1add0a965587c1b34df111814bbc43c3f50f317705",
+        "retriever": "bm25-chroma-prefilter-rrf-v7-vector-completeness",
+        "embedding": "a48549b3259a6165364f226599cd91f39923d5d5",
+        "snapshot": "cc78b5438675d2e2e2a599ffedd865e12838a639e2a8c2fe82095b80a2923efd",
+        "knowledge": "d3750f7c0d029b72f2447853100178c2d7fdefd151d2b1742cba3086e1cb98c7",
+        "template": "166fadc89f8800fc7e170eaba74c037e4aaa6f39b9c2a88669a2008a3eaadc1e",
+        "context": {
+          "enterprise_id": "competition",
+          "dataset_id": "competition-private",
+          "industry_id": "pharmaceutical",
+          "industry_version": "1.0.0",
+          "policy_version": "pharmaceutical-original-1",
+          "data_snapshot": "032991a5cd0fdb500668e91da237d3a28634189c6932cd839d80dd5ff0ef7c67",
+          "knowledge_snapshot": "d3750f7c0d029b72f2447853100178c2d7fdefd151d2b1742cba3086e1cb98c7",
+          "template_version": "58ebcdd6e159f5f2f331790606a83aed894c6a40bcf2a555abe5b2e65ff9a856",
+          "formula_version": "normalized-cost-5-uploaded-details",
+          "enterprise_config_version": "2ec73c117b283831bf092f7a26467be2b99c5c1e66c6a638944851d82bf23903"
+        },
+        "model_available": true,
+        "generation_parameters": {
+          "reasoning_effort": "",
+          "temperature": null,
+          "top_p": null,
+          "max_tokens": 8192,
+          "timeout_seconds": 90.0,
+          "effective_reasoning_parameters": {},
+          "auth_mode": "auto",
+          "max_repairs": 2
+        },
+        "retrieval_parameters": {
+          "mode": "hybrid",
+          "weight_policy": "lexical-anchor:0.75/0.25;otherwise:0.5/0.5",
+          "reranker": "none",
+          "limit": 8
+        },
+        "run_id": "main_09566e7"
+      },
+      "retrieval": {
+        "status": "PASS",
+        "mode": "hybrid",
+        "recall_status": "RECALLED",
+        "knowledge_version": "1af4930746dec54294bc",
+        "framework": "llama-index-core BaseRetriever/TextNode"
+      },
+      "downloads": {
+        "docx": {
+          "sha256": "98d781dda39398649958d135c49e54ffaef2f4be74db6e857b14047e337e2365",
+          "bytes": 275393
+        },
+        "pdf": {
+          "sha256": "4ae5b4b59eb66e4c51d1a0749ac93a9cbf50553c3d2cc280d874239b23f1f5c0",
+          "bytes": 1237914
+        }
+      },
+      "rpa": {
+        "action_id": "YH-f40b2bb4b5e525e36a9717f8",
+        "notification": "SIMULATED_SENT",
+        "idempotent": true,
+        "edited_before_confirm": true,
+        "human_acknowledgement": "NOT_ENTERED",
+        "remote": {
+          "task_id": "YH-f40b2bb4b5e525e36a9717f8",
+          "status": "sent",
+          "created_at": "2026-09-29T04:08:27.501848+08:00"
+        }
+      }
+    },
+    {
+      "id": "Q2",
+      "job_id": "3ba04888ba7144228fb3613a99016689",
+      "status": "DEGRADED",
+      "error": null,
+      "narrative_status": "PASS",
+      "model_identity": {
+        "status": "VERIFIED",
+        "requested": "deepseek-flash",
+        "returned": [
+          "deepseek-flash"
+        ],
+        "reason": "全部调用响应model经核验一致"
+      },
+      "usage": {
+        "prompt_tokens": 20396,
+        "completion_tokens": 24111,
+        "total_tokens": 44507,
+        "calls": 3
+      },
+      "calls": [
+        {
+          "requested_model": "deepseek-flash",
+          "returned_model": "deepseek-flash",
+          "identity_status": "VERIFIED_EXACT",
+          "reason": "响应model与请求一致",
+          "call_id": 100,
+          "endpoint": "https://api.deepseek.com/chat/completions"
+        },
+        {
+          "requested_model": "deepseek-flash",
+          "returned_model": "deepseek-flash",
+          "identity_status": "VERIFIED_EXACT",
+          "reason": "响应model与请求一致",
+          "call_id": 101,
+          "endpoint": "https://api.deepseek.com/chat/completions"
+        },
+        {
+          "requested_model": "deepseek-flash",
+          "returned_model": "deepseek-flash",
+          "identity_status": "VERIFIED_EXACT",
+          "reason": "响应model与请求一致",
+          "call_id": 102,
+          "endpoint": "https://api.deepseek.com/chat/completions"
+        }
+      ],
+      "cache_hit": false,
+      "unit_validation": {
+        "benchmark/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "benchmark/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "labor/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "labor/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "materials/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "materials/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "overhead/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "overhead/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        }
+      },
+      "alert_coverage": {
+        "alert-f63295afdd8152cfe65f": {
+          "covered": true,
+          "element_key": "materials",
+          "basis": "total"
+        },
+        "alert-4dfbe0c1984e3bac496f": {
+          "covered": true,
+          "element_key": "labor",
+          "basis": "total"
+        },
+        "alert-0c80378a697b26dda64c": {
+          "covered": true,
+          "element_key": "overhead",
+          "basis": "total"
+        }
+      },
+      "failures": [
+        "JSONDecodeError: Unterminated string starting at: line 1 column 2069 (char 2068)"
+      ],
+      "versions": {
+        "renderer": "reader-20260928-wordpdf-v13",
+        "model": "deepseek-flash",
+        "protocol": "openai",
+        "endpoint": "https://api.deepseek.com",
+        "prompt": "ranked-diagnostic-paths-v6-bounded-batches",
+        "attribution": "attribution-v2-bound-snapshot",
+        "reasoning_effort": "",
+        "retrieval_policy": "af76d98f09fa02205fc7a1ae51be3cd861bf457e0cd701509ccec953a8315496",
+        "validator": "useful-bounded-attribution-v7",
+        "parser": "scope-prefilter-v9-workspace-source-provenance",
+        "terminology": "540ade4b03b05c3ca9661b1add0a965587c1b34df111814bbc43c3f50f317705",
+        "retriever": "bm25-chroma-prefilter-rrf-v7-vector-completeness",
+        "embedding": "a48549b3259a6165364f226599cd91f39923d5d5",
+        "snapshot": "1bbf894bd209905d00773b84ccdafc9617ba0cab2a0f05bc6ca198fd143415a4",
+        "knowledge": "d3750f7c0d029b72f2447853100178c2d7fdefd151d2b1742cba3086e1cb98c7",
+        "template": "166fadc89f8800fc7e170eaba74c037e4aaa6f39b9c2a88669a2008a3eaadc1e",
+        "context": {
+          "enterprise_id": "competition",
+          "dataset_id": "competition-private",
+          "industry_id": "pharmaceutical",
+          "industry_version": "1.0.0",
+          "policy_version": "pharmaceutical-original-1",
+          "data_snapshot": "032991a5cd0fdb500668e91da237d3a28634189c6932cd839d80dd5ff0ef7c67",
+          "knowledge_snapshot": "d3750f7c0d029b72f2447853100178c2d7fdefd151d2b1742cba3086e1cb98c7",
+          "template_version": "58ebcdd6e159f5f2f331790606a83aed894c6a40bcf2a555abe5b2e65ff9a856",
+          "formula_version": "normalized-cost-5-uploaded-details",
+          "enterprise_config_version": "2ec73c117b283831bf092f7a26467be2b99c5c1e66c6a638944851d82bf23903"
+        },
+        "model_available": true,
+        "generation_parameters": {
+          "reasoning_effort": "",
+          "temperature": null,
+          "top_p": null,
+          "max_tokens": 8192,
+          "timeout_seconds": 90.0,
+          "effective_reasoning_parameters": {},
+          "auth_mode": "auto",
+          "max_repairs": 2
+        },
+        "retrieval_parameters": {
+          "mode": "hybrid",
+          "weight_policy": "lexical-anchor:0.75/0.25;otherwise:0.5/0.5",
+          "reranker": "none",
+          "limit": 8
+        },
+        "run_id": "main_09566e7"
+      },
+      "retrieval": {
+        "status": "PASS",
+        "mode": "hybrid",
+        "recall_status": "RECALLED",
+        "knowledge_version": "1af4930746dec54294bc",
+        "framework": "llama-index-core BaseRetriever/TextNode"
+      },
+      "downloads": {
+        "docx": {
+          "sha256": "061d1e66f6688ba2c893695b1d4f092f60ab03bebdf232dc150f52ed570196cd",
+          "bytes": 272964
+        },
+        "pdf": {
+          "sha256": "4da88f05fad5f54949cc51810a3749504bf51e160ff2755d101ec09751277b59",
+          "bytes": 1274360
+        }
+      },
+      "rpa": {
+        "action_id": "YH-041c4fd3be0a3422a08f47f9",
+        "notification": "SIMULATED_SENT",
+        "idempotent": true,
+        "edited_before_confirm": true,
+        "human_acknowledgement": "NOT_ENTERED",
+        "remote": {
+          "task_id": "YH-041c4fd3be0a3422a08f47f9",
+          "status": "sent",
+          "created_at": "2026-09-29T04:10:29.224520+08:00"
+        }
+      }
+    }
+  ]
+}

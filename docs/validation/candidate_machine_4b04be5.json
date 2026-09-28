@@ -1,0 +1,243 @@
+{
+  "candidate_code_commit": "4b04be55dc66fb39343f1e28d266415e264f3a81",
+  "application_git_tree": "9a6a085b158657eb0debd8e47a3124b027ea4fef",
+  "scope": "S2 fresh call only; S1 content approval remains attached to c5a2f34 artifacts; no final E2E",
+  "backend": {
+    "passed": 664,
+    "failed": 0,
+    "skipped": 2,
+    "warnings": 2,
+    "skip_reason": "slow import E2E not enabled; legacy capability-context discovery unavailable",
+    "evidence": "validation/candidate_machine.json"
+  },
+  "regression_xml_sha256": "be4b479d58133bb48f919da1cf3b2086a68b2dee3bee957fec883cbec3cf2ce3",
+  "scenarios": [
+    {
+      "scenario": "S2",
+      "commit": "4b04be55dc66fb39343f1e28d266415e264f3a81",
+      "job_id": "072fc4c446454c86a21e3e17a449228e",
+      "status": "DEGRADED",
+      "narrative_status": "PASS",
+      "calls": [
+        {
+          "requested_model": "deepseek-flash",
+          "returned_model": "deepseek-flash",
+          "identity_status": "VERIFIED_EXACT",
+          "reason": "响应model与请求一致",
+          "call_id": 86,
+          "endpoint": "https://api.deepseek.com/chat/completions"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 6377,
+        "completion_tokens": 5606,
+        "total_tokens": 11983,
+        "calls": 1
+      },
+      "cache_hit": false,
+      "failures": [],
+      "versions": {
+        "renderer": "reader-20260928-branding-v12",
+        "model": "deepseek-flash",
+        "protocol": "openai",
+        "endpoint": "https://api.deepseek.com",
+        "prompt": "ranked-diagnostic-paths-v5",
+        "attribution": "attribution-v2-bound-snapshot",
+        "reasoning_effort": "",
+        "retrieval_policy": "af76d98f09fa02205fc7a1ae51be3cd861bf457e0cd701509ccec953a8315496",
+        "validator": "useful-bounded-attribution-v7",
+        "parser": "scope-prefilter-v9-workspace-source-provenance",
+        "terminology": "540ade4b03b05c3ca9661b1add0a965587c1b34df111814bbc43c3f50f317705",
+        "retriever": "bm25-chroma-prefilter-rrf-v7-vector-completeness",
+        "embedding": "a48549b3259a6165364f226599cd91f39923d5d5",
+        "snapshot": "52203a1defd095ba7e1bff9c03b81cd74de3119300ee5d7d7228dce0b9871df3",
+        "knowledge": "d3750f7c0d029b72f2447853100178c2d7fdefd151d2b1742cba3086e1cb98c7",
+        "template": "166fadc89f8800fc7e170eaba74c037e4aaa6f39b9c2a88669a2008a3eaadc1e",
+        "context": {
+          "enterprise_id": "competition",
+          "dataset_id": "competition-private",
+          "industry_id": "pharmaceutical",
+          "industry_version": "1.0.0",
+          "policy_version": "pharmaceutical-original-1",
+          "data_snapshot": "032991a5cd0fdb500668e91da237d3a28634189c6932cd839d80dd5ff0ef7c67",
+          "knowledge_snapshot": "d3750f7c0d029b72f2447853100178c2d7fdefd151d2b1742cba3086e1cb98c7",
+          "template_version": "58ebcdd6e159f5f2f331790606a83aed894c6a40bcf2a555abe5b2e65ff9a856",
+          "formula_version": "normalized-cost-5-uploaded-details",
+          "enterprise_config_version": "2ec73c117b283831bf092f7a26467be2b99c5c1e66c6a638944851d82bf23903"
+        },
+        "model_available": true,
+        "generation_parameters": {
+          "reasoning_effort": "",
+          "temperature": null,
+          "top_p": null,
+          "max_tokens": 8192,
+          "timeout_seconds": 90.0,
+          "effective_reasoning_parameters": {},
+          "auth_mode": "auto",
+          "max_repairs": 2
+        },
+        "retrieval_parameters": {
+          "mode": "hybrid",
+          "weight_policy": "lexical-anchor:0.75/0.25;otherwise:0.5/0.5",
+          "reranker": "none",
+          "limit": 8
+        },
+        "run_id": "s2_current_4b04be5"
+      },
+      "artifacts": {
+        "docx": {
+          "sha256": "09ca50165074d92a01db27ca562650570bac7874375f413392dc98859f572dd7",
+          "bytes": 264131
+        },
+        "pdf": {
+          "sha256": "4793186e1f6153844d634d53db6a6829466e8c4b2652d4661be9552fb2fc92d9",
+          "bytes": 1173511
+        }
+      },
+      "content_checks": {
+        "pages": 18,
+        "review_pages": [
+          8,
+          9,
+          14
+        ],
+        "sections": [
+          {
+            "section": "materials",
+            "complete_docx": true,
+            "complete_pdf": true,
+            "program_data_prerequisites": []
+          },
+          {
+            "section": "benchmark",
+            "complete_docx": true,
+            "complete_pdf": true,
+            "program_data_prerequisites": [
+              "两厂同期间同规格原料实际采购单价与同批次实耗及合格产出对照明细"
+            ]
+          }
+        ],
+        "capability_status": "PASS",
+        "layout_changed": false,
+        "new_model_calls": 1,
+        "cache_hit": false,
+        "pdf_check": "exclude only exact repeated header and page-number lines when joining page-spanning paragraphs"
+      },
+      "unit_validation": {
+        "benchmark/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "benchmark/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "materials/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "materials/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        }
+      },
+      "human_review": "PENDING"
+    }
+  ],
+  "previous_S2_attempt": {
+    "commit": "337bf1319b72a345bad48d16165401eb96cbcea8",
+    "job_id": "ad3e32e85b234187829b8b0d664dbd6d",
+    "narrative_status": "DEGRADED",
+    "calls": [
+      {
+        "requested_model": "deepseek-flash",
+        "returned_model": "deepseek-flash",
+        "identity_status": "VERIFIED_EXACT",
+        "reason": "响应model与请求一致",
+        "call_id": 83,
+        "endpoint": "https://api.deepseek.com/chat/completions"
+      },
+      {
+        "requested_model": "deepseek-flash",
+        "returned_model": "deepseek-flash",
+        "identity_status": "VERIFIED_EXACT",
+        "reason": "响应model与请求一致",
+        "call_id": 84,
+        "endpoint": "https://api.deepseek.com/chat/completions"
+      },
+      {
+        "requested_model": "deepseek-flash",
+        "returned_model": "deepseek-flash",
+        "identity_status": "VERIFIED_EXACT",
+        "reason": "响应model与请求一致",
+        "call_id": 85,
+        "endpoint": "https://api.deepseek.com/chat/completions"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 19557,
+      "completion_tokens": 18178,
+      "total_tokens": 37735,
+      "calls": 3
+    },
+    "cache_hit": false,
+    "failures": [
+      "materials/explanation: ValueError: price/usage decomposition needs matched comparison-period prices, consumption and output records",
+      "benchmark/explanation: ValueError: price/usage decomposition needs matched comparison-period prices, consumption and output records",
+      "JSONDecodeError: Unterminated string starting at: line 1 column 463 (char 462)",
+      "materials/explanation: ValueError: price/usage decomposition needs matched comparison-period prices, consumption and output records",
+      "materials: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代"
+    ]
+  },
+  "previous_S1_machine_record": "candidate_machine_c5a2f34.json",
+  "approved_S1_content_candidate": {
+    "code_commit": "c5a2f3430f8c0346b3952c85b55dcd889dbb246e",
+    "source_code_commit": "d9338a018222acf8165a84c8942f596d35c6fb41",
+    "source_job_id": "cb3e96ba929d4a498ad5db47186af773",
+    "source_call_id": 79,
+    "mode": "RECORDED_RESPONSE_REVALIDATION",
+    "new_model_calls": 0,
+    "explanation_validation": "PASS",
+    "current_fresh_model_validation": "DEGRADED_SEPARATE_RUN",
+    "source_response_sha256": "1022ba0e7b1a6579f4c1b93a5f9190c0bd6c474884e1237f28e44d14a634eb6c",
+    "human_review": "PASS",
+    "artifacts": {
+      "docx": {
+        "sha256": "058394afc1f15e71d0660de44fc6b50ac594151250487b88b140ae0ba761e85b",
+        "bytes": 266515
+      },
+      "pdf": {
+        "sha256": "88e03665bdb72001868a0c5c7dbe6a9880161280381828df6f53de2768786963",
+        "bytes": 1203400
+      }
+    },
+    "checks": {
+      "pages": 18,
+      "previous_reviewed_pages": 16,
+      "layout_changed": false,
+      "checks": [
+        {
+          "section": "materials",
+          "complete_in_docx": true,
+          "complete_in_pdf": true,
+          "ranked_paths": 2
+        },
+        {
+          "section": "benchmark",
+          "complete_in_docx": true,
+          "complete_in_pdf": true,
+          "ranked_paths": 2
+        }
+      ],
+      "new_model_calls": 0
+    },
+    "attribution_score": 4,
+    "reviewer": "胡珺杰"
+  },
+  "frontend": "unchanged; prior user web check PASS",
+  "layout_changes": false,
+  "model_budget_policy": "per operation and process-local calendar day; max 45; no increase",
+  "competition_ready": false,
+  "post_human_final_e2e": "NOT_RUN_WAITING_FOR_REMAINING_REVIEWS",
+  "data_content_publication": "LOCAL_ONLY"
+}

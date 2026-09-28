@@ -1,47 +1,331 @@
 {
-  "candidate_code_commit": "4b04be55dc66fb39343f1e28d266415e264f3a81",
-  "application_git_tree": "9a6a085b158657eb0debd8e47a3124b027ea4fef",
-  "scope": "S2 fresh call only; S1 content approval remains attached to c5a2f34 artifacts; no final E2E",
+  "candidate_code_commit": "fc6e3fc5a4c5f94401433e353b60d2d3e83e5c3e",
+  "application_git_tree": "0bca355b3be9179f9f7fc7c8ba8362b409e70e2e",
+  "scope": "final backend/browser/S3 fresh call; S1/S2/Q2 prior-code calls revalidated without new model calls",
   "backend": {
-    "passed": 664,
+    "passed": 667,
     "failed": 0,
-    "skipped": 2,
+    "skipped": 1,
     "warnings": 2,
-    "skip_reason": "slow import E2E not enabled; legacy capability-context discovery unavailable",
-    "evidence": "validation/candidate_machine.json"
+    "skip_reason": "legacy capability-context discovery unavailable; slow import E2E ENABLED",
+    "regression_xml_sha256": "42127dbbf988eefffbd44104b86dee3590fa7eb9a7d9a5565cced2cf31a010c6"
   },
-  "regression_xml_sha256": "be4b479d58133bb48f919da1cf3b2086a68b2dee3bee957fec883cbec3cf2ce3",
+  "frontend": {
+    "build": "PASS",
+    "build_code_commit": "09566e7f67afbce5c832ccf412c51652a55e0e55",
+    "frontend_git_tree": "8120a304bfe0204a4e77f24f41c0dc5e79b6e4cb",
+    "source_equal_to_final": true,
+    "log_sha256": "af7bfe0b873563f2e383a8f5f4d879ee1ba6d2f66742312005f9d7c036557914",
+    "node_tests": "1 passed; a9115a0 identical frontend tree",
+    "browser": {
+      "status": "PASS",
+      "code_commit": "fc6e3fc5a4c5f94401433e353b60d2d3e83e5c3e",
+      "actual_pages": 9,
+      "viewports": 2
+    },
+    "targeted_browser_contracts": {
+      "passed": 12,
+      "code_commit": "a9115a0837f437827d90f7255d4d6d4feaeae145",
+      "source_equal_to_final": true
+    }
+  },
   "scenarios": [
     {
-      "scenario": "S2",
-      "commit": "4b04be55dc66fb39343f1e28d266415e264f3a81",
-      "job_id": "072fc4c446454c86a21e3e17a449228e",
+      "id": "S1",
+      "job_id": "8ca928f243bc46f8b29a4b0d9731903d",
       "status": "DEGRADED",
+      "error": null,
       "narrative_status": "PASS",
+      "model_identity": {
+        "status": "VERIFIED",
+        "requested": "deepseek-flash",
+        "returned": [
+          "deepseek-flash"
+        ],
+        "reason": "全部调用响应model经核验一致"
+      },
+      "usage": {
+        "prompt_tokens": 6444,
+        "completion_tokens": 7723,
+        "total_tokens": 14167,
+        "calls": 1
+      },
       "calls": [
         {
           "requested_model": "deepseek-flash",
           "returned_model": "deepseek-flash",
           "identity_status": "VERIFIED_EXACT",
           "reason": "响应model与请求一致",
-          "call_id": 86,
+          "call_id": 95,
           "endpoint": "https://api.deepseek.com/chat/completions"
         }
       ],
-      "usage": {
-        "prompt_tokens": 6377,
-        "completion_tokens": 5606,
-        "total_tokens": 11983,
-        "calls": 1
-      },
       "cache_hit": false,
+      "unit_validation": {
+        "benchmark/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "benchmark/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "materials/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "materials/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        }
+      },
+      "alert_coverage": {},
       "failures": [],
       "versions": {
-        "renderer": "reader-20260928-branding-v12",
+        "renderer": "reader-20260928-wordpdf-v13",
         "model": "deepseek-flash",
         "protocol": "openai",
         "endpoint": "https://api.deepseek.com",
-        "prompt": "ranked-diagnostic-paths-v5",
+        "prompt": "ranked-diagnostic-paths-v6-bounded-batches",
+        "attribution": "attribution-v2-bound-snapshot",
+        "reasoning_effort": "",
+        "retrieval_policy": "af76d98f09fa02205fc7a1ae51be3cd861bf457e0cd701509ccec953a8315496",
+        "validator": "useful-bounded-attribution-v7",
+        "parser": "scope-prefilter-v9-workspace-source-provenance",
+        "terminology": "540ade4b03b05c3ca9661b1add0a965587c1b34df111814bbc43c3f50f317705",
+        "retriever": "bm25-chroma-prefilter-rrf-v7-vector-completeness",
+        "embedding": "a48549b3259a6165364f226599cd91f39923d5d5",
+        "snapshot": "1ce027b520eed8e5c447d71f90670b4a07688e23dc1887165b83e83406e2992f",
+        "knowledge": "d3750f7c0d029b72f2447853100178c2d7fdefd151d2b1742cba3086e1cb98c7",
+        "template": "166fadc89f8800fc7e170eaba74c037e4aaa6f39b9c2a88669a2008a3eaadc1e",
+        "context": {
+          "enterprise_id": "competition",
+          "dataset_id": "competition-private",
+          "industry_id": "pharmaceutical",
+          "industry_version": "1.0.0",
+          "policy_version": "pharmaceutical-original-1",
+          "data_snapshot": "032991a5cd0fdb500668e91da237d3a28634189c6932cd839d80dd5ff0ef7c67",
+          "knowledge_snapshot": "d3750f7c0d029b72f2447853100178c2d7fdefd151d2b1742cba3086e1cb98c7",
+          "template_version": "58ebcdd6e159f5f2f331790606a83aed894c6a40bcf2a555abe5b2e65ff9a856",
+          "formula_version": "normalized-cost-5-uploaded-details",
+          "enterprise_config_version": "2ec73c117b283831bf092f7a26467be2b99c5c1e66c6a638944851d82bf23903"
+        },
+        "model_available": true,
+        "generation_parameters": {
+          "reasoning_effort": "",
+          "temperature": null,
+          "top_p": null,
+          "max_tokens": 8192,
+          "timeout_seconds": 90.0,
+          "effective_reasoning_parameters": {},
+          "auth_mode": "auto",
+          "max_repairs": 2
+        },
+        "retrieval_parameters": {
+          "mode": "hybrid",
+          "weight_policy": "lexical-anchor:0.75/0.25;otherwise:0.5/0.5",
+          "reranker": "none",
+          "limit": 8
+        },
+        "run_id": "main_09566e7"
+      },
+      "retrieval": {
+        "status": "PASS",
+        "mode": "hybrid",
+        "recall_status": "RECALLED",
+        "knowledge_version": "1af4930746dec54294bc",
+        "framework": "llama-index-core BaseRetriever/TextNode"
+      },
+      "downloads": {
+        "docx": {
+          "sha256": "e2df72326dfbce7bd7a028fe112c160cbc97fdb6dd628b4bc604f9cb7cac8cf3",
+          "bytes": 266557
+        },
+        "pdf": {
+          "sha256": "45cc0a788445b554d5964dc7b2b7ab5a7255ce649cef9d6cd5a7b8b2a56b5131",
+          "bytes": 1202452
+        }
+      },
+      "rpa": {
+        "action_id": "YH-46903d9d53d9bdeb61f98780",
+        "notification": "SIMULATED_SENT",
+        "idempotent": true,
+        "edited_before_confirm": true,
+        "human_acknowledgement": "NOT_ENTERED",
+        "remote": {
+          "task_id": "YH-46903d9d53d9bdeb61f98780",
+          "status": "sent",
+          "created_at": "2026-09-29T04:06:22.731909+08:00"
+        }
+      },
+      "code_commit": "09566e7f67afbce5c832ccf412c51652a55e0e55",
+      "mode": "PRIOR_CODE_FRESH_MODEL_WITH_FINAL_CODE_REVALIDATION",
+      "current_code_fresh_call": false,
+      "capability_status": "PASS",
+      "human_review_status": "PENDING",
+      "status_explanation": "网站业务人工验收未代填；机器能力与交付评分分开",
+      "word_com": {
+        "scenario": "S1",
+        "source_docx_sha256": "e2df72326dfbce7bd7a028fe112c160cbc97fdb6dd628b4bc604f9cb7cac8cf3",
+        "source_docx_unchanged": true,
+        "teammate_converter_commit": "2e7131ade3fc7629216b5422ae5c416d8ea621f6",
+        "script_sha256": "d05266457df685d2f802461dfbbc3ec51bc98e4a898cc8bb03b87a44d83aa8cc",
+        "word_com_pdf": {
+          "sha256": "546e591eeee39f8db352bbfeb05ff468bfb17ceb1ddf81d52596b550ae335d80",
+          "bytes": 1052515
+        },
+        "pdf_checks": {
+          "api_libreoffice": {
+            "pages": 18,
+            "explanations": [
+              {
+                "section": "materials",
+                "claim_type": "hypothesis",
+                "docx_complete": true,
+                "pdf_complete": true
+              },
+              {
+                "section": "materials",
+                "claim_type": "hypothesis",
+                "docx_complete": true,
+                "pdf_complete": true
+              },
+              {
+                "section": "benchmark",
+                "claim_type": "hypothesis",
+                "docx_complete": true,
+                "pdf_complete": true
+              }
+            ],
+            "status": "PASS"
+          },
+          "word_com": {
+            "pages": 17,
+            "explanations": [
+              {
+                "section": "materials",
+                "claim_type": "hypothesis",
+                "docx_complete": true,
+                "pdf_complete": true
+              },
+              {
+                "section": "materials",
+                "claim_type": "hypothesis",
+                "docx_complete": true,
+                "pdf_complete": true
+              },
+              {
+                "section": "benchmark",
+                "claim_type": "hypothesis",
+                "docx_complete": true,
+                "pdf_complete": true
+              }
+            ],
+            "status": "PASS"
+          }
+        }
+      },
+      "final_code_revalidation": {
+        "scenario": "S1",
+        "validation_code_commit": "fc6e3fc5a4c5f94401433e353b60d2d3e83e5c3e",
+        "source_code_commit": "09566e7f67afbce5c832ccf412c51652a55e0e55",
+        "source_job_id": "8ca928f243bc46f8b29a4b0d9731903d",
+        "mode": "RECORDED_RESPONSE_REVALIDATION",
+        "new_model_calls": 0,
+        "status": "PASS",
+        "unit_validation": {
+          "benchmark/explanation": {
+            "status": "PASS",
+            "frozen": true
+          },
+          "benchmark/recommendation": {
+            "status": "PASS",
+            "frozen": true
+          },
+          "materials/explanation": {
+            "status": "PASS",
+            "frozen": true
+          },
+          "materials/recommendation": {
+            "status": "PASS",
+            "frozen": true
+          }
+        },
+        "alert_coverage": {},
+        "failure_reasons": [],
+        "source_response_hashes": [
+          {
+            "call_id": 95,
+            "sha256": "f06d069dbcae1fb619ff9b1215add01dd753473009c17ab8b3bcdbf6e9de2d66"
+          }
+        ],
+        "source_artifacts": {
+          "docx": {
+            "sha256": "e2df72326dfbce7bd7a028fe112c160cbc97fdb6dd628b4bc604f9cb7cac8cf3"
+          },
+          "pdf": {
+            "sha256": "45cc0a788445b554d5964dc7b2b7ab5a7255ce649cef9d6cd5a7b8b2a56b5131"
+          }
+        }
+      }
+    },
+    {
+      "id": "S2",
+      "job_id": "0a73e598626f40f18a5f14ce93d85f2e",
+      "status": "DEGRADED",
+      "error": null,
+      "narrative_status": "PASS",
+      "model_identity": {
+        "status": "VERIFIED",
+        "requested": "deepseek-flash",
+        "returned": [
+          "deepseek-flash"
+        ],
+        "reason": "全部调用响应model经核验一致"
+      },
+      "usage": {
+        "prompt_tokens": 6377,
+        "completion_tokens": 7795,
+        "total_tokens": 14172,
+        "calls": 1
+      },
+      "calls": [
+        {
+          "requested_model": "deepseek-flash",
+          "returned_model": "deepseek-flash",
+          "identity_status": "VERIFIED_EXACT",
+          "reason": "响应model与请求一致",
+          "call_id": 96,
+          "endpoint": "https://api.deepseek.com/chat/completions"
+        }
+      ],
+      "cache_hit": false,
+      "unit_validation": {
+        "benchmark/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "benchmark/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "materials/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "materials/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        }
+      },
+      "alert_coverage": {},
+      "failures": [],
+      "versions": {
+        "renderer": "reader-20260928-wordpdf-v13",
+        "model": "deepseek-flash",
+        "protocol": "openai",
+        "endpoint": "https://api.deepseek.com",
+        "prompt": "ranked-diagnostic-paths-v6-bounded-batches",
         "attribution": "attribution-v2-bound-snapshot",
         "reasoning_effort": "",
         "retrieval_policy": "af76d98f09fa02205fc7a1ae51be3cd861bf457e0cd701509ccec953a8315496",
@@ -82,53 +366,201 @@
           "reranker": "none",
           "limit": 8
         },
-        "run_id": "s2_current_4b04be5"
+        "run_id": "main_09566e7"
       },
-      "artifacts": {
+      "retrieval": {
+        "status": "PASS",
+        "mode": "hybrid",
+        "recall_status": "RECALLED",
+        "knowledge_version": "1af4930746dec54294bc",
+        "framework": "llama-index-core BaseRetriever/TextNode"
+      },
+      "downloads": {
         "docx": {
-          "sha256": "09ca50165074d92a01db27ca562650570bac7874375f413392dc98859f572dd7",
-          "bytes": 264131
+          "sha256": "b3b47d62a7cf30931037431fecba4dab090457ea9b28e35ff9e714b0a9f7c52c",
+          "bytes": 264271
         },
         "pdf": {
-          "sha256": "4793186e1f6153844d634d53db6a6829466e8c4b2652d4661be9552fb2fc92d9",
-          "bytes": 1173511
+          "sha256": "cb3f61f239881c940695a5519e20446d900b1471e4b228d11c348f265c46b341",
+          "bytes": 1177104
         }
       },
-      "content_checks": {
-        "pages": 18,
-        "review_pages": [
-          8,
-          9,
-          14
-        ],
-        "sections": [
-          {
-            "section": "materials",
-            "complete_docx": true,
-            "complete_pdf": true,
-            "program_data_prerequisites": []
+      "rpa": {
+        "action_id": "YH-ad3319e6f52fdae24c4217fc",
+        "notification": "SIMULATED_SENT",
+        "idempotent": true,
+        "edited_before_confirm": true,
+        "human_acknowledgement": "NOT_ENTERED",
+        "remote": {
+          "task_id": "YH-ad3319e6f52fdae24c4217fc",
+          "status": "sent",
+          "created_at": "2026-09-29T04:07:05.973206+08:00"
+        }
+      },
+      "code_commit": "09566e7f67afbce5c832ccf412c51652a55e0e55",
+      "mode": "PRIOR_CODE_FRESH_MODEL_WITH_FINAL_CODE_REVALIDATION",
+      "current_code_fresh_call": false,
+      "capability_status": "PASS",
+      "human_review_status": "PENDING",
+      "status_explanation": "网站业务人工验收未代填；机器能力与交付评分分开",
+      "word_com": {
+        "scenario": "S2",
+        "source_docx_sha256": "b3b47d62a7cf30931037431fecba4dab090457ea9b28e35ff9e714b0a9f7c52c",
+        "source_docx_unchanged": true,
+        "teammate_converter_commit": "2e7131ade3fc7629216b5422ae5c416d8ea621f6",
+        "script_sha256": "d05266457df685d2f802461dfbbc3ec51bc98e4a898cc8bb03b87a44d83aa8cc",
+        "word_com_pdf": {
+          "sha256": "e356bd0c36bda02bf81621d0e1b20e8c1b2c00af01a2cce910ff6e3e44662345",
+          "bytes": 1039066
+        },
+        "pdf_checks": {
+          "api_libreoffice": {
+            "pages": 18,
+            "explanations": [
+              {
+                "section": "materials",
+                "claim_type": "hypothesis",
+                "docx_complete": true,
+                "pdf_complete": true
+              },
+              {
+                "section": "materials",
+                "claim_type": "hypothesis",
+                "docx_complete": true,
+                "pdf_complete": true
+              },
+              {
+                "section": "benchmark",
+                "claim_type": "hypothesis",
+                "docx_complete": true,
+                "pdf_complete": true
+              }
+            ],
+            "status": "PASS"
           },
+          "word_com": {
+            "pages": 17,
+            "explanations": [
+              {
+                "section": "materials",
+                "claim_type": "hypothesis",
+                "docx_complete": true,
+                "pdf_complete": true
+              },
+              {
+                "section": "materials",
+                "claim_type": "hypothesis",
+                "docx_complete": true,
+                "pdf_complete": true
+              },
+              {
+                "section": "benchmark",
+                "claim_type": "hypothesis",
+                "docx_complete": true,
+                "pdf_complete": true
+              }
+            ],
+            "status": "PASS"
+          }
+        }
+      },
+      "final_code_revalidation": {
+        "scenario": "S2",
+        "validation_code_commit": "fc6e3fc5a4c5f94401433e353b60d2d3e83e5c3e",
+        "source_code_commit": "09566e7f67afbce5c832ccf412c51652a55e0e55",
+        "source_job_id": "0a73e598626f40f18a5f14ce93d85f2e",
+        "mode": "RECORDED_RESPONSE_REVALIDATION",
+        "new_model_calls": 0,
+        "status": "PASS",
+        "unit_validation": {
+          "benchmark/explanation": {
+            "status": "PASS",
+            "frozen": true
+          },
+          "benchmark/recommendation": {
+            "status": "PASS",
+            "frozen": true
+          },
+          "materials/explanation": {
+            "status": "PASS",
+            "frozen": true
+          },
+          "materials/recommendation": {
+            "status": "PASS",
+            "frozen": true
+          }
+        },
+        "alert_coverage": {},
+        "failure_reasons": [],
+        "source_response_hashes": [
           {
-            "section": "benchmark",
-            "complete_docx": true,
-            "complete_pdf": true,
-            "program_data_prerequisites": [
-              "两厂同期间同规格原料实际采购单价与同批次实耗及合格产出对照明细"
-            ]
+            "call_id": 96,
+            "sha256": "98b3533a9f3850842d62acb8a60dfebe18ab2bb0c120fb00b4d0d58b48684598"
           }
         ],
-        "capability_status": "PASS",
-        "layout_changed": false,
-        "new_model_calls": 1,
-        "cache_hit": false,
-        "pdf_check": "exclude only exact repeated header and page-number lines when joining page-spanning paragraphs"
+        "source_artifacts": {
+          "docx": {
+            "sha256": "b3b47d62a7cf30931037431fecba4dab090457ea9b28e35ff9e714b0a9f7c52c"
+          },
+          "pdf": {
+            "sha256": "cb3f61f239881c940695a5519e20446d900b1471e4b228d11c348f265c46b341"
+          }
+        }
+      }
+    },
+    {
+      "id": "S3",
+      "job_id": "4b5f4f160bde45f194c17882ba071840",
+      "status": "DEGRADED",
+      "error": null,
+      "narrative_status": "PASS",
+      "model_identity": {
+        "status": "VERIFIED",
+        "requested": "deepseek-flash",
+        "returned": [
+          "deepseek-flash"
+        ],
+        "reason": "全部调用响应model经核验一致"
       },
+      "usage": {
+        "prompt_tokens": 12550,
+        "completion_tokens": 13485,
+        "total_tokens": 26035,
+        "calls": 2
+      },
+      "calls": [
+        {
+          "requested_model": "deepseek-flash",
+          "returned_model": "deepseek-flash",
+          "identity_status": "VERIFIED_EXACT",
+          "reason": "响应model与请求一致",
+          "call_id": 103,
+          "endpoint": "https://api.deepseek.com/chat/completions"
+        },
+        {
+          "requested_model": "deepseek-flash",
+          "returned_model": "deepseek-flash",
+          "identity_status": "VERIFIED_EXACT",
+          "reason": "响应model与请求一致",
+          "call_id": 104,
+          "endpoint": "https://api.deepseek.com/chat/completions"
+        }
+      ],
+      "cache_hit": false,
       "unit_validation": {
         "benchmark/explanation": {
           "status": "PASS",
           "frozen": true
         },
         "benchmark/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "labor/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "labor/recommendation": {
           "status": "PASS",
           "frozen": true
         },
@@ -139,105 +571,695 @@
         "materials/recommendation": {
           "status": "PASS",
           "frozen": true
+        },
+        "overhead/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "overhead/recommendation": {
+          "status": "PASS",
+          "frozen": true
         }
       },
-      "human_review": "PENDING"
-    }
-  ],
-  "previous_S2_attempt": {
-    "commit": "337bf1319b72a345bad48d16165401eb96cbcea8",
-    "job_id": "ad3e32e85b234187829b8b0d664dbd6d",
-    "narrative_status": "DEGRADED",
-    "calls": [
-      {
-        "requested_model": "deepseek-flash",
-        "returned_model": "deepseek-flash",
-        "identity_status": "VERIFIED_EXACT",
-        "reason": "响应model与请求一致",
-        "call_id": 83,
-        "endpoint": "https://api.deepseek.com/chat/completions"
+      "alert_coverage": {
+        "alert-ae6cfac6295472537aa5": {
+          "covered": true,
+          "element_key": "materials",
+          "basis": "total"
+        },
+        "alert-a3392a1012a3bdbfd2a9": {
+          "covered": true,
+          "element_key": "labor",
+          "basis": "total"
+        },
+        "alert-918366df38ec19897ded": {
+          "covered": true,
+          "element_key": "overhead",
+          "basis": "total"
+        }
       },
-      {
-        "requested_model": "deepseek-flash",
-        "returned_model": "deepseek-flash",
-        "identity_status": "VERIFIED_EXACT",
-        "reason": "响应model与请求一致",
-        "call_id": 84,
-        "endpoint": "https://api.deepseek.com/chat/completions"
+      "failures": [],
+      "versions": {
+        "renderer": "reader-20260928-wordpdf-v13",
+        "model": "deepseek-flash",
+        "protocol": "openai",
+        "endpoint": "https://api.deepseek.com",
+        "prompt": "ranked-diagnostic-paths-v6-bounded-batches",
+        "attribution": "attribution-v2-bound-snapshot",
+        "reasoning_effort": "",
+        "retrieval_policy": "af76d98f09fa02205fc7a1ae51be3cd861bf457e0cd701509ccec953a8315496",
+        "validator": "useful-bounded-attribution-v8",
+        "parser": "scope-prefilter-v9-workspace-source-provenance",
+        "terminology": "540ade4b03b05c3ca9661b1add0a965587c1b34df111814bbc43c3f50f317705",
+        "retriever": "bm25-chroma-prefilter-rrf-v7-vector-completeness",
+        "embedding": "a48549b3259a6165364f226599cd91f39923d5d5",
+        "snapshot": "cc78b5438675d2e2e2a599ffedd865e12838a639e2a8c2fe82095b80a2923efd",
+        "knowledge": "d3750f7c0d029b72f2447853100178c2d7fdefd151d2b1742cba3086e1cb98c7",
+        "template": "166fadc89f8800fc7e170eaba74c037e4aaa6f39b9c2a88669a2008a3eaadc1e",
+        "context": {
+          "enterprise_id": "competition",
+          "dataset_id": "competition-private",
+          "industry_id": "pharmaceutical",
+          "industry_version": "1.0.0",
+          "policy_version": "pharmaceutical-original-1",
+          "data_snapshot": "032991a5cd0fdb500668e91da237d3a28634189c6932cd839d80dd5ff0ef7c67",
+          "knowledge_snapshot": "d3750f7c0d029b72f2447853100178c2d7fdefd151d2b1742cba3086e1cb98c7",
+          "template_version": "58ebcdd6e159f5f2f331790606a83aed894c6a40bcf2a555abe5b2e65ff9a856",
+          "formula_version": "normalized-cost-5-uploaded-details",
+          "enterprise_config_version": "2ec73c117b283831bf092f7a26467be2b99c5c1e66c6a638944851d82bf23903"
+        },
+        "model_available": true,
+        "generation_parameters": {
+          "reasoning_effort": "",
+          "temperature": null,
+          "top_p": null,
+          "max_tokens": 8192,
+          "timeout_seconds": 90.0,
+          "effective_reasoning_parameters": {},
+          "auth_mode": "auto",
+          "max_repairs": 2
+        },
+        "retrieval_parameters": {
+          "mode": "hybrid",
+          "weight_policy": "lexical-anchor:0.75/0.25;otherwise:0.5/0.5",
+          "reranker": "none",
+          "limit": 8
+        },
+        "run_id": "main_fc6e3fc"
       },
-      {
-        "requested_model": "deepseek-flash",
-        "returned_model": "deepseek-flash",
-        "identity_status": "VERIFIED_EXACT",
-        "reason": "响应model与请求一致",
-        "call_id": 85,
-        "endpoint": "https://api.deepseek.com/chat/completions"
+      "retrieval": {
+        "status": "PASS",
+        "mode": "hybrid",
+        "recall_status": "RECALLED",
+        "knowledge_version": "1af4930746dec54294bc",
+        "framework": "llama-index-core BaseRetriever/TextNode"
+      },
+      "downloads": {
+        "docx": {
+          "sha256": "b3b3705bc9ecddadea7b47b386eb1b346831c202bf645bf925cfd7b651385e5f",
+          "bytes": 276026
+        },
+        "pdf": {
+          "sha256": "bf8aaec379d04424a844ca2e5b3441762acece43149195e94fbb40e4be50f834",
+          "bytes": 1263324
+        }
+      },
+      "rpa": {
+        "action_id": "YH-7fb919f70b0770c0c28edc4e",
+        "notification": "SIMULATED_SENT",
+        "idempotent": true,
+        "edited_before_confirm": true,
+        "human_acknowledgement": "NOT_ENTERED",
+        "remote": {
+          "task_id": "YH-7fb919f70b0770c0c28edc4e",
+          "status": "sent",
+          "created_at": "2026-09-29T04:16:32.472269+08:00"
+        }
+      },
+      "code_commit": "fc6e3fc5a4c5f94401433e353b60d2d3e83e5c3e",
+      "mode": "FRESH_MODEL",
+      "current_code_fresh_call": true,
+      "capability_status": "PASS",
+      "human_review_status": "PENDING",
+      "status_explanation": "网站业务人工验收未代填；机器能力与交付评分分开",
+      "word_com": {
+        "scenario": "S3",
+        "source_docx_sha256": "b3b3705bc9ecddadea7b47b386eb1b346831c202bf645bf925cfd7b651385e5f",
+        "source_docx_unchanged": true,
+        "teammate_converter_commit": "2e7131ade3fc7629216b5422ae5c416d8ea621f6",
+        "script_sha256": "d05266457df685d2f802461dfbbc3ec51bc98e4a898cc8bb03b87a44d83aa8cc",
+        "word_com_pdf": {
+          "sha256": "0548945973344e04637d8ebe7beb2a1d0db5130b4f1da5e874c4a08a0bfa5b92",
+          "bytes": 1096682
+        },
+        "pdf_checks": {
+          "api_libreoffice": {
+            "pages": 19,
+            "explanations": [
+              {
+                "section": "materials",
+                "claim_type": "hypothesis",
+                "docx_complete": true,
+                "pdf_complete": true
+              },
+              {
+                "section": "overhead",
+                "claim_type": "hypothesis",
+                "docx_complete": true,
+                "pdf_complete": true
+              },
+              {
+                "section": "materials",
+                "claim_type": "hypothesis",
+                "docx_complete": true,
+                "pdf_complete": true
+              },
+              {
+                "section": "labor",
+                "claim_type": "hypothesis",
+                "docx_complete": true,
+                "pdf_complete": true
+              },
+              {
+                "section": "overhead",
+                "claim_type": "hypothesis",
+                "docx_complete": true,
+                "pdf_complete": true
+              },
+              {
+                "section": "benchmark",
+                "claim_type": "hypothesis",
+                "docx_complete": true,
+                "pdf_complete": true
+              }
+            ],
+            "status": "PASS"
+          },
+          "word_com": {
+            "pages": 19,
+            "explanations": [
+              {
+                "section": "materials",
+                "claim_type": "hypothesis",
+                "docx_complete": true,
+                "pdf_complete": true
+              },
+              {
+                "section": "overhead",
+                "claim_type": "hypothesis",
+                "docx_complete": true,
+                "pdf_complete": true
+              },
+              {
+                "section": "materials",
+                "claim_type": "hypothesis",
+                "docx_complete": true,
+                "pdf_complete": true
+              },
+              {
+                "section": "labor",
+                "claim_type": "hypothesis",
+                "docx_complete": true,
+                "pdf_complete": true
+              },
+              {
+                "section": "overhead",
+                "claim_type": "hypothesis",
+                "docx_complete": true,
+                "pdf_complete": true
+              },
+              {
+                "section": "benchmark",
+                "claim_type": "hypothesis",
+                "docx_complete": true,
+                "pdf_complete": true
+              }
+            ],
+            "status": "PASS"
+          }
+        }
       }
-    ],
-    "usage": {
-      "prompt_tokens": 19557,
-      "completion_tokens": 18178,
-      "total_tokens": 37735,
-      "calls": 3
     },
-    "cache_hit": false,
-    "failures": [
-      "materials/explanation: ValueError: price/usage decomposition needs matched comparison-period prices, consumption and output records",
-      "benchmark/explanation: ValueError: price/usage decomposition needs matched comparison-period prices, consumption and output records",
-      "JSONDecodeError: Unterminated string starting at: line 1 column 463 (char 462)",
-      "materials/explanation: ValueError: price/usage decomposition needs matched comparison-period prices, consumption and output records",
-      "materials: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代"
-    ]
-  },
-  "previous_S1_machine_record": "candidate_machine_c5a2f34.json",
-  "approved_S1_content_candidate": {
-    "code_commit": "c5a2f3430f8c0346b3952c85b55dcd889dbb246e",
-    "source_code_commit": "d9338a018222acf8165a84c8942f596d35c6fb41",
-    "source_job_id": "cb3e96ba929d4a498ad5db47186af773",
-    "source_call_id": 79,
-    "mode": "RECORDED_RESPONSE_REVALIDATION",
-    "new_model_calls": 0,
-    "explanation_validation": "PASS",
-    "current_fresh_model_validation": "DEGRADED_SEPARATE_RUN",
-    "source_response_sha256": "1022ba0e7b1a6579f4c1b93a5f9190c0bd6c474884e1237f28e44d14a634eb6c",
-    "human_review": "PASS",
-    "artifacts": {
-      "docx": {
-        "sha256": "058394afc1f15e71d0660de44fc6b50ac594151250487b88b140ae0ba761e85b",
-        "bytes": 266515
+    {
+      "id": "Q2",
+      "job_id": "3ba04888ba7144228fb3613a99016689",
+      "status": "DEGRADED",
+      "error": null,
+      "narrative_status": "PASS",
+      "model_identity": {
+        "status": "VERIFIED",
+        "requested": "deepseek-flash",
+        "returned": [
+          "deepseek-flash"
+        ],
+        "reason": "全部调用响应model经核验一致"
       },
-      "pdf": {
-        "sha256": "88e03665bdb72001868a0c5c7dbe6a9880161280381828df6f53de2768786963",
-        "bytes": 1203400
-      }
-    },
-    "checks": {
-      "pages": 18,
-      "previous_reviewed_pages": 16,
-      "layout_changed": false,
-      "checks": [
+      "usage": {
+        "prompt_tokens": 20396,
+        "completion_tokens": 24111,
+        "total_tokens": 44507,
+        "calls": 3
+      },
+      "calls": [
         {
-          "section": "materials",
-          "complete_in_docx": true,
-          "complete_in_pdf": true,
-          "ranked_paths": 2
+          "requested_model": "deepseek-flash",
+          "returned_model": "deepseek-flash",
+          "identity_status": "VERIFIED_EXACT",
+          "reason": "响应model与请求一致",
+          "call_id": 100,
+          "endpoint": "https://api.deepseek.com/chat/completions"
         },
         {
-          "section": "benchmark",
-          "complete_in_docx": true,
-          "complete_in_pdf": true,
-          "ranked_paths": 2
+          "requested_model": "deepseek-flash",
+          "returned_model": "deepseek-flash",
+          "identity_status": "VERIFIED_EXACT",
+          "reason": "响应model与请求一致",
+          "call_id": 101,
+          "endpoint": "https://api.deepseek.com/chat/completions"
+        },
+        {
+          "requested_model": "deepseek-flash",
+          "returned_model": "deepseek-flash",
+          "identity_status": "VERIFIED_EXACT",
+          "reason": "响应model与请求一致",
+          "call_id": 102,
+          "endpoint": "https://api.deepseek.com/chat/completions"
         }
       ],
-      "new_model_calls": 0
-    },
-    "attribution_score": 4,
-    "reviewer": "胡珺杰"
+      "cache_hit": false,
+      "unit_validation": {
+        "benchmark/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "benchmark/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "labor/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "labor/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "materials/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "materials/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "overhead/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "overhead/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        }
+      },
+      "alert_coverage": {
+        "alert-f63295afdd8152cfe65f": {
+          "covered": true,
+          "element_key": "materials",
+          "basis": "total"
+        },
+        "alert-4dfbe0c1984e3bac496f": {
+          "covered": true,
+          "element_key": "labor",
+          "basis": "total"
+        },
+        "alert-0c80378a697b26dda64c": {
+          "covered": true,
+          "element_key": "overhead",
+          "basis": "total"
+        }
+      },
+      "failures": [
+        "JSONDecodeError: Unterminated string starting at: line 1 column 2069 (char 2068)"
+      ],
+      "versions": {
+        "renderer": "reader-20260928-wordpdf-v13",
+        "model": "deepseek-flash",
+        "protocol": "openai",
+        "endpoint": "https://api.deepseek.com",
+        "prompt": "ranked-diagnostic-paths-v6-bounded-batches",
+        "attribution": "attribution-v2-bound-snapshot",
+        "reasoning_effort": "",
+        "retrieval_policy": "af76d98f09fa02205fc7a1ae51be3cd861bf457e0cd701509ccec953a8315496",
+        "validator": "useful-bounded-attribution-v7",
+        "parser": "scope-prefilter-v9-workspace-source-provenance",
+        "terminology": "540ade4b03b05c3ca9661b1add0a965587c1b34df111814bbc43c3f50f317705",
+        "retriever": "bm25-chroma-prefilter-rrf-v7-vector-completeness",
+        "embedding": "a48549b3259a6165364f226599cd91f39923d5d5",
+        "snapshot": "1bbf894bd209905d00773b84ccdafc9617ba0cab2a0f05bc6ca198fd143415a4",
+        "knowledge": "d3750f7c0d029b72f2447853100178c2d7fdefd151d2b1742cba3086e1cb98c7",
+        "template": "166fadc89f8800fc7e170eaba74c037e4aaa6f39b9c2a88669a2008a3eaadc1e",
+        "context": {
+          "enterprise_id": "competition",
+          "dataset_id": "competition-private",
+          "industry_id": "pharmaceutical",
+          "industry_version": "1.0.0",
+          "policy_version": "pharmaceutical-original-1",
+          "data_snapshot": "032991a5cd0fdb500668e91da237d3a28634189c6932cd839d80dd5ff0ef7c67",
+          "knowledge_snapshot": "d3750f7c0d029b72f2447853100178c2d7fdefd151d2b1742cba3086e1cb98c7",
+          "template_version": "58ebcdd6e159f5f2f331790606a83aed894c6a40bcf2a555abe5b2e65ff9a856",
+          "formula_version": "normalized-cost-5-uploaded-details",
+          "enterprise_config_version": "2ec73c117b283831bf092f7a26467be2b99c5c1e66c6a638944851d82bf23903"
+        },
+        "model_available": true,
+        "generation_parameters": {
+          "reasoning_effort": "",
+          "temperature": null,
+          "top_p": null,
+          "max_tokens": 8192,
+          "timeout_seconds": 90.0,
+          "effective_reasoning_parameters": {},
+          "auth_mode": "auto",
+          "max_repairs": 2
+        },
+        "retrieval_parameters": {
+          "mode": "hybrid",
+          "weight_policy": "lexical-anchor:0.75/0.25;otherwise:0.5/0.5",
+          "reranker": "none",
+          "limit": 8
+        },
+        "run_id": "main_09566e7"
+      },
+      "retrieval": {
+        "status": "PASS",
+        "mode": "hybrid",
+        "recall_status": "RECALLED",
+        "knowledge_version": "1af4930746dec54294bc",
+        "framework": "llama-index-core BaseRetriever/TextNode"
+      },
+      "downloads": {
+        "docx": {
+          "sha256": "061d1e66f6688ba2c893695b1d4f092f60ab03bebdf232dc150f52ed570196cd",
+          "bytes": 272964
+        },
+        "pdf": {
+          "sha256": "4da88f05fad5f54949cc51810a3749504bf51e160ff2755d101ec09751277b59",
+          "bytes": 1274360
+        }
+      },
+      "rpa": {
+        "action_id": "YH-041c4fd3be0a3422a08f47f9",
+        "notification": "SIMULATED_SENT",
+        "idempotent": true,
+        "edited_before_confirm": true,
+        "human_acknowledgement": "NOT_ENTERED",
+        "remote": {
+          "task_id": "YH-041c4fd3be0a3422a08f47f9",
+          "status": "sent",
+          "created_at": "2026-09-29T04:10:29.224520+08:00"
+        }
+      },
+      "code_commit": "09566e7f67afbce5c832ccf412c51652a55e0e55",
+      "mode": "PRIOR_CODE_FRESH_MODEL_WITH_FINAL_CODE_REVALIDATION",
+      "current_code_fresh_call": false,
+      "capability_status": "PASS",
+      "human_review_status": "PENDING",
+      "status_explanation": "网站业务人工验收未代填；机器能力与交付评分分开",
+      "word_com": {
+        "scenario": "Q2",
+        "source_docx_sha256": "061d1e66f6688ba2c893695b1d4f092f60ab03bebdf232dc150f52ed570196cd",
+        "source_docx_unchanged": true,
+        "teammate_converter_commit": "2e7131ade3fc7629216b5422ae5c416d8ea621f6",
+        "script_sha256": "d05266457df685d2f802461dfbbc3ec51bc98e4a898cc8bb03b87a44d83aa8cc",
+        "word_com_pdf": {
+          "sha256": "692d846395578425442c8f40d3389ec68bc9e82776b27f2285abfec0eb36dde3",
+          "bytes": 1093477
+        },
+        "pdf_checks": {
+          "api_libreoffice": {
+            "pages": 19,
+            "explanations": [
+              {
+                "section": "materials",
+                "claim_type": "hypothesis",
+                "docx_complete": true,
+                "pdf_complete": true
+              },
+              {
+                "section": "materials",
+                "claim_type": "hypothesis",
+                "docx_complete": true,
+                "pdf_complete": true
+              },
+              {
+                "section": "labor",
+                "claim_type": "hypothesis",
+                "docx_complete": true,
+                "pdf_complete": true
+              },
+              {
+                "section": "overhead",
+                "claim_type": "hypothesis",
+                "docx_complete": true,
+                "pdf_complete": true
+              },
+              {
+                "section": "benchmark",
+                "claim_type": "hypothesis",
+                "docx_complete": true,
+                "pdf_complete": true
+              }
+            ],
+            "status": "PASS"
+          },
+          "word_com": {
+            "pages": 18,
+            "explanations": [
+              {
+                "section": "materials",
+                "claim_type": "hypothesis",
+                "docx_complete": true,
+                "pdf_complete": true
+              },
+              {
+                "section": "materials",
+                "claim_type": "hypothesis",
+                "docx_complete": true,
+                "pdf_complete": true
+              },
+              {
+                "section": "labor",
+                "claim_type": "hypothesis",
+                "docx_complete": true,
+                "pdf_complete": true
+              },
+              {
+                "section": "overhead",
+                "claim_type": "hypothesis",
+                "docx_complete": true,
+                "pdf_complete": true
+              },
+              {
+                "section": "benchmark",
+                "claim_type": "hypothesis",
+                "docx_complete": true,
+                "pdf_complete": true
+              }
+            ],
+            "status": "PASS"
+          }
+        }
+      },
+      "final_code_revalidation": {
+        "scenario": "Q2",
+        "validation_code_commit": "fc6e3fc5a4c5f94401433e353b60d2d3e83e5c3e",
+        "source_code_commit": "09566e7f67afbce5c832ccf412c51652a55e0e55",
+        "source_job_id": "3ba04888ba7144228fb3613a99016689",
+        "mode": "RECORDED_RESPONSE_REVALIDATION",
+        "new_model_calls": 0,
+        "status": "PASS",
+        "unit_validation": {
+          "benchmark/explanation": {
+            "status": "PASS",
+            "frozen": true
+          },
+          "benchmark/recommendation": {
+            "status": "PASS",
+            "frozen": true
+          },
+          "labor/explanation": {
+            "status": "PASS",
+            "frozen": true
+          },
+          "labor/recommendation": {
+            "status": "PASS",
+            "frozen": true
+          },
+          "materials/explanation": {
+            "status": "PASS",
+            "frozen": true
+          },
+          "materials/recommendation": {
+            "status": "PASS",
+            "frozen": true
+          },
+          "overhead/explanation": {
+            "status": "PASS",
+            "frozen": true
+          },
+          "overhead/recommendation": {
+            "status": "PASS",
+            "frozen": true
+          }
+        },
+        "alert_coverage": {
+          "alert-f63295afdd8152cfe65f": {
+            "covered": true,
+            "element_key": "materials",
+            "basis": "total"
+          },
+          "alert-4dfbe0c1984e3bac496f": {
+            "covered": true,
+            "element_key": "labor",
+            "basis": "total"
+          },
+          "alert-0c80378a697b26dda64c": {
+            "covered": true,
+            "element_key": "overhead",
+            "basis": "total"
+          }
+        },
+        "failure_reasons": [
+          "JSONDecodeError: Unterminated string starting at: line 1 column 2069 (char 2068)"
+        ],
+        "source_response_hashes": [
+          {
+            "call_id": 100,
+            "sha256": "2a444d084e5d708c23bda87d91290a3c1ac434335fb4747f9063604c39912de7"
+          },
+          {
+            "call_id": 101,
+            "sha256": "191819539098f1409bad816f389659d12b9d248b5b26d284d8eb7c772e62c8b7"
+          },
+          {
+            "call_id": 102,
+            "sha256": "67f0f16ccce03be32c1def6efc9277b887dde0aa46ad282e3675fbb4888bff18"
+          }
+        ],
+        "source_artifacts": {
+          "docx": {
+            "sha256": "061d1e66f6688ba2c893695b1d4f092f60ab03bebdf232dc150f52ed570196cd"
+          },
+          "pdf": {
+            "sha256": "4da88f05fad5f54949cc51810a3749504bf51e160ff2755d101ec09751277b59"
+          }
+        }
+      }
+    }
+  ],
+  "independent_calculation": {
+    "status": "PASS",
+    "checks": 2160,
+    "specification_checks": 32,
+    "official_answer_key_available": false,
+    "evidence_sha256": "d43958c223f41a53ea6bcf4d4fecdb3185bb967efc946b4d8257b6e1fedb1b85",
+    "generation_commit": "09566e7f67afbce5c832ccf412c51652a55e0e55",
+    "calculation_modules_unchanged": true
   },
-  "frontend": "unchanged; prior user web check PASS",
-  "layout_changes": false,
-  "model_budget_policy": "per operation and process-local calendar day; max 45; no increase",
+  "preserved_originals": {
+    "files_checked": 373,
+    "changed": [],
+    "approved_samples_checked": 4,
+    "approved_samples_changed": [],
+    "reports_py_exact_teammate_version": true,
+    "recovery_copy": "outside_repository"
+  },
+  "teammate_layout_commit": "2e7131ade3fc7629216b5422ae5c416d8ea621f6",
+  "renderer": "reader-20260928-branding-v13",
+  "pdf_platform_boundary": "WSL API uses LibreOffice; additional PDFs exported by exact teammate Windows Word COM script; originals untouched",
+  "source_downloads": {
+    "prior_four_scenarios": {
+      "status": "PASS",
+      "sources": [
+        {
+          "source_id": "src-cfa88188b451d3416e844672",
+          "bytes": 542078,
+          "content_type": "application/pdf",
+          "sha256": "aa7d48f697f2caa2bedf5b16e84a4d4765d3c92a52a619a7a93360764d7d8e00"
+        },
+        {
+          "source_id": "src-216f83299e7265e0f66d2682",
+          "bytes": 436675,
+          "content_type": "application/pdf",
+          "sha256": "281a6829ed15ce1df55d9c13f16fd5052e26276a6d30020520967657431eb4e7"
+        },
+        {
+          "source_id": "src-4956255b068b8284298c2411",
+          "bytes": 815792,
+          "content_type": "application/pdf",
+          "sha256": "2e599f526df282da063695de31a7007b97c7ff1ad16d7a97c91747f32534a048"
+        },
+        {
+          "source_id": "src-ecb561c42624f253ab7831ab",
+          "bytes": 2616,
+          "content_type": "text/plain; charset=utf-8",
+          "sha256": "a28221a0a1fffe6fcb84aa3786e9e26f48fb6c4e32510d47b96fa7181ca947c3"
+        },
+        {
+          "source_id": "src-1242392d2a8a31d428f92382",
+          "bytes": 375424,
+          "content_type": "application/pdf",
+          "sha256": "1e3808fc86fece94d3736690f087c218b8e082e6defe869e68bbdfdcdce7e503"
+        },
+        {
+          "source_id": "src-3e6bf0b079665d8187335d68",
+          "bytes": 386196,
+          "content_type": "application/pdf",
+          "sha256": "5f1dd55e4a388b190fc74c601f0589574bccbfa716a2025ea3e79857dd2eec47"
+        },
+        {
+          "source_id": "src-2bcbbd10d9b5f6208bf3768d",
+          "bytes": 2981,
+          "content_type": "text/plain; charset=utf-8",
+          "sha256": "ca759e5ff10308484d5ed87eff8b558d567b64f65b9c3786992a41be1b78c82f"
+        },
+        {
+          "source_id": "src-c8eca4288a9feeefe3d12923",
+          "bytes": 345398,
+          "content_type": "application/pdf",
+          "sha256": "834aa8a81c2938dfb9e6ec28b8743ea0e667c237e06a6609415d97fe3b85b5ad"
+        }
+      ]
+    },
+    "final_S3": {
+      "status": "PASS",
+      "sources": [
+        {
+          "source_id": "src-cfa88188b451d3416e844672",
+          "bytes": 542078,
+          "content_type": "application/pdf",
+          "sha256": "aa7d48f697f2caa2bedf5b16e84a4d4765d3c92a52a619a7a93360764d7d8e00"
+        },
+        {
+          "source_id": "src-216f83299e7265e0f66d2682",
+          "bytes": 436675,
+          "content_type": "application/pdf",
+          "sha256": "281a6829ed15ce1df55d9c13f16fd5052e26276a6d30020520967657431eb4e7"
+        },
+        {
+          "source_id": "src-4956255b068b8284298c2411",
+          "bytes": 815792,
+          "content_type": "application/pdf",
+          "sha256": "2e599f526df282da063695de31a7007b97c7ff1ad16d7a97c91747f32534a048"
+        },
+        {
+          "source_id": "src-ecb561c42624f253ab7831ab",
+          "bytes": 2616,
+          "content_type": "text/plain; charset=utf-8",
+          "sha256": "a28221a0a1fffe6fcb84aa3786e9e26f48fb6c4e32510d47b96fa7181ca947c3"
+        },
+        {
+          "source_id": "src-1242392d2a8a31d428f92382",
+          "bytes": 375424,
+          "content_type": "application/pdf",
+          "sha256": "1e3808fc86fece94d3736690f087c218b8e082e6defe869e68bbdfdcdce7e503"
+        }
+      ]
+    }
+  },
+  "prior_call_records": [
+    "candidate_calls_a9115a0.json",
+    "candidate_calls_09566e7.json"
+  ],
+  "prior_scored_samples": "candidate_review.json",
+  "model_budget": {
+    "operation": "generate",
+    "local_calendar_day": "2026-09-29",
+    "cap": 45,
+    "used": 45,
+    "increase_authorized": false,
+    "additional_calls_requested": 6
+  },
+  "post_human_final_e2e": "PARTIAL_CURRENT_CODE_NEW_CALL_GAP",
   "competition_ready": false,
-  "post_human_final_e2e": "NOT_RUN_WAITING_FOR_REMAINING_REVIEWS",
   "data_content_publication": "LOCAL_ONLY"
 }

@@ -11,59 +11,68 @@
   "supplemental_scenarios": [
     "Q2"
   ],
-  "candidate_code_commit": "4b04be55dc66fb39343f1e28d266415e264f3a81",
-  "tested_code_commit": "4b04be55dc66fb39343f1e28d266415e264f3a81",
+  "candidate_code_commit": "fc6e3fc5a4c5f94401433e353b60d2d3e83e5c3e",
+  "tested_code_commit": "fc6e3fc5a4c5f94401433e353b60d2d3e83e5c3e",
   "baseline_commit": "3aba221e81d582970a7261204d2b255e822b0e88",
   "historical_run_index": "validation/baseline_3aba221_current_run.json",
-  "human_review": "PARTIAL_PENDING_S2",
+  "human_review": "S1_S2_APPROVED_ARTIFACTS_S3_USER_ASSIGNED_4",
   "human_web_check": "PASS",
   "human_review_record": "evaluation/人工评分记录.json",
-  "human_review_scope": "S1既有响应重校验样本4分通过，文件绑定c5a2f34；S2在4b04be5新增调用通过，等待单独评分。",
+  "human_review_scope": "S1/S2各4分只对应原已评候选；S3用户免打开赋4分并绑定最终文件；新生成S1/S2不迁移旧分数。Q2不评分。",
   "candidate_review_record": "validation/candidate_review.json",
   "evaluation_report": "evaluation/评测报告.md",
   "candidate_notes": "交付候选说明.md",
   "preserved_originals": {
     "files_checked": 373,
-    "changed": 0,
-    "layout_changes": false,
+    "changed": [],
+    "approved_samples_checked": 4,
+    "approved_samples_changed": [],
+    "reports_py_exact_teammate_version": true,
     "recovery_copy": "outside_repository"
   },
   "backend": {
-    "passed": 664,
+    "passed": 667,
     "failed": 0,
-    "skipped": 2,
+    "skipped": 1,
     "warnings": 2,
-    "skip_reason": "slow import E2E not enabled; legacy capability-context discovery unavailable",
-    "evidence": "validation/candidate_machine.json"
+    "skip_reason": "legacy capability-context discovery unavailable; slow import E2E ENABLED",
+    "regression_xml_sha256": "42127dbbf988eefffbd44104b86dee3590fa7eb9a7d9a5565cced2cf31a010c6"
   },
-  "frontend_build": "NOT_RERUN_FRONTEND_UNCHANGED",
+  "frontend_build": {
+    "build": "PASS",
+    "build_code_commit": "09566e7f67afbce5c832ccf412c51652a55e0e55",
+    "frontend_git_tree": "8120a304bfe0204a4e77f24f41c0dc5e79b6e4cb",
+    "source_equal_to_final": true,
+    "log_sha256": "af7bfe0b873563f2e383a8f5f4d879ee1ba6d2f66742312005f9d7c036557914",
+    "node_tests": "1 passed; a9115a0 identical frontend tree",
+    "browser": {
+      "status": "PASS",
+      "code_commit": "fc6e3fc5a4c5f94401433e353b60d2d3e83e5c3e",
+      "actual_pages": 9,
+      "viewports": 2
+    },
+    "targeted_browser_contracts": {
+      "passed": 12,
+      "code_commit": "a9115a0837f437827d90f7255d4d6d4feaeae145",
+      "source_equal_to_final": true
+    }
+  },
   "browser": {
-    "actual_pages": 9,
-    "viewports": 2,
     "status": "PASS",
-    "targeted_contracts": 6,
-    "scope": "previous 61d47bd automated check plus user PASS; no frontend changes"
+    "code_commit": "fc6e3fc5a4c5f94401433e353b60d2d3e83e5c3e",
+    "actual_pages": 9,
+    "viewports": 2
   },
   "fresh_model_reports": {
-    "run_id": "s2_current_4b04be5",
-    "S1": "NOT_RUN_ON_CURRENT_CODE",
-    "S2": "PASS",
-    "S3": "NOT_RUN_ON_CURRENT_CODE",
-    "Q2": "NOT_RUN_ON_CURRENT_CODE",
-    "new_calls": 1,
+    "run_id": "main_fc6e3fc",
+    "S1": "NOT_RUN_ON_FINAL_CODE",
+    "S2": "NOT_RUN_ON_FINAL_CODE",
+    "S3": "PASS",
+    "Q2": "NOT_RUN_ON_FINAL_CODE",
+    "new_calls": 2,
     "local_cache_hits": 0,
     "model": "deepseek-flash",
-    "scope": "S2 only; historical S1 failures and approved content remain separately bound"
-  },
-  "previous_candidate_run": {
-    "commit": "be19ef4",
-    "S1": "PASS",
-    "S2": "DEGRADED_READ_TIMEOUT",
-    "S3": "PASS_AFTER_ONE_REPAIR",
-    "Q2": "PASS",
-    "new_calls": 5,
-    "local_cache_hits": 0,
-    "note": "Preserved separately; not pooled into final candidate results"
+    "scope": "S1/S2/Q2在09566e7新增调用通过，最终fc6e3fc留存响应重校验通过；不冒充最终代码新增调用"
   },
   "video": {
     "status": "PENDING_USER_RECORDING",
@@ -76,19 +85,18 @@
     "path": null
   },
   "publication_boundary": "Existing repository scope unchanged; organizer permission to publish competition assets remains unverified; new report contents local only",
-  "post_human_final_e2e": "NOT_RUN_WAITING_FOR_REMAINING_REVIEWS",
+  "post_human_final_e2e": "PARTIAL_CURRENT_CODE_NEW_CALL_GAP",
   "github_delivery": {
-    "branch": "codex/delivery-repair-20260928",
-    "status": "PUSHED_WORK_BRANCH",
-    "verified_content_commit": "4b04be5",
+    "branch": "main",
+    "status": "READY_FOR_AUTHORIZED_PUSH",
+    "tested_code_commit": "fc6e3fc5a4c5f94401433e353b60d2d3e83e5c3e",
     "merged_to_main": false,
     "release_published": false,
-    "note": "应用源码绑定4b04be5；S2新增调用通过，S1既有内容评分按原文件独立保留。"
+    "authorization": "用户明确要求推送main"
   },
   "workflow_checks": {
-    "scope": "previous 61d47bd run retained separately; not claimed as new-code full E2E",
-    "S1_downloads": "PASS",
-    "S2_downloads": "PASS"
+    "S3_on_final": "download DOCX/PDF, edit draft, confirm localhost mock delivery, repeated confirm idempotent PASS",
+    "S1_S2_Q2": "same checks PASS on09566e7; final-code response revalidation PASS"
   },
   "bonus": {
     "heatmap_and_tracking": "UI_ROUTES_VERIFIED",
@@ -99,11 +107,10 @@
   "concurrent_upstream": {
     "commit": "2e7131ade3fc7629216b5422ae5c416d8ea621f6",
     "file": "05_原型/backend/pharma/reports.py",
-    "change": "Windows Word COM PDF conversion and renderer v13",
-    "status": "NOT_INCLUDED_NOT_VALIDATED",
-    "scope": "本候选保留已验证v12；未覆盖队友提交，未把v12证据迁移到v13"
+    "status": "INCLUDED_EXACT_CONTENT",
+    "verification": "Word COM probe plus candidate conversions and full explanation text checks; no local layout edits"
   },
-  "previous_complete_candidate_run": "validation/candidate_run_61d47bd.json",
+  "previous_complete_candidate_run": "validation/candidate_calls_09566e7.json",
   "content_review_candidate": {
     "run_id": "s1_revalidated_c5a2f34",
     "source_call_id": 79,
@@ -112,12 +119,18 @@
     "record": "validation/candidate_review.json",
     "attribution_score": 4
   },
-  "model_budget": "PER_OPERATION_LOCAL_CALENDAR_DAY_CAP_45",
-  "active_review": {
-    "scenario": "S2",
-    "run_id": "s2_current_4b04be5",
-    "code_commit": "4b04be55dc66fb39343f1e28d266415e264f3a81",
-    "status": "PENDING",
-    "record": "validation/candidate_review.json"
-  }
+  "model_budget": {
+    "operation": "generate",
+    "local_calendar_day": "2026-09-29",
+    "cap": 45,
+    "used": 45,
+    "increase_authorized": false,
+    "additional_calls_requested": 6
+  },
+  "active_review": null,
+  "application_git_tree": "0bca355b3be9179f9f7fc7c8ba8362b409e70e2e",
+  "prior_candidate_run": "validation/candidate_run_4b04be5.json",
+  "candidate_machine_record": "validation/candidate_machine.json",
+  "local_candidate_directory": "/home/hujunjie/yaoheng_candidate_runs/main_fc6e3fc",
+  "local_prior_candidate_directory": "/home/hujunjie/yaoheng_candidate_runs/main_09566e7"
 }

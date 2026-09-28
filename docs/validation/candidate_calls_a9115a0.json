@@ -1,0 +1,583 @@
+{
+  "code_commit": "a9115a0837f437827d90f7255d4d6d4feaeae145",
+  "mode": "FRESH_MODEL",
+  "scope": "historical candidate; not final-code validation",
+  "required_scenarios": [
+    "S1",
+    "S2",
+    "S3"
+  ],
+  "supplemental_scenarios": [
+    "Q2"
+  ],
+  "scenarios": [
+    {
+      "id": "S1",
+      "job_id": "0a28591404b8454c80c4c96cb816eafb",
+      "status": "DEGRADED",
+      "error": null,
+      "narrative_status": "PASS",
+      "model_identity": {
+        "status": "VERIFIED",
+        "requested": "deepseek-flash",
+        "returned": [
+          "deepseek-flash"
+        ],
+        "reason": "全部调用响应model经核验一致"
+      },
+      "usage": {
+        "prompt_tokens": 6444,
+        "completion_tokens": 5511,
+        "total_tokens": 11955,
+        "calls": 1
+      },
+      "calls": [
+        {
+          "requested_model": "deepseek-flash",
+          "returned_model": "deepseek-flash",
+          "identity_status": "VERIFIED_EXACT",
+          "reason": "响应model与请求一致",
+          "call_id": 87,
+          "endpoint": "https://api.deepseek.com/chat/completions"
+        }
+      ],
+      "cache_hit": false,
+      "unit_validation": {
+        "benchmark/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "benchmark/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "materials/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "materials/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        }
+      },
+      "alert_coverage": {},
+      "failures": [],
+      "versions": {
+        "renderer": "reader-20260928-wordpdf-v13",
+        "model": "deepseek-flash",
+        "protocol": "openai",
+        "endpoint": "https://api.deepseek.com",
+        "prompt": "ranked-diagnostic-paths-v5",
+        "attribution": "attribution-v2-bound-snapshot",
+        "reasoning_effort": "",
+        "retrieval_policy": "af76d98f09fa02205fc7a1ae51be3cd861bf457e0cd701509ccec953a8315496",
+        "validator": "useful-bounded-attribution-v7",
+        "parser": "scope-prefilter-v9-workspace-source-provenance",
+        "terminology": "540ade4b03b05c3ca9661b1add0a965587c1b34df111814bbc43c3f50f317705",
+        "retriever": "bm25-chroma-prefilter-rrf-v7-vector-completeness",
+        "embedding": "a48549b3259a6165364f226599cd91f39923d5d5",
+        "snapshot": "1ce027b520eed8e5c447d71f90670b4a07688e23dc1887165b83e83406e2992f",
+        "knowledge": "d3750f7c0d029b72f2447853100178c2d7fdefd151d2b1742cba3086e1cb98c7",
+        "template": "166fadc89f8800fc7e170eaba74c037e4aaa6f39b9c2a88669a2008a3eaadc1e",
+        "context": {
+          "enterprise_id": "competition",
+          "dataset_id": "competition-private",
+          "industry_id": "pharmaceutical",
+          "industry_version": "1.0.0",
+          "policy_version": "pharmaceutical-original-1",
+          "data_snapshot": "032991a5cd0fdb500668e91da237d3a28634189c6932cd839d80dd5ff0ef7c67",
+          "knowledge_snapshot": "d3750f7c0d029b72f2447853100178c2d7fdefd151d2b1742cba3086e1cb98c7",
+          "template_version": "58ebcdd6e159f5f2f331790606a83aed894c6a40bcf2a555abe5b2e65ff9a856",
+          "formula_version": "normalized-cost-5-uploaded-details",
+          "enterprise_config_version": "2ec73c117b283831bf092f7a26467be2b99c5c1e66c6a638944851d82bf23903"
+        },
+        "model_available": true,
+        "generation_parameters": {
+          "reasoning_effort": "",
+          "temperature": null,
+          "top_p": null,
+          "max_tokens": 8192,
+          "timeout_seconds": 90.0,
+          "effective_reasoning_parameters": {},
+          "auth_mode": "auto",
+          "max_repairs": 2
+        },
+        "retrieval_parameters": {
+          "mode": "hybrid",
+          "weight_policy": "lexical-anchor:0.75/0.25;otherwise:0.5/0.5",
+          "reranker": "none",
+          "limit": 8
+        },
+        "run_id": "main_a9115a0"
+      },
+      "retrieval": {
+        "status": "PASS",
+        "mode": "hybrid",
+        "recall_status": "RECALLED",
+        "knowledge_version": "1af4930746dec54294bc",
+        "framework": "llama-index-core BaseRetriever/TextNode"
+      },
+      "downloads": {
+        "docx": {
+          "sha256": "d0bff0445cd098110f8a22c3217ac6ed8e554a7f2c0489266d5564f80431c09c",
+          "bytes": 266391
+        },
+        "pdf": {
+          "sha256": "5a5b9aa8db0c83b29a46b536cd6e52b1270e226895f82c66f8f76b8e987f13d7",
+          "bytes": 1202852
+        }
+      },
+      "rpa": {
+        "action_id": "YH-71143d25b607bb81c76a35fa",
+        "notification": "SIMULATED_SENT",
+        "idempotent": true,
+        "edited_before_confirm": true,
+        "human_acknowledgement": "NOT_ENTERED",
+        "remote": {
+          "task_id": "YH-71143d25b607bb81c76a35fa",
+          "status": "sent",
+          "created_at": "2026-09-29T03:53:21.091028+08:00"
+        }
+      }
+    },
+    {
+      "id": "S2",
+      "job_id": "4eed8da9f5c642128346f20a50928d71",
+      "status": "DEGRADED",
+      "error": null,
+      "narrative_status": "PASS",
+      "model_identity": {
+        "status": "VERIFIED",
+        "requested": "deepseek-flash",
+        "returned": [
+          "deepseek-flash"
+        ],
+        "reason": "全部调用响应model经核验一致"
+      },
+      "usage": {
+        "prompt_tokens": 6377,
+        "completion_tokens": 7648,
+        "total_tokens": 14025,
+        "calls": 1
+      },
+      "calls": [
+        {
+          "requested_model": "deepseek-flash",
+          "returned_model": "deepseek-flash",
+          "identity_status": "VERIFIED_EXACT",
+          "reason": "响应model与请求一致",
+          "call_id": 88,
+          "endpoint": "https://api.deepseek.com/chat/completions"
+        }
+      ],
+      "cache_hit": false,
+      "unit_validation": {
+        "benchmark/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "benchmark/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "materials/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "materials/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        }
+      },
+      "alert_coverage": {},
+      "failures": [],
+      "versions": {
+        "renderer": "reader-20260928-wordpdf-v13",
+        "model": "deepseek-flash",
+        "protocol": "openai",
+        "endpoint": "https://api.deepseek.com",
+        "prompt": "ranked-diagnostic-paths-v5",
+        "attribution": "attribution-v2-bound-snapshot",
+        "reasoning_effort": "",
+        "retrieval_policy": "af76d98f09fa02205fc7a1ae51be3cd861bf457e0cd701509ccec953a8315496",
+        "validator": "useful-bounded-attribution-v7",
+        "parser": "scope-prefilter-v9-workspace-source-provenance",
+        "terminology": "540ade4b03b05c3ca9661b1add0a965587c1b34df111814bbc43c3f50f317705",
+        "retriever": "bm25-chroma-prefilter-rrf-v7-vector-completeness",
+        "embedding": "a48549b3259a6165364f226599cd91f39923d5d5",
+        "snapshot": "52203a1defd095ba7e1bff9c03b81cd74de3119300ee5d7d7228dce0b9871df3",
+        "knowledge": "d3750f7c0d029b72f2447853100178c2d7fdefd151d2b1742cba3086e1cb98c7",
+        "template": "166fadc89f8800fc7e170eaba74c037e4aaa6f39b9c2a88669a2008a3eaadc1e",
+        "context": {
+          "enterprise_id": "competition",
+          "dataset_id": "competition-private",
+          "industry_id": "pharmaceutical",
+          "industry_version": "1.0.0",
+          "policy_version": "pharmaceutical-original-1",
+          "data_snapshot": "032991a5cd0fdb500668e91da237d3a28634189c6932cd839d80dd5ff0ef7c67",
+          "knowledge_snapshot": "d3750f7c0d029b72f2447853100178c2d7fdefd151d2b1742cba3086e1cb98c7",
+          "template_version": "58ebcdd6e159f5f2f331790606a83aed894c6a40bcf2a555abe5b2e65ff9a856",
+          "formula_version": "normalized-cost-5-uploaded-details",
+          "enterprise_config_version": "2ec73c117b283831bf092f7a26467be2b99c5c1e66c6a638944851d82bf23903"
+        },
+        "model_available": true,
+        "generation_parameters": {
+          "reasoning_effort": "",
+          "temperature": null,
+          "top_p": null,
+          "max_tokens": 8192,
+          "timeout_seconds": 90.0,
+          "effective_reasoning_parameters": {},
+          "auth_mode": "auto",
+          "max_repairs": 2
+        },
+        "retrieval_parameters": {
+          "mode": "hybrid",
+          "weight_policy": "lexical-anchor:0.75/0.25;otherwise:0.5/0.5",
+          "reranker": "none",
+          "limit": 8
+        },
+        "run_id": "main_a9115a0"
+      },
+      "retrieval": {
+        "status": "PASS",
+        "mode": "hybrid",
+        "recall_status": "RECALLED",
+        "knowledge_version": "1af4930746dec54294bc",
+        "framework": "llama-index-core BaseRetriever/TextNode"
+      },
+      "downloads": {
+        "docx": {
+          "sha256": "0c54943d0815b17d47b2de9865d50834916e0c2c4713a28d24305536d33193e1",
+          "bytes": 264138
+        },
+        "pdf": {
+          "sha256": "17a69fba1c59a4358bb1c62946b1a7f1c04504d41abd9676da265578fe05a8b5",
+          "bytes": 1173348
+        }
+      },
+      "rpa": {
+        "action_id": "YH-730319ff99982c0fa3638bd8",
+        "notification": "SIMULATED_SENT",
+        "idempotent": true,
+        "edited_before_confirm": true,
+        "human_acknowledgement": "NOT_ENTERED",
+        "remote": {
+          "task_id": "YH-730319ff99982c0fa3638bd8",
+          "status": "sent",
+          "created_at": "2026-09-29T03:54:06.481692+08:00"
+        }
+      }
+    },
+    {
+      "id": "S3",
+      "job_id": "43c5d4cce04741e281afb129989acc4a",
+      "status": "DEGRADED",
+      "error": null,
+      "narrative_status": "DEGRADED",
+      "model_identity": {
+        "status": "VERIFIED",
+        "requested": "deepseek-flash",
+        "returned": [
+          "deepseek-flash"
+        ],
+        "reason": "全部调用响应model经核验一致"
+      },
+      "usage": {
+        "prompt_tokens": 25761,
+        "completion_tokens": 24576,
+        "total_tokens": 50337,
+        "calls": 3
+      },
+      "calls": [
+        {
+          "requested_model": "deepseek-flash",
+          "returned_model": "deepseek-flash",
+          "identity_status": "VERIFIED_EXACT",
+          "reason": "响应model与请求一致",
+          "call_id": 89,
+          "endpoint": "https://api.deepseek.com/chat/completions"
+        },
+        {
+          "requested_model": "deepseek-flash",
+          "returned_model": "deepseek-flash",
+          "identity_status": "VERIFIED_EXACT",
+          "reason": "响应model与请求一致",
+          "call_id": 90,
+          "endpoint": "https://api.deepseek.com/chat/completions"
+        },
+        {
+          "requested_model": "deepseek-flash",
+          "returned_model": "deepseek-flash",
+          "identity_status": "VERIFIED_EXACT",
+          "reason": "响应model与请求一致",
+          "call_id": 91,
+          "endpoint": "https://api.deepseek.com/chat/completions"
+        }
+      ],
+      "cache_hit": false,
+      "unit_validation": {},
+      "alert_coverage": {
+        "alert-ae6cfac6295472537aa5": {
+          "covered": false,
+          "element_key": "materials",
+          "basis": "total"
+        },
+        "alert-a3392a1012a3bdbfd2a9": {
+          "covered": false,
+          "element_key": "labor",
+          "basis": "total"
+        },
+        "alert-918366df38ec19897ded": {
+          "covered": false,
+          "element_key": "overhead",
+          "basis": "total"
+        }
+      },
+      "failures": [
+        "JSONDecodeError: Unterminated string starting at: line 1 column 536 (char 535)",
+        "JSONDecodeError: Unterminated string starting at: line 1 column 873 (char 872)",
+        "JSONDecodeError: Unterminated string starting at: line 1 column 2140 (char 2139)",
+        "materials: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代",
+        "labor: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代",
+        "overhead: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代",
+        "benchmark: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代",
+        "ALERT_EXPLANATION_MISSING:alert-ae6cfac6295472537aa5",
+        "ALERT_EXPLANATION_MISSING:alert-a3392a1012a3bdbfd2a9",
+        "ALERT_EXPLANATION_MISSING:alert-918366df38ec19897ded"
+      ],
+      "versions": {
+        "renderer": "reader-20260928-wordpdf-v13",
+        "model": "deepseek-flash",
+        "protocol": "openai",
+        "endpoint": "https://api.deepseek.com",
+        "prompt": "ranked-diagnostic-paths-v5",
+        "attribution": "attribution-v2-bound-snapshot",
+        "reasoning_effort": "",
+        "retrieval_policy": "af76d98f09fa02205fc7a1ae51be3cd861bf457e0cd701509ccec953a8315496",
+        "validator": "useful-bounded-attribution-v7",
+        "parser": "scope-prefilter-v9-workspace-source-provenance",
+        "terminology": "540ade4b03b05c3ca9661b1add0a965587c1b34df111814bbc43c3f50f317705",
+        "retriever": "bm25-chroma-prefilter-rrf-v7-vector-completeness",
+        "embedding": "a48549b3259a6165364f226599cd91f39923d5d5",
+        "snapshot": "cc78b5438675d2e2e2a599ffedd865e12838a639e2a8c2fe82095b80a2923efd",
+        "knowledge": "d3750f7c0d029b72f2447853100178c2d7fdefd151d2b1742cba3086e1cb98c7",
+        "template": "166fadc89f8800fc7e170eaba74c037e4aaa6f39b9c2a88669a2008a3eaadc1e",
+        "context": {
+          "enterprise_id": "competition",
+          "dataset_id": "competition-private",
+          "industry_id": "pharmaceutical",
+          "industry_version": "1.0.0",
+          "policy_version": "pharmaceutical-original-1",
+          "data_snapshot": "032991a5cd0fdb500668e91da237d3a28634189c6932cd839d80dd5ff0ef7c67",
+          "knowledge_snapshot": "d3750f7c0d029b72f2447853100178c2d7fdefd151d2b1742cba3086e1cb98c7",
+          "template_version": "58ebcdd6e159f5f2f331790606a83aed894c6a40bcf2a555abe5b2e65ff9a856",
+          "formula_version": "normalized-cost-5-uploaded-details",
+          "enterprise_config_version": "2ec73c117b283831bf092f7a26467be2b99c5c1e66c6a638944851d82bf23903"
+        },
+        "model_available": true,
+        "generation_parameters": {
+          "reasoning_effort": "",
+          "temperature": null,
+          "top_p": null,
+          "max_tokens": 8192,
+          "timeout_seconds": 90.0,
+          "effective_reasoning_parameters": {},
+          "auth_mode": "auto",
+          "max_repairs": 2
+        },
+        "retrieval_parameters": {
+          "mode": "hybrid",
+          "weight_policy": "lexical-anchor:0.75/0.25;otherwise:0.5/0.5",
+          "reranker": "none",
+          "limit": 8
+        },
+        "run_id": "main_a9115a0"
+      },
+      "retrieval": {
+        "status": "PASS",
+        "mode": "hybrid",
+        "recall_status": "RECALLED",
+        "knowledge_version": "1af4930746dec54294bc",
+        "framework": "llama-index-core BaseRetriever/TextNode"
+      },
+      "downloads": {
+        "docx": {
+          "sha256": "158a80462edd29766e95f0118ddd0390f2e8181f6bae913b47b78378367dd6e5",
+          "bytes": 273008
+        },
+        "pdf": {
+          "sha256": "e2fc6a77df31de2c573a9553b5ecb7d9f61cecd61cb648746a5fc85b345384ca",
+          "bytes": 1155778
+        }
+      },
+      "rpa": {
+        "action_id": "YH-e62059d404a0fc5d0c024aae",
+        "notification": "SIMULATED_SENT",
+        "idempotent": true,
+        "edited_before_confirm": true,
+        "human_acknowledgement": "NOT_ENTERED",
+        "remote": {
+          "task_id": "YH-e62059d404a0fc5d0c024aae",
+          "status": "sent",
+          "created_at": "2026-09-29T03:56:24.159828+08:00"
+        }
+      }
+    },
+    {
+      "id": "Q2",
+      "job_id": "26117f64054a4b95ab1aebe08557a715",
+      "status": "DEGRADED",
+      "error": null,
+      "narrative_status": "DEGRADED",
+      "model_identity": {
+        "status": "VERIFIED",
+        "requested": "deepseek-flash",
+        "returned": [
+          "deepseek-flash"
+        ],
+        "reason": "全部调用响应model经核验一致"
+      },
+      "usage": {
+        "prompt_tokens": 28489,
+        "completion_tokens": 24575,
+        "total_tokens": 53064,
+        "calls": 3
+      },
+      "calls": [
+        {
+          "requested_model": "deepseek-flash",
+          "returned_model": "deepseek-flash",
+          "identity_status": "VERIFIED_EXACT",
+          "reason": "响应model与请求一致",
+          "call_id": 92,
+          "endpoint": "https://api.deepseek.com/chat/completions"
+        },
+        {
+          "requested_model": "deepseek-flash",
+          "returned_model": "deepseek-flash",
+          "identity_status": "VERIFIED_EXACT",
+          "reason": "响应model与请求一致",
+          "call_id": 93,
+          "endpoint": "https://api.deepseek.com/chat/completions"
+        },
+        {
+          "requested_model": "deepseek-flash",
+          "returned_model": "deepseek-flash",
+          "identity_status": "VERIFIED_EXACT",
+          "reason": "响应model与请求一致",
+          "call_id": 94,
+          "endpoint": "https://api.deepseek.com/chat/completions"
+        }
+      ],
+      "cache_hit": false,
+      "unit_validation": {},
+      "alert_coverage": {
+        "alert-f63295afdd8152cfe65f": {
+          "covered": false,
+          "element_key": "materials",
+          "basis": "total"
+        },
+        "alert-4dfbe0c1984e3bac496f": {
+          "covered": false,
+          "element_key": "labor",
+          "basis": "total"
+        },
+        "alert-0c80378a697b26dda64c": {
+          "covered": false,
+          "element_key": "overhead",
+          "basis": "total"
+        }
+      },
+      "failures": [
+        "JSONDecodeError: Unterminated string starting at: line 89 column 30 (char 2875)",
+        "JSONDecodeError: Unterminated string starting at: line 1 column 1144 (char 1143)",
+        "JSONDecodeError: Expecting property name enclosed in double quotes: line 106 column 1 (char 3419)",
+        "materials: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代",
+        "labor: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代",
+        "overhead: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代",
+        "benchmark: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代",
+        "ALERT_EXPLANATION_MISSING:alert-f63295afdd8152cfe65f",
+        "ALERT_EXPLANATION_MISSING:alert-4dfbe0c1984e3bac496f",
+        "ALERT_EXPLANATION_MISSING:alert-0c80378a697b26dda64c"
+      ],
+      "versions": {
+        "renderer": "reader-20260928-wordpdf-v13",
+        "model": "deepseek-flash",
+        "protocol": "openai",
+        "endpoint": "https://api.deepseek.com",
+        "prompt": "ranked-diagnostic-paths-v5",
+        "attribution": "attribution-v2-bound-snapshot",
+        "reasoning_effort": "",
+        "retrieval_policy": "af76d98f09fa02205fc7a1ae51be3cd861bf457e0cd701509ccec953a8315496",
+        "validator": "useful-bounded-attribution-v7",
+        "parser": "scope-prefilter-v9-workspace-source-provenance",
+        "terminology": "540ade4b03b05c3ca9661b1add0a965587c1b34df111814bbc43c3f50f317705",
+        "retriever": "bm25-chroma-prefilter-rrf-v7-vector-completeness",
+        "embedding": "a48549b3259a6165364f226599cd91f39923d5d5",
+        "snapshot": "1bbf894bd209905d00773b84ccdafc9617ba0cab2a0f05bc6ca198fd143415a4",
+        "knowledge": "d3750f7c0d029b72f2447853100178c2d7fdefd151d2b1742cba3086e1cb98c7",
+        "template": "166fadc89f8800fc7e170eaba74c037e4aaa6f39b9c2a88669a2008a3eaadc1e",
+        "context": {
+          "enterprise_id": "competition",
+          "dataset_id": "competition-private",
+          "industry_id": "pharmaceutical",
+          "industry_version": "1.0.0",
+          "policy_version": "pharmaceutical-original-1",
+          "data_snapshot": "032991a5cd0fdb500668e91da237d3a28634189c6932cd839d80dd5ff0ef7c67",
+          "knowledge_snapshot": "d3750f7c0d029b72f2447853100178c2d7fdefd151d2b1742cba3086e1cb98c7",
+          "template_version": "58ebcdd6e159f5f2f331790606a83aed894c6a40bcf2a555abe5b2e65ff9a856",
+          "formula_version": "normalized-cost-5-uploaded-details",
+          "enterprise_config_version": "2ec73c117b283831bf092f7a26467be2b99c5c1e66c6a638944851d82bf23903"
+        },
+        "model_available": true,
+        "generation_parameters": {
+          "reasoning_effort": "",
+          "temperature": null,
+          "top_p": null,
+          "max_tokens": 8192,
+          "timeout_seconds": 90.0,
+          "effective_reasoning_parameters": {},
+          "auth_mode": "auto",
+          "max_repairs": 2
+        },
+        "retrieval_parameters": {
+          "mode": "hybrid",
+          "weight_policy": "lexical-anchor:0.75/0.25;otherwise:0.5/0.5",
+          "reranker": "none",
+          "limit": 8
+        },
+        "run_id": "main_a9115a0"
+      },
+      "retrieval": {
+        "status": "PASS",
+        "mode": "hybrid",
+        "recall_status": "RECALLED",
+        "knowledge_version": "1af4930746dec54294bc",
+        "framework": "llama-index-core BaseRetriever/TextNode"
+      },
+      "downloads": {
+        "docx": {
+          "sha256": "ff495412e8a5d91342aa014b67e80fceb39afdc3983223364160bffd9fb3b9cd",
+          "bytes": 270138
+        },
+        "pdf": {
+          "sha256": "65507509d5ad13ef017b45cc0f1d581cdbfd43577f2b52c7d86e0303235dfa33",
+          "bytes": 1203675
+        }
+      },
+      "rpa": {
+        "action_id": "YH-963e4c9c2f7a4576222e2d60",
+        "notification": "SIMULATED_SENT",
+        "idempotent": true,
+        "edited_before_confirm": true,
+        "human_acknowledgement": "NOT_ENTERED",
+        "remote": {
+          "task_id": "YH-963e4c9c2f7a4576222e2d60",
+          "status": "sent",
+          "created_at": "2026-09-29T03:58:35.827875+08:00"
+        }
+      }
+    }
+  ]
+}
