@@ -15,7 +15,7 @@ __pycache__/
 *.tmp
 *.sqlite*
 .runtime/
-frontend/dist/
+**/frontend/dist/
 07_交付/
 04_方案与文档/
 ~$*
