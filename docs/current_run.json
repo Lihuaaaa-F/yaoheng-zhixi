@@ -91,12 +91,13 @@
   "post_human_final_e2e": "REQUIRED_SCENARIOS_PASS_SUPPLEMENTAL_Q2_DEGRADED",
   "github_delivery": {
     "branch": "main",
-    "status": "PUSHED_MAIN_PENDING_FINAL_RECORD_UPDATE",
-    "verified_content_commit": "b26c29c2ce67cdc9dbc489133f22129f4396550f",
+    "status": "PUSHED_MAIN",
+    "verified_content_commit": "35bfd290560c5e4299643dcd3b5d90aafda28d2d",
     "tested_code_commit": "fc6e3fc5a4c5f94401433e353b60d2d3e83e5c3e",
     "merged_to_main": true,
     "release_published": false,
-    "authorization": "用户明确要求推送main"
+    "authorization": "用户明确要求推送main",
+    "record_update_scope": "后续仅推送回执；应用Git树与fc6e3fc一致"
   },
   "workflow_checks": {
     "required_scenarios": "S1/S2/S3 same-code models, hybrid retrieval, actual downloads, draft edit, localhost confirmation and idempotence PASS",
