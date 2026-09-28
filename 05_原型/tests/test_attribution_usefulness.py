@@ -26,7 +26,7 @@ def paths():
         dict(mechanism='采购结算价格偏高可能推高材料单位成本',
              basis='材料成本差异提示需优先核查采购价格路径',
              verification='若同规格采购单价偏高则支持该推测，否则降低价格路径优先级',
-             data_needed=['两厂同规格采购结算单价记录'],
+             data_needed=['两厂同规格采购结算单价记录','两厂同批次实耗与合格产出记录'],
              expected_result='可分解采购价差贡献并区分单位耗用影响'),
         dict(mechanism='单位耗用增加可能推高材料单位成本',
              basis='材料差异也可能来自实物投入与合格产出关系',
@@ -76,3 +76,19 @@ def test_insufficient_label_cannot_hide_affirmative_causality():
     rows=compile_task_explanations([explanation('benchmark',text_template='需核查工资记录，但工资上涨导致差异扩大。')],snap())
     with pytest.raises(ValueError,match='causality'):
         validate_findings(rows,snap(),[])
+
+
+def test_price_and_usage_decomposition_cannot_be_promised_from_prices_alone():
+    entries=paths();entries[0]['data_needed']=['两厂采购结算单价记录']
+    with pytest.raises(ValueError,match='price/usage decomposition'):
+        compile_task_explanations([explanation('benchmark',diagnostic_paths=entries)],snap())
+
+
+def test_meeting_yield_standard_does_not_exclude_period_deterioration():
+    entries=paths();entries[1]['mechanism']='提取收率下降可能增加材料单位耗用'
+    entries[1]['verification']='若收率低于工艺标准则支持该推测，若收率达标则排除该推测'
+    with pytest.raises(ValueError,match='yield change'):
+        compile_task_explanations([explanation('benchmark',diagnostic_paths=entries)],snap())
+    entries[1]['verification']='若收率低于同口径基期则支持该推测，若收率未下降则降低该推测'
+    rows=compile_task_explanations([explanation('benchmark',diagnostic_paths=entries)],snap())
+    assert '同口径基期' in validate_findings(rows,snap(),[])[0]['rendered_text']

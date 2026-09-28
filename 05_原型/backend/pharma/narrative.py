@@ -26,8 +26,8 @@ from pydantic import BaseModel, Field, ConfigDict
 import httpx
 from .config import RUNTIME, MODEL_DEFAULT, MODEL_PROTOCOL_DEFAULT, MODEL_BASE_URL_DEFAULT, MODEL_CODING_BASE_URL_DEFAULT
 
-PROMPT_VERSION='ranked-diagnostic-paths-v2'
-VALIDATOR_VERSION='useful-bounded-attribution-v2'
+PROMPT_VERSION='ranked-diagnostic-paths-v3'
+VALIDATOR_VERSION='useful-bounded-attribution-v3'
 # Aliases may only be added after a live probe has verified that the upstream
 # really serves the requested model under that exact returned id.
 # 追加机制（2026-09-24 审批方案 C5）：环境变量 PHARMA_MODEL_VERIFIED_ALIASES，
@@ -411,6 +411,13 @@ def diagnostic_text(paths):
             raise ValueError('diagnostic verification needs a supporting and a weakening observation')
         if not re.search(r'分解|区分|量化|估算|判断|定位|核算',path.expected_result):
             raise ValueError('diagnostic expected result must name the attribution gain')
+        if '收率' in path.mechanism and re.search(r'标准|达标',path.verification) and not re.search(r'基期|上期|前期|同期|两厂',path.verification):
+            raise ValueError('yield change needs comparable periods; meeting a standard cannot exclude deterioration')
+        if re.search(r'价差|单价差',path.expected_result) and re.search(r'耗用|单耗|量差|配比',path.expected_result):
+            records='、'.join(path.data_needed)
+            if not (re.search(r'单价|采购价|结算价',records) and re.search(r'实耗|耗用|领用|投料',records)
+                    and re.search(r'产出|产量',records) and re.search(r'基期|上期|前期|同期|两厂',records)):
+                raise ValueError('price/usage decomposition needs matched comparison-period prices, consumption and output records')
         # All fields enter the existing numeric, direction and causal validators.
         # Each is a single scoped sentence; labels are not permission for certainty.
         for value in (path.mechanism,path.basis,path.verification,path.expected_result):
@@ -450,6 +457,7 @@ def explanation_tasks(snapshot):
                           'deterministic_facts':compile_benchmark_scope(snapshot),
                           'comparison_contract':{k:comparison.get(k) for k in ('left','right','direction','period','limits')},
                           'cross_factory_structure':comparison.get('elements',[]),
+                          'comparison_summary':comparison.get('summary',[]),
                           'allowed_claim_types':['hypothesis','insufficient_evidence'] if refs else ['insufficient_evidence'],
                           'data_limit':None if refs else '缺少类型化跨厂指标，只能说明缺证，不得借用单厂环比指标'})
             continue
@@ -1356,7 +1364,7 @@ evidence_quotes是对象，键为evidence_refs中的ID，值必须从对应allow
 missing_evidence是具体记录或测量名称的非空数组，不写未绑定的日期、指标数值、空词或确定因果；每一项长度4—120字、不带句读标点，且必须含记录/合同/台账/凭证/单价/耗用/投料/工时/收率/明细/批次/日志/计量/采购价/检验报告等业务对象名词之一（如“对应车间期间批生产记录”“对应月份采购合同台账”），“相关数据”“详细信息”“进一步资料”等泛称不合格。确需日期时，只能使用输入实际/比较期间内的年月，中文年月会规范为ISO；未知日期仍拒绝。
 数字纪律：除 deadline_basis 的1—30工作日建议窗口外，text_template、suggestion、verification_target、expected_evidence、missing_evidence 各字段一律不得手写数字、中文数词或百分比（包括年份、数量、金额、比率）。表达程度只用定性词（“明显下降”“大幅高于”）。确需引用数值程度时：只能引用输入 metrics 的 display 值，且写法必须能在自身小数位下与注册值唯一对应——符号由方向词承担（写“下降15.2%”而不是“-15.2%下降”），百分号必须与注册单位一致；整数或一位小数简写在唯一对应注册值时会被接受，但无法唯一对应（多个注册值四舍五入到同一写法）或编造的数字仍会被整体拒绝，优先写全精度值。
 写作风格（人类可读性要求，2026-09-21 真人评审反馈）：面向企业成本会计的书面中文。每句只说一件事，句子以15—40字为主；主语用具体名称（如“直接材料”“山茱萸”），少用“该”“其”“上述”；不写“体现了”“反映了”“综上所述”等空泛词；专业词第一次出现时用括号加一句白话解释；全文不出现英文。
-程序已计算确定性根因排序（attribution_directions，含要素/药材/两因子根因、行情同向、对照厂反事实方向）。假设优先与这些方向对齐或显式讨论分歧；只能引用其名称与方向定性词，不得复述其中的数值。归因深度要求：text_template用一句话直接给出当前最值得优先核查的判断。diagnostic_paths_required为true时必须给diagnostic_paths，按现有线索的支持程度排序，提供两至三种不同机制（不是同一机制换药材名称），没有概率数据不报概率，不把经验核查优先级冒充发生概率。每条路径必须包含mechanism（用“可能”给出具体机制）、basis（用实际成本构成或行情/文档线索解释为何优先，工艺标准只支持机理不证明本期异常）、verification（以“若…”写出支持结果，并明确什么相反结果会降低或排除该推测）、data_needed（具体资料数组）、expected_result（补齐这些资料可分解或量化什么，例如采购价差与单位耗用差、工资率与工时效率、固定费用与产量摊销；不承诺证明因果）。各字段为无句号分号的单句，最多各一百余字。总正文控制在千字以内。缺少工厂实际记录时可用insufficient_evidence承载条件性推测，字段仍须写“可能/若/待核”，不能把未核实事实当成排序依据。对于有计算差异而没有文档的跨厂任务，应解释差异集中在哪个要素以及对应的可检验机制，不能停在“缺两厂资料”。缺少全部指标时不凭空排序，诚实说明无法定位。材料价差与耗用差、人工工资率与工时、制造费用支出与分摊只是可用机制示例，要按本次证据选择，不机械套用。cost_directions是确定性方向，材料单位成本下降不代表材料占比下降；占比取决于分子与总单位成本的相对变化，不得反向解释。
+程序已计算确定性根因排序（attribution_directions，含要素/药材/两因子根因、行情同向、对照厂反事实方向）。假设优先与这些方向对齐或显式讨论分歧；只能引用其名称与方向定性词，不得复述其中的数值。归因深度要求：text_template用一句话直接给出当前最值得优先核查的判断。diagnostic_paths_required为true时必须给diagnostic_paths，按现有线索的支持程度排序，提供两至三种不同机制（不是同一机制换药材名称），没有概率数据不报概率，不把经验核查优先级冒充发生概率。每条路径必须包含mechanism（用“可能”给出具体机制）、basis（用实际成本构成或行情/文档线索解释为何优先，工艺标准只支持机理不证明本期异常）、verification（以“若…”写出支持结果，并明确什么相反结果会降低或排除该推测）、data_needed（具体资料数组）、expected_result（补齐这些资料可分解或量化什么，例如采购价差与单位耗用差、工资率与工时效率、固定费用与产量摊销；不承诺证明因果）。分析收益必须与所需资料匹配：分解采购价差与耗用差须同时列出本期及基期或两厂同规格实际采购单价、实耗和合格产出记录；只拿采购合同或发票不能分解耗用差。收率变化须比较同口径本期与基期，达标不代表没有下降，不能把达标作为排除收率恶化的条件。comparison_summary中的产量与总额是已有事实，不要把已提供的产量当成缺失，需核查的是固定费用及分摊基数。各字段为无句号分号的单句，最多各一百余字。总正文控制在千字以内。缺少工厂实际记录时可用insufficient_evidence承载条件性推测，字段仍须写“可能/若/待核”，不能把未核实事实当成排序依据。对于有计算差异而没有文档的跨厂任务，应解释差异集中在哪个要素以及对应的可检验机制，不能停在“缺两厂资料”。缺少全部指标时不凭空排序，诚实说明无法定位。材料价差与耗用差、人工工资率与工时、制造费用支出与分摊只是可用机制示例，要按本次证据选择，不机械套用。cost_directions是确定性方向，材料单位成本下降不代表材料占比下降；占比取决于分子与总单位成本的相对变化，不得反向解释。
 recommendation可为null；提供时须有suggestion、verification_target、expected_evidence(具体记录数组)、responsible_role(未知写待分配)、department、priority(high/medium/low)、deadline_basis。建议须可核查，生产工艺或质量控制变更须人工批准。deadline_basis可写月度成本结账后、月度成本分析完成后或报告完成后的一至三十个工作日建议窗口（数字形式如“月度成本结账后5个工作日内”），程序绑定为待责任人确认的期限提议，不是已确认日期；金额与比例不能放在期限字段。仅将输入中的适用证据用于本任务，不编造来源。
 稀疏数据任务的合法形状示例（仅适用于diagnostic_paths_required=false，不复制到有差异的任务）：{"explanations":[{"task_id":"输入task_id","claim_type":"insufficient_evidence","text_template":"现有证据不足以确认差异原因，需核查对应生产记录。","evidence_refs":[],"evidence_quotes":{},"missing_evidence":["实际生产记录"],"recommendation":null}]}。
 """
