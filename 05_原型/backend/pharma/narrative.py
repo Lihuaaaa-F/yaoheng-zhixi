@@ -27,7 +27,7 @@ import httpx
 from .config import RUNTIME, MODEL_DEFAULT, MODEL_PROTOCOL_DEFAULT, MODEL_BASE_URL_DEFAULT, MODEL_CODING_BASE_URL_DEFAULT
 
 PROMPT_VERSION='ranked-diagnostic-paths-v5'
-VALIDATOR_VERSION='useful-bounded-attribution-v5'
+VALIDATOR_VERSION='useful-bounded-attribution-v6'
 # Aliases may only be added after a live probe has verified that the upstream
 # really serves the requested model under that exact returned id.
 # 追加机制（2026-09-24 审批方案 C5）：环境变量 PHARMA_MODEL_VERIFIED_ALIASES，
@@ -420,7 +420,7 @@ def diagnostic_text(paths):
             # Do not require the model to repeat the same records in every path.
             records='、'.join(x for p in paths for x in p.data_needed)
             if not (re.search(r'单价|采购价|结算价',records) and re.search(r'实耗|耗用|领用|投料',records)
-                    and re.search(r'产出|产量',records) and re.search(r'基期|上期|前期|同期|两厂',records)):
+                    and re.search(r'产出|产量',records) and re.search(r'基期|上期|前期|同期|两期|两厂',records)):
                 raise ValueError('price/usage decomposition needs matched comparison-period prices, consumption and output records')
         # All fields enter the existing numeric, direction and causal validators.
         # Natural punctuation is allowed. Validate causality before joining its

@@ -116,3 +116,11 @@ def test_shared_task_data_plan_can_support_both_hypotheses():
     rows=compile_task_explanations([explanation('benchmark',diagnostic_paths=entries)],snap())
     finding=validate_findings(rows,snap(),[])[0]
     assert '两厂批次投料与合格产出记录' in finding['missing_evidence']
+
+
+def test_two_periods_is_a_valid_comparison_data_plan():
+    entries=paths()
+    for entry in entries:
+        entry['data_needed']=[x.replace('两厂','两期') for x in entry['data_needed']]
+    rows=compile_task_explanations([explanation('materials',diagnostic_paths=entries)],snap())
+    assert '两期同规格采购结算单价记录' in validate_findings(rows,snap(),[])[0]['missing_evidence']
