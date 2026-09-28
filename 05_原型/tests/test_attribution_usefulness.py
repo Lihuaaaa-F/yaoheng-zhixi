@@ -137,3 +137,26 @@ def test_two_periods_is_a_valid_comparison_data_plan():
         entry['data_needed']=[x.replace('两厂','两期') for x in entry['data_needed']]
     rows=compile_task_explanations([explanation('materials',diagnostic_paths=entries)],snap())
     assert '两期同规格采购结算单价记录' in validate_findings(rows,snap(),[])[0]['missing_evidence']
+
+
+def test_large_report_batches_tasks_without_repeating_frozen_explanations(tmp_path):
+    snapshot=snap()
+    for section in ('labor','overhead'):
+        snapshot['elements'].append({'key':section,'name':section,'unit_delta':'1'})
+        snapshot['metrics'][section]={'metric_id':'monthly:'+section,'display':'3.00','unit':'元/件'}
+    snapshot['alerts']=[{'element_key':s,'basis':'unit'} for s in ('labor','overhead')]
+    requested=[]
+    def respond(request):
+        body=json.loads(request.content)
+        payload=json.JSONDecoder().raw_decode(body['messages'][1]['content'])[0]
+        tasks=payload['tasks'];requested.append([t['section'] for t in tasks])
+        # Captured S3/Q2 failure pattern: the large request exhausts output tokens.
+        content='{"explanations":[' if len(tasks)>2 else json.dumps({'explanations':[explanation(t['section']) for t in tasks]})
+        return httpx.Response(200,json={'model':'controlled-model','choices':[{'message':{'content':content}}]})
+    gateway=ModelGateway(runtime=tmp_path,client=httpx.Client(transport=httpx.MockTransport(respond)),
+                         model='controlled-model',api_key='fixture',max_repairs=2)
+    result=generate(snapshot,[],gateway=gateway,use_cache=False)
+    assert result['status']=='PASS',result['failure_reasons']
+    assert len(requested)==2
+    assert sorted(s for batch in requested for s in batch)==['benchmark','labor','materials','overhead']
+    assert all(v['status']=='PASS' for v in result['unit_validation'].values())

@@ -26,7 +26,7 @@ from pydantic import BaseModel, Field, ConfigDict
 import httpx
 from .config import RUNTIME, MODEL_DEFAULT, MODEL_PROTOCOL_DEFAULT, MODEL_BASE_URL_DEFAULT, MODEL_CODING_BASE_URL_DEFAULT
 
-PROMPT_VERSION='ranked-diagnostic-paths-v5'
+PROMPT_VERSION='ranked-diagnostic-paths-v6-bounded-batches'
 VALIDATOR_VERSION='useful-bounded-attribution-v7'
 # Aliases may only be added after a live probe has verified that the upstream
 # really serves the requested model under that exact returned id.
@@ -1408,7 +1408,7 @@ recommendation可为null；提供时须有suggestion、verification_target、exp
             attribution_directions.append({'cause':_rk.get('cause'),'direction':_rk.get('direction'),'likelihood':_rk.get('label'),'basis':_rk.get('basis')})
         if (_attr.get('did') or {}).get('status')=='PASS':
             attribution_directions.append({'cause':'对照厂反事实估计','direction':('与本期变动同向' if (_attr['did'].get('parallel_trend')=='稳健') else '平行趋势存疑'),'likelihood':None,'basis':'DiD'+_attr['did'].get('parallel_trend','')})
-    user=json.dumps({'context':{k:snapshot.get(k) for k in ('month','factory','product','specification','analysis_type','period','topic')},'tasks':prompt_tasks,'quantity_comparisons':snapshot.get('period_changes',{}).get('quantity'),'cost_directions':cost_direction_facts(snapshot),'attribution_directions':attribution_directions,'evidence':excerpts},ensure_ascii=False,default=str)
+    request_payload={'context':{k:snapshot.get(k) for k in ('month','factory','product','specification','analysis_type','period','topic')},'tasks':prompt_tasks,'quantity_comparisons':snapshot.get('period_changes',{}).get('quantity'),'cost_directions':cost_direction_facts(snapshot),'attribution_directions':attribution_directions,'evidence':excerpts}
     failures, usage, valid, failed_sections, sections = [], {}, {}, {}, {}
     identities, model_responded = [], False
     accepted_units,failed_units = {}, {}
@@ -1421,7 +1421,23 @@ recommendation可为null；提供时须有suggestion、verification_target、exp
         usage['calls']=usage_totals['calls']
     # allow_model=False：不发起任何模型调用（对标页异步路径），直接落规则结果；
     # 后台报告任务随后按同一缓存键生成完整模型解释并入缓存。
-    for attempt in (range(gateway.max_repairs+1) if allow_model else ()):
+    # Keep the existing per-report call ceiling. Large S3/Q2 requests can spend
+    # nearly all output tokens on reasoning and return truncated JSON. Bound the
+    # task batch, then use the same frozen-unit repair loop for remaining tasks.
+    call_limit=gateway.max_repairs+1
+    batch_size=max(2,(len(prompt_tasks)+call_limit-1)//call_limit)
+    format_feedback=''
+    for attempt in (range(call_limit) if allow_model else ()):
+        pending_tasks=[t for t in prompt_tasks if
+            (t['section'],'explanation') not in accepted_units or
+            any(section==t['section'] for section,_ in failed_units)]
+        batch=pending_tasks[:batch_size]
+        selected={t['section'] for t in batch}
+        issues=[{'task_id':'explain:'+section,'unit':role,'reason':reason}
+                for (section,role),reason in failed_units.items() if section in selected]
+        user=json.dumps({**request_payload,'tasks':batch},ensure_ascii=False,default=str)
+        if attempt:
+            user+='\n本轮只输出tasks中列出的任务；已通过解释/行动均已冻结。仅recommendation失败时只返回task_id和recommendation。待修复单元：'+json.dumps(issues,ensure_ascii=False)+'；未覆盖要求：'+json.dumps({k:v for k,v in failed_sections.items() if k in selected},ensure_ascii=False)+format_feedback
         try:
             raw,call_usage,identity=gateway.complete(system,user)
             model_responded=True
@@ -1472,8 +1488,7 @@ recommendation可为null；提供时须有suggestion、verification_target、exp
                 if not any(alert['alert_id'] in f.get('alert_refs',[]) and f['claim_type'] in ('hypothesis','insufficient_evidence') for f in valid.get(alert['element_key'],[])):
                     failed_sections[alert['element_key']]='ALERT_EXPLANATION_MISSING:'+alert['alert_id']
             if not failed_sections:break
-            pending=[{'task_id':'explain:'+section,'unit':role,'reason':reason} for (section,role),reason in failed_units.items()]
-            user += '\n仅修复失败单元，已通过解释/行动均已冻结：'+json.dumps(pending,ensure_ascii=False)+'；未覆盖任务：'+json.dumps(failed_sections,ensure_ascii=False)+'。只返回对应task_id的explanations；若仅recommendation失败，可仅返回task_id和recommendation，不需重复解释。遗漏失败单元不会清除失败。不要自由业务数字或metric插槽，不得新增来源。'
+            format_feedback=''
         except Exception as exc:
             reason=type(exc).__name__+((': '+str(exc)[:100]) if isinstance(exc,(ValueError,RuntimeError)) and not isinstance(exc,httpx.HTTPError) else '')
             failures.append(reason)
@@ -1482,7 +1497,7 @@ recommendation可为null；提供时须有suggestion、verification_target、exp
             if isinstance(exc,(httpx.TimeoutException,httpx.ConnectError,RuntimeError,httpx.HTTPStatusError)):
                 failures.append('网络/配置类错误未重试（仅限流与5xx自动退避重试）') if isinstance(exc,(httpx.TimeoutException,httpx.ConnectError)) else None
                 break
-            user += '\n输出格式校验失败：'+reason+'。只返回explanations数组，每个task_id一次；不要findings、section、alert_refs、metric_refs或数字复述。'
+            format_feedback = '\n输出格式校验失败：'+reason+'。只返回explanations数组，每个task_id一次；不要findings、section、alert_refs、metric_refs或数字复述。'
     required=required_explanation_sections(snapshot)
     explanation_types={'hypothesis','insufficient_evidence'}
     coverage={section:any(f.get('origin')=='model' and f.get('claim_type') in explanation_types for f in valid.get(section,[])) for section in required}
