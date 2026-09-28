@@ -3,7 +3,7 @@ import pytest
 import json
 import httpx
 from pharma.narrative import ModelGateway, generate
-from pharma.narrative import compile_task_explanations, validate_findings
+from pharma.narrative import compile_task_explanations, validate_findings, diagnostic_text, DiagnosticPath
 from test_benchmark_explanation_contract import snap, explanation
 
 
@@ -82,7 +82,20 @@ def test_price_and_usage_decomposition_cannot_be_promised_from_prices_alone():
     entries=paths();entries[0]['data_needed']=['两厂采购结算单价记录']
     entries[1]['data_needed']=['两厂采购发票明细']
     with pytest.raises(ValueError,match='price/usage decomposition'):
-        compile_task_explanations([explanation('benchmark',diagnostic_paths=entries)],snap())
+        diagnostic_text([DiagnosticPath.model_validate(p) for p in entries])
+
+
+@pytest.mark.parametrize('section,prefix',[('materials','本期及基期'),('benchmark','两厂同期间')])
+def test_compiler_completes_decomposition_data_plan_without_inventing_facts(section,prefix):
+    entries=paths()
+    for path in entries:path['data_needed']=['对应月份采购合同记录']
+    rows=compile_task_explanations([explanation(section,diagnostic_paths=entries)],snap())
+    finding=validate_findings(rows,snap(),[])[0]
+    plan=prefix+'同规格原料实际采购单价与同批次实耗及合格产出对照明细'
+    assert finding['diagnostic_plan_additions']==[plan]
+    assert plan in finding['rendered_text'] and plan in finding['missing_evidence']
+    assert '采购结算价格偏高可能' in finding['rendered_text']
+    assert finding['claim_type']=='insufficient_evidence'
 
 
 def test_meeting_yield_standard_does_not_exclude_period_deterioration():

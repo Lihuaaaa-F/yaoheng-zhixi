@@ -27,7 +27,7 @@ import httpx
 from .config import RUNTIME, MODEL_DEFAULT, MODEL_PROTOCOL_DEFAULT, MODEL_BASE_URL_DEFAULT, MODEL_CODING_BASE_URL_DEFAULT
 
 PROMPT_VERSION='ranked-diagnostic-paths-v5'
-VALIDATOR_VERSION='useful-bounded-attribution-v6'
+VALIDATOR_VERSION='useful-bounded-attribution-v7'
 # Aliases may only be added after a live probe has verified that the upstream
 # really serves the requested model under that exact returned id.
 # 追加机制（2026-09-24 审批方案 C5）：环境变量 PHARMA_MODEL_VERIFIED_ALIASES，
@@ -363,6 +363,7 @@ class Finding(BaseModel):
     evidence_quotes: dict[str,str] = Field(default_factory=dict)
     hypothesis: bool = False
     missing_evidence: list[str] = Field(default_factory=list)
+    diagnostic_plan_additions: list[str] = Field(default_factory=list)
     suggestion: str = ''
     section: str = 'summary'
     alert_refs: list[str] = Field(default_factory=list)
@@ -399,6 +400,27 @@ class DiagnosticPath(BaseModel):
     expected_result: str = Field(min_length=8, max_length=150)
 
 
+def price_usage_requested(path):
+    return bool(re.search(r'价差|单价差|采购价格',path.expected_result)
+                and re.search(r'耗用|单耗|量差|配比',path.expected_result))
+
+
+def price_usage_plan_complete(paths):
+    records='、'.join(x for p in paths for x in p.data_needed)
+    return bool(re.search(r'单价|采购价|结算价',records) and re.search(r'实耗|耗用|领用|投料',records)
+                and re.search(r'产出|产量',records) and re.search(r'基期|上期|前期|同期|两期|两厂',records))
+
+
+def complete_diagnostic_plan(paths,section):
+    """Supply calculation prerequisites, never a cause, observed value or evidence."""
+    if not any(price_usage_requested(p) for p in paths) or price_usage_plan_complete(paths):
+        return paths,[]
+    scope='两厂同期间' if section=='benchmark' else '本期及基期'
+    record=scope+'同规格原料实际采购单价与同批次实耗及合格产出对照明细'
+    return [p.model_copy(update={'data_needed':list(dict.fromkeys([*p.data_needed,record]))})
+            if price_usage_requested(p) else p for p in paths],[record]
+
+
 def diagnostic_text(paths):
     if not 2 <= len(paths) <= 3:
         raise ValueError('DIAGNOSTIC_PATHS_REQUIRED: provide two or three ranked alternatives')
@@ -415,13 +437,8 @@ def diagnostic_text(paths):
             raise ValueError('diagnostic expected result must name the attribution gain')
         if '收率' in path.mechanism and re.search(r'标准|达标',path.verification) and not re.search(r'基期|上期|前期|同期|两厂',path.verification):
             raise ValueError('yield change needs comparable periods; meeting a standard cannot exclude deterioration')
-        if re.search(r'价差|单价差|采购价格',path.expected_result) and re.search(r'耗用|单耗|量差|配比',path.expected_result):
-            # Alternatives in one immutable task share the requested data plan.
-            # Do not require the model to repeat the same records in every path.
-            records='、'.join(x for p in paths for x in p.data_needed)
-            if not (re.search(r'单价|采购价|结算价',records) and re.search(r'实耗|耗用|领用|投料',records)
-                    and re.search(r'产出|产量',records) and re.search(r'基期|上期|前期|同期|两期|两厂',records)):
-                raise ValueError('price/usage decomposition needs matched comparison-period prices, consumption and output records')
+        if price_usage_requested(path) and not price_usage_plan_complete(paths):
+            raise ValueError('price/usage decomposition needs matched comparison-period prices, consumption and output records')
         # All fields enter the existing numeric, direction and causal validators.
         # Natural punctuation is allowed. Validate causality before joining its
         # clauses for the existing sentence-scoped uncertainty contract.
@@ -513,13 +530,16 @@ def compile_task_explanations(rows,snapshot,*,accepted_units=None,errors=None):
                     raise ValueError('DIAGNOSTIC_PATHS_REQUIRED: calculated drivers need ranked mechanisms, verification and expected attribution gain')
                 prose=row.text_template
                 missing=list(row.missing_evidence)
+                additions=[]
                 if row.diagnostic_paths:
-                    prose += diagnostic_text(row.diagnostic_paths)
-                    missing=list(dict.fromkeys(missing+[x for p in row.diagnostic_paths for x in p.data_needed]))
+                    paths,additions=complete_diagnostic_plan(row.diagnostic_paths,section)
+                    prose += diagnostic_text(paths)
+                    missing=list(dict.fromkeys(missing+[x for p in paths for x in p.data_needed]))
                 findings.append({'claim_type':row.claim_type,'text_template':prose,'section':section,
                                  'alert_refs':task['alert_refs'],'metric_refs':task['metric_refs'],
                                  'evidence_refs':row.evidence_refs,'evidence_quotes':row.evidence_quotes,
-                                 'hypothesis':row.claim_type=='hypothesis','missing_evidence':missing})
+                                 'hypothesis':row.claim_type=='hypothesis','missing_evidence':missing,
+                                 'diagnostic_plan_additions':additions})
             except Exception as exc: failure((section,'explanation'),exc)
         if raw.get('recommendation') is not None and (section,'recommendation') not in accepted_units:
             try:
