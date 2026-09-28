@@ -78,9 +78,11 @@
   "post_human_final_e2e": "NOT_RUN_WAITING_FOR_USER",
   "github_delivery": {
     "branch": "codex/delivery-repair-20260928",
-    "status": "NOT_YET_PUSHED",
+    "status": "PUSHED_WORK_BRANCH",
+    "verified_content_commit": "0b994f7584d44aacd582c2ba31845fbb66682469",
     "merged_to_main": false,
-    "release_published": false
+    "release_published": false,
+    "note": "后续仅补记推送与并行主分支更新回执；应用源码仍绑定61d47bd"
   },
   "workflow_checks": {
     "original_and_import_paths": "PASS_TESTED_SCOPE",
@@ -95,5 +97,12 @@
     "graph": "21 nodes / 27 edges; historical 10-query gain not positive",
     "forecast": "existing Holt; total-cost forecasts worse than naive for all three products",
     "multi_model_collaboration": "NOT_DEMONSTRATED_REPORTS_USED_ONE_MODEL"
+  },
+  "concurrent_upstream": {
+    "commit": "2e7131ade3fc7629216b5422ae5c416d8ea621f6",
+    "file": "05_原型/backend/pharma/reports.py",
+    "change": "Windows Word COM PDF conversion and renderer v13",
+    "status": "NOT_INCLUDED_NOT_VALIDATED",
+    "scope": "本候选保留已验证v12；未覆盖队友提交，未把v12证据迁移到v13"
   }
 }
