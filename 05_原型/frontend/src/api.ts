@@ -37,3 +37,5 @@ export async function openApiFile(path: string, filename?: string, page?: number
   if (filename) anchor.download = filename; else { anchor.target = '_blank'; anchor.rel = 'noopener'; }
   anchor.click(); setTimeout(() => URL.revokeObjectURL(url), 120000);
 }
+
+export const normalizedTopic = (selection: { analysis_type?: string; topic?: string | null }) => selection.analysis_type === 'special' ? (selection.topic?.trim() || '成本变化与证据核查') : '';

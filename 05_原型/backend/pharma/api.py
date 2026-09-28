@@ -50,7 +50,8 @@ class AnalysisRequest(BaseModel):
     benchmark_right:str|None=Field(default=None,min_length=1,max_length=120)
 class ReportRequest(AnalysisRequest):
     run_id:str|None=Field(default=None,pattern=r'^[A-Za-z0-9_-]{1,80}$')
-    retry:bool=False  # 对 DEGRADED 报告明确重试：旧任务保留，新任务复用可用计算结果
+    retry:bool=False  # 兼容旧客户端：等价 fresh_model
+    generation_mode:Literal['reuse','repair_artifacts','fresh_model']='reuse'
 
 class SearchRequest(BaseModel):
     context_id:str|None=None
@@ -115,7 +116,7 @@ def scoped_analysis(req):
     cid=selected_context(req.context_id)
     require_workspace_ready(cid)
     options=scoped_catalog(cid)
-    params=req.model_dump(exclude={'context_id','run_id','retry','topic','benchmark_right'})
+    params=req.model_dump(exclude={'context_id','run_id','retry','generation_mode','topic','benchmark_right'})
     params['factory']=params['factory'] or options['factories'][0]
     params['product']=params['product'] or options['products'][0]
     if req.benchmark_right:
@@ -132,7 +133,8 @@ def scoped_analysis(req):
                                            params['analysis_type'],params['basis'])
     else:snapshot=analyze_reference(cid,**params)
     if req.analysis_type=='special':
-        snapshot={**snapshot,'topic':(req.topic or '成本变化与证据核查').strip()}
+        from .report_contract import normalize_topic
+        snapshot={**snapshot,'topic':normalize_topic(req.analysis_type,req.topic)}
         snapshot['snapshot_id']=hashlib.sha256(json.dumps(snapshot,sort_keys=True,ensure_ascii=False).encode()).hexdigest()
     return snapshot
 
@@ -298,6 +300,9 @@ def _generation_versions(snapshot,req):
 def _enqueue_report(req:ReportRequest,prepared_snapshot=None):
     """报告任务入队：POST /api/reports 与 Agent 决策执行共用同一路径。"""
     snapshot=store.snapshot(prepared_snapshot if prepared_snapshot is not None else scoped_analysis(req))
+    from .report_contract import report_readiness
+    readiness=report_readiness(snapshot)
+    if not readiness['ready']:raise ValueError('IMPORT_ELEMENTS_INCOMPLETE: '+readiness['message'])
     versions=_generation_versions(snapshot,req)
     key=hashlib.sha256(json.dumps(versions,sort_keys=True).encode()).hexdigest()
     from .revision import revision_record
@@ -306,8 +311,14 @@ def _enqueue_report(req:ReportRequest,prepared_snapshot=None):
         'factory':snapshot.get('factory'),'product':snapshot.get('product'),'month':snapshot.get('month'),
         'analysis_type':snapshot.get('analysis_type'),'basis':snapshot.get('basis'),'topic':snapshot.get('topic'),
         'benchmark_right':snapshot.get('benchmark_context',{}).get('right'),
-        'versions':versions,'run_id':req.run_id,**revision},key,retry=bool(getattr(req,'retry',False)))
+        'versions':versions,'run_id':req.run_id,
+        'generation_mode':'fresh_model' if req.retry else req.generation_mode,**revision},key,retry=req.retry)
     return j,snapshot
+
+@app.post('/api/reports/preflight')
+def report_preflight(req:AnalysisRequest):
+    from .report_contract import report_readiness
+    return report_readiness(scoped_analysis(req))
 
 @app.post('/api/reports',status_code=202)
 def report(req:ReportRequest):
@@ -655,13 +666,13 @@ def attribution(context_id:str|None=None,factory:str|None=None,product:str|None=
 @app.get('/api/agent/decision')
 def agent_decision(context_id:str|None=None,factory:str|None=None,product:str|None=None,month:str|None=_month_query(),
                    analysis_type:Literal['monthly','quarterly','special']='monthly',basis:Literal['unit','total']='unit',
-                   with_advisory:bool=False):
+                   with_advisory:bool=False,topic:str|None=None):
     """Agent 自主决策：确定性判断“生成报告/仅更新看板”。
 
     with_advisory 默认关闭（GET 不应默认消耗模型预算）；前端展示说明时显式开启。
     """
     from .decision import evaluate,advise,DecisionStore
-    snapshot=store.snapshot(resolved_analysis(context_id,factory,product,month,analysis_type,basis))
+    snapshot=store.snapshot(scoped_analysis(AnalysisRequest(context_id=context_id,factory=factory,product=product,month=month,analysis_type=analysis_type,basis=basis,topic=topic)))
     evaluation=evaluate(snapshot,store.list_reports(),artifact_health=store.artifacts_healthy)
     if with_advisory:evaluation=advise(evaluation,snapshot)
     decision_id=DecisionStore().append(evaluation)
@@ -677,7 +688,11 @@ def apply_decision(decision_id:int):
     if record['decision']!='REPORT_NEEDED':raise ValueError('DECISION_NOT_REPORT_NEEDED')
     if record['applied_job_id']:raise ValueError('DECISION_ALREADY_APPLIED:'+record['applied_job_id'])
     selection=json.loads(record['selection'])
-    j,_=_enqueue_report(ReportRequest(**selection))
+    from .decision import evaluate
+    snapshot=scoped_analysis(AnalysisRequest(**selection))
+    current=evaluate(snapshot,store.list_reports(),artifact_health=store.artifacts_healthy)
+    if current['decision']!='REPORT_NEEDED':raise ValueError('DECISION_NO_LONGER_REQUIRES_REPORT')
+    j,_=_enqueue_report(ReportRequest(**selection,generation_mode=current['generation_mode']),prepared_snapshot=snapshot)
     ledger.bind_job(decision_id,j['id'])
     return {'job_id':j['id'],'status':j['status'],'cache_source_time':j['created']}
 

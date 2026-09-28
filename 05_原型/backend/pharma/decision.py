@@ -16,7 +16,7 @@ from pathlib import Path
 from .config import RUNTIME
 
 # 策略版本：判定规则变化时递增，回执据此区分新旧口径。
-DECISION_POLICY_VERSION = 'report-vs-dashboard-v2-artifact-health'
+DECISION_POLICY_VERSION = 'report-vs-dashboard-v3-capability-topic'
 ADVISORY_PROMPT_VERSION = 'decision-advisory-v2-signal-selection'
 
 
@@ -26,13 +26,14 @@ def _matching_report_jobs(jobs, selection):
     口径 = 企业上下文 + 工厂 + 产品 + 期间 + 分析类型 + 成本口径；
     任务创建时把这些字段冻结在 input 里，之后数据变化不影响旧任务。
     """
+    from .report_contract import normalize_topic
     wanted = (selection.get('context_id'), selection.get('factory'), selection.get('product'),
-              selection.get('month'), selection.get('analysis_type'), selection.get('basis'))
+              selection.get('month'), selection.get('analysis_type'), selection.get('basis'), normalize_topic(selection.get('analysis_type'),selection.get('topic')))
     matched = []
     for job in jobs:
         payload = job.get('input') or {}
         actual = (payload.get('context_id'), payload.get('factory'), payload.get('product'),
-                  payload.get('month'), payload.get('analysis_type'), payload.get('basis'))
+                  payload.get('month'), payload.get('analysis_type'), payload.get('basis'), normalize_topic(payload.get('analysis_type'),payload.get('topic')))
         if job.get('kind') == 'report' and actual == wanted:
             matched.append(job)
     return matched
@@ -51,10 +52,11 @@ def evaluate(snapshot, jobs, artifact_health=None):
        当前版本，看板随实时分析更新即可，不重复消耗渲染与审核资源）。
     """
     from .narrative import required_alerts
-    selection = {k: snapshot.get(k) for k in ('context_id', 'factory', 'product', 'month', 'analysis_type', 'basis')}
+    selection = {k: snapshot.get(k) for k in ('context_id', 'factory', 'product', 'month', 'analysis_type', 'basis', 'topic')}
     alerts = required_alerts(snapshot)
     reports = [j for j in _matching_report_jobs(jobs, selection) if j.get('status') in ('SUCCEEDED', 'DEGRADED')]
     signals = []
+    generation_mode = 'reuse'
     signals.append({'id': 'active_alerts', 'label': '超阈值告警数', 'value': len(alerts),
                     'detail': '；'.join(a['fact_summary'] for a in alerts[:3]) or '无告警'})
     def _usable(job):
@@ -79,7 +81,13 @@ def evaluate(snapshot, jobs, artifact_health=None):
             reason = '底层数据版本已变化，正式报告需要基于当前快照重新生成'
             signals.append({'id': 'snapshot_binding', 'label': '报告绑定快照', 'value': '过期',
                             'detail': f'报告绑定 {str(bound)[:12]}，当前快照 {str(current)[:12]}'})
+        elif latest.get('status')=='DEGRADED' and latest.get('result',{}).get('capability_status')!='PASS':
+            decision='REPORT_NEEDED'
+            generation_mode='fresh_model'
+            reason='已有报告存在模型、检索或产物校验降级，需要处理失败项；待人工评审单独记录'
+            signals.append({'id':'report_for_period','label':'报告能力校验','value':'未通过','detail':reason})
         elif not _usable(latest):
+            generation_mode='repair_artifacts' if latest.get('result',{}).get('narrative') else 'reuse'
             decision = 'REPORT_NEEDED'
             reason = '已有报告产物缺失或损坏（哈希不符），需要重新生成'
             signals.append({'id': 'artifact_health', 'label': '报告产物健康', 'value': '不可用',
@@ -89,7 +97,7 @@ def evaluate(snapshot, jobs, artifact_health=None):
             reason = '正式报告已覆盖当前数据版本，看板更新即可'
             signals.append({'id': 'snapshot_binding', 'label': '报告绑定快照', 'value': '一致',
                             'detail': f'报告 {latest["id"][:8]} 与当前快照一致'})
-    return {'decision': decision, 'reason': reason, 'policy_version': DECISION_POLICY_VERSION,
+    return {'decision': decision, 'generation_mode':generation_mode, 'reason': reason, 'policy_version': DECISION_POLICY_VERSION,
             'engine': 'deterministic', 'signals': signals, 'selection': selection,
             'alert_count': len(alerts), 'evaluated_at': time.time()}
 

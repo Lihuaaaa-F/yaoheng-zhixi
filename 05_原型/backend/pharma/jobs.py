@@ -40,27 +40,30 @@ class JobStore:
         return json.loads(r['body'])
     def enqueue(self,kind,payload,cache_key=None,retry=False):
         id=uuid.uuid4().hex;initial={}
+        if kind=='report':payload={**payload,'generation_mode':'fresh_model' if retry else payload.get('generation_mode','reuse')}
         with self.db() as c:
             c.execute('BEGIN IMMEDIATE')
             if cache_key:
                 old=c.execute('SELECT * FROM jobs WHERE cache_key=?',(cache_key,)).fetchone()
-                if old and old['status'] != 'FAILED':
+                if old and (old['status'] != 'FAILED' or payload.get('generation_mode')=='repair_artifacts'):
                     previous=self._decode(old)
-                    retryable=retry and previous['kind']=='report' and previous['status']=='DEGRADED'
-                    if not retryable and (previous['status'] not in TERMINAL or previous['kind']!='report' or self.artifacts_healthy(previous)):
+                    retryable=payload.get('generation_mode')=='fresh_model' and previous['kind']=='report' and (previous['status'] in TERMINAL or previous['input'].get('generation_mode')!='fresh_model')
+                    repair_requested=payload.get('generation_mode')=='repair_artifacts' and previous['status'] in TERMINAL
+                    if not retryable and not repair_requested and (previous['status'] not in TERMINAL or previous['kind']!='report' or self.artifacts_healthy(previous)):
                         return previous
                     # 重试（fix5）：服务恢复后允许对 DEGRADED 报告重新尝试；旧任务
                     # 保留在历史中，新任务复用已验证的确定性计算结果。
                     if retryable:
-                        payload={**payload,'retry_of':old['id'],'retry_reason':'DEGRADED_RETRY_REQUESTED'}
+                        payload={**payload,'retry_of':old['id'],'retry_reason':'FRESH_MODEL_REQUESTED'}
                         c.execute('INSERT INTO job_events(job_id,stage,at) VALUES(?,?,?)',(old['id'],'CACHE_INVALIDATED_RETRY',stamp()))
                     else:
-                        payload={**payload,'repair_of':old['id'],'repair_reason':'ARTIFACT_MISSING_OR_HASH_MISMATCH'}
+                        payload={**payload,'repair_of':old['id'],'repair_reason':'ARTIFACT_REPAIR_REQUESTED' if repair_requested else 'ARTIFACT_MISSING_OR_HASH_MISMATCH'}
                         c.execute('INSERT INTO job_events(job_id,stage,at) VALUES(?,?,?)',(old['id'],'CACHE_INVALIDATED_ARTIFACT',stamp()))
                     # Re-render only; validated calculations and explanations retain provenance.
                     initial={k:v for k,v in previous['result'].items() if k in ('snapshot','evidence','benchmark')}
-                    if previous['result'].get('narrative',{}).get('status')=='PASS':initial['narrative']=previous['result']['narrative']
+                    if not retryable and previous['result'].get('narrative'):initial['narrative']=previous['result']['narrative']
                     initial['repair_provenance']={'source_job_id':old['id'],'reason':payload.get('repair_reason') or payload['retry_reason']}
+                if old and old['status']=='FAILED':payload={**payload,'retry_of':old['id'],'retry_reason':'PREVIOUS_JOB_FAILED'}
                 if old:c.execute('UPDATE jobs SET cache_key=NULL WHERE id=?',(old['id'],))
             c.execute('INSERT INTO jobs(id,cache_key,kind,status,stage,input,result,created,updated,progress,detail) '
                       'VALUES(?,?,?,?,?,?,?,?,?,?,?)',

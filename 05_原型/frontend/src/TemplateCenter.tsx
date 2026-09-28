@@ -24,7 +24,7 @@ export default function TemplateCenter() {
       successPrefix="报告模板解析成功"
       failPrefix="报告模板解析失败"
       listTitle="报告模板导入列表"
-      hint="上传 Word 报告模板并解析。目前安装模板用于内置制药数据的报告；自行导入业务数据的报告使用通用模板，暂不套用上传的 Word 版式。"
+      hint="上传 Word 报告模板并解析。内置制药与用户导入报告均使用完整 Word 模板；导入数据缺少材料、人工或制造费用时，会在生成前提示补齐。"
       processingNotes="解析会检查必需章节和占位符，完成数据绑定后安装为该报告类型的当前模板。生成时保留模板结构，并检查数字、章节、引用和未填占位符。"
       emptyText="暂无待解析的报告模板，请先在上方上传 Word 模板文件。"
       extra={() => <section className="installed-templates">

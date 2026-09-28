@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { api, Selection } from './api';
+import { api, Selection, normalizedTopic } from './api';
 import { boolLabel } from './labels';
 
 // Agent 自主决策卡（赛题加分项）：展示“生成报告/仅更新看板”的确定性决策、
@@ -17,7 +17,7 @@ export default function DecisionCard({ selection, onApplied, onError }: {
 }) {
     const [explaining,setExplaining]=useState(false);
     const [data, setData] = useState<any>(null), [applying, setApplying] = useState(false), [applied, setApplied] = useState<string | null>(null), [error, setError] = useState(''), [reload, setReload] = useState(0);
-    const key = `${selection.context_id}:${selection.factory}:${selection.product}:${selection.month}:${selection.analysis_type}:${selection.basis}`;
+    const key = `${selection.context_id}:${selection.factory}:${selection.product}:${selection.month}:${selection.analysis_type}:${selection.basis}:${normalizedTopic(selection)}`;
     const currentKey=useRef(key);currentKey.current=key;
     useEffect(() => {
         const c = new AbortController();

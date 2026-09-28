@@ -1,7 +1,7 @@
 import { snapshotReport } from './NarrativePanel';
 import { useState, useEffect } from 'react';
 import { Select } from 'antd';
-import { api, Selection } from './api';
+import { api, Selection, normalizedTopic } from './api';
 import { cleanText, DeveloperDetails } from './presentation';
 
 const taskLabel = (s: string) => ({ DRAFT: '待确认', PENDING_CONFIRMATION: '待确认', QUEUED: '等待发送', SENDING: '正在发送', SENT: '模拟通知已发送', ACCEPTED: '远端已接收，通知未确认', DELIVERY_UNKNOWN: '投递结果未知', FAILED: '发送未通过', CONFLICT: '内容冲突' }[s] ?? '待查询');
@@ -21,8 +21,8 @@ export default function Rectification({ selection, snapshot, jobs, actions, refr
     if (a.metadata?.context_id !== selection.context_id) return false;
     const source = a.metadata?.selection;
     if (!source) return Boolean(snapshot?.snapshot_id && a.metadata?.snapshot_id === snapshot.snapshot_id);
-    return (['factory', 'product', 'month', 'analysis_type', 'basis', 'topic'] as const)
-      .every(key => String(source[key] ?? '') === String(selection[key] ?? ''));
+    return (['factory', 'product', 'month', 'analysis_type', 'basis'] as const)
+      .every(key => String(source[key] ?? '') === String(selection[key] ?? '')) && normalizedTopic(source) === normalizedTopic(selection);
   };
   const visibleActions = showHistory ? actions : actions.filter(matchesSelection);
   const editingAction = editing ? actions.find(action => action.id === editing) : null;

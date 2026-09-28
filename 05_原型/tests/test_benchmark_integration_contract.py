@@ -36,7 +36,8 @@ def test_reference_report_worker_passes_cross_metrics_to_generation(tmp_path, mo
         @classmethod
         def for_route(cls,route,**kwargs):return cls()
     monkeypatch.setattr(narrative,'ModelGateway',GatewayStub)
-    def capture(value,evidence):
+    def capture(value,evidence,*,use_cache=True):
+        assert use_cache is True
         captured.append(value)
         raise RuntimeError('stop after inspected model boundary; no network')
     monkeypatch.setattr(narrative,'generate',capture)

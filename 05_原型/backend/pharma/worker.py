@@ -29,7 +29,7 @@ def process_job(store,job):
             from .vector_switch import run_vector_switch
             run_vector_switch(store,job);return
         versions=payload.get('versions',{})
-        from .reports import TEMPLATE
+        from .reports import TEMPLATE,_full_template_context
         from .narrative import ModelGateway
         from .versions import soft_items,hard_items
         from .ingestion import ingest
@@ -44,7 +44,7 @@ def process_job(store,job):
             if versions.get(key) and versions[key]!=current:raise ValueError(key.upper()+'_VERSION_CHANGED_RESUBMIT')
         for key,current in hard_items(snapshot):
             if versions.get(key)!=current:raise ValueError(key.upper()+'_VERSION_CHANGED_RESUBMIT')
-        if not synthetic and versions.get('template') and hashlib.sha256(working_template(snapshot.get('analysis_type','monthly'))[0].read_bytes()).hexdigest()!=versions['template']:
+        if _full_template_context(snapshot.get('context_id')) and hashlib.sha256(working_template(snapshot.get('analysis_type','monthly'))[0].read_bytes()).hexdigest()!=versions.get('template'):
             raise ValueError('TEMPLATE_VERSION_CHANGED_RESUBMIT')
         # resolve_context above binds source knowledge; retrieval records its
         # separate index/embedding/retriever version in the evidence bundle.
@@ -98,7 +98,11 @@ def process_job(store,job):
                 snapshot['attribution']=analyze_attribution_snapshot(snapshot)
             except Exception as exc:  # noqa: BLE001
                 snapshot['attribution']={'status':'UNAVAILABLE','reason':type(exc).__name__+': '+str(exc)[:120]}
-        if 'narrative' not in result:result['narrative']=generate(snapshot,result['evidence'])
+        if 'narrative' not in result:
+            mode=payload.get('generation_mode','reuse')
+            if mode=='repair_artifacts':raise ValueError('ARTIFACT_REPAIR_REQUIRES_EXISTING_NARRATIVE')
+            result['narrative']=generate(snapshot,result['evidence'],use_cache=mode!='fresh_model')
+            result['narrative_provenance']={'job_id':id,'source_job_id':payload.get('retry_of') or payload.get('repair_of'),'generation_mode':mode}
         from .narrative import merge_rescued_evidence
         result['evidence']=merge_rescued_evidence(result['evidence'],result['narrative'])
         store.update(id,'RENDERING_DOCX',result,progress=70,detail='渲染 Word 报告（模板绑定与图表）')

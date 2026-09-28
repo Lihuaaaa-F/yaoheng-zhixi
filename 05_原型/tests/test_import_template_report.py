@@ -257,8 +257,24 @@ def test_import_report_keeps_header_branding(tmp_path, monkeypatch):
 
 
 @pytest.mark.skipif(not __import__('os').getenv('PHARMA_E2E_SLOW'),reason='慢速隔离 E2E：设 PHARMA_E2E_SLOW=1 执行（默认不进快速门）')
-def test_import_isolated_e2e_smoke():
-    """隔离实例 monthly 导入全链路冒烟（配方见导入数据勘察 e2eRecipe）：
-    PHARMA_RUNTIME_DIR/PHARMA_ARTIFACTS_DIR 重定向后起 8877/8290 实例，
-    POST /api/reports 走 monthly 导入上下文，断言产物 docx verify PASS。"""
-    assert True  # 占位：全链路配方由交付验收轮执行；快速门内不跑网络/子进程
+def test_import_isolated_e2e_smoke(tmp_path):
+    """Real API + queue + content checks; separate process prevents shared state."""
+    import os, subprocess, sys
+    from pathlib import Path
+    if not shutil.which('soffice'):pytest.skip('需要已安装的 LibreOffice 才能验证真实 PDF')
+    root=Path(__file__).resolve().parents[2]
+    env={k:v for k,v in os.environ.items() if not k.startswith(('PHARMA_','GLM_','ZHIPU_'))}
+    templates=tmp_path/'templates';templates.mkdir()
+    source,mapping=working_template('monthly')
+    shutil.copy2(source,templates/'月度成本分析报告工作模板.docx')
+    shutil.copy2(mapping,templates/'placeholder_map.json')
+    env.update(PYTHONPATH=str(root/'05_原型/backend'), PHARMA_RUNTIME_DIR=str(tmp_path/'runtime'),
+        PHARMA_ARTIFACTS_DIR=str(tmp_path/'候选测试件'),PHARMA_TEMPLATE_DIR=str(templates),
+        PHARMA_API_KEY='',PHARMA_MODEL_KEY_FILE=str(tmp_path/'no-key'),PHARMA_AUTO_EXPLAIN='0',
+        PHARMA_API_TOKEN='',TMPDIR='/tmp')
+    completed=subprocess.run([sys.executable,str(root/'05_原型/scripts/check_import_report.py')],
+        env=env,cwd=root,text=True,capture_output=True,timeout=240)
+    assert completed.returncode==0,completed.stdout+'\n'+completed.stderr
+    result=json.loads(completed.stdout.strip().splitlines()[-1])
+    assert result['status']=='PASS' and result['model_calls']==0
+    assert {r['kind'] for r in result['reports']}=={'monthly','quarterly','special'}

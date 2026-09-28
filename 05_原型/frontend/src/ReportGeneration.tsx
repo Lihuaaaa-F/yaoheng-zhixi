@@ -2,7 +2,7 @@ import { snapshotReport } from './NarrativePanel';
 import { useEffect, useState } from 'react';
 import { Button, Input, Select } from 'antd';
 import FilePicker from './FilePicker';
-import { api, apiHeaders, openApiFile, Selection } from './api';
+import { api, apiHeaders, openApiFile, Selection, normalizedTopic } from './api';
 import { Acceptance, AnalysisStatus, DeveloperDetails } from './presentation';
 
 const jobLabel = (s: string) => ({ SUCCEEDED: '生成流程结束', DEGRADED: '生成流程结束，存在待评或降级项', FAILED: '生成失败', QUEUED: '等待生成', RUNNING: '正在生成' }[s] ?? '处理中');
@@ -14,6 +14,16 @@ export default function ReportGeneration({ selection, snapshot, jobs, refresh, o
   const [showHistory, setShowHistory] = useState(false);
   const [pending, setPending] = useState(false);
   const [notice, setNotice] = useState('');
+  const [readiness, setReadiness] = useState<any>(null);
+  const selectionKey = JSON.stringify(selection);
+  useEffect(() => {
+    const controller = new AbortController();
+    setReadiness(null);
+    api('/reports/preflight', JSON.parse(selectionKey), controller.signal)
+      .then(value => { if (!controller.signal.aborted) setReadiness(value); })
+      .catch(error => { if (!controller.signal.aborted) setReadiness({ready:false,message:error.message}); });
+    return () => controller.abort();
+  }, [selectionKey, snapshot?.snapshot_id]);
   // 2026-09-24 修复（AUD-FE-01）：按当前选择参数过滤而非 snapshot_id——
   // 此前进本页改筛选后快照未刷新，新任务默认列表不显示（须勾"查看历史"）。
   const matchesSelection = (j: any) => j.kind === 'report'
@@ -23,11 +33,12 @@ export default function ReportGeneration({ selection, snapshot, jobs, refresh, o
     && j.input?.month === selection.month
     && j.input?.analysis_type === selection.analysis_type
     && (j.input?.basis??'unit') === selection.basis
-    && (j.input?.topic??'') === (selection.topic??'');
+    && normalizedTopic(j.input ?? {}) === normalizedTopic(selection);
   const visibleJobs = showHistory ? jobs.filter(j => j.kind !== 'data_parse' && j.kind !== 'kb' && j.kind !== 'template_parse' && j.kind !== 'vector_switch')
     : jobs.filter(matchesSelection).slice(0, 3);
   const snapshotJob = jobs.find(matchesSelection);
-  const needsRetry = !!snapshotJob && ['DEGRADED', 'FAILED'].includes(snapshotJob.status);
+  const needsRetry = !!snapshotJob && (snapshotJob.status === 'FAILED' || (snapshotJob.status === 'DEGRADED' && snapshotJob.result?.capability_status !== 'PASS'));
+  const activeJob = !!snapshotJob && ['QUEUED', 'RUNNING'].includes(snapshotJob.status);
   const currentReport = snapshotReport(jobs, snapshot?.snapshot_id);
   const run = async (fn: () => Promise<void>) => {
     setPending(true); onError('');
@@ -39,13 +50,18 @@ export default function ReportGeneration({ selection, snapshot, jobs, refresh, o
     <div className="panel-heading">
       <div><h2>报告生成与下载</h2>
         <p className="muted">{selection.factory} · {selection.product} · {selection.month} · {{ monthly: '月度', quarterly: '季度', special: '专题' }[selection.analysis_type]}报告</p></div>
-      <button className="primary" disabled={pending || !snapshot} onClick={() => run(async () => {
-        await api('/reports', { ...selection, ...(needsRetry ? { retry: true } : {}) });
+      <button className="primary" disabled={pending || !snapshot || activeJob || !readiness?.ready} onClick={() => run(async () => {
+        await api('/reports', { ...selection, generation_mode: needsRetry ? 'fresh_model' : 'reuse' });
         setNotice(needsRetry ? '已忽略缓存重新生成，约需一至两分钟；完成后此处更新验收状态。' : '报告已提交，进度见下方任务卡；完成后核验分项验收。');
       })}>{needsRetry ? '重新生成（忽略缓存）' : '生成报告'}</button>
     </div>
     <p role="status">{notice}</p>
-    {selection.context_id && selection.context_id !== 'pharmaceutical:competition' && <p className="muted">当前上传工作区使用通用报告模板；报告模板页安装的 Word 版式暂仅用于内置制药数据。</p>}
+    {readiness && !readiness.ready && <p role="alert" className="error">{readiness.message}</p>}
+    <p className="muted">内置制药与用户导入报告均使用完整 Word 模板。普通生成复用同版本结果；重新调用模型会保留原报告并创建新任务。</p>
+    {snapshotJob && !activeJob && <div className="downloads">
+      <button disabled={pending || !readiness?.ready} onClick={() => run(async () => { await api('/reports', {...selection, generation_mode:'fresh_model'}); setNotice('已请求新的模型解释，原任务与产物保留。'); })}>重新调用模型</button>
+      <button disabled={pending || !readiness?.ready || !snapshotJob.result?.narrative} onClick={() => run(async () => { await api('/reports', {...selection, generation_mode:'repair_artifacts'}); setNotice('已提交产物修复，复用原解释，不新增模型调用。'); })}>仅修复产物</button>
+    </div>}
     <label className="history-toggle"><input type="checkbox" checked={showHistory} onChange={e => setShowHistory(e.target.checked)} /> 查看历史报告及失败记录</label>
     {!visibleJobs.length
       ? <p className="empty">{snapshot ? '尚无报告。生成后分别核验文件、业务内容与人工评审。' : '请先在上方筛选中选择有效的分析对象（产品/工厂/月份），再生成或查看报告。'}</p>
@@ -54,12 +70,12 @@ export default function ReportGeneration({ selection, snapshot, jobs, refresh, o
         <p>执行状态：{jobLabel(j.status)}{j.detail && j.detail !== '排队等待处理' ? ` · ${j.detail}` : ''}{typeof j.progress === 'number' && !['SUCCEEDED', 'DEGRADED', 'FAILED'].includes(j.status) ? `（${j.progress}%）` : ''}</p>
         {j.result?.narrative && <AnalysisStatus narrative={j.result.narrative} review={j.result.acceptance} />}
         <Acceptance result={j.result} />
-        {['SUCCEEDED', 'DEGRADED'].includes(j.status) && <ReportAcceptance job={j} onError={onError} />}
+        {['SUCCEEDED', 'DEGRADED'].includes(j.status) && <ReportAcceptance job={j} onError={onError} refresh={refresh} />}
         {j.error && <p className="error">本次生成未通过：{j.error}</p>}
         <div className="downloads">{['docx', 'pdf'].map(kind => {
           const a = j.result?.[kind];
           return a?.artifact_id && ['SUCCEEDED', 'DEGRADED'].includes(j.status)
-            ? <a key={kind} href={`/api/artifacts/${encodeURIComponent(a.artifact_id)}`} onClick={event=>{event.preventDefault();void openApiFile(`/api/artifacts/${encodeURIComponent(a.artifact_id)}`,`${j.input?.product??'成本分析'}_${j.input?.month??'报告'}.${kind}`).catch(e=>onError(e.message))}} download>{kind === 'docx' ? 'Word' : 'PDF'} 下载（待审核）</a>
+            ? <a key={kind} href={`/api/artifacts/${encodeURIComponent(a.artifact_id)}`} onClick={event=>{event.preventDefault();void openApiFile(`/api/artifacts/${encodeURIComponent(a.artifact_id)}`,`${j.input?.product??'成本分析'}_${j.input?.month??'报告'}.${kind}`).catch(e=>onError(e.message))}} download>{kind === 'docx' ? 'Word' : 'PDF'} 下载（{j.result?.human_review_status === 'PASS' ? '人工审核通过' : j.result?.human_review_status === 'FAIL' ? '人工审核未通过' : '待人工审核'}{j.result?.capability_status !== 'PASS' ? '，机器校验有降级项' : ''}）</a>
             : <span key={kind}>{kind.toUpperCase()} · {j.status === 'FAILED' ? '生成未通过' : a?.status === 'PASS' ? '文件已生成' : '等待文件'}</span>;
         })}{j.result?.audit?.artifact_id && ['SUCCEEDED', 'DEGRADED'].includes(j.status) && <a href={`/api/artifacts/${encodeURIComponent(j.result.audit.artifact_id)}`} onClick={event=>{event.preventDefault();void openApiFile(`/api/artifacts/${encodeURIComponent(j.result.audit.artifact_id)}`,'报告验证记录.json').catch(e=>onError(e.message))}} download>机器审计附件</a>}</div>
         <DeveloperDetails value={j} />
@@ -71,10 +87,10 @@ export default function ReportGeneration({ selection, snapshot, jobs, refresh, o
 const HUMAN_DIMS = ['section_completeness', 'readability', 'visual_quality'] as const;
 const HUMAN_DIM_SHORT: Record<string, string> = { section_completeness: '章节', readability: '可读', visual_quality: '版式' };
 /** 人工验收区（2026-09-24）：评定标准说明 + 负责人评审登记 + 可追踪的评审历史。 */
-function ReportAcceptance({ job, onError }: { job: any; onError: (s: string) => void }) {
+function ReportAcceptance({ job, onError, refresh }: { job: any; onError: (s: string) => void; refresh: () => Promise<void> }) {
   const [version, setVersion] = useState(0);
   return <>
-    <AcceptanceUpload jobId={job.id} onDone={() => setVersion(value => value + 1)} onError={onError} />
+    <AcceptanceUpload jobId={job.id} onDone={() => { setVersion(value => value + 1); void refresh().catch(e => onError(e.message)); }} onError={onError} />
     <ReviewHistory jobId={job.id} version={version} />
   </>;
 }

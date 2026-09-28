@@ -34,7 +34,7 @@ try {
     const context = await browser.newContext({ viewport, locale: 'zh-CN', reducedMotion: 'reduce' });
     await context.route('**/api/**', route => {
       const request = route.request(), pathname = new URL(request.url()).pathname;
-      const readPost = request.method() === 'POST' && ['/api/analyses', '/api/assistant/context', '/api/kb/search'].includes(pathname);
+      const readPost = request.method() === 'POST' && ['/api/analyses', '/api/reports/preflight', '/api/assistant/context', '/api/kb/search'].includes(pathname);
       if (!['GET', 'HEAD', 'OPTIONS'].includes(request.method()) && !readPost) {
         blockedWrites.push({ method: request.method(), path: pathname });
         return route.abort('blockedbyclient');
