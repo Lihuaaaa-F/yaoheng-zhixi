@@ -1,8 +1,8 @@
 {
-  "schema_version": 2,
-  "delivery_version": "2026-09-24",
+  "schema_version": 3,
   "status": "PARTIAL",
   "competition_ready": false,
+  "delivery_stage": "preliminary",
   "required_scenarios": [
     "S1",
     "S2",
@@ -11,76 +11,89 @@
   "supplemental_scenarios": [
     "Q2"
   ],
-  "report_generation_code_changes": false,
-  "human_web_check": "PASS",
-  "human_review": "PASS",
+  "candidate_code_commit": "61d47bdd46f9482b366a84c495748ee4e8114f40",
+  "tested_code_commit": "61d47bdd46f9482b366a84c495748ee4e8114f40",
+  "baseline_commit": "3aba221e81d582970a7261204d2b255e822b0e88",
+  "historical_run_index": "validation/baseline_3aba221_current_run.json",
+  "human_review": "PENDING",
+  "human_web_check": "PENDING",
   "human_review_record": "evaluation/人工评分记录.json",
+  "human_review_scope": "historical A4 only; candidate scores not entered",
+  "candidate_review_record": "validation/candidate_review.json",
   "evaluation_report": "evaluation/评测报告.md",
-  "human_review_scope": "交付评测中的A4三场景；不登记网站业务报告验收",
-  "attribution_scores": {
-    "S1": 4,
-    "S2": 4,
-    "S3": 4
+  "candidate_notes": "交付候选说明.md",
+  "preserved_originals": {
+    "files_checked": 373,
+    "changed": 0,
+    "layout_changes": false,
+    "recovery_copy": "outside_repository"
   },
   "backend": {
-    "passed": 613,
+    "passed": 648,
+    "failed": 0,
     "skipped": 1,
-    "scope": "正式目录迁移后全量源码测试，含新增预测CLI",
-    "warnings": 2
+    "warnings": 2,
+    "skip_reason": "legacy capability-context discovery test; independent real PDF E2E executed",
+    "evidence": "validation/candidate_machine.json"
   },
   "frontend_build": "PASS",
-  "workflow_checks": {
-    "business_upload_mapping_accumulation_replacement": "PASS",
-    "three_knowledge_formats_real_vector_hybrid": "PASS",
-    "bad_knowledge_preserves_index": "PASS",
-    "template_install_failure_preserves_previous": "PASS",
-    "assistant_real_two_turns_and_lifecycle": "PASS",
-    "draft_edit_simulated_rpa_receipt_idempotence": "PASS",
-    "forecast_graph_routes_agent_decision": "PASS"
+  "browser": {
+    "actual_pages": 9,
+    "viewports": 2,
+    "status": "PASS",
+    "targeted_contracts": 6
   },
   "fresh_model_reports": {
+    "run_id": "candidate_61d47bd",
     "S1": "PASS",
     "S2": "PASS",
-    "S3": "DEGRADED_AFTER_RETRY",
-    "Q2": "DEGRADED_AFTER_RETRY",
-    "scope": "独立复测新增调用；没有用A4缓存通过替代新调用结果"
-  },
-  "known_limits": [
-    "S3/Q2新增模型解释合同未通过；按用户要求不再修改报告生成部分。",
-    "专题未填主题时默认主题与当前列表筛选不一致，可经历史入口找到报告；报告模块未修改。"
-  ],
-  "directory_migration": "PASS：历史8份文件哈希一致，真实混合检索及来源打开、正式入口启停、32快照/31报告/14任务/0业务评分保留",
-  "clean_install": {
-    "status": "PASS_CORE",
-    "scope": "独立提交目录、共享兼容Python、全新npm缓存安装、无旧dist重建、独立运行数据；原题分析及Word/PDF生成下载、模拟RPA",
-    "model_mode": "无密钥规则降级，不计真实模型或向量验收",
-    "browser_checks": 18
-  },
-  "github_delivery": {
-    "status": "VERIFIED_DEFAULT_BRANCH",
-    "repository": "https://github.com/Lihuaaaa-F/yaoheng-zhixi",
-    "branch": "main",
-    "verified_content_commit": "e0947e02f11ef8142308a87ff630912fc4bc7e11",
-    "verified_tree": "733196b0a328323775b1cd4569f82c56939e71ce",
-    "note": "提交及文件树已通过Git与GitHub API双重核对；此后仅补记交付回执。"
-  },
-  "video": "用户暂缓",
-  "ppt": "用户暂缓",
-  "tested_code_commit": "62c4ab46d1ce1d90929520b6ebfd79957a2dac9f",
-  "windows_launcher": "PASS：新根目录批处理入口实调，普通PowerShell及WSL Docker路径可用",
-  "docker": {
-    "status": "PASS_TESTED_SCOPE",
-    "image_id": "sha256:8928ebb68f055ceead568c407b16a65f6666f278dd74dfff536be0dd9d3a4627",
-    "scope": "独立源码构建、三服务健康、普通用户、容器卷向量资产180片段、真实混合检索5条证据、S1新增授权模型调用、Word/PDF下载及模拟RPA",
+    "S3": "PASS",
+    "Q2": "PASS_SUPPLEMENTAL",
+    "new_calls": 4,
+    "local_cache_hits": 0,
     "model": "deepseek-flash",
-    "narrative_status": "PASS",
-    "business_human_review": "PENDING",
-    "fresh_report_job": "1830b2b1ef4e4274889dd69574209d81",
-    "host_opt_mount": false,
-    "restart_persistence": "PASS"
+    "scope": "Final fixed candidate; all returned model identities verified; prior timeout kept separately"
   },
-  "frontend_node_tests": {
-    "passed": 2,
-    "failed": 0
+  "previous_candidate_run": {
+    "commit": "be19ef4",
+    "S1": "PASS",
+    "S2": "DEGRADED_READ_TIMEOUT",
+    "S3": "PASS_AFTER_ONE_REPAIR",
+    "Q2": "PASS",
+    "new_calls": 5,
+    "local_cache_hits": 0,
+    "note": "Preserved separately; not pooled into final candidate results"
+  },
+  "video": {
+    "status": "PENDING_USER_RECORDING",
+    "required": true,
+    "path": null
+  },
+  "ppt": {
+    "status": "CONDITIONAL_FINAL_STAGE",
+    "required_stage": "final",
+    "path": null
+  },
+  "publication_boundary": "Existing repository scope unchanged; organizer permission to publish competition assets remains unverified; new report contents local only",
+  "post_human_final_e2e": "NOT_RUN_WAITING_FOR_USER",
+  "github_delivery": {
+    "branch": "codex/delivery-repair-20260928",
+    "status": "NOT_YET_PUSHED",
+    "merged_to_main": false,
+    "release_published": false
+  },
+  "workflow_checks": {
+    "original_and_import_paths": "PASS_TESTED_SCOPE",
+    "real_hybrid_retrieval": "PASS",
+    "knowledge_source_downloads": "PASS_8",
+    "word_pdf_downloads": "PASS_8",
+    "draft_edit_confirm_simulated_receipt_idempotence": "PASS_4",
+    "rule_decision_topic_and_pending_review": "PASS"
+  },
+  "bonus": {
+    "heatmap_and_tracking": "UI_ROUTES_VERIFIED",
+    "graph": "21 nodes / 27 edges; historical 10-query gain not positive",
+    "forecast": "existing Holt; total-cost forecasts worse than naive for all three products",
+    "multi_model_collaboration": "NOT_DEMONSTRATED_REPORTS_USED_ONE_MODEL"
   }
 }

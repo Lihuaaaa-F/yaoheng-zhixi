@@ -10,7 +10,8 @@
 | GET /api/catalog?context_id=… | 合法产品/工厂/期间/单位 |
 | POST /api/analyses | context_id、factory、product、month、analysis_type、basis，返回固定上下文快照 |
 | GET /api/benchmarks | context_id、product、month、analysis_type、basis、left、right；季度贯通 |
-| POST /api/reports | 与analysis一致；同版本完成结果复用 |
+| POST /api/reports/preflight | 与 analysis 同选择条件；返回完整报告缺少要素，不调用模型 |
+| POST /api/reports | generation_mode 为 reuse / fresh_model / repair_artifacts；retry=true 兼容为 fresh_model；专题支持 topic |
 | GET /api/jobs?context_id=… | 本上下文任务；执行状态与解释来源/真人审核分别显示 |
 | GET /api/artifacts/{id} | 终态可下载，DEGRADED允许；真实哈希漂移拒绝，preview明确草稿 |
 | POST /api/reports/{id}/reviews | 真人署名、0—5归因、章节/可读性/版式；实际产物绑定 |
@@ -32,7 +33,7 @@ bootstrap采用同一build_inputs.py指纹，node_modules锁指纹不一致则np
 
 ## 前端构建与浏览器验证
 
-以下命令均从应用根 `药衡智析_增量源码交接/public_source_candidate` 执行。`bootstrap.sh` 完成依赖锁校验、前端编译并写入 `.build-inputs`；单独 `npm run build` 不写该验收指纹。源码或锁文件修改后重新运行 bootstrap，再用环境探针确认 `frontend.dist_matches_sources=true`。`check_environment.py --strict` 的退出码只覆盖依赖能力与构建匹配；还须查看其 LibreOffice、字体等字段，PDF与浏览器的真实可用性由对应导出/浏览器流程验证。
+以下命令均从仓库 Git 根目录 执行。`bootstrap.sh` 完成依赖锁校验、前端编译并写入 `.build-inputs`；单独 `npm run build` 不写该验收指纹。源码或锁文件修改后重新运行 bootstrap，再用环境探针确认 `frontend.dist_matches_sources=true`。`check_environment.py --strict` 的退出码只覆盖依赖能力与构建匹配；还须查看其 LibreOffice、字体等字段，PDF与浏览器的真实可用性由对应导出/浏览器流程验证。
 
 ```bash
 bash 05_原型/scripts/bootstrap.sh
@@ -55,7 +56,7 @@ npm run dev -- --port 5178 --strictPort
 
 ```bash
 TMPDIR=/tmp PHARMA_E2E_URL=http://127.0.0.1:5178 \
-  PHARMA_E2E_OUT=/tmp/yaoheng-context-ui npm --prefix 05_原型/frontend run e2e
+  PHARMA_E2E_OUT=/tmp/yaoheng-context-ui npm --prefix 05_原型/frontend run e2e:contracts
 ```
 
 真实 API 浏览器测试使用受管服务和当前构建：

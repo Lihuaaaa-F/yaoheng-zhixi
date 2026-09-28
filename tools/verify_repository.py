@@ -5,6 +5,24 @@ from pathlib import Path
 import re
 from urllib.parse import unquote,urlsplit
 ROOT=Path(__file__).resolve().parents[1]
+def verify_media(current, root):
+    errors=[]
+    stage=current.get('delivery_stage','preliminary')
+    for kind, required in (('video',True),('ppt',stage=='final')):
+        item=current.get(kind)
+        if not isinstance(item,dict):
+            errors.append(kind+':须记录真实状态、路径和适用阶段');continue
+        status=item.get('status');relative=item.get('path')
+        if status=='DELIVERED':
+            if not relative or not (root/relative).is_file():errors.append(kind+':交付文件缺失')
+        elif required and current.get('competition_ready'):
+            errors.append(kind+':必交物尚未交付')
+        elif status not in ('MISSING','PENDING_USER_RECORDING','CONDITIONAL_FINAL_STAGE'):
+            errors.append(kind+':状态无效')
+        if required and status=='CONDITIONAL_FINAL_STAGE':errors.append(kind+':当前阶段不能记为条件项')
+    return errors
+
+
 def verify():
     errors=[];docs=ROOT/'docs'
     current=json.loads((docs/'current_run.json').read_text())
@@ -17,7 +35,7 @@ def verify():
         for fmt,relative in row['files'].items():
             file=docs/'evaluation'/relative
             if not file.is_file() or hashlib.sha256(file.read_bytes()).hexdigest()!=row['hashes'][fmt]:errors.append('评测样本不匹配:'+relative)
-    if current['video']!='用户暂缓' or current['ppt']!='用户暂缓':errors.append('媒体范围与用户要求不一致')
+    errors.extend(verify_media(current,ROOT))
     if current.get('competition_ready') and current['status']!='PASS':errors.append('未完成验证不能声称全部交付通过')
     paths=[ROOT/'README.md',ROOT/'CONTRIBUTING.md',docs/'技术方案.md',docs/'环境与部署.md',docs/'evaluation_report.md',docs/'forecast/README.md']
     for document in paths:
