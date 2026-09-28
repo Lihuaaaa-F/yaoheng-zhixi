@@ -80,6 +80,7 @@ def test_insufficient_label_cannot_hide_affirmative_causality():
 
 def test_price_and_usage_decomposition_cannot_be_promised_from_prices_alone():
     entries=paths();entries[0]['data_needed']=['两厂采购结算单价记录']
+    entries[1]['data_needed']=['两厂采购发票明细']
     with pytest.raises(ValueError,match='price/usage decomposition'):
         compile_task_explanations([explanation('benchmark',diagnostic_paths=entries)],snap())
 
@@ -99,3 +100,19 @@ def test_counter_observation_can_redirect_to_another_mechanism():
     entries[0]['verification']='若本期采购单价高于基期则支持该推测，若采购单价持平则应转向耗用机制'
     rows=compile_task_explanations([explanation('benchmark',diagnostic_paths=entries)],snap())
     assert '转向耗用机制' in validate_findings(rows,snap(),[])[0]['rendered_text']
+
+
+def test_natural_punctuation_and_equivalent_attribution_gain_survive():
+    entries=paths()
+    entries[0]['verification']='若采购单价偏高则支持该推测；若采购单价相近则转向耗用机制。'
+    entries[0]['expected_result']='分离采购价格与实物耗用对材料成本的影响'
+    rows=compile_task_explanations([explanation('benchmark',diagnostic_paths=entries)],snap())
+    text=validate_findings(rows,snap(),[])[0]['rendered_text']
+    assert '分离采购价格与实物耗用' in text and '转向耗用机制' in text
+
+
+def test_shared_task_data_plan_can_support_both_hypotheses():
+    entries=paths();entries[0]['data_needed']=['两厂同规格采购结算单价记录']
+    rows=compile_task_explanations([explanation('benchmark',diagnostic_paths=entries)],snap())
+    finding=validate_findings(rows,snap(),[])[0]
+    assert '两厂批次投料与合格产出记录' in finding['missing_evidence']
