@@ -24,7 +24,7 @@ MAP_PATH = _TEMPLATE_DIR / 'placeholder_map.json'
 # 用户安装模板（数据中心“报告模板”解析后安装）：按报告类型存放；
 # 季度/专题未安装时回退月度模板（绑定合同一致，仅期间口径不同）。
 RUNTIME_TEMPLATES = RUNTIME / 'templates'
-RENDERER_VERSION='reader-20260928-branding-v12'
+RENDERER_VERSION='reader-20260928-wordpdf-v13'
 NA = 'N/A（无可用基期或明细）'
 
 
@@ -1212,44 +1212,125 @@ def soffice_exe(converter='libreoffice'):
 # soffice 的 UserInstallation profile 不可并发共用（LibreOffice 自带目录锁会直接失败）
 _LO_CONVERT_LOCK = threading.Lock()
 
+# Word COM 导出串行锁：WINWORD 自动化实例同样不可并发滥用（单实例队列）
+_WORD_CONVERT_LOCK = threading.Lock()
+_WORD_COM_OK=None
+_WORD2PDF_PS='''param([string]$Docx='',[string]$Pdf='',[switch]$Probe)
+$ErrorActionPreference='Stop'
+$before=@(Get-Process WINWORD -ErrorAction SilentlyContinue | ForEach-Object {$_.Id})
+$word=$null
+try {
+  $word=New-Object -ComObject Word.Application
+  $word.Visible=$false; $word.DisplayAlerts=0
+  try { $word.AutomationSecurity=3 } catch {}
+  if ($Probe) { Write-Output 'DONE'; exit 0 }
+  $doc=$word.Documents.Open($Docx,$false,$true)
+  $doc.ExportAsFixedFormat($Pdf,17)
+  $doc.Close(0)
+  Write-Output 'DONE'
+} catch {
+  Write-Output ('ERR: '+$_.Exception.Message); exit 1
+} finally {
+  if ($null -ne $word) { $word.Quit() }
+  # 仅回收本脚本新起且无主窗口的 WINWORD；转换期间用户手工打开的 Word
+  # （有 MainWindowTitle）不误杀（2026-09-28 终审竞态修补）。
+  $after=@(Get-Process WINWORD -ErrorAction SilentlyContinue | Where-Object { -not $_.MainWindowTitle } | ForEach-Object {$_.Id})
+  foreach ($p in $after) { if ($before -notcontains $p) { Stop-Process -Id $p -Force -ErrorAction SilentlyContinue } }
+}'''
+
+def _ensure_word2pdf_script():
+    script=RUNTIME/'word2pdf.ps1'
+    if not script.exists():
+        script.parent.mkdir(parents=True,exist_ok=True)
+        script.write_text(_WORD2PDF_PS,encoding='utf-8-sig')
+    return script
+
+def word_com_available():
+    """本机 Word COM 探测（结果缓存）。用户裁定（2026-09-28）"Word 要和 PDF
+    视觉上一样"：LibreOffice 渲染题包艺术字水印丢 -45° 旋转（斜排画成横排），
+    Word COM 导出忠实呈现——Windows+Word 环境优先走 Word 导出，否则回退 soffice
+    （Linux/容器部署不受影响，部署一致性保持）。"""
+    global _WORD_COM_OK
+    if _WORD_COM_OK is None:
+        if os.name!='nt':_WORD_COM_OK=False
+        else:
+            try:
+                script=_ensure_word2pdf_script()
+                r=subprocess.run(['powershell','-NoProfile','-ExecutionPolicy','Bypass','-File',str(script),'-Probe'],capture_output=True,text=True,timeout=90)
+                _WORD_COM_OK=(r.returncode==0 and 'DONE' in (r.stdout or ''))
+            except (OSError,subprocess.TimeoutExpired):_WORD_COM_OK=False
+    return _WORD_COM_OK
+
+def _word_com_convert(path,target,timeout=90):
+    """Word COM 导出 PDF。成功返回 None，失败返回错误串（调用方回退 soffice）。"""
+    try:
+        script=_ensure_word2pdf_script()
+        r=subprocess.run(['powershell','-NoProfile','-ExecutionPolicy','Bypass','-File',str(script),'-Docx',str(path),'-Pdf',str(target)],capture_output=True,text=True,timeout=timeout)
+        if r.returncode==0 and 'DONE' in (r.stdout or '') and Path(target).exists():return None
+        if r.returncode==0 and 'DONE' in (r.stdout or ''):return 'WORD_EXPORT_NO_OUTPUT'
+        return 'WORD_COM_ERR:'+((r.stdout or '')+(r.stderr or '')).strip()[-160:]
+    except subprocess.TimeoutExpired:
+        # 只杀无主窗口的 WINWORD（本管线的自动化实例）；用户手工打开的 Word
+        # 有 MainWindowTitle，不会被误伤。
+        subprocess.run(['powershell','-NoProfile','-Command','Get-Process WINWORD -ErrorAction SilentlyContinue | Where-Object { -not $_.MainWindowTitle } | Stop-Process -Force'],capture_output=True)
+        return 'WORD_COM_TIMEOUT'
+    except OSError as exc:return 'WORD_COM_OS:'+type(exc).__name__
+
 
 def convert_pdf(docx_path,timeout=90,converter='libreoffice',_toc_pass=0):
     import os
     path=Path(docx_path)
     exe = soffice_exe(converter)
-    if exe is None: return {'status': 'FAILED', 'reason': 'CONVERTER_NOT_FOUND: ' + converter}
+    if exe is None and (os.name!='nt' or not word_com_available()):
+        return {'status': 'FAILED', 'reason': 'CONVERTER_NOT_FOUND: ' + converter}
     try:
+        used='word-com' if (converter=='libreoffice' and os.name=='nt' and word_com_available()) else converter
+        word_err=None
         temp_root = '/tmp' if os.name != 'nt' else tempfile.gettempdir()
         with tempfile.TemporaryDirectory(prefix='pharma-lo-',dir=temp_root) as work:
             folder=Path(work)
-            # SSE-9（2026-09-24 评审）：profile 与 fontconfig 字体缓存持久化到 RUNTIME。
-            # 原实现每次转换新建空 profile/空缓存=恒定冷启（实测 6.5s/次，三次无热身）。
-            # 失败即清 profile 供下次重建；_LO_CONVERT_LOCK 保证不并发共用。
-            persist=RUNTIME/'soffice'
-            try:persist.mkdir(parents=True,exist_ok=True)
-            except OSError:persist=None
-            profile=(persist or folder)/'profile';fontcache=(persist or folder)/'font-cache'
             target=folder/path.with_suffix('.pdf').name
-            from xml.sax.saxutils import escape
-            font_config=folder/'fonts.conf'
-            font_config.write_text('<?xml version="1.0"?><!DOCTYPE fontconfig SYSTEM "fonts.dtd"><fontconfig><include ignore_missing="yes">/etc/fonts/fonts.conf</include><dir>'+escape(str(ROOT/'05_原型/assets/fonts'))+'</dir><cachedir>'+escape(str(fontcache))+'</cachedir></fontconfig>')
-            env={**os.environ,'TMPDIR':'/tmp','XDG_RUNTIME_DIR':work,'FONTCONFIG_FILE':str(font_config)}
-            with _LO_CONVERT_LOCK:
-                proc=subprocess.Popen([exe,f'-env:UserInstallation={profile.as_uri()}','--headless','--convert-to','pdf','--outdir',work,str(path)],stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,env=env)
-                try:
-                    out,err=proc.communicate(timeout=timeout)
-                except subprocess.TimeoutExpired:
-                    # soffice.exe 与 venv python.exe 同为"启动器"型：真身 soffice.bin
-                    # 是其子进程，超时只 TerminateProcess 直接子进程会孤儿化 bin——
-                    # 残留进程还锁死临时 profile 目录（Windows 上 TemporaryDirectory
-                    # 清理会因此报错）。树杀一并回收（2026-09-23 同族排查 manage.py）。
-                    if os.name=='nt':subprocess.run(['taskkill','/F','/T','/PID',str(proc.pid)],capture_output=True)
-                    else:proc.kill()
-                    proc.communicate()
-                    return {'status':'FAILED','reason':'CONVERT_TIMEOUT'}
-            if proc.returncode or not target.exists():
-                if persist is not None:shutil.rmtree(profile,ignore_errors=True)
-                return {'status':'FAILED','reason':'CONVERSION_FAILED','log':err[-1000:]}
+            if used=='word-com':
+                # 2026-09-28 用户裁定"Word 要和 PDF 视觉上一样"：LibreOffice 渲染
+                # 题包艺术字水印会丢 -45° 旋转（斜排画成横排），Word COM 导出忠实
+                # 呈现；失败回退 soffice 并在返回的 converter 字段如实透出。
+                with _WORD_CONVERT_LOCK:
+                    word_err=_word_com_convert(path,target,timeout)
+                if word_err is None:used='word-com'
+                else:used='libreoffice'
+            if used=='libreoffice':
+                if exe is None:
+                    # 仅装 Word 未装 LibreOffice 的部署且 Word 通道失败：无处可回退，
+                    # 如实返回（否则 exe=None 落到 Popen 抛裸 TypeError，原因失真——
+                    # 2026-09-28 终审）。
+                    return {'status':'FAILED','reason':'CONVERTER_NOT_FOUND: libreoffice','log':(word_err or '')[-300:]}
+                # SSE-9（2026-09-24 评审）：profile 与 fontconfig 字体缓存持久化到 RUNTIME。
+                # 原实现每次转换新建空 profile/空缓存=恒定冷启（实测 6.5s/次，三次无热身）。
+                # 失败即清 profile 供下次重建；_LO_CONVERT_LOCK 保证不并发共用。
+                persist=RUNTIME/'soffice'
+                try:persist.mkdir(parents=True,exist_ok=True)
+                except OSError:persist=None
+                profile=(persist or folder)/'profile';fontcache=(persist or folder)/'font-cache'
+                from xml.sax.saxutils import escape
+                font_config=folder/'fonts.conf'
+                font_config.write_text('<?xml version="1.0"?><!DOCTYPE fontconfig SYSTEM "fonts.dtd"><fontconfig><include ignore_missing="yes">/etc/fonts/fonts.conf</include><dir>'+escape(str(ROOT/'05_原型/assets/fonts'))+'</dir><cachedir>'+escape(str(fontcache))+'</cachedir></fontconfig>')
+                env={**os.environ,'TMPDIR':'/tmp','XDG_RUNTIME_DIR':work,'FONTCONFIG_FILE':str(font_config)}
+                with _LO_CONVERT_LOCK:
+                    proc=subprocess.Popen([exe,f'-env:UserInstallation={profile.as_uri()}','--headless','--convert-to','pdf','--outdir',work,str(path)],stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,env=env)
+                    try:
+                        out,err=proc.communicate(timeout=timeout)
+                    except subprocess.TimeoutExpired:
+                        # soffice.exe 与 venv python.exe 同为"启动器"型：真身 soffice.bin
+                        # 是其子进程，超时只 TerminateProcess 直接子进程会孤儿化 bin——
+                        # 残留进程还锁死临时 profile 目录（Windows 上 TemporaryDirectory
+                        # 清理会因此报错）。树杀一并回收（2026-09-23 同族排查 manage.py）。
+                        if os.name=='nt':subprocess.run(['taskkill','/F','/T','/PID',str(proc.pid)],capture_output=True)
+                        else:proc.kill()
+                        proc.communicate()
+                        return {'status':'FAILED','reason':'CONVERT_TIMEOUT'}
+                if proc.returncode or not target.exists():
+                    if persist is not None:shutil.rmtree(profile,ignore_errors=True)
+                    return {'status':'FAILED','reason':'CONVERSION_FAILED','log':((word_err or '')+' '+err[-900:])[-1000:]}
             import fitz
             with fitz.open(target) as doc:
                 text=''.join(p.get_text() for p in doc);pages=len(doc)
@@ -1345,7 +1426,7 @@ def convert_pdf(docx_path,timeout=90,converter='libreoffice',_toc_pass=0):
             return convert_pdf(path,timeout,converter,_toc_pass+1)
         _strip_keep_with_next(d)  # 兜底：多轮修复中任何残存的 keepNext/keepLines 一并摘除
         d.save(path)
-        return {'status':'PASS','scope':'file_conversion','toc_updated':bool(toc_verified) and len(toc_verified)>=len(toc_entry_paras) and not toc_updated,'orphan_headings':orphan_headings,'detached_figure_captions':detached_figure_captions,'toc_pages':page_map,'path':str(pdf),'pages':pages,'sha256':hashlib.sha256(pdf.read_bytes()).hexdigest()}
+        return {'status':'PASS','scope':'file_conversion','converter':used,'word_fallback':(word_err or '')[-160:] if (word_err and used=='libreoffice') else '','toc_updated':bool(toc_verified) and len(toc_verified)>=len(toc_entry_paras) and not toc_updated,'orphan_headings':orphan_headings,'detached_figure_captions':detached_figure_captions,'toc_pages':page_map,'path':str(pdf),'pages':pages,'sha256':hashlib.sha256(pdf.read_bytes()).hexdigest()}
     except (OSError,subprocess.TimeoutExpired) as exc:return {'status':'FAILED','reason':type(exc).__name__}
 
 
