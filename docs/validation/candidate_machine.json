@@ -1,7 +1,7 @@
 {
   "candidate_code_commit": "fc6e3fc5a4c5f94401433e353b60d2d3e83e5c3e",
   "application_git_tree": "0bca355b3be9179f9f7fc7c8ba8362b409e70e2e",
-  "scope": "final backend/browser/S3 fresh call; S1/S2/Q2 prior-code calls revalidated without new model calls",
+  "scope": "same exact fc6e3fc commit: required S1/S2/S3 fresh calls PASS; supplemental Q2 fresh calls DEGRADED, retained",
   "backend": {
     "passed": 667,
     "failed": 0,
@@ -32,7 +32,7 @@
   "scenarios": [
     {
       "id": "S1",
-      "job_id": "8ca928f243bc46f8b29a4b0d9731903d",
+      "job_id": "3d78ca2d21c748de8fe98f17d6f9ecef",
       "status": "DEGRADED",
       "error": null,
       "narrative_status": "PASS",
@@ -45,10 +45,10 @@
         "reason": "全部调用响应model经核验一致"
       },
       "usage": {
-        "prompt_tokens": 6444,
-        "completion_tokens": 7723,
-        "total_tokens": 14167,
-        "calls": 1
+        "prompt_tokens": 18457,
+        "completion_tokens": 19094,
+        "total_tokens": 37551,
+        "calls": 3
       },
       "calls": [
         {
@@ -56,7 +56,23 @@
           "returned_model": "deepseek-flash",
           "identity_status": "VERIFIED_EXACT",
           "reason": "响应model与请求一致",
-          "call_id": 95,
+          "call_id": 105,
+          "endpoint": "https://api.deepseek.com/chat/completions"
+        },
+        {
+          "requested_model": "deepseek-flash",
+          "returned_model": "deepseek-flash",
+          "identity_status": "VERIFIED_EXACT",
+          "reason": "响应model与请求一致",
+          "call_id": 106,
+          "endpoint": "https://api.deepseek.com/chat/completions"
+        },
+        {
+          "requested_model": "deepseek-flash",
+          "returned_model": "deepseek-flash",
+          "identity_status": "VERIFIED_EXACT",
+          "reason": "响应model与请求一致",
+          "call_id": 107,
           "endpoint": "https://api.deepseek.com/chat/completions"
         }
       ],
@@ -80,7 +96,10 @@
         }
       },
       "alert_coverage": {},
-      "failures": [],
+      "failures": [
+        "JSONDecodeError: Unterminated string starting at: line 1 column 881 (char 880)",
+        "benchmark: ValueError: hypothesis requires both evidence kinds and missing evidence"
+      ],
       "versions": {
         "renderer": "reader-20260928-wordpdf-v13",
         "model": "deepseek-flash",
@@ -90,13 +109,13 @@
         "attribution": "attribution-v2-bound-snapshot",
         "reasoning_effort": "",
         "retrieval_policy": "af76d98f09fa02205fc7a1ae51be3cd861bf457e0cd701509ccec953a8315496",
-        "validator": "useful-bounded-attribution-v7",
+        "validator": "useful-bounded-attribution-v8",
         "parser": "scope-prefilter-v9-workspace-source-provenance",
         "terminology": "540ade4b03b05c3ca9661b1add0a965587c1b34df111814bbc43c3f50f317705",
         "retriever": "bm25-chroma-prefilter-rrf-v7-vector-completeness",
         "embedding": "a48549b3259a6165364f226599cd91f39923d5d5",
-        "snapshot": "1ce027b520eed8e5c447d71f90670b4a07688e23dc1887165b83e83406e2992f",
-        "knowledge": "d3750f7c0d029b72f2447853100178c2d7fdefd151d2b1742cba3086e1cb98c7",
+        "snapshot": "777d1ed9e2292effcf08f9ec9463b8a6c10ce9398517216b7bc62f6dce37fd24",
+        "knowledge": "5e47979af9c22b55a1e0e56ce651138db94d60cc9a8d7d72a1eed7b56ca8f2c3",
         "template": "166fadc89f8800fc7e170eaba74c037e4aaa6f39b9c2a88669a2008a3eaadc1e",
         "context": {
           "enterprise_id": "competition",
@@ -105,7 +124,7 @@
           "industry_version": "1.0.0",
           "policy_version": "pharmaceutical-original-1",
           "data_snapshot": "032991a5cd0fdb500668e91da237d3a28634189c6932cd839d80dd5ff0ef7c67",
-          "knowledge_snapshot": "d3750f7c0d029b72f2447853100178c2d7fdefd151d2b1742cba3086e1cb98c7",
+          "knowledge_snapshot": "5e47979af9c22b55a1e0e56ce651138db94d60cc9a8d7d72a1eed7b56ca8f2c3",
           "template_version": "58ebcdd6e159f5f2f331790606a83aed894c6a40bcf2a555abe5b2e65ff9a856",
           "formula_version": "normalized-cost-5-uploaded-details",
           "enterprise_config_version": "2ec73c117b283831bf092f7a26467be2b99c5c1e66c6a638944851d82bf23903"
@@ -127,52 +146,52 @@
           "reranker": "none",
           "limit": 8
         },
-        "run_id": "main_09566e7"
+        "run_id": "main_fc6e3fc"
       },
       "retrieval": {
         "status": "PASS",
         "mode": "hybrid",
         "recall_status": "RECALLED",
-        "knowledge_version": "1af4930746dec54294bc",
+        "knowledge_version": "ac1e78bae153873c723c",
         "framework": "llama-index-core BaseRetriever/TextNode"
       },
       "downloads": {
         "docx": {
-          "sha256": "e2df72326dfbce7bd7a028fe112c160cbc97fdb6dd628b4bc604f9cb7cac8cf3",
-          "bytes": 266557
+          "sha256": "da209785381868df5fa64466f0ed421cb7de89c72ef56be86e5f8ce1971c36d2",
+          "bytes": 266668
         },
         "pdf": {
-          "sha256": "45cc0a788445b554d5964dc7b2b7ab5a7255ce649cef9d6cd5a7b8b2a56b5131",
-          "bytes": 1202452
+          "sha256": "42145d261ab3ca3769098c794364d916cf29f89c53f84dafd1d161144f7b6536",
+          "bytes": 1208191
         }
       },
       "rpa": {
-        "action_id": "YH-46903d9d53d9bdeb61f98780",
+        "action_id": "YH-11a64b96285c8535ed93e718",
         "notification": "SIMULATED_SENT",
         "idempotent": true,
         "edited_before_confirm": true,
         "human_acknowledgement": "NOT_ENTERED",
         "remote": {
-          "task_id": "YH-46903d9d53d9bdeb61f98780",
+          "task_id": "YH-11a64b96285c8535ed93e718",
           "status": "sent",
-          "created_at": "2026-09-29T04:06:22.731909+08:00"
+          "created_at": "2026-09-29T04:30:57.333281+08:00"
         }
       },
-      "code_commit": "09566e7f67afbce5c832ccf412c51652a55e0e55",
-      "mode": "PRIOR_CODE_FRESH_MODEL_WITH_FINAL_CODE_REVALIDATION",
-      "current_code_fresh_call": false,
+      "code_commit": "fc6e3fc5a4c5f94401433e353b60d2d3e83e5c3e",
+      "mode": "FRESH_MODEL",
+      "current_code_fresh_call": true,
       "capability_status": "PASS",
       "human_review_status": "PENDING",
-      "status_explanation": "网站业务人工验收未代填；机器能力与交付评分分开",
+      "status_explanation": "机器能力和交付评分分开；网站业务人工验收未代填",
       "word_com": {
         "scenario": "S1",
-        "source_docx_sha256": "e2df72326dfbce7bd7a028fe112c160cbc97fdb6dd628b4bc604f9cb7cac8cf3",
+        "source_docx_sha256": "da209785381868df5fa64466f0ed421cb7de89c72ef56be86e5f8ce1971c36d2",
         "source_docx_unchanged": true,
         "teammate_converter_commit": "2e7131ade3fc7629216b5422ae5c416d8ea621f6",
         "script_sha256": "d05266457df685d2f802461dfbbc3ec51bc98e4a898cc8bb03b87a44d83aa8cc",
         "word_com_pdf": {
-          "sha256": "546e591eeee39f8db352bbfeb05ff468bfb17ceb1ddf81d52596b550ae335d80",
-          "bytes": 1052515
+          "sha256": "5cc5bb83127277ce5ce801b89252e6ab354245980b88f15079b17d4eb889d7d1",
+          "bytes": 1054141
         },
         "pdf_checks": {
           "api_libreoffice": {
@@ -225,53 +244,69 @@
           }
         }
       },
-      "final_code_revalidation": {
-        "scenario": "S1",
-        "validation_code_commit": "fc6e3fc5a4c5f94401433e353b60d2d3e83e5c3e",
-        "source_code_commit": "09566e7f67afbce5c832ccf412c51652a55e0e55",
-        "source_job_id": "8ca928f243bc46f8b29a4b0d9731903d",
-        "mode": "RECORDED_RESPONSE_REVALIDATION",
-        "new_model_calls": 0,
-        "status": "PASS",
-        "unit_validation": {
-          "benchmark/explanation": {
-            "status": "PASS",
-            "frozen": true
-          },
-          "benchmark/recommendation": {
-            "status": "PASS",
-            "frozen": true
-          },
-          "materials/explanation": {
-            "status": "PASS",
-            "frozen": true
-          },
-          "materials/recommendation": {
-            "status": "PASS",
-            "frozen": true
+      "call_audit": [
+        {
+          "call_id": 105,
+          "request_sha256": "402f3b6dbd7a133742491a35743e57351b8abf2c016fe8f2a387c3a4f15077d0",
+          "response_sha256": "d420cd8838d2c5cedf4f83ae17b126ed1db52be51deb116b110428107137707e",
+          "finish_reason": "length",
+          "provider_usage": {
+            "prompt_tokens": 6444,
+            "completion_tokens": 8192,
+            "total_tokens": 14636,
+            "prompt_tokens_details": {
+              "cached_tokens": 6272
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 7714
+            },
+            "prompt_cache_hit_tokens": 6272,
+            "prompt_cache_miss_tokens": 172
           }
         },
-        "alert_coverage": {},
-        "failure_reasons": [],
-        "source_response_hashes": [
-          {
-            "call_id": 95,
-            "sha256": "f06d069dbcae1fb619ff9b1215add01dd753473009c17ab8b3bcdbf6e9de2d66"
+        {
+          "call_id": 106,
+          "request_sha256": "24ae6bf7bdd39b8217fcbc37f37df7017dd1c4e54f48d760dc565380b2afb1a0",
+          "response_sha256": "0176e24c722e05c5139c78f1a26aad0b906077e174c1f117653ca711c917fc51",
+          "finish_reason": "stop",
+          "provider_usage": {
+            "prompt_tokens": 6545,
+            "completion_tokens": 4721,
+            "total_tokens": 11266,
+            "prompt_tokens_details": {
+              "cached_tokens": 6400
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 3598
+            },
+            "prompt_cache_hit_tokens": 6400,
+            "prompt_cache_miss_tokens": 145
           }
-        ],
-        "source_artifacts": {
-          "docx": {
-            "sha256": "e2df72326dfbce7bd7a028fe112c160cbc97fdb6dd628b4bc604f9cb7cac8cf3"
-          },
-          "pdf": {
-            "sha256": "45cc0a788445b554d5964dc7b2b7ab5a7255ce649cef9d6cd5a7b8b2a56b5131"
+        },
+        {
+          "call_id": 107,
+          "request_sha256": "bcd714c2dad3042e53a39dfbbcf4bec27d1b55406b340e750a68dae0275a6f4b",
+          "response_sha256": "595db230e1e9b52e98464f442714769214716487de668483988e232f9408ae92",
+          "finish_reason": "stop",
+          "provider_usage": {
+            "prompt_tokens": 5468,
+            "completion_tokens": 6181,
+            "total_tokens": 11649,
+            "prompt_tokens_details": {
+              "cached_tokens": 1792
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 5377
+            },
+            "prompt_cache_hit_tokens": 1792,
+            "prompt_cache_miss_tokens": 3676
           }
         }
-      }
+      ]
     },
     {
       "id": "S2",
-      "job_id": "0a73e598626f40f18a5f14ce93d85f2e",
+      "job_id": "9f8005424d0042c4b2757a94f380eff2",
       "status": "DEGRADED",
       "error": null,
       "narrative_status": "PASS",
@@ -285,8 +320,8 @@
       },
       "usage": {
         "prompt_tokens": 6377,
-        "completion_tokens": 7795,
-        "total_tokens": 14172,
+        "completion_tokens": 5924,
+        "total_tokens": 12301,
         "calls": 1
       },
       "calls": [
@@ -295,7 +330,7 @@
           "returned_model": "deepseek-flash",
           "identity_status": "VERIFIED_EXACT",
           "reason": "响应model与请求一致",
-          "call_id": 96,
+          "call_id": 108,
           "endpoint": "https://api.deepseek.com/chat/completions"
         }
       ],
@@ -329,13 +364,13 @@
         "attribution": "attribution-v2-bound-snapshot",
         "reasoning_effort": "",
         "retrieval_policy": "af76d98f09fa02205fc7a1ae51be3cd861bf457e0cd701509ccec953a8315496",
-        "validator": "useful-bounded-attribution-v7",
+        "validator": "useful-bounded-attribution-v8",
         "parser": "scope-prefilter-v9-workspace-source-provenance",
         "terminology": "540ade4b03b05c3ca9661b1add0a965587c1b34df111814bbc43c3f50f317705",
         "retriever": "bm25-chroma-prefilter-rrf-v7-vector-completeness",
         "embedding": "a48549b3259a6165364f226599cd91f39923d5d5",
-        "snapshot": "52203a1defd095ba7e1bff9c03b81cd74de3119300ee5d7d7228dce0b9871df3",
-        "knowledge": "d3750f7c0d029b72f2447853100178c2d7fdefd151d2b1742cba3086e1cb98c7",
+        "snapshot": "22c5d9b7d3e25cff0b3637630be71a369b2c8d0a43a75df3398bd1b708086fd9",
+        "knowledge": "5e47979af9c22b55a1e0e56ce651138db94d60cc9a8d7d72a1eed7b56ca8f2c3",
         "template": "166fadc89f8800fc7e170eaba74c037e4aaa6f39b9c2a88669a2008a3eaadc1e",
         "context": {
           "enterprise_id": "competition",
@@ -344,7 +379,7 @@
           "industry_version": "1.0.0",
           "policy_version": "pharmaceutical-original-1",
           "data_snapshot": "032991a5cd0fdb500668e91da237d3a28634189c6932cd839d80dd5ff0ef7c67",
-          "knowledge_snapshot": "d3750f7c0d029b72f2447853100178c2d7fdefd151d2b1742cba3086e1cb98c7",
+          "knowledge_snapshot": "5e47979af9c22b55a1e0e56ce651138db94d60cc9a8d7d72a1eed7b56ca8f2c3",
           "template_version": "58ebcdd6e159f5f2f331790606a83aed894c6a40bcf2a555abe5b2e65ff9a856",
           "formula_version": "normalized-cost-5-uploaded-details",
           "enterprise_config_version": "2ec73c117b283831bf092f7a26467be2b99c5c1e66c6a638944851d82bf23903"
@@ -366,52 +401,52 @@
           "reranker": "none",
           "limit": 8
         },
-        "run_id": "main_09566e7"
+        "run_id": "main_fc6e3fc"
       },
       "retrieval": {
         "status": "PASS",
         "mode": "hybrid",
         "recall_status": "RECALLED",
-        "knowledge_version": "1af4930746dec54294bc",
+        "knowledge_version": "ac1e78bae153873c723c",
         "framework": "llama-index-core BaseRetriever/TextNode"
       },
       "downloads": {
         "docx": {
-          "sha256": "b3b47d62a7cf30931037431fecba4dab090457ea9b28e35ff9e714b0a9f7c52c",
-          "bytes": 264271
+          "sha256": "ed986d5a6dbb8142818ca4376b70d9dc122e3bee2a428ac1bc59c97f812babaa",
+          "bytes": 264250
         },
         "pdf": {
-          "sha256": "cb3f61f239881c940695a5519e20446d900b1471e4b228d11c348f265c46b341",
-          "bytes": 1177104
+          "sha256": "93066a01d2b83e901996af5da166781540e016227297e47a4e2f5985ebfd94bd",
+          "bytes": 1173224
         }
       },
       "rpa": {
-        "action_id": "YH-ad3319e6f52fdae24c4217fc",
+        "action_id": "YH-aa1b60fb1f919f5804d0d873",
         "notification": "SIMULATED_SENT",
         "idempotent": true,
         "edited_before_confirm": true,
         "human_acknowledgement": "NOT_ENTERED",
         "remote": {
-          "task_id": "YH-ad3319e6f52fdae24c4217fc",
+          "task_id": "YH-aa1b60fb1f919f5804d0d873",
           "status": "sent",
-          "created_at": "2026-09-29T04:07:05.973206+08:00"
+          "created_at": "2026-09-29T04:31:32.537538+08:00"
         }
       },
-      "code_commit": "09566e7f67afbce5c832ccf412c51652a55e0e55",
-      "mode": "PRIOR_CODE_FRESH_MODEL_WITH_FINAL_CODE_REVALIDATION",
-      "current_code_fresh_call": false,
+      "code_commit": "fc6e3fc5a4c5f94401433e353b60d2d3e83e5c3e",
+      "mode": "FRESH_MODEL",
+      "current_code_fresh_call": true,
       "capability_status": "PASS",
       "human_review_status": "PENDING",
-      "status_explanation": "网站业务人工验收未代填；机器能力与交付评分分开",
+      "status_explanation": "机器能力和交付评分分开；网站业务人工验收未代填",
       "word_com": {
         "scenario": "S2",
-        "source_docx_sha256": "b3b47d62a7cf30931037431fecba4dab090457ea9b28e35ff9e714b0a9f7c52c",
+        "source_docx_sha256": "ed986d5a6dbb8142818ca4376b70d9dc122e3bee2a428ac1bc59c97f812babaa",
         "source_docx_unchanged": true,
         "teammate_converter_commit": "2e7131ade3fc7629216b5422ae5c416d8ea621f6",
         "script_sha256": "d05266457df685d2f802461dfbbc3ec51bc98e4a898cc8bb03b87a44d83aa8cc",
         "word_com_pdf": {
-          "sha256": "e356bd0c36bda02bf81621d0e1b20e8c1b2c00af01a2cce910ff6e3e44662345",
-          "bytes": 1039066
+          "sha256": "61979312a78bb54177394f962a3680ed8276af91e41a605200364addf33b3ce4",
+          "bytes": 1022764
         },
         "pdf_checks": {
           "api_libreoffice": {
@@ -439,7 +474,7 @@
             "status": "PASS"
           },
           "word_com": {
-            "pages": 17,
+            "pages": 16,
             "explanations": [
               {
                 "section": "materials",
@@ -464,49 +499,27 @@
           }
         }
       },
-      "final_code_revalidation": {
-        "scenario": "S2",
-        "validation_code_commit": "fc6e3fc5a4c5f94401433e353b60d2d3e83e5c3e",
-        "source_code_commit": "09566e7f67afbce5c832ccf412c51652a55e0e55",
-        "source_job_id": "0a73e598626f40f18a5f14ce93d85f2e",
-        "mode": "RECORDED_RESPONSE_REVALIDATION",
-        "new_model_calls": 0,
-        "status": "PASS",
-        "unit_validation": {
-          "benchmark/explanation": {
-            "status": "PASS",
-            "frozen": true
-          },
-          "benchmark/recommendation": {
-            "status": "PASS",
-            "frozen": true
-          },
-          "materials/explanation": {
-            "status": "PASS",
-            "frozen": true
-          },
-          "materials/recommendation": {
-            "status": "PASS",
-            "frozen": true
-          }
-        },
-        "alert_coverage": {},
-        "failure_reasons": [],
-        "source_response_hashes": [
-          {
-            "call_id": 96,
-            "sha256": "98b3533a9f3850842d62acb8a60dfebe18ab2bb0c120fb00b4d0d58b48684598"
-          }
-        ],
-        "source_artifacts": {
-          "docx": {
-            "sha256": "b3b47d62a7cf30931037431fecba4dab090457ea9b28e35ff9e714b0a9f7c52c"
-          },
-          "pdf": {
-            "sha256": "cb3f61f239881c940695a5519e20446d900b1471e4b228d11c348f265c46b341"
+      "call_audit": [
+        {
+          "call_id": 108,
+          "request_sha256": "3d037392136b1d310ca10f425c71dfaa63d58d0c4c82aae857d3a9394da14223",
+          "response_sha256": "31697c1bcab547059a321d1b7f63137d4c6ae998b6b4f4ba3f7ace9ed47179a6",
+          "finish_reason": "stop",
+          "provider_usage": {
+            "prompt_tokens": 6377,
+            "completion_tokens": 5924,
+            "total_tokens": 12301,
+            "prompt_tokens_details": {
+              "cached_tokens": 6144
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 4519
+            },
+            "prompt_cache_hit_tokens": 6144,
+            "prompt_cache_miss_tokens": 233
           }
         }
-      }
+      ]
     },
     {
       "id": "S3",
@@ -681,7 +694,7 @@
       "current_code_fresh_call": true,
       "capability_status": "PASS",
       "human_review_status": "PENDING",
-      "status_explanation": "网站业务人工验收未代填；机器能力与交付评分分开",
+      "status_explanation": "机器能力和交付评分分开；网站业务人工验收未代填",
       "word_com": {
         "scenario": "S3",
         "source_docx_sha256": "b3b3705bc9ecddadea7b47b386eb1b346831c202bf645bf925cfd7b651385e5f",
@@ -778,14 +791,54 @@
             "status": "PASS"
           }
         }
-      }
+      },
+      "call_audit": [
+        {
+          "call_id": 103,
+          "request_sha256": "add7f5b8a06c29004054707bf9886c86f75b9f3b0610c9a732df9535e1242c0d",
+          "response_sha256": "2d1d8a4ad7212ce20e10d87133c6de38bf8a7966cfa7636a10cad5da3ba62595",
+          "finish_reason": "stop",
+          "provider_usage": {
+            "prompt_tokens": 6102,
+            "completion_tokens": 7617,
+            "total_tokens": 13719,
+            "prompt_tokens_details": {
+              "cached_tokens": 5888
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 6429
+            },
+            "prompt_cache_hit_tokens": 5888,
+            "prompt_cache_miss_tokens": 214
+          }
+        },
+        {
+          "call_id": 104,
+          "request_sha256": "b935b3decd1497cb0ab98c8d041b99aaaae9e82d856e8416eb66551832dda7fb",
+          "response_sha256": "497b15ca2219680427e0811b26083f29f9d3969555f58e8c3e6131e8e4527854",
+          "finish_reason": "stop",
+          "provider_usage": {
+            "prompt_tokens": 6448,
+            "completion_tokens": 5868,
+            "total_tokens": 12316,
+            "prompt_tokens_details": {
+              "cached_tokens": 6272
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 4626
+            },
+            "prompt_cache_hit_tokens": 6272,
+            "prompt_cache_miss_tokens": 176
+          }
+        }
+      ]
     },
     {
       "id": "Q2",
-      "job_id": "3ba04888ba7144228fb3613a99016689",
+      "job_id": "b92013f1163c4d53a3e9b78833a79b84",
       "status": "DEGRADED",
       "error": null,
-      "narrative_status": "PASS",
+      "narrative_status": "DEGRADED",
       "model_identity": {
         "status": "VERIFIED",
         "requested": "deepseek-flash",
@@ -795,10 +848,10 @@
         "reason": "全部调用响应model经核验一致"
       },
       "usage": {
-        "prompt_tokens": 20396,
-        "completion_tokens": 24111,
-        "total_tokens": 44507,
-        "calls": 3
+        "prompt_tokens": 13302,
+        "completion_tokens": 16384,
+        "total_tokens": 29686,
+        "calls": 2
       },
       "calls": [
         {
@@ -806,7 +859,7 @@
           "returned_model": "deepseek-flash",
           "identity_status": "VERIFIED_EXACT",
           "reason": "响应model与请求一致",
-          "call_id": 100,
+          "call_id": 109,
           "endpoint": "https://api.deepseek.com/chat/completions"
         },
         {
@@ -814,72 +867,40 @@
           "returned_model": "deepseek-flash",
           "identity_status": "VERIFIED_EXACT",
           "reason": "响应model与请求一致",
-          "call_id": 101,
-          "endpoint": "https://api.deepseek.com/chat/completions"
-        },
-        {
-          "requested_model": "deepseek-flash",
-          "returned_model": "deepseek-flash",
-          "identity_status": "VERIFIED_EXACT",
-          "reason": "响应model与请求一致",
-          "call_id": 102,
+          "call_id": 110,
           "endpoint": "https://api.deepseek.com/chat/completions"
         }
       ],
       "cache_hit": false,
-      "unit_validation": {
-        "benchmark/explanation": {
-          "status": "PASS",
-          "frozen": true
-        },
-        "benchmark/recommendation": {
-          "status": "PASS",
-          "frozen": true
-        },
-        "labor/explanation": {
-          "status": "PASS",
-          "frozen": true
-        },
-        "labor/recommendation": {
-          "status": "PASS",
-          "frozen": true
-        },
-        "materials/explanation": {
-          "status": "PASS",
-          "frozen": true
-        },
-        "materials/recommendation": {
-          "status": "PASS",
-          "frozen": true
-        },
-        "overhead/explanation": {
-          "status": "PASS",
-          "frozen": true
-        },
-        "overhead/recommendation": {
-          "status": "PASS",
-          "frozen": true
-        }
-      },
+      "unit_validation": {},
       "alert_coverage": {
         "alert-f63295afdd8152cfe65f": {
-          "covered": true,
+          "covered": false,
           "element_key": "materials",
           "basis": "total"
         },
         "alert-4dfbe0c1984e3bac496f": {
-          "covered": true,
+          "covered": false,
           "element_key": "labor",
           "basis": "total"
         },
         "alert-0c80378a697b26dda64c": {
-          "covered": true,
+          "covered": false,
           "element_key": "overhead",
           "basis": "total"
         }
       },
       "failures": [
-        "JSONDecodeError: Unterminated string starting at: line 1 column 2069 (char 2068)"
+        "JSONDecodeError: Expecting value: line 1 column 1 (char 0)",
+        "JSONDecodeError: Expecting value: line 1 column 1 (char 0)",
+        "RuntimeError: MODEL_CALL_BUDGET_REACHED",
+        "materials: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代",
+        "labor: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代",
+        "overhead: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代",
+        "benchmark: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代",
+        "ALERT_EXPLANATION_MISSING:alert-f63295afdd8152cfe65f",
+        "ALERT_EXPLANATION_MISSING:alert-4dfbe0c1984e3bac496f",
+        "ALERT_EXPLANATION_MISSING:alert-0c80378a697b26dda64c"
       ],
       "versions": {
         "renderer": "reader-20260928-wordpdf-v13",
@@ -890,13 +911,13 @@
         "attribution": "attribution-v2-bound-snapshot",
         "reasoning_effort": "",
         "retrieval_policy": "af76d98f09fa02205fc7a1ae51be3cd861bf457e0cd701509ccec953a8315496",
-        "validator": "useful-bounded-attribution-v7",
+        "validator": "useful-bounded-attribution-v8",
         "parser": "scope-prefilter-v9-workspace-source-provenance",
         "terminology": "540ade4b03b05c3ca9661b1add0a965587c1b34df111814bbc43c3f50f317705",
         "retriever": "bm25-chroma-prefilter-rrf-v7-vector-completeness",
         "embedding": "a48549b3259a6165364f226599cd91f39923d5d5",
-        "snapshot": "1bbf894bd209905d00773b84ccdafc9617ba0cab2a0f05bc6ca198fd143415a4",
-        "knowledge": "d3750f7c0d029b72f2447853100178c2d7fdefd151d2b1742cba3086e1cb98c7",
+        "snapshot": "e444d5922bedd061f798a6a700922a3571689e0529eede457942c79a806e4922",
+        "knowledge": "5e47979af9c22b55a1e0e56ce651138db94d60cc9a8d7d72a1eed7b56ca8f2c3",
         "template": "166fadc89f8800fc7e170eaba74c037e4aaa6f39b9c2a88669a2008a3eaadc1e",
         "context": {
           "enterprise_id": "competition",
@@ -905,7 +926,7 @@
           "industry_version": "1.0.0",
           "policy_version": "pharmaceutical-original-1",
           "data_snapshot": "032991a5cd0fdb500668e91da237d3a28634189c6932cd839d80dd5ff0ef7c67",
-          "knowledge_snapshot": "d3750f7c0d029b72f2447853100178c2d7fdefd151d2b1742cba3086e1cb98c7",
+          "knowledge_snapshot": "5e47979af9c22b55a1e0e56ce651138db94d60cc9a8d7d72a1eed7b56ca8f2c3",
           "template_version": "58ebcdd6e159f5f2f331790606a83aed894c6a40bcf2a555abe5b2e65ff9a856",
           "formula_version": "normalized-cost-5-uploaded-details",
           "enterprise_config_version": "2ec73c117b283831bf092f7a26467be2b99c5c1e66c6a638944851d82bf23903"
@@ -927,83 +948,59 @@
           "reranker": "none",
           "limit": 8
         },
-        "run_id": "main_09566e7"
+        "run_id": "main_fc6e3fc"
       },
       "retrieval": {
         "status": "PASS",
         "mode": "hybrid",
         "recall_status": "RECALLED",
-        "knowledge_version": "1af4930746dec54294bc",
+        "knowledge_version": "ac1e78bae153873c723c",
         "framework": "llama-index-core BaseRetriever/TextNode"
       },
       "downloads": {
         "docx": {
-          "sha256": "061d1e66f6688ba2c893695b1d4f092f60ab03bebdf232dc150f52ed570196cd",
-          "bytes": 272964
+          "sha256": "75d1586923419850ca76a1a42dfcf72b300026cd5e1f2c225b4046d915fabf18",
+          "bytes": 270138
         },
         "pdf": {
-          "sha256": "4da88f05fad5f54949cc51810a3749504bf51e160ff2755d101ec09751277b59",
-          "bytes": 1274360
+          "sha256": "0e4b2c0d2cce05430aa4ec27c077db10c97747546dc9ced74dd92b680f21be4d",
+          "bytes": 1203439
         }
       },
       "rpa": {
-        "action_id": "YH-041c4fd3be0a3422a08f47f9",
+        "action_id": "YH-1e57a93c8634a21cd3ca0b0f",
         "notification": "SIMULATED_SENT",
         "idempotent": true,
         "edited_before_confirm": true,
         "human_acknowledgement": "NOT_ENTERED",
         "remote": {
-          "task_id": "YH-041c4fd3be0a3422a08f47f9",
+          "task_id": "YH-1e57a93c8634a21cd3ca0b0f",
           "status": "sent",
-          "created_at": "2026-09-29T04:10:29.224520+08:00"
+          "created_at": "2026-09-29T04:32:55.954444+08:00"
         }
       },
-      "code_commit": "09566e7f67afbce5c832ccf412c51652a55e0e55",
-      "mode": "PRIOR_CODE_FRESH_MODEL_WITH_FINAL_CODE_REVALIDATION",
-      "current_code_fresh_call": false,
-      "capability_status": "PASS",
+      "code_commit": "fc6e3fc5a4c5f94401433e353b60d2d3e83e5c3e",
+      "mode": "FRESH_MODEL",
+      "current_code_fresh_call": true,
+      "capability_status": "DEGRADED",
       "human_review_status": "PENDING",
-      "status_explanation": "网站业务人工验收未代填；机器能力与交付评分分开",
+      "status_explanation": "机器能力和交付评分分开；网站业务人工验收未代填",
       "word_com": {
         "scenario": "Q2",
-        "source_docx_sha256": "061d1e66f6688ba2c893695b1d4f092f60ab03bebdf232dc150f52ed570196cd",
+        "source_docx_sha256": "75d1586923419850ca76a1a42dfcf72b300026cd5e1f2c225b4046d915fabf18",
         "source_docx_unchanged": true,
         "teammate_converter_commit": "2e7131ade3fc7629216b5422ae5c416d8ea621f6",
         "script_sha256": "d05266457df685d2f802461dfbbc3ec51bc98e4a898cc8bb03b87a44d83aa8cc",
         "word_com_pdf": {
-          "sha256": "692d846395578425442c8f40d3389ec68bc9e82776b27f2285abfec0eb36dde3",
-          "bytes": 1093477
+          "sha256": "c65339930a7d57b43c0eaa5449480ecef6e6dc2fef029a42ea40035a04bd6f17",
+          "bytes": 1038020
         },
         "pdf_checks": {
           "api_libreoffice": {
-            "pages": 19,
+            "pages": 18,
             "explanations": [
               {
                 "section": "materials",
-                "claim_type": "hypothesis",
-                "docx_complete": true,
-                "pdf_complete": true
-              },
-              {
-                "section": "materials",
-                "claim_type": "hypothesis",
-                "docx_complete": true,
-                "pdf_complete": true
-              },
-              {
-                "section": "labor",
-                "claim_type": "hypothesis",
-                "docx_complete": true,
-                "pdf_complete": true
-              },
-              {
-                "section": "overhead",
-                "claim_type": "hypothesis",
-                "docx_complete": true,
-                "pdf_complete": true
-              },
-              {
-                "section": "benchmark",
                 "claim_type": "hypothesis",
                 "docx_complete": true,
                 "pdf_complete": true
@@ -1012,34 +1009,10 @@
             "status": "PASS"
           },
           "word_com": {
-            "pages": 18,
+            "pages": 16,
             "explanations": [
               {
                 "section": "materials",
-                "claim_type": "hypothesis",
-                "docx_complete": true,
-                "pdf_complete": true
-              },
-              {
-                "section": "materials",
-                "claim_type": "hypothesis",
-                "docx_complete": true,
-                "pdf_complete": true
-              },
-              {
-                "section": "labor",
-                "claim_type": "hypothesis",
-                "docx_complete": true,
-                "pdf_complete": true
-              },
-              {
-                "section": "overhead",
-                "claim_type": "hypothesis",
-                "docx_complete": true,
-                "pdf_complete": true
-              },
-              {
-                "section": "benchmark",
                 "claim_type": "hypothesis",
                 "docx_complete": true,
                 "pdf_complete": true
@@ -1049,91 +1022,46 @@
           }
         }
       },
-      "final_code_revalidation": {
-        "scenario": "Q2",
-        "validation_code_commit": "fc6e3fc5a4c5f94401433e353b60d2d3e83e5c3e",
-        "source_code_commit": "09566e7f67afbce5c832ccf412c51652a55e0e55",
-        "source_job_id": "3ba04888ba7144228fb3613a99016689",
-        "mode": "RECORDED_RESPONSE_REVALIDATION",
-        "new_model_calls": 0,
-        "status": "PASS",
-        "unit_validation": {
-          "benchmark/explanation": {
-            "status": "PASS",
-            "frozen": true
-          },
-          "benchmark/recommendation": {
-            "status": "PASS",
-            "frozen": true
-          },
-          "labor/explanation": {
-            "status": "PASS",
-            "frozen": true
-          },
-          "labor/recommendation": {
-            "status": "PASS",
-            "frozen": true
-          },
-          "materials/explanation": {
-            "status": "PASS",
-            "frozen": true
-          },
-          "materials/recommendation": {
-            "status": "PASS",
-            "frozen": true
-          },
-          "overhead/explanation": {
-            "status": "PASS",
-            "frozen": true
-          },
-          "overhead/recommendation": {
-            "status": "PASS",
-            "frozen": true
+      "call_audit": [
+        {
+          "call_id": 109,
+          "request_sha256": "aee1b780541c8a3a7a8d580fd9c99b4b288f6c294688e2d53e51366033907347",
+          "response_sha256": "9a544277ec559dc493b8191a81f0dcdee09c26af9ca83b8a6f359dbbb57cb0f2",
+          "finish_reason": "length",
+          "provider_usage": {
+            "prompt_tokens": 6602,
+            "completion_tokens": 8192,
+            "total_tokens": 14794,
+            "prompt_tokens_details": {
+              "cached_tokens": 6400
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 8192
+            },
+            "prompt_cache_hit_tokens": 6400,
+            "prompt_cache_miss_tokens": 202
           }
         },
-        "alert_coverage": {
-          "alert-f63295afdd8152cfe65f": {
-            "covered": true,
-            "element_key": "materials",
-            "basis": "total"
-          },
-          "alert-4dfbe0c1984e3bac496f": {
-            "covered": true,
-            "element_key": "labor",
-            "basis": "total"
-          },
-          "alert-0c80378a697b26dda64c": {
-            "covered": true,
-            "element_key": "overhead",
-            "basis": "total"
-          }
-        },
-        "failure_reasons": [
-          "JSONDecodeError: Unterminated string starting at: line 1 column 2069 (char 2068)"
-        ],
-        "source_response_hashes": [
-          {
-            "call_id": 100,
-            "sha256": "2a444d084e5d708c23bda87d91290a3c1ac434335fb4747f9063604c39912de7"
-          },
-          {
-            "call_id": 101,
-            "sha256": "191819539098f1409bad816f389659d12b9d248b5b26d284d8eb7c772e62c8b7"
-          },
-          {
-            "call_id": 102,
-            "sha256": "67f0f16ccce03be32c1def6efc9277b887dde0aa46ad282e3675fbb4888bff18"
-          }
-        ],
-        "source_artifacts": {
-          "docx": {
-            "sha256": "061d1e66f6688ba2c893695b1d4f092f60ab03bebdf232dc150f52ed570196cd"
-          },
-          "pdf": {
-            "sha256": "4da88f05fad5f54949cc51810a3749504bf51e160ff2755d101ec09751277b59"
+        {
+          "call_id": 110,
+          "request_sha256": "69807117b66beede33479d6be4990c4cc9a48444f187c0c27efc51468c2021ab",
+          "response_sha256": "f4a02c5c4abddb7216262cf3495636337656d13758d7087d39c68e6b44264aa1",
+          "finish_reason": "length",
+          "provider_usage": {
+            "prompt_tokens": 6700,
+            "completion_tokens": 8192,
+            "total_tokens": 14892,
+            "prompt_tokens_details": {
+              "cached_tokens": 6528
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 8192
+            },
+            "prompt_cache_hit_tokens": 6528,
+            "prompt_cache_miss_tokens": 172
           }
         }
-      }
+      ]
     }
   ],
   "independent_calculation": {
@@ -1157,94 +1085,57 @@
   "renderer": "reader-20260928-branding-v13",
   "pdf_platform_boundary": "WSL API uses LibreOffice; additional PDFs exported by exact teammate Windows Word COM script; originals untouched",
   "source_downloads": {
-    "prior_four_scenarios": {
-      "status": "PASS",
-      "sources": [
-        {
-          "source_id": "src-cfa88188b451d3416e844672",
-          "bytes": 542078,
-          "content_type": "application/pdf",
-          "sha256": "aa7d48f697f2caa2bedf5b16e84a4d4765d3c92a52a619a7a93360764d7d8e00"
-        },
-        {
-          "source_id": "src-216f83299e7265e0f66d2682",
-          "bytes": 436675,
-          "content_type": "application/pdf",
-          "sha256": "281a6829ed15ce1df55d9c13f16fd5052e26276a6d30020520967657431eb4e7"
-        },
-        {
-          "source_id": "src-4956255b068b8284298c2411",
-          "bytes": 815792,
-          "content_type": "application/pdf",
-          "sha256": "2e599f526df282da063695de31a7007b97c7ff1ad16d7a97c91747f32534a048"
-        },
-        {
-          "source_id": "src-ecb561c42624f253ab7831ab",
-          "bytes": 2616,
-          "content_type": "text/plain; charset=utf-8",
-          "sha256": "a28221a0a1fffe6fcb84aa3786e9e26f48fb6c4e32510d47b96fa7181ca947c3"
-        },
-        {
-          "source_id": "src-1242392d2a8a31d428f92382",
-          "bytes": 375424,
-          "content_type": "application/pdf",
-          "sha256": "1e3808fc86fece94d3736690f087c218b8e082e6defe869e68bbdfdcdce7e503"
-        },
-        {
-          "source_id": "src-3e6bf0b079665d8187335d68",
-          "bytes": 386196,
-          "content_type": "application/pdf",
-          "sha256": "5f1dd55e4a388b190fc74c601f0589574bccbfa716a2025ea3e79857dd2eec47"
-        },
-        {
-          "source_id": "src-2bcbbd10d9b5f6208bf3768d",
-          "bytes": 2981,
-          "content_type": "text/plain; charset=utf-8",
-          "sha256": "ca759e5ff10308484d5ed87eff8b558d567b64f65b9c3786992a41be1b78c82f"
-        },
-        {
-          "source_id": "src-c8eca4288a9feeefe3d12923",
-          "bytes": 345398,
-          "content_type": "application/pdf",
-          "sha256": "834aa8a81c2938dfb9e6ec28b8743ea0e667c237e06a6609415d97fe3b85b5ad"
-        }
-      ]
-    },
-    "final_S3": {
-      "status": "PASS",
-      "sources": [
-        {
-          "source_id": "src-cfa88188b451d3416e844672",
-          "bytes": 542078,
-          "content_type": "application/pdf",
-          "sha256": "aa7d48f697f2caa2bedf5b16e84a4d4765d3c92a52a619a7a93360764d7d8e00"
-        },
-        {
-          "source_id": "src-216f83299e7265e0f66d2682",
-          "bytes": 436675,
-          "content_type": "application/pdf",
-          "sha256": "281a6829ed15ce1df55d9c13f16fd5052e26276a6d30020520967657431eb4e7"
-        },
-        {
-          "source_id": "src-4956255b068b8284298c2411",
-          "bytes": 815792,
-          "content_type": "application/pdf",
-          "sha256": "2e599f526df282da063695de31a7007b97c7ff1ad16d7a97c91747f32534a048"
-        },
-        {
-          "source_id": "src-ecb561c42624f253ab7831ab",
-          "bytes": 2616,
-          "content_type": "text/plain; charset=utf-8",
-          "sha256": "a28221a0a1fffe6fcb84aa3786e9e26f48fb6c4e32510d47b96fa7181ca947c3"
-        },
-        {
-          "source_id": "src-1242392d2a8a31d428f92382",
-          "bytes": 375424,
-          "content_type": "application/pdf",
-          "sha256": "1e3808fc86fece94d3736690f087c218b8e082e6defe869e68bbdfdcdce7e503"
-        }
-      ]
-    }
+    "status": "PASS",
+    "sources": [
+      {
+        "source_id": "src-cfa88188b451d3416e844672",
+        "bytes": 542078,
+        "content_type": "application/pdf",
+        "sha256": "aa7d48f697f2caa2bedf5b16e84a4d4765d3c92a52a619a7a93360764d7d8e00"
+      },
+      {
+        "source_id": "src-216f83299e7265e0f66d2682",
+        "bytes": 436675,
+        "content_type": "application/pdf",
+        "sha256": "281a6829ed15ce1df55d9c13f16fd5052e26276a6d30020520967657431eb4e7"
+      },
+      {
+        "source_id": "src-4956255b068b8284298c2411",
+        "bytes": 815792,
+        "content_type": "application/pdf",
+        "sha256": "2e599f526df282da063695de31a7007b97c7ff1ad16d7a97c91747f32534a048"
+      },
+      {
+        "source_id": "src-ecb561c42624f253ab7831ab",
+        "bytes": 2616,
+        "content_type": "text/plain; charset=utf-8",
+        "sha256": "a28221a0a1fffe6fcb84aa3786e9e26f48fb6c4e32510d47b96fa7181ca947c3"
+      },
+      {
+        "source_id": "src-1242392d2a8a31d428f92382",
+        "bytes": 375424,
+        "content_type": "application/pdf",
+        "sha256": "1e3808fc86fece94d3736690f087c218b8e082e6defe869e68bbdfdcdce7e503"
+      },
+      {
+        "source_id": "src-3e6bf0b079665d8187335d68",
+        "bytes": 386196,
+        "content_type": "application/pdf",
+        "sha256": "5f1dd55e4a388b190fc74c601f0589574bccbfa716a2025ea3e79857dd2eec47"
+      },
+      {
+        "source_id": "src-2bcbbd10d9b5f6208bf3768d",
+        "bytes": 2981,
+        "content_type": "text/plain; charset=utf-8",
+        "sha256": "ca759e5ff10308484d5ed87eff8b558d567b64f65b9c3786992a41be1b78c82f"
+      },
+      {
+        "source_id": "src-c8eca4288a9feeefe3d12923",
+        "bytes": 345398,
+        "content_type": "application/pdf",
+        "sha256": "834aa8a81c2938dfb9e6ec28b8743ea0e667c237e06a6609415d97fe3b85b5ad"
+      }
+    ]
   },
   "prior_call_records": [
     "candidate_calls_a9115a0.json",
@@ -1253,13 +1144,66 @@
   "prior_scored_samples": "candidate_review.json",
   "model_budget": {
     "operation": "generate",
-    "local_calendar_day": "2026-09-29",
-    "cap": 45,
-    "used": 45,
-    "increase_authorized": false,
-    "additional_calls_requested": 6
+    "original_daily_cap": 45,
+    "additional_authorization": "用户明确授权额外最多6次",
+    "extra_calls_used": 6,
+    "temporary_total_cap": 51,
+    "total_day_calls": 51,
+    "original_cap_restored": 45,
+    "endpoint_changed": false,
+    "max_output_tokens_per_call": 8192
   },
-  "post_human_final_e2e": "PARTIAL_CURRENT_CODE_NEW_CALL_GAP",
+  "post_human_final_e2e": {
+    "status": "REQUIRED_SCENARIOS_PASS_SUPPLEMENTAL_Q2_DEGRADED",
+    "new_model_calls": 0,
+    "scenarios": [
+      {
+        "scenario": "S1",
+        "code_commit": "fc6e3fc5a4c5f94401433e353b60d2d3e83e5c3e",
+        "narrative_status": "PASS",
+        "downloads_sha256": "PASS",
+        "snapshot_binding": "PASS",
+        "model_identity": "PASS",
+        "hybrid_retrieval": "PASS",
+        "simulation_receipt": "PASS",
+        "human_business_acceptance": "PENDING"
+      },
+      {
+        "scenario": "S2",
+        "code_commit": "fc6e3fc5a4c5f94401433e353b60d2d3e83e5c3e",
+        "narrative_status": "PASS",
+        "downloads_sha256": "PASS",
+        "snapshot_binding": "PASS",
+        "model_identity": "PASS",
+        "hybrid_retrieval": "PASS",
+        "simulation_receipt": "PASS",
+        "human_business_acceptance": "PENDING"
+      },
+      {
+        "scenario": "S3",
+        "code_commit": "fc6e3fc5a4c5f94401433e353b60d2d3e83e5c3e",
+        "narrative_status": "PASS",
+        "downloads_sha256": "PASS",
+        "snapshot_binding": "PASS",
+        "model_identity": "PASS",
+        "hybrid_retrieval": "PASS",
+        "simulation_receipt": "PASS",
+        "human_business_acceptance": "PENDING"
+      },
+      {
+        "scenario": "Q2",
+        "code_commit": "fc6e3fc5a4c5f94401433e353b60d2d3e83e5c3e",
+        "narrative_status": "DEGRADED",
+        "downloads_sha256": "PASS",
+        "snapshot_binding": "PASS",
+        "model_identity": "PASS",
+        "hybrid_retrieval": "PASS",
+        "simulation_receipt": "PASS",
+        "human_business_acceptance": "PENDING"
+      }
+    ]
+  },
   "competition_ready": false,
-  "data_content_publication": "LOCAL_ONLY"
+  "data_content_publication": "LOCAL_ONLY",
+  "prior_response_revalidation": "candidate_response_revalidation_fc6e3fc.json"
 }

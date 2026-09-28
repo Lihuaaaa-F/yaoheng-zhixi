@@ -1,0 +1,173 @@
+[
+  {
+    "scenario": "S1",
+    "validation_code_commit": "fc6e3fc5a4c5f94401433e353b60d2d3e83e5c3e",
+    "source_code_commit": "09566e7f67afbce5c832ccf412c51652a55e0e55",
+    "source_job_id": "8ca928f243bc46f8b29a4b0d9731903d",
+    "mode": "RECORDED_RESPONSE_REVALIDATION",
+    "new_model_calls": 0,
+    "status": "PASS",
+    "unit_validation": {
+      "benchmark/explanation": {
+        "status": "PASS",
+        "frozen": true
+      },
+      "benchmark/recommendation": {
+        "status": "PASS",
+        "frozen": true
+      },
+      "materials/explanation": {
+        "status": "PASS",
+        "frozen": true
+      },
+      "materials/recommendation": {
+        "status": "PASS",
+        "frozen": true
+      }
+    },
+    "alert_coverage": {},
+    "failure_reasons": [],
+    "source_response_hashes": [
+      {
+        "call_id": 95,
+        "sha256": "f06d069dbcae1fb619ff9b1215add01dd753473009c17ab8b3bcdbf6e9de2d66"
+      }
+    ],
+    "source_artifacts": {
+      "docx": {
+        "sha256": "e2df72326dfbce7bd7a028fe112c160cbc97fdb6dd628b4bc604f9cb7cac8cf3"
+      },
+      "pdf": {
+        "sha256": "45cc0a788445b554d5964dc7b2b7ab5a7255ce649cef9d6cd5a7b8b2a56b5131"
+      }
+    }
+  },
+  {
+    "scenario": "S2",
+    "validation_code_commit": "fc6e3fc5a4c5f94401433e353b60d2d3e83e5c3e",
+    "source_code_commit": "09566e7f67afbce5c832ccf412c51652a55e0e55",
+    "source_job_id": "0a73e598626f40f18a5f14ce93d85f2e",
+    "mode": "RECORDED_RESPONSE_REVALIDATION",
+    "new_model_calls": 0,
+    "status": "PASS",
+    "unit_validation": {
+      "benchmark/explanation": {
+        "status": "PASS",
+        "frozen": true
+      },
+      "benchmark/recommendation": {
+        "status": "PASS",
+        "frozen": true
+      },
+      "materials/explanation": {
+        "status": "PASS",
+        "frozen": true
+      },
+      "materials/recommendation": {
+        "status": "PASS",
+        "frozen": true
+      }
+    },
+    "alert_coverage": {},
+    "failure_reasons": [],
+    "source_response_hashes": [
+      {
+        "call_id": 96,
+        "sha256": "98b3533a9f3850842d62acb8a60dfebe18ab2bb0c120fb00b4d0d58b48684598"
+      }
+    ],
+    "source_artifacts": {
+      "docx": {
+        "sha256": "b3b47d62a7cf30931037431fecba4dab090457ea9b28e35ff9e714b0a9f7c52c"
+      },
+      "pdf": {
+        "sha256": "cb3f61f239881c940695a5519e20446d900b1471e4b228d11c348f265c46b341"
+      }
+    }
+  },
+  {
+    "scenario": "Q2",
+    "validation_code_commit": "fc6e3fc5a4c5f94401433e353b60d2d3e83e5c3e",
+    "source_code_commit": "09566e7f67afbce5c832ccf412c51652a55e0e55",
+    "source_job_id": "3ba04888ba7144228fb3613a99016689",
+    "mode": "RECORDED_RESPONSE_REVALIDATION",
+    "new_model_calls": 0,
+    "status": "PASS",
+    "unit_validation": {
+      "benchmark/explanation": {
+        "status": "PASS",
+        "frozen": true
+      },
+      "benchmark/recommendation": {
+        "status": "PASS",
+        "frozen": true
+      },
+      "labor/explanation": {
+        "status": "PASS",
+        "frozen": true
+      },
+      "labor/recommendation": {
+        "status": "PASS",
+        "frozen": true
+      },
+      "materials/explanation": {
+        "status": "PASS",
+        "frozen": true
+      },
+      "materials/recommendation": {
+        "status": "PASS",
+        "frozen": true
+      },
+      "overhead/explanation": {
+        "status": "PASS",
+        "frozen": true
+      },
+      "overhead/recommendation": {
+        "status": "PASS",
+        "frozen": true
+      }
+    },
+    "alert_coverage": {
+      "alert-f63295afdd8152cfe65f": {
+        "covered": true,
+        "element_key": "materials",
+        "basis": "total"
+      },
+      "alert-4dfbe0c1984e3bac496f": {
+        "covered": true,
+        "element_key": "labor",
+        "basis": "total"
+      },
+      "alert-0c80378a697b26dda64c": {
+        "covered": true,
+        "element_key": "overhead",
+        "basis": "total"
+      }
+    },
+    "failure_reasons": [
+      "JSONDecodeError: Unterminated string starting at: line 1 column 2069 (char 2068)"
+    ],
+    "source_response_hashes": [
+      {
+        "call_id": 100,
+        "sha256": "2a444d084e5d708c23bda87d91290a3c1ac434335fb4747f9063604c39912de7"
+      },
+      {
+        "call_id": 101,
+        "sha256": "191819539098f1409bad816f389659d12b9d248b5b26d284d8eb7c772e62c8b7"
+      },
+      {
+        "call_id": 102,
+        "sha256": "67f0f16ccce03be32c1def6efc9277b887dde0aa46ad282e3675fbb4888bff18"
+      }
+    ],
+    "source_artifacts": {
+      "docx": {
+        "sha256": "061d1e66f6688ba2c893695b1d4f092f60ab03bebdf232dc150f52ed570196cd"
+      },
+      "pdf": {
+        "sha256": "4da88f05fad5f54949cc51810a3749504bf51e160ff2755d101ec09751277b59"
+      }
+    }
+  }
+]

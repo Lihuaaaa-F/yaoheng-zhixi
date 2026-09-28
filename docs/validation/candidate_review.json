@@ -65,12 +65,14 @@
     },
     {
       "scenario": "Q2",
-      "status": "MACHINE_PASS_HUMAN_OPENING_WAIVED",
+      "status": "MACHINE_DEGRADED_HUMAN_OPENING_WAIVED",
       "attribution_score": null,
       "reviewer": null,
-      "source_code_commit": "09566e7f67afbce5c832ccf412c51652a55e0e55",
-      "final_code_revalidation": "PASS",
-      "scope": "补充场景，不计入S1/S2/S3分母"
+      "source_code_commit": "fc6e3fc5a4c5f94401433e353b60d2d3e83e5c3e",
+      "scope": "补充场景，不计入S1/S2/S3分母",
+      "job_id": "b92013f1163c4d53a3e9b78833a79b84",
+      "new_model_calls": 2,
+      "reason": "两次输出额度耗尽；额度上限阻止第三次调用"
     }
   ],
   "previous_candidate_review": "candidate_review_61d47bd.json",
@@ -79,9 +81,11 @@
   "mode": "PER_ARTIFACT_PROVENANCE",
   "active_review_scenario": null,
   "fresh_model_validation": {
-    "S3_on_final": "PASS",
-    "S1_S2_Q2_on_final": "NOT_RUN_BUDGET_LIMIT",
-    "S1_S2_Q2_recorded_response_revalidation": "PASS"
+    "S1": "PASS",
+    "S2": "PASS",
+    "S3": "PASS",
+    "Q2": "DEGRADED",
+    "code_commit": "fc6e3fc5a4c5f94401433e353b60d2d3e83e5c3e"
   },
   "remaining_review_instruction": {
     "source": "用户：不用继续下一份了，我也打4分，完成既定任务并推送到main分支",
