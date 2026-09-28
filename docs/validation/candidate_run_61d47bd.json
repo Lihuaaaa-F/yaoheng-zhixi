@@ -11,15 +11,15 @@
   "supplemental_scenarios": [
     "Q2"
   ],
-  "candidate_code_commit": "c5a2f3430f8c0346b3952c85b55dcd889dbb246e",
-  "tested_code_commit": "c5a2f3430f8c0346b3952c85b55dcd889dbb246e",
+  "candidate_code_commit": "61d47bdd46f9482b366a84c495748ee4e8114f40",
+  "tested_code_commit": "61d47bdd46f9482b366a84c495748ee4e8114f40",
   "baseline_commit": "3aba221e81d582970a7261204d2b255e822b0e88",
   "historical_run_index": "validation/baseline_3aba221_current_run.json",
-  "human_review": "PENDING_CONTENT_REVIEW",
+  "human_review": "REVISION_REQUIRED",
   "human_web_check": "PASS",
   "human_review_record": "evaluation/人工评分记录.json",
-  "human_review_scope": "网页检查通过；61d47bd S1为2分。当前只复评既有响应重校验的S1内容，不计新增调用通过。",
-  "candidate_review_record": "validation/candidate_review.json",
+  "human_review_scope": "原A4评分仅对应历史样本；candidate_61d47bd S1=2分，需要修订；其他候选尚未评审",
+  "candidate_review_record": "validation/candidate_review_61d47bd.json",
   "evaluation_report": "evaluation/评测报告.md",
   "candidate_notes": "交付候选说明.md",
   "preserved_originals": {
@@ -29,31 +29,30 @@
     "recovery_copy": "outside_repository"
   },
   "backend": {
-    "passed": 662,
+    "passed": 648,
     "failed": 0,
-    "skipped": 2,
+    "skipped": 1,
     "warnings": 2,
-    "skip_reason": "slow import E2E not enabled; legacy capability-context discovery unavailable",
-    "evidence": "validation/candidate_machine.json"
+    "skip_reason": "legacy capability-context discovery test; independent real PDF E2E executed",
+    "evidence": "validation/candidate_machine_61d47bd.json"
   },
-  "frontend_build": "NOT_RERUN_FRONTEND_UNCHANGED",
+  "frontend_build": "PASS",
   "browser": {
     "actual_pages": 9,
     "viewports": 2,
     "status": "PASS",
-    "targeted_contracts": 6,
-    "scope": "previous 61d47bd automated check plus user PASS; no frontend changes"
+    "targeted_contracts": 6
   },
   "fresh_model_reports": {
-    "run_id": "s1_revision_c5a2f34",
-    "S1": "DEGRADED",
-    "S2": "NOT_RUN_ON_CURRENT_CODE",
-    "S3": "NOT_RUN_ON_CURRENT_CODE",
-    "Q2": "NOT_RUN_ON_CURRENT_CODE",
-    "new_calls": 3,
+    "run_id": "candidate_61d47bd",
+    "S1": "PASS",
+    "S2": "PASS",
+    "S3": "PASS",
+    "Q2": "PASS_SUPPLEMENTAL",
+    "new_calls": 4,
     "local_cache_hits": 0,
     "model": "deepseek-flash",
-    "scope": "S1 only; earlier failed revisions retained in candidate_machine.json"
+    "scope": "Final fixed candidate; all returned model identities verified; prior timeout kept separately"
   },
   "previous_candidate_run": {
     "commit": "be19ef4",
@@ -79,15 +78,19 @@
   "post_human_final_e2e": "NOT_RUN_WAITING_FOR_USER",
   "github_delivery": {
     "branch": "codex/delivery-repair-20260928",
-    "status": "PENDING_PUSH",
-    "verified_content_commit": null,
+    "status": "PUSHED_WORK_BRANCH",
+    "verified_content_commit": "0b994f7584d44aacd582c2ba31845fbb66682469",
     "merged_to_main": false,
     "release_published": false,
-    "note": "应用源码绑定c5a2f3430f8c0346b3952c85b55dcd889dbb246e；后续仅更新评测关联文档"
+    "note": "后续仅补记推送与并行主分支更新回执；应用源码仍绑定61d47bd"
   },
   "workflow_checks": {
-    "scope": "previous 61d47bd run retained separately; not claimed as new-code full E2E",
-    "S1_downloads": "PASS"
+    "original_and_import_paths": "PASS_TESTED_SCOPE",
+    "real_hybrid_retrieval": "PASS",
+    "knowledge_source_downloads": "PASS_8",
+    "word_pdf_downloads": "PASS_8",
+    "draft_edit_confirm_simulated_receipt_idempotence": "PASS_4",
+    "rule_decision_topic_and_pending_review": "PASS"
   },
   "bonus": {
     "heatmap_and_tracking": "UI_ROUTES_VERIFIED",
@@ -102,13 +105,5 @@
     "status": "NOT_INCLUDED_NOT_VALIDATED",
     "scope": "本候选保留已验证v12；未覆盖队友提交，未把v12证据迁移到v13"
   },
-  "previous_complete_candidate_run": "validation/candidate_run_61d47bd.json",
-  "content_review_candidate": {
-    "run_id": "s1_revalidated_c5a2f34",
-    "source_call_id": 79,
-    "new_model_calls": 0,
-    "status": "PENDING",
-    "record": "validation/candidate_review.json"
-  },
-  "model_budget": "EXHAUSTED_EXISTING_ROLLING_DAY_CAP"
+  "historical": true
 }

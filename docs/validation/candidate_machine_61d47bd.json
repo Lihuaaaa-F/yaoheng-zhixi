@@ -1,0 +1,447 @@
+{
+  "candidate_code_commit": "61d47bdd46f9482b366a84c495748ee4e8114f40",
+  "application_source_sha256": "5416f97025c77ca0a0fb690d347c8729ea27b46c8a6726f1cc78659c6b032a80",
+  "scope": "machine validation before candidate human review",
+  "backend": {
+    "passed": 648,
+    "failed": 0,
+    "skipped": 1,
+    "warnings": 2,
+    "skip_reason": "legacy capability-context discovery test; independent real PDF E2E executed"
+  },
+  "frontend_build": "PASS",
+  "frontend_node_tests": {
+    "passed": 2
+  },
+  "browser": {
+    "live_pages": 9,
+    "viewports": 2,
+    "targeted_contracts": 6,
+    "console_errors": 0
+  },
+  "independent_calculation": {
+    "checks": 2160,
+    "specification_checks": 32,
+    "max_relative_error": "0",
+    "official_answer_certification": false
+  },
+  "source_downloads": {
+    "checked": 8,
+    "status": "PASS"
+  },
+  "scenarios": [
+    {
+      "scenario": "S1",
+      "job_id": "26d38b79c3db4cd6b4b8b5ce1a4db128",
+      "narrative_status": "PASS",
+      "execution_status": "COMPLETED",
+      "capability_status": "PASS",
+      "human_review_status": "PENDING",
+      "local_model_cache_hit": false,
+      "usage": {
+        "prompt_tokens": 5574,
+        "completion_tokens": 5533,
+        "total_tokens": 11107,
+        "calls": 1
+      },
+      "calls": [
+        {
+          "requested_model": "deepseek-flash",
+          "returned_model": "deepseek-flash",
+          "identity_status": "VERIFIED_EXACT",
+          "reason": "响应model与请求一致",
+          "call_id": 65,
+          "endpoint": "https://api.deepseek.com/chat/completions"
+        }
+      ],
+      "model_identity": {
+        "status": "VERIFIED",
+        "requested": "deepseek-flash",
+        "returned": [
+          "deepseek-flash"
+        ],
+        "reason": "全部调用响应model经核验一致"
+      },
+      "unit_validation": {
+        "benchmark/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "benchmark/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "materials/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "materials/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        }
+      },
+      "alert_coverage": {},
+      "retrieval": {
+        "status": "PASS",
+        "mode": "hybrid",
+        "recall_status": "RECALLED",
+        "knowledge_version": "1af4930746dec54294bc",
+        "framework": "llama-index-core BaseRetriever/TextNode"
+      },
+      "template_version": "166fadc89f8800fc7e170eaba74c037e4aaa6f39b9c2a88669a2008a3eaadc1e",
+      "artifacts": {
+        "docx": {
+          "sha256": "a465a074ef64b6025f7cd27c7c80daa0c57342ec3d5460f8cc422d719296b340",
+          "bytes": 265695,
+          "publication": "LOCAL_ONLY_CANDIDATE"
+        },
+        "pdf": {
+          "sha256": "60c8a2740d31d36f97373ca9e0d4c0d820a790796ff30cf3e6eba557bcf72381",
+          "bytes": 1161175,
+          "publication": "LOCAL_ONLY_CANDIDATE"
+        }
+      },
+      "rpa": {
+        "notification": "SIMULATED_SENT",
+        "idempotent": true,
+        "edited_before_confirm": true,
+        "human_acknowledgement": "NOT_ENTERED"
+      }
+    },
+    {
+      "scenario": "S2",
+      "job_id": "18f7f2a746024785b4953b6fe6ce685f",
+      "narrative_status": "PASS",
+      "execution_status": "COMPLETED",
+      "capability_status": "PASS",
+      "human_review_status": "PENDING",
+      "local_model_cache_hit": false,
+      "usage": {
+        "prompt_tokens": 5507,
+        "completion_tokens": 3978,
+        "total_tokens": 9485,
+        "calls": 1
+      },
+      "calls": [
+        {
+          "requested_model": "deepseek-flash",
+          "returned_model": "deepseek-flash",
+          "identity_status": "VERIFIED_EXACT",
+          "reason": "响应model与请求一致",
+          "call_id": 66,
+          "endpoint": "https://api.deepseek.com/chat/completions"
+        }
+      ],
+      "model_identity": {
+        "status": "VERIFIED",
+        "requested": "deepseek-flash",
+        "returned": [
+          "deepseek-flash"
+        ],
+        "reason": "全部调用响应model经核验一致"
+      },
+      "unit_validation": {
+        "benchmark/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "benchmark/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "materials/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "materials/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        }
+      },
+      "alert_coverage": {},
+      "retrieval": {
+        "status": "PASS",
+        "mode": "hybrid",
+        "recall_status": "RECALLED",
+        "knowledge_version": "1af4930746dec54294bc",
+        "framework": "llama-index-core BaseRetriever/TextNode"
+      },
+      "template_version": "166fadc89f8800fc7e170eaba74c037e4aaa6f39b9c2a88669a2008a3eaadc1e",
+      "artifacts": {
+        "docx": {
+          "sha256": "df7934fad57fc4132f6a01c3c858192e7fe70b5a1e213737b1fc45c78af9c140",
+          "bytes": 263402,
+          "publication": "LOCAL_ONLY_CANDIDATE"
+        },
+        "pdf": {
+          "sha256": "66281299dc554ddc43312376ac44c2ca1a23e70fea3960eb9314b4d9c0e926b1",
+          "bytes": 1185925,
+          "publication": "LOCAL_ONLY_CANDIDATE"
+        }
+      },
+      "rpa": {
+        "notification": "SIMULATED_SENT",
+        "idempotent": true,
+        "edited_before_confirm": true,
+        "human_acknowledgement": "NOT_ENTERED"
+      }
+    },
+    {
+      "scenario": "S3",
+      "job_id": "41c7b2c4208d426b8812dbe12e6172e1",
+      "narrative_status": "PASS",
+      "execution_status": "COMPLETED",
+      "capability_status": "PASS",
+      "human_review_status": "PENDING",
+      "local_model_cache_hit": false,
+      "usage": {
+        "prompt_tokens": 7649,
+        "completion_tokens": 7795,
+        "total_tokens": 15444,
+        "calls": 1
+      },
+      "calls": [
+        {
+          "requested_model": "deepseek-flash",
+          "returned_model": "deepseek-flash",
+          "identity_status": "VERIFIED_EXACT",
+          "reason": "响应model与请求一致",
+          "call_id": 67,
+          "endpoint": "https://api.deepseek.com/chat/completions"
+        }
+      ],
+      "model_identity": {
+        "status": "VERIFIED",
+        "requested": "deepseek-flash",
+        "returned": [
+          "deepseek-flash"
+        ],
+        "reason": "全部调用响应model经核验一致"
+      },
+      "unit_validation": {
+        "benchmark/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "benchmark/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "labor/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "labor/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "materials/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "materials/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "overhead/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "overhead/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        }
+      },
+      "alert_coverage": {
+        "alert-ae6cfac6295472537aa5": {
+          "covered": true,
+          "element_key": "materials",
+          "basis": "total"
+        },
+        "alert-a3392a1012a3bdbfd2a9": {
+          "covered": true,
+          "element_key": "labor",
+          "basis": "total"
+        },
+        "alert-918366df38ec19897ded": {
+          "covered": true,
+          "element_key": "overhead",
+          "basis": "total"
+        }
+      },
+      "retrieval": {
+        "status": "PASS",
+        "mode": "hybrid",
+        "recall_status": "RECALLED",
+        "knowledge_version": "1af4930746dec54294bc",
+        "framework": "llama-index-core BaseRetriever/TextNode"
+      },
+      "template_version": "166fadc89f8800fc7e170eaba74c037e4aaa6f39b9c2a88669a2008a3eaadc1e",
+      "artifacts": {
+        "docx": {
+          "sha256": "d5684a419fffe99d60103b0558ca2df69f55c65439fcea43d0c6662b208e364f",
+          "bytes": 274360,
+          "publication": "LOCAL_ONLY_CANDIDATE"
+        },
+        "pdf": {
+          "sha256": "84ff542eb4ee2afbe8b66cf3aed25b7e313175862542aa91dab572a8e0504117",
+          "bytes": 1229233,
+          "publication": "LOCAL_ONLY_CANDIDATE"
+        }
+      },
+      "rpa": {
+        "notification": "SIMULATED_SENT",
+        "idempotent": true,
+        "edited_before_confirm": true,
+        "human_acknowledgement": "NOT_ENTERED"
+      }
+    },
+    {
+      "scenario": "Q2",
+      "job_id": "a662033ea6b547d69da5ae9585bdbbe1",
+      "narrative_status": "PASS",
+      "execution_status": "COMPLETED",
+      "capability_status": "PASS",
+      "human_review_status": "PENDING",
+      "local_model_cache_hit": false,
+      "usage": {
+        "prompt_tokens": 8523,
+        "completion_tokens": 5019,
+        "total_tokens": 13542,
+        "calls": 1
+      },
+      "calls": [
+        {
+          "requested_model": "deepseek-flash",
+          "returned_model": "deepseek-flash",
+          "identity_status": "VERIFIED_EXACT",
+          "reason": "响应model与请求一致",
+          "call_id": 68,
+          "endpoint": "https://api.deepseek.com/chat/completions"
+        }
+      ],
+      "model_identity": {
+        "status": "VERIFIED",
+        "requested": "deepseek-flash",
+        "returned": [
+          "deepseek-flash"
+        ],
+        "reason": "全部调用响应model经核验一致"
+      },
+      "unit_validation": {
+        "benchmark/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "benchmark/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "labor/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "labor/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "materials/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "materials/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "overhead/explanation": {
+          "status": "PASS",
+          "frozen": true
+        },
+        "overhead/recommendation": {
+          "status": "PASS",
+          "frozen": true
+        }
+      },
+      "alert_coverage": {
+        "alert-f63295afdd8152cfe65f": {
+          "covered": true,
+          "element_key": "materials",
+          "basis": "total"
+        },
+        "alert-4dfbe0c1984e3bac496f": {
+          "covered": true,
+          "element_key": "labor",
+          "basis": "total"
+        },
+        "alert-0c80378a697b26dda64c": {
+          "covered": true,
+          "element_key": "overhead",
+          "basis": "total"
+        }
+      },
+      "retrieval": {
+        "status": "PASS",
+        "mode": "hybrid",
+        "recall_status": "RECALLED",
+        "knowledge_version": "1af4930746dec54294bc",
+        "framework": "llama-index-core BaseRetriever/TextNode"
+      },
+      "template_version": "166fadc89f8800fc7e170eaba74c037e4aaa6f39b9c2a88669a2008a3eaadc1e",
+      "artifacts": {
+        "docx": {
+          "sha256": "1191d91911a9f91776795e3db261c7723f80106f2d02d9d94c6615b4de6106d8",
+          "bytes": 271478,
+          "publication": "LOCAL_ONLY_CANDIDATE"
+        },
+        "pdf": {
+          "sha256": "cc1d547bb1e55bc0c83d79acc0e5d46df859343ae33ddab264e14328bc7b2dd4",
+          "bytes": 1223349,
+          "publication": "LOCAL_ONLY_CANDIDATE"
+        }
+      },
+      "rpa": {
+        "notification": "SIMULATED_SENT",
+        "idempotent": true,
+        "edited_before_confirm": true,
+        "human_acknowledgement": "NOT_ENTERED"
+      }
+    }
+  ],
+  "page_counts": [
+    {
+      "scenario": "S1",
+      "original_pdf_pages": 16,
+      "candidate_pdf_pages": 16,
+      "layout_adjustment": false
+    },
+    {
+      "scenario": "S2",
+      "original_pdf_pages": 17,
+      "candidate_pdf_pages": 19,
+      "layout_adjustment": false
+    },
+    {
+      "scenario": "S3",
+      "original_pdf_pages": 18,
+      "candidate_pdf_pages": 18,
+      "layout_adjustment": false
+    },
+    {
+      "scenario": "Q2",
+      "original_pdf_pages": 18,
+      "candidate_pdf_pages": 17,
+      "layout_adjustment": false
+    }
+  ],
+  "fresh_model_attempts": 4,
+  "local_model_cache_hits": 0,
+  "prior_candidate": {
+    "code_commit": "be19ef4",
+    "new_attempts": 5,
+    "S2": "READ_TIMEOUT_NO_RETRY",
+    "scope": "Separate earlier candidate; retained and excluded from final denominator"
+  },
+  "human_review": "PENDING",
+  "competition_ready": false,
+  "data_content_publication": "candidate samples and raw request/response logs local only"
+}

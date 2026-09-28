@@ -1,59 +1,50 @@
 {
-  "status": "REVISION_REQUIRED",
-  "run_id": "candidate_61d47bd",
-  "code_commit": "61d47bdd46f9482b366a84c495748ee4e8114f40",
+  "status": "PENDING_CONTENT_REVIEW",
+  "run_id": "s1_revalidated_c5a2f34",
+  "code_commit": "c5a2f3430f8c0346b3952c85b55dcd889dbb246e",
   "scope": "比赛评测候选，独立于网站业务验收",
+  "web_check": {
+    "status": "PASS",
+    "scope": "用户检查61d47bd网页通过；本次未修改前端"
+  },
   "records": [
     {
       "scenario": "S1",
-      "status": "REVISION_REQUIRED",
-      "attribution_score": 2,
-      "reviewer": "胡珺杰",
+      "status": "PENDING",
+      "attribution_score": null,
+      "reviewer": null,
+      "job_id": null,
       "artifact_hashes": {
-        "docx": "a465a074ef64b6025f7cd27c7c80daa0c57342ec3d5460f8cc422d719296b340",
-        "pdf": "60c8a2740d31d36f97373ca9e0d4c0d820a790796ff30cf3e6eba557bcf72381"
+        "docx": "058394afc1f15e71d0660de44fc6b50ac594151250487b88b140ae0ba761e85b",
+        "pdf": "88e03665bdb72001868a0c5c7dbe6a9880161280381828df6f53de2768786963"
       },
-      "job_id": "26d38b79c3db4cd6b4b8b5ce1a4db128",
-      "review_source": "用户本轮明确评分",
-      "feedback": "归因过度保守，缺证清单不能辅助判断根因；需要几种较大可能性的推测、排序依据，以及补齐数据后可达到的归因效果。"
+      "source_job_id": "cb3e96ba929d4a498ad5db47186af773"
     },
     {
       "scenario": "S2",
-      "status": "PENDING",
+      "status": "NOT_GENERATED_ON_CURRENT_CODE",
       "attribution_score": null,
-      "reviewer": null,
-      "artifact_hashes": {
-        "docx": "df7934fad57fc4132f6a01c3c858192e7fe70b5a1e213737b1fc45c78af9c140",
-        "pdf": "66281299dc554ddc43312376ac44c2ca1a23e70fea3960eb9314b4d9c0e926b1"
-      },
-      "job_id": "18f7f2a746024785b4953b6fe6ce685f"
+      "reviewer": null
     },
     {
       "scenario": "S3",
-      "status": "PENDING",
+      "status": "NOT_GENERATED_ON_CURRENT_CODE",
       "attribution_score": null,
-      "reviewer": null,
-      "artifact_hashes": {
-        "docx": "d5684a419fffe99d60103b0558ca2df69f55c65439fcea43d0c6662b208e364f",
-        "pdf": "84ff542eb4ee2afbe8b66cf3aed25b7e313175862542aa91dab572a8e0504117"
-      },
-      "job_id": "41c7b2c4208d426b8812dbe12e6172e1"
+      "reviewer": null
     },
     {
       "scenario": "Q2",
-      "status": "PENDING",
+      "status": "NOT_GENERATED_ON_CURRENT_CODE",
       "attribution_score": null,
-      "reviewer": null,
-      "artifact_hashes": {
-        "docx": "1191d91911a9f91776795e3db261c7723f80106f2d02d9d94c6615b4de6106d8",
-        "pdf": "cc1d547bb1e55bc0c83d79acc0e5d46df859343ae33ddab264e14328bc7b2dd4"
-      },
-      "job_id": "a662033ea6b547d69da5ae9585bdbbe1"
+      "reviewer": null
     }
   ],
-  "historical_scores": "原 A4 S1/S2/S3 各4分，不迁移；Q2不计必测分母",
-  "web_check": {
-    "status": "PASS",
-    "source": "用户本轮明确反馈"
-  }
+  "previous_candidate_review": "candidate_review_61d47bd.json",
+  "previous_S1_score": 2,
+  "historical_scores": "原A4 S1/S2/S3各4分只对应原件；61d47bd S1=2分只对应已评文件；均不迁移；Q2不计必测分母",
+  "mode": "RECORDED_RESPONSE_REVALIDATION",
+  "new_model_calls": 0,
+  "current_fresh_model_validation": "DEGRADED",
+  "source_call_id": 79,
+  "source_code_commit": "d9338a018222acf8165a84c8942f596d35c6fb41"
 }
