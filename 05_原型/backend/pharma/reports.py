@@ -463,6 +463,48 @@ def benchmark_labels(comparison):
     return left, right, direction
 
 
+def _full_template_context(context_id):
+    """导入数据报告（imp-*）与竞赛共用同一套完整 Word 模板管线。
+
+    仅精确放行 competition 与 imp- 前缀；synthetic-pharma / mechanical_demo
+    等演示上下文继续走 reference 简版（其测试合同依赖此行为）。
+    """
+    return context_id=='pharmaceutical:competition' or str(context_id).startswith('pharmaceutical:imp-')
+
+def _is_import(snapshot):
+    return snapshot.get('data_provenance')=='user_import'
+
+# 导入数据集要素键为英文单数（data_import 预设映射 element:material），
+# 模板绑定合同与竞赛快照一致使用复数键；仅此一对键需要显示层映射。
+_IMPORT_VIEW_MAP={'material':'materials'}
+
+def _import_template_view(snapshot,narrative=None):
+    """导入快照的显示层适配：单数要素键映射为模板合同的复数键。
+
+    只改键名（elements[].key / trend 行键 / findings[].section），不改任何
+    数值与文本；metrics 不映射（build_bindings 不读要素级指标，模型解释的
+    metric_refs 仍指向单数指标键）。幂等：已是复数键的快照原样返回。
+    缺要素时显式报错（IMPORT_ELEMENTS_INCOMPLETE）：导入质检仅要求 ≥1 个
+    要素列（data_import/import_pipeline），改道后 build_bindings 对三要素键
+    硬索引会抛裸 KeyError，这里给出可读的中文失败原因（刻意行为收窄，
+    此前此类快照可出 3 页 reference 简版）。
+    """
+    view=json.loads(json.dumps(snapshot))
+    for e in view.get('elements',[]):
+        if e.get('key') in _IMPORT_VIEW_MAP:e['key']=_IMPORT_VIEW_MAP[e['key']]
+    for row in view.get('trend',[]):
+        for k in list(row):
+            if k in _IMPORT_VIEW_MAP:row[_IMPORT_VIEW_MAP[k]]=row.pop(k)
+    keys={e.get('key') for e in view.get('elements',[])}
+    missing=[k for k in ('materials','labor','overhead') if k not in keys]
+    if missing:raise ValueError('IMPORT_ELEMENTS_INCOMPLETE: 缺少成本要素 '+','.join(missing)+'；导入数据需映射材料/人工/制造费用三要素列后再生成报告')
+    if narrative is None:return view
+    narrative=json.loads(json.dumps(narrative))
+    for f in narrative.get('findings',[]):
+        if f.get('section') in _IMPORT_VIEW_MAP:f['section']=_IMPORT_VIEW_MAP[f['section']]
+    return view,narrative
+
+
 def build_bindings(snapshot,narrative,benchmark=None):
     m=snapshot['metrics']; els={e['key']:e for e in snapshot['elements']}; quarterly=snapshot['analysis_type']=='quarterly'
     period=snapshot.get('period',{}); label=(period.get('start','')+' 至 '+period.get('end','')) if quarterly else snapshot['month']
@@ -512,7 +554,12 @@ def build_bindings(snapshot,narrative,benchmark=None):
     def prose(section):
         return '\n'.join(f.get('rendered_text',f.get('text','')) for f in findings if f.get('section')==section and f.get('claim_type') in ('hypothesis','insufficient_evidence'))
     material=els['materials']
-    material_text='直接材料每盒 '+number(material['unit'])+' 元，比上期变动 '+number(material.get('unit_delta'))+' 元，占单位成本变动的 '+number(material.get('unit_contribution'))+'%。'
+    # 竞赛要素恒有 unit_contribution（单位口径，metrics.py）；导入要素只有按
+    # 快照口径（basis）计算的 contribution——回退时句子措辞随口径切换，
+    # 不把总额口径贡献说成单位成本占比。
+    _mc=material.get('unit_contribution')
+    material_text='直接材料每盒 '+number(material['unit'])+' 元，比上期变动 '+number(material.get('unit_delta'))+' 元，'+('占单位成本变动的 '+number(_mc) if _mc is not None else ('占总成本环比变动的 '+number(material.get('contribution')) if snapshot.get('basis')=='total' else '占单位成本（环比）变动的 '+number(material.get('contribution'))))+'%。'
+
     rows=snapshot.get('materials_summary',[])
     if rows:
         material_text+='\n'+'；'.join(r.get('name','')+'：'+number(r.get('previous'))+' → '+number(r.get('current'))+' 元/盒，变动 '+number(r.get('delta'))+' 元/盒，占材料增量 '+number(r.get('contribution'))+'%' for r in rows[:4])+'。'
@@ -555,7 +602,9 @@ def build_bindings(snapshot,narrative,benchmark=None):
     for side,factory in (('left',left),('right',right)):
         label=(benchmark_details.get(side) or {}).get('data_label')
         if label:synthetic_notes.append(factory+'明细：'+label)
-    values['差异归因分析文本']=(prose('benchmark') or '三要素差额用于定位核查重点。请两厂成本会计核对同规格的领料、工时与费用分摊记录。')+('数据边界：'+'；'.join(synthetic_notes)+'。' if synthetic_notes else '')
+    # 导入无对标时默认句不再虚构"两厂核对"场景（与五章标题替换同口径）。
+    _bm_default='未选择跨厂比较；不构造明细或归因。' if _is_import(snapshot) and not (benchmark or {}).get('elements',[]) else '三要素差额用于定位核查重点。请两厂成本会计核对同规格的领料、工时与费用分摊记录。'
+    values['差异归因分析文本']=(prose('benchmark') or _bm_default)+('数据边界：'+'；'.join(synthetic_notes)+'。' if synthetic_notes else '')
     # 本月亮点（2026-09-21 修复 #11）：从注册指标与行业分位确定性生成，
     # 不再输出通用管理提示。每条都绑定可核对数字；无显著改善时如实说明。
     highlights=[]
@@ -587,12 +636,17 @@ def build_bindings(snapshot,narrative,benchmark=None):
             except Exception:pass
     values['本月亮点']=('；'.join(highlights)+'。') if highlights else ('本期单位成本 '+number(m['unit_cost'])+' 元/盒，产量 '+number(m['quantity'],0)+' 盒；本期无显著优于基期或行业中位的确定性亮点。')
     detail_note='；'.join(synthetic_notes) if synthetic_notes else '缺失的工厂原料明细仍须补充，汇总差异不能替代真实下钻'
-    values['需关注问题']='原料成本变化不能直接等同采购价变化。平均小时工资为题包折算口径，不能据此认定基础薪率上调。跨厂原料差异需核对两厂明细：'+detail_note+'。'
+    # 导入数据的"题包折算口径/跨厂合成明细"失实，改用快照自带的数据边界
+    # （limits[0] 是数据来源标签，不作问题列出）；竞赛保留题包口径话术。
+    if _is_import(snapshot):
+        values['需关注问题']='数据边界：'+'；'.join([x for x in (snapshot.get('limits') or [])[1:] if x])+'。'
+    else:
+        values['需关注问题']='原料成本变化不能直接等同采购价变化。平均小时工资为题包折算口径，不能据此认定基础薪率上调。跨厂原料差异需核对两厂明细：'+detail_note+'。'
     delta=changes.get('unit_cost',{}).get('mom',{}).get('delta')
     values['合计贡献度']='100.00' if delta is not None and Decimal(delta)!=0 else 'N/A（总变动为0或无基期）'
     return values
 
-def sanitize_template_identity(doc):
+def sanitize_template_identity(doc,snapshot=None):
     """Replace author/reviewer metadata and decorative textbox branding by role.
 
     The original template stays read-only. No original personal name or company
@@ -601,6 +655,11 @@ def sanitize_template_identity(doc):
     # 模板 md 规定的固定值（2026-09-21 真人评审三轮：模板已显示的以模板为准）
     labels = {'编制人': '财务部成本会计', '审核人': '财务总监',
               '编制单位': '中药一厂 财务部', '企业名称': '中药一厂', '数据来源': 'ERP系统成本模块'}
+    # 导入数据的报告"数据来源=ERP系统成本模块"失实，按快照数据标签如实改写
+    # （用户导入恒为"用户导入数据（数据中心发布）"，industry._import_or_pack_label）；
+    # 该标签不在模板占位符清单内，不会被 setdefault(NA) 覆写。竞赛快照不触发。
+    if snapshot is not None and _is_import(snapshot) and snapshot.get('data_label'):
+        labels['数据来源']=str(snapshot['data_label'])
     for table in doc.tables:
         for row in table.rows:
             for index, cell in enumerate(row.cells[:-1]):
@@ -615,6 +674,20 @@ def sanitize_template_identity(doc):
     for part in parts:
         # 2026-09-21 四轮（用户裁定）：模板水印文字原样保留，不再改写。
         pass
+    # 导入报告版式对齐 69485c9d 样张（2026-09-28）：样张与主runtime已装模板的
+    # 分节均无正文页眉（logo/"整体解决方案"/创灵境水印），而新归一化模板按
+    # 2026-09-24 修复保留活页眉引用，导入报告会每页出现样张没有的页眉水印并与
+    # 表格正文叠压。导入分支确定性地清空各节页眉内容（页脚页码保留）；竞赛
+    # 路径不触发，维持 2b4c575 的水印原样裁定。
+    if snapshot is not None and _is_import(snapshot):
+        for section in doc.sections:
+            for hdr in (section.header, section.first_page_header, section.even_page_header):
+                # linked 页眉无自有内容（继承前节）；读取会触发 python-docx 凭空
+                # 建定义，必须先跳过（2026-09-28 实测 headerReference 0→1 副作用）。
+                if hdr.is_linked_to_previous:continue
+                for p in hdr.paragraphs:
+                    for r in list(p.runs):r._element.getparent().remove(r._element)
+                for tbl in list(hdr.tables):tbl._element.getparent().remove(tbl._element)
     doc.core_properties.author = '药衡智析演示团队'
     doc.core_properties.last_modified_by = '药衡智析'
 
@@ -629,7 +702,11 @@ def insert_element_analysis(doc, snapshot, bindings):
         if anchor is None:
             raise ValueError('MISSING_COST_SECTION:'+key)
         element = elements[key]
-        anchor.insert_paragraph_before(element['name']+'每盒 '+number(element['unit'])+' 元，比上期变动 '+number(element.get('unit_delta'))+' 元，占单位成本环比变动 '+number(element.get('unit_contribution'))+'%。'+caution)
+        # 与材料归因句同口径：竞赛恒有 unit_contribution；导入回退 basis 口径贡献，
+        # 措辞随 snapshot.basis 切换（total→总额口径），不虚构单位成本占比。
+        _uc=element.get('unit_contribution')
+        _share='占单位成本环比变动 '+number(_uc)+'%。' if _uc is not None else ('占总成本环比变动 '+number(element.get('contribution'))+'%。' if snapshot.get('basis')=='total' else '占单位成本（环比）变动 '+number(element.get('contribution'))+'%。')
+        anchor.insert_paragraph_before(element['name']+'每盒 '+number(element['unit'])+' 元，比上期变动 '+number(element.get('unit_delta'))+' 元，'+_share+caution)
         if bindings.get(binding):
             anchor.insert_paragraph_before(bindings[binding])
 
@@ -668,7 +745,7 @@ def explanation_presence(path, narrative, scoped=True):
 def render_docx(snapshot,narrative,evidence,output,benchmark=None):
     from .narrative import merge_rescued_evidence
     evidence=merge_rescued_evidence(evidence,narrative)
-    if snapshot.get('context_id') and snapshot['context_id']!='pharmaceutical:competition':
+    if snapshot.get('context_id') and not _full_template_context(snapshot['context_id']):
         from .reference_report import render
         result=render(snapshot,narrative,evidence,output,benchmark)
         check=verify_docx(output,snapshot,narrative=narrative)
@@ -676,6 +753,7 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
         validate_word_compat(output)
         result['verification']=check
         return result
+    if _is_import(snapshot):snapshot,narrative=_import_template_view(snapshot,narrative)
     from docx import Document
     from .narrative import render_visible_text
     narrative=json.loads(json.dumps(narrative))
@@ -690,7 +768,7 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
     if template_path == TEMPLATE:
         ensure_working_template()
     meta=json.loads(template_map.read_text());doc=Document(template_path)
-    sanitize_template_identity(doc)
+    sanitize_template_identity(doc,snapshot)
     values=build_bindings(snapshot,narrative,benchmark)
     for entry in meta['placeholders']:values.setdefault(entry['field'], NA)
     dynamic={k for k in values if '表格' in k}
@@ -711,6 +789,10 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
             ('均为可选组件，并非一次性全部实施','按报告使用方的权限与场景按需提供'),
             ('明确技术架构、实施计划、系统配置','维护系统配置与账号权限'),
         ]
+        # 导入数据无跨厂对标时，模板静态章标题的"与中药二厂"失实（竞赛专属文本
+        # 仅此一处章标题，已安装模板 w:t 全量核实）；与 5.3 默认句同口径。
+        if _is_import(snapshot) and not (benchmark or {}).get('elements',[]):
+            replacements.append(('五、对标分析（与中药二厂）','五、对标分析（未选择跨厂比较）'))
         if snapshot['analysis_type']=='quarterly':
             replacements += [('本月','本季度'),('上月','上季度'),('去年同月','去年同季'),('分析月份','分析期间')]
         rewrite_template_prose(p,replacements)
@@ -976,8 +1058,15 @@ def render_docx(snapshot,narrative,evidence,output,benchmark=None):
     # 人工归因评分要有可填写的区域（表单）而非一行文字。内容先建齐，再统一
     # 走美化/编号/字体管线。
     doc.add_paragraph('七、编制说明').style=doc.styles['Heading 2']
-    doc.add_paragraph(compilation_note(narrative))
-    doc.add_paragraph('数据说明：本报告使用比赛模拟数据。事实、原因假设与缺失证据分别标注；整改任务确认后仅模拟发送。')
+    # 数据来源话术按快照来源分流（2026-09-28 导入报告改道完整模板）：导入数据
+    # 写"ERP系统/比赛模拟数据"失实，数据来源取快照标签、解释来源沿用
+    # compilation_note 的 mode-aware 口径；竞赛两行保持远程重构后原样。
+    if _is_import(snapshot):
+        doc.add_paragraph('本报告由成本智能分析系统自动生成，数据来源于'+str(snapshot.get('data_label') or '用户导入数据（数据中心发布）')+'。'+compilation_note(narrative).split('。',1)[1])
+        doc.add_paragraph('本报告依据用户导入数据及当前知识版本生成。缺失字段不推算为真实数据，原因判断须结合业务资料核实。')
+    else:
+        doc.add_paragraph(compilation_note(narrative))
+        doc.add_paragraph('数据说明：本报告使用比赛模拟数据。事实、原因假设与缺失证据分别标注；整改任务确认后仅模拟发送。')
     doc.add_paragraph('八、知识库引用').style=doc.styles['Heading 2']
     def _kb_ref(keyword,default_doc):
         for e in evidence.get('evidence',[]):
@@ -1053,12 +1142,16 @@ def compilation_note(narrative):
 
 
 def verify_docx(path,snapshot,sections=None,narrative=None,placeholders=None):
-    if snapshot.get('context_id') and snapshot['context_id']!='pharmaceutical:competition':
+    if snapshot.get('context_id') and not _full_template_context(snapshot['context_id']):
         from .reference_report import verify
         result=verify(path,snapshot)
         result.update(explanation_presence(path,narrative,scoped=False))
         if result['explanation_binding_failures']:result['status']='FAIL'
         return result
+    if _is_import(snapshot):
+        view=_import_template_view(snapshot,narrative)
+        # narrative=None 时适配器只回快照 dict；解包前归一为二元组（2026-09-28 终审）
+        snapshot,narrative=view if isinstance(view,tuple) else (view,None)
     explanation_check=explanation_presence(path,narrative)
     # 书签核对必须用本次渲染的占位符清单（2026-09-22 修复）：用户安装模板的
     # 书签前缀/位置与题包 MAP 不同，死读题包 map 会把全部绑定误判为 null。
@@ -2104,37 +2197,45 @@ def add_reader_charts(doc,snapshot,benchmark,anchors,output):
         pic.add_run().add_picture(str(path),width=Cm(min(width_cm,usable_cm)))
         anchor.addnext(pic._p);pic._p.addnext(cap._p)
         return cap  # 返回题注段，供后续图表链式接排
-    trend=snapshot['trend'];fig,ax=plt.subplots(figsize=(8,2.5))
-    vals=[float(r['unit_cost']) for r in trend];ax.plot([r['month'] for r in trend],vals,'o-',color='#176C8C');ax.set_ylabel('单位成本（元/盒）')
-    span=max(vals)-min(vals);margin=max(span*.6,max(vals)*.07);ax.set_ylim(max(0,min(vals)-margin),max(vals)+margin)
-    for i,v in enumerate(vals):ax.annotate(f'{v:.2f}',(i,v),xytext=(0,7),textcoords='offset points',ha='center')
-    ax.grid(axis='y',alpha=.2);insert(fig,'trend',anchors['近6个月成本趋势表格']._p,snapshot['product']+' · '+snapshot['factory']+' · '+trend[0]['month']+' 至 '+trend[-1]['month']+'｜单位成本趋势（纵轴范围见刻度）')
+    # 导入数据产量缺失时 trend 行/要素 unit 可为 None（industry.py 允许），
+    # 画图前统一过滤——竞赛快照值恒存在，过滤结果恒等，输出逐字节不变；
+    # 全部缺失则图整体缺席=诚实缺席（导入产量全缺时今天 reference 路径
+    # number(None)→NA 可渲染，改道后此处裸 float 会 TypeError，改动H 守卫）。
+    trend=[r for r in snapshot['trend'] if r.get('unit_cost') not in (None,'')]
+    if trend:
+        fig,ax=plt.subplots(figsize=(8,2.5))
+        vals=[float(r['unit_cost']) for r in trend];ax.plot([r['month'] for r in trend],vals,'o-',color='#176C8C');ax.set_ylabel('单位成本（元/盒）')
+        span=max(vals)-min(vals);margin=max(span*.6,max(vals)*.07);ax.set_ylim(max(0,min(vals)-margin),max(vals)+margin)
+        for i,v in enumerate(vals):ax.annotate(f'{v:.2f}',(i,v),xytext=(0,7),textcoords='offset points',ha='center')
+        ax.grid(axis='y',alpha=.2);insert(fig,'trend',anchors['近6个月成本趋势表格']._p,snapshot['product']+' · '+snapshot['factory']+' · '+trend[0]['month']+' 至 '+trend[-1]['month']+'｜单位成本趋势（纵轴范围见刻度）')
     els=snapshot['elements']
-    # 占比数据用饼图（2026-09-21 真人评审反馈：占比不应画横向柱状图）
-    fig,ax=plt.subplots(figsize=(6.8,2.9))
-    sizes=[float(e['unit']) for e in els]
-    labels=[e['name']+' '+number(e['unit'])+' 元' for e in els]
-    wedges,texts,autotexts=ax.pie(sizes,labels=labels,autopct=lambda pct:f'{pct:.1f}%',startangle=90,counterclock=False,
-        colors=['#176C8C','#46978D','#82939F','#B08968'][:len(els)],wedgeprops={'linewidth':1.2,'edgecolor':'white'},textprops={'fontsize':9})
-    for t in autotexts:t.set_color('white');t.set_fontsize(8.5)
-    ax.set_aspect('equal')
     anchor=next(p._p for p in doc.paragraphs if p.text.startswith('2.2'))
-    _cap22=insert(fig,'structure',anchor,subtitle+'｜三要素单位成本构成占比',width_cm=13)
-    # 预算对比图（2026-09-23 用户反馈 #11：直观图片偏少）——三要素实际 vs
-    # 预算分组柱，标注偏差%；接排在占比饼图之后（2.2 成本结构节内）。
-    _budget=[(e['name'],float(e['unit']),e.get('budget_unit')) for e in els]
-    _budget=[(n,a,float(b)) for n,a,b in _budget if b not in (None,'','0')]
-    if _budget:
-        fig,ax=plt.subplots(figsize=(6.8,2.9));pos=list(range(len(_budget)))
-        ax.bar([x-.17 for x in pos],[a for _,a,_ in _budget],width=.34,label='本期实际',color='#176C8C')
-        ax.bar([x+.17 for x in pos],[b for _,_,b in _budget],width=.34,label='本期预算',color='#B08968')
-        peak=max(max(a,b) for _,a,b in _budget)
-        for i,(n,a,b) in enumerate(_budget):
-            dev=(a-b)/b*100 if b else 0
-            ax.text(i,max(a,b)+peak*0.04,('+' if dev>=0 else '−')+f'{abs(dev):.1f}%',ha='center',va='bottom',fontsize=8.5,color='#C00000' if dev>0 else '#008000')
-        ax.set_xticks(pos,[n for n,_,_ in _budget]);ax.set_ylabel('元/盒');ax.set_ylim(0,peak*1.22)
-        ax.legend(ncol=2,loc='upper center',frameon=False);ax.grid(axis='y',alpha=.2)
-        insert(fig,'budget',_cap22._p,subtitle+'｜三要素实际与预算对比（柱上为预算偏差）')
+    _els=[e for e in els if e.get('unit') not in (None,'')]  # 饼图与预算柱统一过滤、两图复用（导入产量缺失时 unit 可为 None）
+    if _els:
+        # 占比数据用饼图（2026-09-21 真人评审反馈：占比不应画横向柱状图）
+        fig,ax=plt.subplots(figsize=(6.8,2.9))
+        sizes=[float(e['unit']) for e in _els]
+        labels=[e['name']+' '+number(e['unit'])+' 元' for e in _els]
+        wedges,texts,autotexts=ax.pie(sizes,labels=labels,autopct=lambda pct:f'{pct:.1f}%',startangle=90,counterclock=False,
+            colors=['#176C8C','#46978D','#82939F','#B08968'][:len(_els)],wedgeprops={'linewidth':1.2,'edgecolor':'white'},textprops={'fontsize':9})
+        for t in autotexts:t.set_color('white');t.set_fontsize(8.5)
+        ax.set_aspect('equal')
+        _cap22=insert(fig,'structure',anchor,subtitle+'｜三要素单位成本构成占比',width_cm=13)
+        # 预算对比图（2026-09-23 用户反馈 #11：直观图片偏少）——三要素实际 vs
+        # 预算分组柱，标注偏差%；接排在占比饼图之后（2.2 成本结构节内）。
+        _budget=[(e['name'],float(e['unit']),e.get('budget_unit')) for e in _els]
+        _budget=[(n,a,float(b)) for n,a,b in _budget if b not in (None,'','0')]
+        if _budget:
+            fig,ax=plt.subplots(figsize=(6.8,2.9));pos=list(range(len(_budget)))
+            ax.bar([x-.17 for x in pos],[a for _,a,_ in _budget],width=.34,label='本期实际',color='#176C8C')
+            ax.bar([x+.17 for x in pos],[b for _,_,b in _budget],width=.34,label='本期预算',color='#B08968')
+            peak=max(max(a,b) for _,a,b in _budget)
+            for i,(n,a,b) in enumerate(_budget):
+                dev=(a-b)/b*100 if b else 0
+                ax.text(i,max(a,b)+peak*0.04,('+' if dev>=0 else '−')+f'{abs(dev):.1f}%',ha='center',va='bottom',fontsize=8.5,color='#C00000' if dev>0 else '#008000')
+            ax.set_xticks(pos,[n for n,_,_ in _budget]);ax.set_ylabel('元/盒');ax.set_ylim(0,peak*1.22)
+            ax.legend(ncol=2,loc='upper center',frameon=False);ax.grid(axis='y',alpha=.2)
+            insert(fig,'budget',_cap22._p,subtitle+'｜三要素实际与预算对比（柱上为预算偏差）')
     base=snapshot.get('comparison',{}).get('mom',{}).get('base');current=snapshot['metrics']['unit_cost']['value']
     if base is not None:
         # P2-9（2026-09-23 视觉审查）：改为真瀑布桥接——各要素变动柱自"累计

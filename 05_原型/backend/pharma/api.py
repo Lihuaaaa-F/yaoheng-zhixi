@@ -276,10 +276,12 @@ def _generation_versions(snapshot,req):
     版本键清单单一来源 versions.py（修复 #21）：本函数与 worker 的重提交
     校验从同一组 soft/hard 清单派生，新增键不再双份维护。
     """
-    from .reports import TEMPLATE,normalize_template,working_template
+    from .reports import TEMPLATE,normalize_template,working_template,_full_template_context
     from .narrative import ModelGateway
     from .versions import soft_items,hard_items
-    if snapshot['context_id']=='pharmaceutical:competition':
+    # imp-* 与竞赛同样以工作模板文件哈希为版本键：改道完整模板渲染后，同
+    # snapshot_id 重发不再命中改道前的 reference 简版缓存（键值必变）。
+    if _full_template_context(snapshot['context_id']):
         template_file,_map=working_template(snapshot.get('analysis_type','monthly'))
         if template_file==TEMPLATE and not TEMPLATE.exists():normalize_template()
         template_version=hashlib.sha256(template_file.read_bytes()).hexdigest()
