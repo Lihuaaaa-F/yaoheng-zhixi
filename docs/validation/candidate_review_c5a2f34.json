@@ -1,7 +1,7 @@
 {
-  "status": "PARTIAL_PENDING_S2",
-  "run_id": "sequential_delivery_review",
-  "code_commit": "4b04be55dc66fb39343f1e28d266415e264f3a81",
+  "status": "PARTIAL_S1_CONTENT_PASS",
+  "run_id": "s1_revalidated_c5a2f34",
+  "code_commit": "c5a2f3430f8c0346b3952c85b55dcd889dbb246e",
   "scope": "比赛评测候选，独立于网站业务验收",
   "web_check": {
     "status": "PASS",
@@ -20,28 +20,13 @@
       },
       "source_job_id": "cb3e96ba929d4a498ad5db47186af773",
       "review_source": "用户本轮明确评分",
-      "feedback": "4分，可认为通过",
-      "code_commit": "c5a2f3430f8c0346b3952c85b55dcd889dbb246e",
-      "run_id": "s1_revalidated_c5a2f34",
-      "mode": "RECORDED_RESPONSE_REVALIDATION",
-      "source_call_id": 79,
-      "source_code_commit": "d9338a018222acf8165a84c8942f596d35c6fb41",
-      "new_model_calls": 0
+      "feedback": "4分，可认为通过"
     },
     {
       "scenario": "S2",
-      "status": "PENDING",
+      "status": "NOT_GENERATED_ON_CURRENT_CODE",
       "attribution_score": null,
-      "reviewer": null,
-      "code_commit": "4b04be55dc66fb39343f1e28d266415e264f3a81",
-      "run_id": "s2_current_4b04be5",
-      "mode": "FRESH_MODEL",
-      "job_id": "072fc4c446454c86a21e3e17a449228e",
-      "new_model_calls": 1,
-      "artifact_hashes": {
-        "docx": "09ca50165074d92a01db27ca562650570bac7874375f413392dc98859f572dd7",
-        "pdf": "4793186e1f6153844d634d53db6a6829466e8c4b2652d4661be9552fb2fc92d9"
-      }
+      "reviewer": null
     },
     {
       "scenario": "S3",
@@ -59,11 +44,9 @@
   "previous_candidate_review": "candidate_review_61d47bd.json",
   "previous_S1_score": 2,
   "historical_scores": "原A4 S1/S2/S3各4分只对应原件；61d47bd S1=2分只对应已评文件；均不迁移；Q2不计必测分母",
-  "mode": "PER_ARTIFACT_PROVENANCE",
-  "active_review_scenario": "S2",
-  "fresh_model_validation": {
-    "S1_on_c5a2f34": "DEGRADED",
-    "S1_on_4b04be5": "NOT_RUN",
-    "S2_on_4b04be5": "PASS"
-  }
+  "mode": "RECORDED_RESPONSE_REVALIDATION",
+  "new_model_calls": 0,
+  "current_fresh_model_validation": "DEGRADED",
+  "source_call_id": 79,
+  "source_code_commit": "d9338a018222acf8165a84c8942f596d35c6fb41"
 }

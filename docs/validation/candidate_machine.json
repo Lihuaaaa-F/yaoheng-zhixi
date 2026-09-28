@@ -1,62 +1,41 @@
 {
-  "candidate_code_commit": "c5a2f3430f8c0346b3952c85b55dcd889dbb246e",
-  "application_git_tree": "49988635f5d67d1173266036ee7fdf6fac5cb532",
-  "scope": "S1 attribution revision only; no post-human full E2E or other scenario regeneration",
+  "candidate_code_commit": "4b04be55dc66fb39343f1e28d266415e264f3a81",
+  "application_git_tree": "9a6a085b158657eb0debd8e47a3124b027ea4fef",
+  "scope": "S2 fresh call only; S1 content approval remains attached to c5a2f34 artifacts; no final E2E",
   "backend": {
-    "passed": 662,
+    "passed": 664,
     "failed": 0,
     "skipped": 2,
     "warnings": 2,
     "skip_reason": "slow import E2E not enabled; legacy capability-context discovery unavailable",
     "evidence": "validation/candidate_machine.json"
   },
-  "regression_xml_sha256": "de87191e36933dcea805156393973d7cc0f4c05666772482c3ae0fd86b728497",
-  "frontend": "UNCHANGED; prior build/browser evidence remains bound to 61d47bd; user web check PASS",
+  "regression_xml_sha256": "be4b479d58133bb48f919da1cf3b2086a68b2dee3bee957fec883cbec3cf2ce3",
   "scenarios": [
     {
-      "id": "S1",
-      "job_id": "6154b97a7cc64b0581bc13b7ad98bddf",
+      "scenario": "S2",
+      "commit": "4b04be55dc66fb39343f1e28d266415e264f3a81",
+      "job_id": "072fc4c446454c86a21e3e17a449228e",
       "status": "DEGRADED",
-      "narrative_status": "DEGRADED",
+      "narrative_status": "PASS",
       "calls": [
         {
           "requested_model": "deepseek-flash",
           "returned_model": "deepseek-flash",
           "identity_status": "VERIFIED_EXACT",
           "reason": "响应model与请求一致",
-          "call_id": 80,
-          "endpoint": "https://api.deepseek.com/chat/completions"
-        },
-        {
-          "requested_model": "deepseek-flash",
-          "returned_model": "deepseek-flash",
-          "identity_status": "VERIFIED_EXACT",
-          "reason": "响应model与请求一致",
-          "call_id": 81,
-          "endpoint": "https://api.deepseek.com/chat/completions"
-        },
-        {
-          "requested_model": "deepseek-flash",
-          "returned_model": "deepseek-flash",
-          "identity_status": "VERIFIED_EXACT",
-          "reason": "响应model与请求一致",
-          "call_id": 82,
+          "call_id": 86,
           "endpoint": "https://api.deepseek.com/chat/completions"
         }
       ],
       "usage": {
-        "prompt_tokens": 19713,
-        "completion_tokens": 15118,
-        "total_tokens": 34831,
-        "calls": 3
+        "prompt_tokens": 6377,
+        "completion_tokens": 5606,
+        "total_tokens": 11983,
+        "calls": 1
       },
       "cache_hit": false,
-      "failures": [
-        "materials/explanation: ValueError: price/usage decomposition needs matched comparison-period prices, consumption and output records",
-        "materials/explanation: ValueError: price/usage decomposition needs matched comparison-period prices, consumption and output records",
-        "materials/explanation: ValueError: price/usage decomposition needs matched comparison-period prices, consumption and output records",
-        "materials: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代"
-      ],
+      "failures": [],
       "versions": {
         "renderer": "reader-20260928-branding-v12",
         "model": "deepseek-flash",
@@ -66,12 +45,12 @@
         "attribution": "attribution-v2-bound-snapshot",
         "reasoning_effort": "",
         "retrieval_policy": "af76d98f09fa02205fc7a1ae51be3cd861bf457e0cd701509ccec953a8315496",
-        "validator": "useful-bounded-attribution-v6",
+        "validator": "useful-bounded-attribution-v7",
         "parser": "scope-prefilter-v9-workspace-source-provenance",
         "terminology": "540ade4b03b05c3ca9661b1add0a965587c1b34df111814bbc43c3f50f317705",
         "retriever": "bm25-chroma-prefilter-rrf-v7-vector-completeness",
         "embedding": "a48549b3259a6165364f226599cd91f39923d5d5",
-        "snapshot": "1ce027b520eed8e5c447d71f90670b4a07688e23dc1887165b83e83406e2992f",
+        "snapshot": "52203a1defd095ba7e1bff9c03b81cd74de3119300ee5d7d7228dce0b9871df3",
         "knowledge": "d3750f7c0d029b72f2447853100178c2d7fdefd151d2b1742cba3086e1cb98c7",
         "template": "166fadc89f8800fc7e170eaba74c037e4aaa6f39b9c2a88669a2008a3eaadc1e",
         "context": {
@@ -103,17 +82,46 @@
           "reranker": "none",
           "limit": 8
         },
-        "run_id": "s1_revision_c5a2f34"
+        "run_id": "s2_current_4b04be5"
       },
-      "downloads": {
+      "artifacts": {
         "docx": {
-          "sha256": "f4b08efc0b366527eba7aa56cff97b577dc53e6a869c2dcd07d39a0a1df78cb7",
-          "bytes": 265835
+          "sha256": "09ca50165074d92a01db27ca562650570bac7874375f413392dc98859f572dd7",
+          "bytes": 264131
         },
         "pdf": {
-          "sha256": "e2752abe8387fa6cba22cca835cda574e5ccae47ea6e31f8bd4c35c36d2eb32d",
-          "bytes": 1198858
+          "sha256": "4793186e1f6153844d634d53db6a6829466e8c4b2652d4661be9552fb2fc92d9",
+          "bytes": 1173511
         }
+      },
+      "content_checks": {
+        "pages": 18,
+        "review_pages": [
+          8,
+          9,
+          14
+        ],
+        "sections": [
+          {
+            "section": "materials",
+            "complete_docx": true,
+            "complete_pdf": true,
+            "program_data_prerequisites": []
+          },
+          {
+            "section": "benchmark",
+            "complete_docx": true,
+            "complete_pdf": true,
+            "program_data_prerequisites": [
+              "两厂同期间同规格原料实际采购单价与同批次实耗及合格产出对照明细"
+            ]
+          }
+        ],
+        "capability_status": "PASS",
+        "layout_changed": false,
+        "new_model_calls": 1,
+        "cache_hit": false,
+        "pdf_check": "exclude only exact repeated header and page-number lines when joining page-spanning paragraphs"
       },
       "unit_validation": {
         "benchmark/explanation": {
@@ -125,189 +133,64 @@
           "frozen": true
         },
         "materials/explanation": {
-          "status": "FAILED",
-          "reason": "ValueError: price/usage decomposition needs matched comparison-period prices, consumption and output records"
+          "status": "PASS",
+          "frozen": true
         },
         "materials/recommendation": {
           "status": "PASS",
           "frozen": true
         }
       },
-      "content_checks": null,
-      "human_review": "NOT_READY"
+      "human_review": "PENDING"
     }
   ],
-  "other_scenarios": "S2/S3/Q2 not regenerated on this code; previous 61d47bd samples retain their own provenance",
-  "prior_revision_attempts": [
-    {
-      "commit": "19f831e604af0d4bc08bc3a5f20d1c73d949a277",
-      "job_id": "c25ee9826ccd40c697439b8a30a1ca62",
-      "narrative_status": "PASS",
-      "calls": [
-        {
-          "requested_model": "deepseek-flash",
-          "returned_model": "deepseek-flash",
-          "identity_status": "VERIFIED_EXACT",
-          "reason": "响应model与请求一致",
-          "call_id": 70,
-          "endpoint": "https://api.deepseek.com/chat/completions"
-        }
-      ],
-      "usage": {
-        "prompt_tokens": 5914,
-        "completion_tokens": 5235,
-        "total_tokens": 11149,
-        "calls": 1
+  "previous_S2_attempt": {
+    "commit": "337bf1319b72a345bad48d16165401eb96cbcea8",
+    "job_id": "ad3e32e85b234187829b8b0d664dbd6d",
+    "narrative_status": "DEGRADED",
+    "calls": [
+      {
+        "requested_model": "deepseek-flash",
+        "returned_model": "deepseek-flash",
+        "identity_status": "VERIFIED_EXACT",
+        "reason": "响应model与请求一致",
+        "call_id": 83,
+        "endpoint": "https://api.deepseek.com/chat/completions"
       },
-      "cache_hit": false,
-      "failures": [],
-      "content_status": "NOT_SUBMITTED: yield comparison and decomposition data prerequisites needed correction"
+      {
+        "requested_model": "deepseek-flash",
+        "returned_model": "deepseek-flash",
+        "identity_status": "VERIFIED_EXACT",
+        "reason": "响应model与请求一致",
+        "call_id": 84,
+        "endpoint": "https://api.deepseek.com/chat/completions"
+      },
+      {
+        "requested_model": "deepseek-flash",
+        "returned_model": "deepseek-flash",
+        "identity_status": "VERIFIED_EXACT",
+        "reason": "响应model与请求一致",
+        "call_id": 85,
+        "endpoint": "https://api.deepseek.com/chat/completions"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 19557,
+      "completion_tokens": 18178,
+      "total_tokens": 37735,
+      "calls": 3
     },
-    {
-      "commit": "4f0057dee72fe323221479fe6f9a3eaab0765669",
-      "job_id": "0d4f15e2bca14ab4b57aaf956be16540",
-      "narrative_status": "DEGRADED",
-      "calls": [
-        {
-          "requested_model": "deepseek-flash",
-          "returned_model": "deepseek-flash",
-          "identity_status": "VERIFIED_EXACT",
-          "reason": "响应model与请求一致",
-          "call_id": 71,
-          "endpoint": "https://api.deepseek.com/chat/completions"
-        },
-        {
-          "requested_model": "deepseek-flash",
-          "returned_model": "deepseek-flash",
-          "identity_status": "VERIFIED_EXACT",
-          "reason": "响应model与请求一致",
-          "call_id": 72,
-          "endpoint": "https://api.deepseek.com/chat/completions"
-        },
-        {
-          "requested_model": "deepseek-flash",
-          "returned_model": "deepseek-flash",
-          "identity_status": "VERIFIED_EXACT",
-          "reason": "响应model与请求一致",
-          "call_id": 73,
-          "endpoint": "https://api.deepseek.com/chat/completions"
-        }
-      ],
-      "usage": {
-        "prompt_tokens": 19544,
-        "completion_tokens": 21875,
-        "total_tokens": 41419,
-        "calls": 3
-      },
-      "cache_hit": false,
-      "failures": [
-        "JSONDecodeError: Expecting value: line 1 column 1 (char 0)",
-        "materials/explanation: ValueError: diagnostic verification needs a supporting and a weakening observation",
-        "benchmark/explanation: ValueError: diagnostic verification needs a supporting and a weakening observation",
-        "JSONDecodeError: Unterminated string starting at: line 1 column 2789 (char 2788)",
-        "materials: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代",
-        "benchmark: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代"
-      ]
-    },
-    {
-      "commit": "702a925435f88e204e5e8774131ad8f989f12eba",
-      "job_id": "f05da649a36f4f11b1c0855920396aa5",
-      "narrative_status": "DEGRADED",
-      "calls": [
-        {
-          "requested_model": "deepseek-flash",
-          "returned_model": "deepseek-flash",
-          "identity_status": "VERIFIED_EXACT",
-          "reason": "响应model与请求一致",
-          "call_id": 74,
-          "endpoint": "https://api.deepseek.com/chat/completions"
-        },
-        {
-          "requested_model": "deepseek-flash",
-          "returned_model": "deepseek-flash",
-          "identity_status": "VERIFIED_EXACT",
-          "reason": "响应model与请求一致",
-          "call_id": 75,
-          "endpoint": "https://api.deepseek.com/chat/completions"
-        },
-        {
-          "requested_model": "deepseek-flash",
-          "returned_model": "deepseek-flash",
-          "identity_status": "VERIFIED_EXACT",
-          "reason": "响应model与请求一致",
-          "call_id": 76,
-          "endpoint": "https://api.deepseek.com/chat/completions"
-        }
-      ],
-      "usage": {
-        "prompt_tokens": 19885,
-        "completion_tokens": 22221,
-        "total_tokens": 42106,
-        "calls": 3
-      },
-      "cache_hit": false,
-      "failures": [
-        "materials/explanation: ValueError: price/usage decomposition needs matched comparison-period prices, consumption and output records",
-        "benchmark/explanation: ValueError: diagnostic expected result must name the attribution gain",
-        "materials/explanation: ValueError: diagnostic fields must each be one sentence without terminal punctuation",
-        "benchmark/explanation: ValueError: diagnostic fields must each be one sentence without terminal punctuation",
-        "JSONDecodeError: Unterminated string starting at: line 1 column 19 (char 18)",
-        "materials: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代",
-        "benchmark: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代"
-      ]
-    },
-    {
-      "commit": "d9338a018222acf8165a84c8942f596d35c6fb41",
-      "job_id": "cb3e96ba929d4a498ad5db47186af773",
-      "narrative_status": "DEGRADED",
-      "calls": [
-        {
-          "requested_model": "deepseek-flash",
-          "returned_model": "deepseek-flash",
-          "identity_status": "VERIFIED_EXACT",
-          "reason": "响应model与请求一致",
-          "call_id": 77,
-          "endpoint": "https://api.deepseek.com/chat/completions"
-        },
-        {
-          "requested_model": "deepseek-flash",
-          "returned_model": "deepseek-flash",
-          "identity_status": "VERIFIED_EXACT",
-          "reason": "响应model与请求一致",
-          "call_id": 78,
-          "endpoint": "https://api.deepseek.com/chat/completions"
-        },
-        {
-          "requested_model": "deepseek-flash",
-          "returned_model": "deepseek-flash",
-          "identity_status": "VERIFIED_EXACT",
-          "reason": "响应model与请求一致",
-          "call_id": 79,
-          "endpoint": "https://api.deepseek.com/chat/completions"
-        }
-      ],
-      "usage": {
-        "prompt_tokens": 19748,
-        "completion_tokens": 18696,
-        "total_tokens": 38444,
-        "calls": 3
-      },
-      "cache_hit": false,
-      "failures": [
-        "materials/explanation: ValueError: price/usage decomposition needs matched comparison-period prices, consumption and output records",
-        "benchmark: ValueError: hypothesis requires both evidence kinds and missing evidence",
-        "JSONDecodeError: Unterminated string starting at: line 1 column 1082 (char 1081)",
-        "materials/explanation: ValueError: price/usage decomposition needs matched comparison-period prices, consumption and output records",
-        "materials: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代"
-      ]
-    }
-  ],
-  "prior_complete_machine_record": "candidate_machine_61d47bd.json",
-  "layout_changes": false,
-  "preserved_files": 373,
-  "data_content_publication": "LOCAL_ONLY",
-  "competition_ready": false,
-  "content_review_candidate": {
+    "cache_hit": false,
+    "failures": [
+      "materials/explanation: ValueError: price/usage decomposition needs matched comparison-period prices, consumption and output records",
+      "benchmark/explanation: ValueError: price/usage decomposition needs matched comparison-period prices, consumption and output records",
+      "JSONDecodeError: Unterminated string starting at: line 1 column 463 (char 462)",
+      "materials/explanation: ValueError: price/usage decomposition needs matched comparison-period prices, consumption and output records",
+      "materials: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代"
+    ]
+  },
+  "previous_S1_machine_record": "candidate_machine_c5a2f34.json",
+  "approved_S1_content_candidate": {
     "code_commit": "c5a2f3430f8c0346b3952c85b55dcd889dbb246e",
     "source_code_commit": "d9338a018222acf8165a84c8942f596d35c6fb41",
     "source_job_id": "cb3e96ba929d4a498ad5db47186af773",
@@ -351,6 +234,10 @@
     "attribution_score": 4,
     "reviewer": "胡珺杰"
   },
-  "current_new_call_status": "DEGRADED",
-  "model_budget": "per operation, process-local calendar day cap 45; prior rolling-day exhaustion statement was incorrect"
+  "frontend": "unchanged; prior user web check PASS",
+  "layout_changes": false,
+  "model_budget_policy": "per operation and process-local calendar day; max 45; no increase",
+  "competition_ready": false,
+  "post_human_final_e2e": "NOT_RUN_WAITING_FOR_REMAINING_REVIEWS",
+  "data_content_publication": "LOCAL_ONLY"
 }

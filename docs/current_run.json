@@ -11,14 +11,14 @@
   "supplemental_scenarios": [
     "Q2"
   ],
-  "candidate_code_commit": "c5a2f3430f8c0346b3952c85b55dcd889dbb246e",
-  "tested_code_commit": "c5a2f3430f8c0346b3952c85b55dcd889dbb246e",
+  "candidate_code_commit": "4b04be55dc66fb39343f1e28d266415e264f3a81",
+  "tested_code_commit": "4b04be55dc66fb39343f1e28d266415e264f3a81",
   "baseline_commit": "3aba221e81d582970a7261204d2b255e822b0e88",
   "historical_run_index": "validation/baseline_3aba221_current_run.json",
-  "human_review": "PARTIAL_S1_CONTENT_PASS",
+  "human_review": "PARTIAL_PENDING_S2",
   "human_web_check": "PASS",
   "human_review_record": "evaluation/人工评分记录.json",
-  "human_review_scope": "网页检查通过；61d47bd S1为2分；s1_revalidated_c5a2f34 S1内容复评4分通过，均只绑定各自文件，不替代新增调用验证。",
+  "human_review_scope": "S1既有响应重校验样本4分通过，文件绑定c5a2f34；S2在4b04be5新增调用通过，等待单独评分。",
   "candidate_review_record": "validation/candidate_review.json",
   "evaluation_report": "evaluation/评测报告.md",
   "candidate_notes": "交付候选说明.md",
@@ -29,7 +29,7 @@
     "recovery_copy": "outside_repository"
   },
   "backend": {
-    "passed": 662,
+    "passed": 664,
     "failed": 0,
     "skipped": 2,
     "warnings": 2,
@@ -45,15 +45,15 @@
     "scope": "previous 61d47bd automated check plus user PASS; no frontend changes"
   },
   "fresh_model_reports": {
-    "run_id": "s1_revision_c5a2f34",
-    "S1": "DEGRADED",
-    "S2": "NOT_RUN_ON_CURRENT_CODE",
+    "run_id": "s2_current_4b04be5",
+    "S1": "NOT_RUN_ON_CURRENT_CODE",
+    "S2": "PASS",
     "S3": "NOT_RUN_ON_CURRENT_CODE",
     "Q2": "NOT_RUN_ON_CURRENT_CODE",
-    "new_calls": 3,
+    "new_calls": 1,
     "local_cache_hits": 0,
     "model": "deepseek-flash",
-    "scope": "S1 only; earlier failed revisions retained in candidate_machine.json"
+    "scope": "S2 only; historical S1 failures and approved content remain separately bound"
   },
   "previous_candidate_run": {
     "commit": "be19ef4",
@@ -76,18 +76,19 @@
     "path": null
   },
   "publication_boundary": "Existing repository scope unchanged; organizer permission to publish competition assets remains unverified; new report contents local only",
-  "post_human_final_e2e": "NOT_RUN_WAITING_FOR_USER",
+  "post_human_final_e2e": "NOT_RUN_WAITING_FOR_REMAINING_REVIEWS",
   "github_delivery": {
     "branch": "codex/delivery-repair-20260928",
     "status": "PUSHED_WORK_BRANCH",
-    "verified_content_commit": "ea7b62c",
+    "verified_content_commit": "4b04be5",
     "merged_to_main": false,
     "release_published": false,
-    "note": "工作分支普通推送已完成；应用代码绑定c5a2f34；当前新增调用仍降级，内容复核候选独立记录"
+    "note": "应用源码绑定4b04be5；S2新增调用通过，S1既有内容评分按原文件独立保留。"
   },
   "workflow_checks": {
     "scope": "previous 61d47bd run retained separately; not claimed as new-code full E2E",
-    "S1_downloads": "PASS"
+    "S1_downloads": "PASS",
+    "S2_downloads": "PASS"
   },
   "bonus": {
     "heatmap_and_tracking": "UI_ROUTES_VERIFIED",
@@ -111,5 +112,12 @@
     "record": "validation/candidate_review.json",
     "attribution_score": 4
   },
-  "model_budget": "PER_OPERATION_LOCAL_CALENDAR_DAY_CAP_45"
+  "model_budget": "PER_OPERATION_LOCAL_CALENDAR_DAY_CAP_45",
+  "active_review": {
+    "scenario": "S2",
+    "run_id": "s2_current_4b04be5",
+    "code_commit": "4b04be55dc66fb39343f1e28d266415e264f3a81",
+    "status": "PENDING",
+    "record": "validation/candidate_review.json"
+  }
 }
