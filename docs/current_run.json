@@ -79,11 +79,11 @@
   "post_human_final_e2e": "NOT_RUN_WAITING_FOR_USER",
   "github_delivery": {
     "branch": "codex/delivery-repair-20260928",
-    "status": "PENDING_PUSH",
-    "verified_content_commit": null,
+    "status": "PUSHED_WORK_BRANCH",
+    "verified_content_commit": "ea7b62c",
     "merged_to_main": false,
     "release_published": false,
-    "note": "应用源码绑定c5a2f3430f8c0346b3952c85b55dcd889dbb246e；后续仅更新评测关联文档"
+    "note": "工作分支普通推送已完成；应用代码绑定c5a2f34；当前新增调用仍降级，内容复核候选独立记录"
   },
   "workflow_checks": {
     "scope": "previous 61d47bd run retained separately; not claimed as new-code full E2E",
