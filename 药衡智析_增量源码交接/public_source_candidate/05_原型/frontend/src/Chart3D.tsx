@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { bindChartGestures } from './chartGestures';
 import * as echarts from 'echarts/core';
 import { Bar3DChart, Lines3DChart, Scatter3DChart } from 'echarts-gl/charts';
 import { Grid3DComponent } from 'echarts-gl/components';
@@ -21,6 +22,7 @@ export default function Chart3D({ option, label, height = 720, onClick, onHover 
     onHover?: (info: { text: string; x: number; y: number } | null) => void;
 }) {
     const ref = useRef<HTMLDivElement>(null), instance = useRef<echarts.ECharts | undefined>(undefined), optionSignature = useRef<string>('');
+    const previousScene = useRef<{data: string; distance: number} | null>(null);
     useEffect(() => {
         if (!ref.current) return;
         const dom = ref.current;
@@ -31,14 +33,10 @@ export default function Chart3D({ option, label, height = 720, onClick, onHover 
         (window as any).__chart3d.set(dom, chart);
         const observer = new ResizeObserver(() => chart.resize());
         observer.observe(dom);
-        // 光标在图谱区域内时，滚轮只缩放图谱、不再滚动页面（2026-09-24
-        // 用户要求）。echarts-gl 的 wheel 处理不总是 preventDefault，
-        // 这里在容器上原生兜底（必须 non-passive 才能 preventDefault）。
-        const wheelGuard = (event: WheelEvent) => event.preventDefault();
-        dom.addEventListener('wheel', wheelGuard, { passive: false });
+        const releaseGestures = bindChartGestures(dom);
         return () => {
             observer.disconnect();
-            dom.removeEventListener('wheel', wheelGuard);
+            releaseGestures();
             (window as any).__chart3d?.delete(dom);
             chart.dispose(); instance.current = undefined;
         };
@@ -50,8 +48,23 @@ export default function Chart3D({ option, label, height = 720, onClick, onHover 
         const signature = JSON.stringify(option);
         if (signature === optionSignature.current) return;
         optionSignature.current = signature;
+        // Resizing/fullscreen must preserve the user's orbit and pan. Only
+        // fit the distance to the new viewport; reset remains an explicit remount.
+        const config = option as any;
+        const dataSignature = JSON.stringify(config.series?.map((series: any) => series.data));
+        const view = config.grid3D?.viewControl;
+        const liveView = (chart.getOption() as any)?.grid3D?.[0]?.viewControl;
+        let nextOption = option;
+        if (view && liveView && previousScene.current?.data === dataSignature) {
+            const distance = liveView.distance * view.distance / previousScene.current.distance;
+            nextOption = { ...config, grid3D: { ...config.grid3D, viewControl: {
+                ...view, alpha: liveView.alpha, beta: liveView.beta, center: liveView.center,
+                distance: Math.max(view.minDistance, Math.min(view.maxDistance, distance)),
+            } } };
+        }
+        previousScene.current = { data: dataSignature, distance: view?.distance ?? 1 };
         // Imported labels are untrusted text; never render chart tooltips as HTML.
-        chart.setOption({ ...option, tooltip: { ...(option.tooltip as object), renderMode: 'richText', confine: true }, animation: false, textStyle: { fontFamily: '"Noto Sans CJK SC",sans-serif', fontSize: 12 } }, true);
+        chart.setOption({ ...nextOption, tooltip: { ...(option.tooltip as object), renderMode: 'richText', confine: true }, animation: false, textStyle: { fontFamily: '"Noto Sans CJK SC",sans-serif', fontSize: 12 } }, true);
     }, [option]);
     useEffect(() => { const chart = instance.current; if (!chart || !onClick) return; chart.on('click', onClick); return () => { chart.off('click', onClick); }; }, [onClick]);
     // GL 拾取悬停：echarts 把 GL 系列的 mouseover/mouseout 以 zr 事件抛出，
@@ -62,7 +75,6 @@ export default function Chart3D({ option, label, height = 720, onClick, onHover 
         const dom = ref.current!;
         const handle = (params: any) => {
             const ev = params.event?.event as MouseEvent | undefined;
-            const kindMap: Record<string, string> = { 产品: '产品', 药材: '药材', 工序: '工序' };
             // GL 系列 mouseover 的 componentType 是 'series'（非 'scatter3D'），
             // 用 data.tooltip_kind 区分节点/边点：边点 name 是完整关系串。
             if (params.componentType === 'series' && params.name) {
@@ -75,8 +87,9 @@ export default function Chart3D({ option, label, height = 720, onClick, onHover 
             }
         };
         chart.on('mouseover', handle);
+        chart.on('click', handle);
         chart.on('mouseout', () => onHover(null));
-        return () => { chart.off('mouseover', handle); chart.off('mouseout'); };
+        return () => { chart.off('mouseover', handle); chart.off('click', handle); chart.off('mouseout'); };
     }, [onHover]);
-    return <div className="chart chart-3d" ref={ref} role="img" aria-label={label} style={{ height, width: '100%' }} />;
+    return <div className="chart chart-3d" ref={ref} role="img" aria-label={label} style={{ height, width: '100%', touchAction: 'none', userSelect: 'none' }} />;
 }

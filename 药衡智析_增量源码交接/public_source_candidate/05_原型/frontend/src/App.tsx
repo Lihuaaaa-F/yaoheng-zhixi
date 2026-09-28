@@ -45,6 +45,7 @@ function readLocation() {
 }
 function urlFor(page: string, selection: Selection, left: string, right: string) {
   const q = new URLSearchParams({ page });
+  if (page === 'knowledge' && new URLSearchParams(window.location.search).get('graph') === '1') q.set('graph', '1');
   for (const [key, value] of Object.entries({ ...selection, left, right })) if (value && key !== 'context_id') q.set(key, String(value));
   return `${window.location.pathname}?${q.toString()}`;
 }
@@ -207,7 +208,7 @@ export default function App() {
       <main className="workbench-content floating-surface" aria-label={`${pageInfo.title}工作区`}>
         <div className="workspace-toolbar" aria-label="工作区选项">
           {mobile && <div className="mobile-workspace-controls"><Button type="text" aria-label="打开导航" icon={<MenuUnfoldOutlined />} onClick={() => setNavOpen(true)} /><strong>药衡智析</strong><Button type="text" aria-label="打开对话" icon={<MessageOutlined />} onClick={() => setAssistantOpen(true)} /></div>}
-          {page !== 'analysis' && <div className="workspace-page-title"><h1>{pageInfo.title}</h1><p>{pageInfo.intro}</p></div>}
+          {page !== 'analysis' && <div className="workspace-page-title"><h1>{pageInfo.title}</h1></div>}
           {inWorkspace && contextId && catalog && <section className="workspace-filters" aria-label="分析筛选">
             <label className="product-field"><span>产品</span><Select aria-label="产品" value={product} options={catalog.products.map(value => ({ value }))} onChange={value => changeSelection({ product: value })} /></label>
             {page !== 'benchmark' && <label className="factory-field"><span>工厂</span><Select aria-label="工厂" value={factory} options={catalog.factories.map(value => ({ value }))} onChange={value => changeSelection({ factory: value })} /></label>}
@@ -228,9 +229,9 @@ export default function App() {
         <div className="workspace-scroll" ref={scrollRef} onScroll={trackSection}>
           <div className="business-main" ref={contentRef}>
             {workspaceLoading && inWorkspace && <div className="business-loading" role="status"><Spin /><span>正在汇集已发布的数据…</span></div>}
-            {!workspaceLoading && workspaceState.status === 'EMPTY' && !contextId && inWorkspace && !error && <section className="panel onboarding"><Empty description="尚无可分析的数据" /><p>导入业务文件并完成解析后，这里会自动汇集数据。</p><Button type="primary" icon={<UploadOutlined />} onClick={() => navigate('business')}>导入业务数据</Button></section>}
+            {!workspaceLoading && workspaceState.status === 'EMPTY' && !contextId && inWorkspace && !error && <section className="panel onboarding"><Empty description="尚无可分析的数据" /><p>请先导入并解析业务数据。</p><Button type="primary" icon={<UploadOutlined />} onClick={() => navigate('business')}>导入业务数据</Button></section>}
             {!workspaceLoading && ['BLOCKED', 'PENDING'].includes(workspaceState.status) && inWorkspace && <Alert className="workspace-data-warning" type="warning" showIcon title={workspaceState.status === 'PENDING' ? '还有文件待解析，分析将在全部通过后更新' : '部分文件未通过校验，暂不能生成新分析'} description={workspaceState.issues.slice(0, 3).map((item, index) => <p key={index}>{item.filename ? `${item.filename}：` : ''}{item.message}</p>)} action={<Button size="small" onClick={() => navigate('business')}>检查数据</Button>} />}
-            {analysis_type === 'quarterly' && inWorkspace && <p className="scope-note">季度单位成本按总成本 ÷ 可比产量计算；趋势图保留月度明细，缺月不补零。</p>}
+            {analysis_type === 'quarterly' && inWorkspace && <p className="scope-note">季度单位成本 = 总成本 ÷ 可比产量；缺月不补零。</p>}
             {error && <Alert type="error" showIcon title={error} action={<Button size="small" onClick={() => { setError(''); setReload(value => value + 1); }}>重试</Button>} />}
             {jobsError && ['reports', 'actions'].includes(page) && <Alert type="error" title={`任务列表读取失败：${jobsError}`} action={<Button size="small" onClick={() => refresh()}>重试</Button>} />}
             {!workspaceLoading && (page === 'benchmark' ? benchmarkLoading : snapshotPage && analysisLoading) && <div className="business-loading" role="status"><Spin /><span>{page === 'benchmark' ? '正在计算跨厂差异与检索证据…' : '正在读取当前版本的数据…'}</span></div>}
@@ -240,7 +241,7 @@ export default function App() {
               {page === 'templates' && <TemplateCenter />}
               {page === 'analysis' && snapshot && !workspaceLoading && workspaceState.status === 'READY' && <><Analysis key={`${contextId}:${snapshot.snapshot_id}`} snapshot={snapshot} basis={basis} onEvidence={setDrawer} /><details className="panel"><summary>报告与看板任务建议</summary><DecisionCard selection={selection} onApplied={() => void refresh().catch(event => onError(event.message))} onError={onError} /></details></>}
               {page === 'analysis' && catalog && selection.context_id === contextId && !workspaceLoading && workspaceState.status === 'READY' && <ProductMonthHeatmap key={contextId} selection={selection} onSelect={(product, month) => changeSelection({ product, month, analysis_type: 'monthly' })} />}
-              {page === 'benchmark' && <><div className="comparison-filters"><label>分析工厂<Select aria-label="分析工厂" value={left} options={catalog?.factories.map(value => ({ value, disabled: value === right }))} onChange={value => { window.history.pushState(null, '', urlFor(page, selection, value, right)); setLeft(value); setBenchmark(null); }} /></label><SwapOutlined /><label>基准工厂<Select aria-label="基准工厂" value={right || undefined} placeholder="请选择基准工厂" options={catalog?.factories.map(value => ({ value, disabled: value === left }))} onChange={value => { window.history.pushState(null, '', urlFor(page, selection, left, value)); setRight(value); setBenchmark(null); }} /></label></div>{!catalog || catalog.factories.length < 2 ? <Alert type="info" title="需要至少两个工厂的可比数据才能进行对标。" description="当前工作区接入的工厂不足两家。可在「数据中心」导入第二家工厂的同口径数据；未接入业务数据时，工作区会展示示范双厂数据，可直接体验三步对标。" /> : <div className="benchmark-workbench"><Benchmark data={benchmark} analysisType={analysis_type} onSwap={() => { setLeft(right); setRight(left); setBenchmark(null); }} onEvidence={setDrawer} /></div>}</>}
+              {page === 'benchmark' && <><div className="comparison-filters"><label>分析工厂<Select aria-label="分析工厂" value={left} options={catalog?.factories.map(value => ({ value, disabled: value === right }))} onChange={value => { window.history.pushState(null, '', urlFor(page, selection, value, right)); setLeft(value); setBenchmark(null); }} /></label><SwapOutlined /><label>基准工厂<Select aria-label="基准工厂" value={right || undefined} placeholder="请选择基准工厂" options={catalog?.factories.map(value => ({ value, disabled: value === left }))} onChange={value => { window.history.pushState(null, '', urlFor(page, selection, left, value)); setRight(value); setBenchmark(null); }} /></label></div>{!catalog || catalog.factories.length < 2 ? <Alert type="info" title="需要至少两个工厂的可比数据才能进行对标。" description="请导入第二家工厂的同产品、同期间数据。" /> : <div className="benchmark-workbench"><Benchmark data={benchmark} analysisType={analysis_type} onSwap={() => { setLeft(right); setRight(left); setBenchmark(null); }} onEvidence={setDrawer} /></div>}</>}
               {page === 'reports' && <ReportGeneration selection={selection} snapshot={snapshot} jobs={jobs} refresh={refresh} onError={onError} />}
               {page === 'actions' && <Rectification selection={selection} snapshot={snapshot} jobs={jobs} actions={actions} refresh={refresh} onError={onError} />}
             </Suspense>

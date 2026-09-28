@@ -13,19 +13,19 @@ export default function KnowledgeData({ contextId, product, month, factory, onOp
       kind="knowledge"
       onPublished={()=>setRevision(value=>value+1)}
       types={[
-        { id: 'product', label: '产品知识', accept: '.pdf,.docx,.txt,.csv', note: '配方、工艺路线等产品文档（PDF/Word/TXT；行情/基准表格可传 CSV）。' },
-        { id: 'industry', label: '行业知识', accept: '.pdf,.docx,.txt,.csv', note: '药材行情、GMP 规范、行业基准等外部知识。' },
-        { id: 'enterprise', label: '企业内部知识', accept: '.pdf,.docx,.txt,.csv', note: '设备清单、历史异常记录、对标基线等内部资料。' },
+        { id: 'product', label: '产品知识', accept: '.pdf,.docx,.txt,.csv', note: '配方、工艺路线。' },
+        { id: 'industry', label: '行业知识', accept: '.pdf,.docx,.txt,.csv', note: '药材行情、GMP 规范、行业基准。' },
+        { id: 'enterprise', label: '企业内部知识', accept: '.pdf,.docx,.txt,.csv', note: '设备清单、异常记录、对标基线。' },
       ]}
       parsePath="/kb/build"
       parseBody={() => ({ context_id: contextId })}
       parseLabel="解析知识数据"
       successPrefix="知识库构建成功"
       failPrefix="构建知识库失败"
-      listTitle="知识库数据导入列表"
-      hint="上传企业的产品、工艺、规范或内部资料，解析后可在下方检索，并用于分析中的证据引用。"
-      processingNotes="系统通过关键词与语义混合检索查找资料（BM25 与向量召回、RRF 融合），并保留来源、页码和位置。知识绑定本工作区，不与其他企业混合。扫描件若无法提取文字会提示失败，请补充带文本的文档后重试。"
-      emptyText="暂无待构建的知识文档，请先在上方上传。"
+      listTitle="知识文档"
+      hint="支持 PDF、Word、TXT 和 CSV。"
+      processingNotes="解析后可检索，引用保留来源位置。仅使用当前工作区资料；扫描件需先转为可提取文字的文档。"
+      emptyText="暂无待解析文档"
     />
     <Evidence key={`${contextId}:${revision}`} contextId={contextId} product={product} month={month} factory={factory} onOpen={onOpen} />
   </div>;

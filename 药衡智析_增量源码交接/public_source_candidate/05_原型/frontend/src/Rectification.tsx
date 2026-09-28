@@ -44,16 +44,16 @@ export default function Rectification({ selection, snapshot, jobs, actions, refr
   return <>
     <section className="panel"><h2>企业任务看板</h2>
       <div className="task-summary" aria-label="任务状态汇总"><div><span>已生成任务</span><strong>{uniqueActions.length}</strong></div><div><span>模拟通知送达</span><strong>{delivered}</strong></div><div><span>责任人确认</span><strong>{ownerConfirmed}</strong></div></div>
-      <p className="muted">汇总当前工作区全部任务，以任务 ID 去重；模拟送达按通知回执统计。责任人确认须有署名与时间记录，发送前确认不计入，送达不等于整改完成。</p></section>
+      <p className="muted">全部任务 · 模拟送达、责任人确认与整改完成分别统计。</p></section>
     <section className="panel"><h2>建议转为模拟整改任务</h2>
-      <p className="notice">仅将实际核查建议转为草稿。具体姓名未知时保留“待分配”；确认当前完整内容后，才会执行题包的模拟RPA送达。</p>
+      <p className="notice">草稿确认后才会模拟发送；责任人不明时保留“待分配”。</p>
       <label className="finding-select">载入当前报告建议<Select aria-label="载入当前报告建议" placeholder="选择可执行建议，或手动填写" key={snapshot?.snapshot_id} options={availableFindings.map((f:any,i:number)=>({value:i,label:`${cleanText(f.rendered_text??f.text_template).slice(0,60)}｜建议：${cleanText(f.suggestion).slice(0,44)}`}))} onChange={index => {
         const f = availableFindings[index]; if (!f) return;
         setFinding(cleanText(f.rendered_text ?? f.text_template)); setSuggestion(cleanText(f.suggestion)); setTarget(f.verification_target ?? '');
         setExpected(Array.isArray(f.expected_evidence) ? f.expected_evidence.join('；') : f.expected_evidence ?? '');
         setRole(f.responsible_role ?? '待分配'); setDepartment(f.department ?? '生产管理部'); setPriority(normalizedPriority(f.priority)); setDeadlineBasis(f.deadline_basis ?? '');
       }}/></label>
-      {!availableFindings.length && <p className="muted">当前报告尚无可载入的行动建议。请先在「分析报告」页生成当前报告，或补充核查对象、所需证据和具体行动。</p>}
+      {!availableFindings.length && <p className="muted">暂无可载入建议，可手动填写核查对象、证据与行动。</p>}
       <div className="form-grid">
         <label>责任人<input aria-label="责任人" value={name} onChange={e => setName(e.target.value)} /></label>
         <label>部门<input aria-label="部门" value={department} onChange={e => setDepartment(e.target.value)} /></label>
@@ -66,16 +66,16 @@ export default function Rectification({ selection, snapshot, jobs, actions, refr
         <label className="full">期限依据<input aria-label="期限依据" placeholder="例如：在下次月度成本复盘前，具体日期由责任部门确认" value={deadlineBasis} onChange={e => setDeadlineBasis(e.target.value)} /></label>
         {editing && <label className="full">建议截止日期（确认前可调整）<input aria-label="建议截止日期" type="date" value={deadline} onChange={e => setDeadline(e.target.value)} /></label>}
       </div>
-      {editingAction && <p className="notice" role="status">正在编辑：{editingAction.payload?.task_title}。保留该任务原分析来源与快照，保存后需重新确认发送。</p>}
+      {editingAction && <p className="notice" role="status">正在编辑：{editingAction.payload?.task_title} · 保留原来源，保存后需重新确认发送。</p>}
       <button disabled={pending || (!editingAction && !snapshot) || ![name, department, role, finding, suggestion, target, expected, deadlineBasis].every(s => s.trim())} onClick={() => run(async () => {
         if (editing) { await api(`/actions/${editing}`, payload(), undefined, 'PUT'); setEditing(null); setNotice('草稿已更新，须重新核对确认。'); }
-        else { await api('/actions', payload()); setNotice('草稿已生成，尚未发送。请核对下方完整内容。'); }
+        else { await api('/actions', payload()); setNotice('草稿已保存，待确认发送。'); }
       })}>{editing ? '保存草稿修改' : '生成任务草稿'}</button></section>
     <section className="panel">
       <div className="panel-heading"><h2>任务与发送状态</h2>
         <div className="button-row"><label className="history-toggle"><input type="checkbox" checked={showHistory} onChange={e => setShowHistory(e.target.checked)} /> 查看全部任务</label>
           <button onClick={() => run(refresh)} disabled={pending}>刷新状态</button></div></div>
-      <p className="muted">默认按当前分析筛选（{selection.factory} · {selection.product} · {selection.month}）；与上方企业汇总口径不同。</p>
+      <p className="muted">当前筛选：{selection.factory} · {selection.product} · {selection.month}</p>
       {!visibleActions.length ? <p className="empty">当前分析暂无任务。当前工作区共 {uniqueActions.length} 条任务（见上方汇总），可勾选“查看全部任务”查看历史版本及其他分析对象。</p> : visibleActions.map(a => {
         const p = a.payload ?? {}, m = a.metadata ?? {};
         return <article className="task" data-task-id={a.id} key={a.id}>
@@ -106,13 +106,13 @@ export default function Rectification({ selection, snapshot, jobs, actions, refr
             }}>编辑草稿</button>
               <button className="primary" disabled={pending || editing === a.id} onClick={() => run(async () => {
                 await api(`/actions/${encodeURIComponent(a.id)}/confirm`, { payload_hash: a.payload_hash });
-                setNotice('已确认，等待发送处理；请分别核对接口、模拟通知与整改状态。');
+                setNotice('已确认，等待模拟发送。');
               })}>确认并发送模拟通知</button></div>
             : <button disabled={pending} onClick={() => run(async () => { await api(`/actions/${encodeURIComponent(a.id)}/refresh`, {}); })}>查询模拟通知状态</button>}
           {a.responsibility_confirmation?.status === 'CONFIRMED'
             ? <p className="notice">责任人确认：{a.responsibility_confirmation.confirmed_by} · {a.responsibility_confirmation.confirmed_at}。已确认跟进，不代表整改完成。</p>
             : ['SENT', 'ACCEPTED'].includes(a.status) && <div className="responsibility-confirmation">{acknowledging === a.id
-              ? <><p className="notice">由实际责任人填写姓名，确认已收到并将跟进此任务。这不会登记整改完成或报告人工评分。</p>
+              ? <><p className="notice">请责任人本人确认接收；此操作不代表整改完成。</p>
                 <label>责任确认人姓名<input aria-label="责任确认人姓名" placeholder="请责任人本人填写" value={confirmationName} onChange={e => setConfirmationName(e.target.value)} /></label>
                 <label>确认备注<input aria-label="责任确认备注" value={confirmationComment} onChange={e => setConfirmationComment(e.target.value)} /></label>
                 <div className="button-row"><button disabled={pending || !confirmationName.trim()} onClick={() => run(async () => {

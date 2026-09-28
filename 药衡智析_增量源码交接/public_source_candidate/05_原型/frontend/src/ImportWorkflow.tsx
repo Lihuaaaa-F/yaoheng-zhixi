@@ -53,8 +53,8 @@ export function ImportUploadPanel({ kind, types, onUploaded, hint, processingNot
       // 同内容重复上传是幂等的：返回已有记录（可能早已解析完，直接躺在
       // "已处理记录"里）。必须说明白，否则用户会以为被悄悄解析了。
       setMessage(saved.dedup
-        ? `「${chosen.name}」的内容此前已上传过（当前状态：${IMPORT_STATUS_LABELS[saved.status] ?? saved.status}），本次未重复导入。${saved.status === 'UPLOADED' || saved.status === 'PARSE_FAILED' ? '它就在下方待解析列表中。' : '如需更换数据，请上传内容不同的修正文件。'}`
-        : `已上传：${chosen.name}（${active?.label}），进入下方列表等待解析。`);
+        ? `文件已存在（${IMPORT_STATUS_LABELS[saved.status] ?? saved.status}），未重复导入：${chosen.name}`
+        : `已上传，待解析：${chosen.name}`);
       setFile(null);
       onUploaded();
     } catch (e: any) { setError(e.message ?? String(e)); }
@@ -167,12 +167,11 @@ export default function ImportWorkflow({ kind, types, parsePath, parseLabel, suc
         <Button type="primary" disabled={!!jobId || !waiting.length} loading={busy} onClick={startParse}>
           {parseLabel}
         </Button></div>
-      <p className="muted">检查下方文件后，点击「{parseLabel}」。处理进度和结果将在本页显示。</p>
       {importsError && <div className="error" role="alert">列表读取失败：{importsError}</div>}
       {error && <div className="error" role="alert">{error}</div>}
       <h3>待解析（{waiting.length}）</h3>
-      <ImportListTable imports={waiting} onPreview={setPreviewId} onDelete={removeImport} emptyText={emptyText ?? '暂无待解析数据，请先在上方导入。'} />
-      {kind === 'business' && waiting.length > 0 && acceptedIds.length > 0 && <details className="import-version-options"><summary>更新已接入文件（可选）</summary><p className="muted">补充新期间或新产品时保留“新增文件”。修正旧表时，选择由新文件替代的旧版本；原件会保留。</p>{waiting.map(record => <label className="import-version-row" key={record.id}><span>{record.filename}</span><Select aria-label={`为 ${record.filename} 选择替代文件`} value={replacements[record.id] || ''} disabled={busy || !!jobId} options={[{ value: '', label: '新增文件' }, ...imports.filter(item => acceptedIds.includes(item.id) && item.meta?.data_type === record.meta?.data_type).map(item => ({ value: item.id, label: item.filename }))]} onChange={value => setReplacements(current => ({ ...current, [record.id]: value }))} /></label>)}</details>}
+      <ImportListTable imports={waiting} onPreview={setPreviewId} onDelete={removeImport} emptyText={emptyText ?? '暂无待解析文件'} />
+      {kind === 'business' && waiting.length > 0 && acceptedIds.length > 0 && <details className="import-version-options"><summary>更新已接入文件（可选）</summary><p className="muted">修正旧表时选择要替代的文件；旧原件保留。新增数据无需选择。</p>{waiting.map(record => <label className="import-version-row" key={record.id}><span>{record.filename}</span><Select aria-label={`为 ${record.filename} 选择替代文件`} value={replacements[record.id] || ''} disabled={busy || !!jobId} options={[{ value: '', label: '新增文件' }, ...imports.filter(item => acceptedIds.includes(item.id) && item.meta?.data_type === record.meta?.data_type).map(item => ({ value: item.id, label: item.filename }))]} onChange={value => setReplacements(current => ({ ...current, [record.id]: value }))} /></label>)}</details>}
       {jobId && <JobProgress jobId={jobId} onDone={job => {
         setResult(job); setJobId(''); sessionStorage.removeItem(`pharma-import-${kind}`); refresh();
         if (kind === 'business') window.dispatchEvent(new Event('pharma:data-changed'));

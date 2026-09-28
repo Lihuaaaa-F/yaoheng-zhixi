@@ -65,38 +65,37 @@ export default function ModelConfigForm({ route, onSaved }: { route: Route; onSa
   };
   return <section className="panel model-config">
     <div className="panel-heading"><h2>{LABELS[route]}</h2><Space>{current?.configured && <Tag color="cyan">已配置</Tag>}{current?.key_set && <Tag icon={<CheckCircleOutlined />}>密钥已保存</Tag>}</Space></div>
-    <p className="muted">{route === 'assistant' ? '助手有独立的连接、密钥和推理参数。未配置时使用本地确定性查询，不继承报告模型密钥。' : '可选择任意兼容模型。厂商与型号仅提供填写建议，不限制模型档位。'}</p>
+    {route === 'assistant' && <p className="muted">助手独立配置；未配置时仅查询本地数据。</p>}
     {error && <Alert type="error" showIcon title={error} closable onClose={() => setError('')} />}
     {notice && <Alert type="success" showIcon title={notice} />}
     {current?.parameter_warnings?.map((warning: any, i: number) => <Alert key={i} type="warning" showIcon title={typeof warning === 'string' ? warning : warning.message} />)}
-    {current?.configured && current?.effective?.model && <p className="muted">当前生效型号：{current.effective.model}。修改表单后，保存才会用于新任务。</p>}
+    {current?.configured && current?.effective?.model && <p className="muted">当前：{current.effective.model} · 保存后用于新任务</p>}
     {loading && <p role="status">正在读取当前模型连接…</p>}
     <Form layout="vertical" className="model-form" disabled={loading || !!busy} aria-busy={loading} onFinish={() => run('save')}>
-      <Form.Item label="快速填写厂商或本地服务"><Select value={vendor || undefined} allowClear placeholder="也可以直接填写下方连接" options={vendors.map(v => ({ value: v.id, label: v.label }))} onChange={id => { setVendor(id ?? ''); const v = vendors.find(v => v.id === id); if (v) setForm(f => ({ ...f, base_url: v.base_url, protocol: v.protocol ?? 'openai' })); }} /></Form.Item>
+      <Form.Item label="厂商 / 本地服务"><Select value={vendor || undefined} allowClear placeholder="选择厂商或自行填写" options={vendors.map(v => ({ value: v.id, label: v.label }))} onChange={id => { setVendor(id ?? ''); const v = vendors.find(v => v.id === id); if (v) setForm(f => ({ ...f, base_url: v.base_url, protocol: v.protocol ?? 'openai' })); }} /></Form.Item>
       <div className="form-grid">
         <Form.Item label="模型名称" required><Input aria-label="模型名称" list={`models-${route}`} value={form.model} onChange={e => set('model', e.target.value)} placeholder="如 glm-5.3；支持自由输入" autoComplete="off" /><datalist id={`models-${route}`}>{modelOptions.map(model => <option key={model} value={model} />)}</datalist></Form.Item>
         <Form.Item label="接口协议"><Select aria-label="协议" value={form.protocol} onChange={v => set('protocol', v)} options={[{ value: 'openai', label: 'OpenAI 兼容' }, { value: 'anthropic', label: 'Anthropic' }]} /></Form.Item>
       </div>
-      <Form.Item label="API 根地址（Base URL）" required extra="本地 Ollama、vLLM、LM Studio 使用其兼容 API 地址。Docker 内的本机服务请使用 host.docker.internal。"><Input aria-label="Base URL" value={form.base_url} onChange={e => set('base_url', e.target.value)} placeholder="https://…/v1 或 http://localhost:11434/v1" autoComplete="off" /></Form.Item>
-      <Form.Item label={route === 'assistant' ? '助手 API 密钥' : 'API 密钥'} extra="仅发送到当前应用后端并保存至受控文件；不回显、不进入对话或浏览器持久存储。留空保留已保存密钥。"><Input.Password aria-label="API 密钥" value={form.api_key} onChange={e => set('api_key', e.target.value)} placeholder={current?.key_set ? '已保存，留空保持' : '无需鉴权的本地服务可留空'} autoComplete="new-password" /></Form.Item>
+      <Form.Item label="API 根地址（Base URL）" required extra="本地服务填写兼容 API 地址。"><Input aria-label="Base URL" value={form.base_url} onChange={e => set('base_url', e.target.value)} placeholder="https://…/v1 或 http://localhost:11434/v1" autoComplete="off" /></Form.Item>
+      <Form.Item label={route === 'assistant' ? '助手 API 密钥' : 'API 密钥'} extra="密钥不回显；留空保留已保存密钥。"><Input.Password aria-label="API 密钥" value={form.api_key} onChange={e => set('api_key', e.target.value)} placeholder={current?.key_set ? '已保存，留空保持' : '无需鉴权的本地服务可留空'} autoComplete="new-password" /></Form.Item>
       <div className="form-grid">
         <Form.Item label="鉴权方式"><Select value={form.auth_mode} onChange={v => set('auth_mode', v)} options={[{ value: 'auto', label: '自动识别' }, { value: 'required', label: '必须提供密钥' }, { value: 'none', label: '无需密钥（本地服务）' }]} /></Form.Item>
         <Form.Item label="推理强度"><Select aria-label="推理强度" value={form.reasoning_effort} options={EFFORTS.map(([value, label]) => ({ value, label }))} onChange={v => set('reasoning_effort', v)} /></Form.Item>
       </div>
-      <p className="muted">推理强度由厂商适配器映射；不支持的参数会明确提示。默认值不额外发送推理强度。</p>
-      <Collapse items={[{ key: 'parameters', label: '生成参数与密钥文件', children: <>
+      <Collapse items={[{ key: 'parameters', label: '高级设置', children: <>
         <div className="form-grid">
           <Form.Item label="温度 temperature"><InputNumber min={0} max={2} step={0.1} value={form.temperature} onChange={v => set('temperature', v ?? undefined)} placeholder="模型默认" /></Form.Item>
           <Form.Item label="采样范围 top_p"><InputNumber min={0} max={1} step={0.05} value={form.top_p} onChange={v => set('top_p', v ?? undefined)} placeholder="模型默认" /></Form.Item>
           <Form.Item label="最大输出 token"><InputNumber min={1} max={32768} value={form.max_tokens} onChange={v => set('max_tokens', v ?? undefined)} placeholder="服务默认" /></Form.Item>
           <Form.Item label="请求超时（秒）"><InputNumber min={5} max={180} value={form.timeout_seconds} onChange={v => set('timeout_seconds', v ?? undefined)} placeholder="服务默认" /></Form.Item>
         </div>
-        <Form.Item label="当前型号上下文窗口（tokens，可选）" extra="按服务商文档填写；留空显示未知。此值仅适用于当前模型名称，不会自动套用到其他型号。"><InputNumber aria-label="当前型号上下文窗口" min={1024} max={2000000} value={contextWindow} onChange={value=>setContextWindow(value??undefined)} placeholder="未知"/></Form.Item>
-        <Form.Item label="受控密钥文件名（可选）" extra="仅填写后端受控目录中的文件名，例如 assistant.key。留空保留现有密钥；不接受完整路径。"><Input value={form.key_file} onChange={e => set('key_file', e.target.value)} placeholder="assistant.key" /></Form.Item>
-        <Space><Switch checked={form.clear_api_key} onChange={v => set('clear_api_key', v)} /><span>保存时解除此连接的已存密钥引用</span></Space>
+        <Form.Item label="当前型号上下文窗口（tokens，可选）" extra="按厂商文档填写，仅用于当前型号。"><InputNumber aria-label="当前型号上下文窗口" min={1024} max={2000000} value={contextWindow} onChange={value=>setContextWindow(value??undefined)} placeholder="未知"/></Form.Item>
+        <Form.Item label="受控密钥文件名（可选）" extra="仅填受控目录内的文件名，不接受完整路径。"><Input value={form.key_file} onChange={e => set('key_file', e.target.value)} placeholder="assistant.key" /></Form.Item>
+        <Space><Switch checked={form.clear_api_key} onChange={v => set('clear_api_key', v)} /><span>保存时清除密钥引用</span></Space>
       </> }]} />
       <div className="button-row model-actions"><Button icon={<ApiOutlined />} loading={busy === 'list'} disabled={loading || !!busy} onClick={() => run('list')}>读取模型列表</Button><Button loading={busy === 'test'} disabled={loading || !!busy} onClick={() => run('test')}>测试连接</Button><Button type="primary" icon={<SaveOutlined />} htmlType="submit" loading={busy === 'save'} disabled={loading || !!busy}>保存设置</Button></div>
-      <p className="muted">测试连接会使用当前填写的连接发起一次短请求，可能计入厂商用量；保存不会发起模型生成。</p>
+      <p className="muted">连接测试会产生一次模型调用；保存不调用模型。</p>
     </Form>
     {result && <Alert showIcon type={result.status === 'PASS' ? 'success' : 'error'} title={result.status === 'PASS' ? '连接测试通过' : '连接测试未通过'} description={<><p>{result.reason ?? `${result.returned_model ?? result.model ?? form.model}${result.elapsed_seconds !== undefined ? ` · ${result.elapsed_seconds} 秒` : ''}`}</p>{result.parameter_warnings?.map((w: any, i: number) => <p key={i}>{typeof w === 'string' ? w : w.message}</p>)}</>} />}
   </section>;

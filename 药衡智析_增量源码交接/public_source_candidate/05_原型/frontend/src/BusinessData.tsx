@@ -7,19 +7,19 @@ export default function BusinessData({ onPublished }: { onPublished?: (value: an
     kind="business"
     onPublished={onPublished}
     types={[
-      { id: 'cost_summary', label: '成本汇总数据', accept: '.csv,.xlsx', note: '请提供产量、直接材料、直接人工、制造费用，以及产品、工厂和月份。' },
-      { id: 'material_detail', label: '原材料消耗明细', accept: '.csv,.xlsx', note: '按原材料名称逐行记录的材料消耗（按要素归集到材料口径）。' },
-      { id: 'manufacturing_detail', label: '制造费用明细', accept: '.csv,.xlsx', note: '按费用类别的制造费用明细（按要素归集到制造费用口径）。' },
-      { id: 'labor_detail', label: '人工工时明细', accept: '.csv,.xlsx', note: '直接人工与工时记录（人工要素按期间归集）。' },
-      { id: 'budget', label: '预算数据', accept: '.csv,.xlsx', note: '预算口径的成本与产量（启用预算差异分析）。' },
-      { id: 'industry_reference', label: '行业参考数据', accept: '.csv,.xlsx', note: '外部行业基准行（如 产品类别/行业P25/P50/P75），原样进入分析页“行业参考数据”区块；请上传标注“测试数据”的文件，不参与成本计算。' },
+      { id: 'cost_summary', label: '成本汇总数据', accept: '.csv,.xlsx', note: '必需：产品、工厂、月份、产量及材料、人工、制造费用。' },
+      { id: 'material_detail', label: '原材料消耗明细', accept: '.csv,.xlsx', note: '按原料逐行记录消耗与成本。' },
+      { id: 'manufacturing_detail', label: '制造费用明细', accept: '.csv,.xlsx', note: '按费用类别记录金额。' },
+      { id: 'labor_detail', label: '人工工时明细', accept: '.csv,.xlsx', note: '人工成本与工时记录。' },
+      { id: 'budget', label: '预算数据', accept: '.csv,.xlsx', note: '预算成本与产量。' },
+      { id: 'industry_reference', label: '行业参考数据', accept: '.csv,.xlsx', note: '上传标注“测试数据”的行业基准表，仅作参考，不计入成本。' },
     ]}
     parsePath="/data/parse"
     parseLabel="解析数据"
     successPrefix="数据处理成功"
     failPrefix="数据处理失败"
-    listTitle="业务数据导入列表"
-    hint="上传同一企业的成本汇总、明细或预算表（CSV / XLSX），再统一解析。发布成功后自动进入成本分析。"
-    processingNotes="原始文件保留不转码；解析包含预处理、字段映射、质量检查和分析。模型可辅助字段映射与原因假设，未配置模型时使用规则处理。全部已接入文件与本次上传统一校验，重复记录去重，冲突会提示修正；资料不足不补零，汇总与明细不重复计入。"
+    listTitle="导入记录"
+    hint="上传 CSV / XLSX，再点击“解析数据”。"
+    processingNotes="原件保留。新文件与已接入数据合并校验，重复去重、冲突提示修正；缺失不补零，汇总和明细不重复计入。未配置模型时使用规则映射。"
   />;
 }

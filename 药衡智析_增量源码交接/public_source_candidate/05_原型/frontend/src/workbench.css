@@ -43,3 +43,13 @@ body{min-width:320px}h1{font-size:27px;font-weight:650;letter-spacing:-.5px}h2{f
 /* Correct native input defaults inside composite Ant Design controls. */
 .ant-input-affix-wrapper input.ant-input,.business-main .ant-input-affix-wrapper input.ant-input{min-height:0;height:auto;padding:0;border:0;line-height:1.6;border-radius:0}.business-main .ant-input-number input.ant-input-number-input{min-height:0;height:34px;padding-block:0}.business-main .ant-select input.ant-select-input{min-height:0;padding-block:0}.workspace-filters>label.product-field{min-width:166px}.workspace-filters>label.factory-field{min-width:141px}.workspace-filters>label.period-field{min-width:136px}.workspace-filters>label.range-field{min-width:118px}
 @container(max-width:650px){.workspace-filters>label.product-field,.workspace-filters>label.factory-field,.workspace-filters>label.period-field,.workspace-filters>label.range-field{min-width:135px;flex:1 1 40%}}
+.kb-status{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.kg-disclosure .kg-legend{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:12px 8px;background:#f7f9fa;border-radius:8px;margin-top:12px}
+.kg-disclosure .kg-legend>span{display:flex;align-items:center;justify-content:center;gap:7px;font-size:13px}
+.kg-disclosure .kg-legend i{display:inline-block;width:8px;height:8px;border-radius:50%}
+.kg-disclosure .kg-legend b{font-size:12px;font-weight:500;color:var(--muted)}
+.kg-caption{text-align:center;font-size:12px;margin:4px 0}
+.kg-disclosure .panel-heading{flex-wrap:wrap;gap:8px}
+.kg-disclosure .panel-heading h2{margin:0}
+.kg-disclosure .button-row{gap:4px}
+@container(max-width:500px){.kg-disclosure .chart-3d{min-height:440px}.kb-status{gap:6px}.kg-disclosure .panel-heading .ant-btn{padding-inline:8px}}
