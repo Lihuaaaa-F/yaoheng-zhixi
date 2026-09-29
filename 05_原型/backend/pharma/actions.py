@@ -118,15 +118,17 @@ class ActionStore:
     def _decode(self,row):
         if row is None:raise KeyError('ACTION_NOT_FOUND')
         r=dict(row)
+        r['error']=r.pop('last_error',None)
+        r['retryable_edit']=r['status']=='FAILED' and str(r['error'] or '').startswith('HTTP_422:')
         for k in ('payload','metadata','remote'):r[k]=json.loads(r[k]) if r[k] else None
         remote=r.get('remote') or {}
         r['responsibility_confirmation']=r['metadata'].get('responsibility_confirmation')
         r['delivery']={'http_accepted':r['status'] in ('SENT','ACCEPTED'),'notification': 'SIMULATED_SENT' if r['status'] in ('SENT','ACCEPTED') and notification_proven(remote) else 'UNKNOWN','remediation':remote.get('status') if remote.get('status') in ('confirmed','in_progress','completed') else 'NOT_CONFIRMED'}
         return r
     def get(self,action_id):
-        with self.db() as c:return self._decode(c.execute('SELECT * FROM actions WHERE id=?',(action_id,)).fetchone())
+        with self.db() as c:return self._decode(c.execute('SELECT actions.*,outbox.last_error FROM actions LEFT JOIN outbox ON outbox.action_id=actions.id WHERE actions.id=?',(action_id,)).fetchone())
     def list(self):
-        with self.db() as c:return [self._decode(r) for r in c.execute('SELECT * FROM actions ORDER BY updated DESC')]
+        with self.db() as c:return [self._decode(r) for r in c.execute('SELECT actions.*,outbox.last_error FROM actions LEFT JOIN outbox ON outbox.action_id=actions.id ORDER BY actions.updated DESC')]
     def draft(self,snapshot,finding,assignee,suggestion,priority='medium',verification_target=None,expected_evidence=None,responsible_role=None,deadline_basis=None):
         if priority not in ('high','medium','low'):raise ValueError('INVALID_PRIORITY')
         validate_edit_types({'finding':finding,'suggestion':suggestion,'assignee':assignee})
@@ -149,8 +151,8 @@ class ActionStore:
     def edit(self,action_id,changes):
         validate_edit_types(changes)
         with self.db() as c:
-            c.execute('BEGIN IMMEDIATE');a=self._decode(c.execute('SELECT * FROM actions WHERE id=?',(action_id,)).fetchone())
-            if a['status'] not in ('DRAFT',):raise ValueError('已确认内容不可编辑；请重新生成草稿')
+            c.execute('BEGIN IMMEDIATE');a=self._decode(c.execute('SELECT actions.*,outbox.last_error FROM actions LEFT JOIN outbox ON outbox.action_id=actions.id WHERE actions.id=?',(action_id,)).fetchone())
+            if a['status']!='DRAFT' and not a['retryable_edit']:raise ValueError('已确认内容不可编辑；请重新生成草稿')
             allowed={'task_title','suggestion','priority','assignee','deadline','snapshot_id','finding','verification_target','expected_evidence','responsible_role','deadline_basis'}
             if set(changes)-allowed:raise ValueError('UNSUPPORTED_EDIT_FIELDS')
             if changes.get('snapshot_id',a['metadata']['snapshot_id'])!=a['metadata']['snapshot_id']:raise ValueError('SNAPSHOT_CHANGE_REQUIRES_NEW_DRAFT')
@@ -172,11 +174,16 @@ class ActionStore:
             business=digest({'context':a['metadata'].get('analysis_context'),'action_meta':action_details(a['metadata']),'snapshot_id':a['metadata']['snapshot_id'],'finding':a['payload']['source']['finding'].split('；分析期间：')[0],'assignee':a['payload']['assignee'],'suggestion':a['payload']['suggestion'],'priority':a['payload']['priority']})
             duplicate=c.execute('SELECT id FROM actions WHERE business_hash=? AND id<>?',(business,action_id)).fetchone()
             if duplicate:raise ValueError('DUPLICATE_DRAFT_USE_EXISTING:'+duplicate['id'])
+            if a['retryable_edit']:
+                c.execute('DELETE FROM outbox WHERE action_id=?',(action_id,))
+                c.execute("UPDATE actions SET status='DRAFT',remote=NULL WHERE id=?",(action_id,))
+                c.execute('INSERT INTO action_events(action_id,state,at,detail) VALUES(?,?,?,?)',
+                          (action_id,'DRAFT',now(),'修正被拒收参数；需重新确认'))
             c.execute('UPDATE actions SET payload=?,payload_hash=?,business_hash=?,metadata=?,updated=? WHERE id=?',(json.dumps(a['payload'],ensure_ascii=False),action_identity(a['payload'],a['metadata']),business,json.dumps(a['metadata'],ensure_ascii=False),now(),action_id))
         return self.get(action_id)
     def confirm(self,action_id,payload_hash):
         with self.db() as c:
-            c.execute('BEGIN IMMEDIATE');a=self._decode(c.execute('SELECT * FROM actions WHERE id=?',(action_id,)).fetchone())
+            c.execute('BEGIN IMMEDIATE');a=self._decode(c.execute('SELECT actions.*,outbox.last_error FROM actions LEFT JOIN outbox ON outbox.action_id=actions.id WHERE actions.id=?',(action_id,)).fetchone())
             validate_action(a['payload'],a['metadata'])
             if payload_hash!=a['payload_hash']:raise ValueError('PAYLOAD_CHANGED_RECONFIRM_REQUIRED')
             if a['status']=='DRAFT':
@@ -189,7 +196,7 @@ class ActionStore:
         if not isinstance(confirmed_by,str) or not confirmed_by.strip():raise ValueError('HUMAN_NAME_REQUIRED')
         with self.db() as c:
             c.execute('BEGIN IMMEDIATE')
-            a=self._decode(c.execute('SELECT * FROM actions WHERE id=?',(action_id,)).fetchone())
+            a=self._decode(c.execute('SELECT actions.*,outbox.last_error FROM actions LEFT JOIN outbox ON outbox.action_id=actions.id WHERE actions.id=?',(action_id,)).fetchone())
             if a['status'] not in ('SENT','ACCEPTED'):raise ValueError('ACKNOWLEDGEMENT_REQUIRES_DELIVERY')
             if a['metadata'].get('responsibility_confirmation'):return a
             a['metadata']['responsibility_confirmation']={'status':'CONFIRMED','confirmed_by':confirmed_by.strip(),'confirmed_at':now(),'comment':str(comment)[:2000],'source':'human_entry','remediation_completed':False}
@@ -231,7 +238,7 @@ class ActionStore:
         if client is None:
             with httpx.Client(timeout=httpx.Timeout(10,connect=3),trust_env=_rpa_trust_environment(base_url)) as actual:return self.deliver_one(action_id,actual,base_url)
         with self.db() as c:
-            c.execute('BEGIN IMMEDIATE');a=self._decode(c.execute('SELECT * FROM actions WHERE id=?',(action_id,)).fetchone())
+            c.execute('BEGIN IMMEDIATE');a=self._decode(c.execute('SELECT actions.*,outbox.last_error FROM actions LEFT JOIN outbox ON outbox.action_id=actions.id WHERE actions.id=?',(action_id,)).fetchone())
             ob=c.execute('SELECT * FROM outbox WHERE action_id=?',(action_id,)).fetchone()
             if not ob or a['status']=='DRAFT':raise ValueError('USER_CONFIRMATION_REQUIRED')
             if ob['confirmed_hash']!=a['payload_hash']:raise ValueError('PAYLOAD_CHANGED_RECONFIRM_REQUIRED')

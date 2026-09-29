@@ -56,8 +56,11 @@ docker compose -f 05_原型/deploy/docker-compose.yml stop
 PYTHONPATH=05_原型/backend TMPDIR=/tmp PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 \
   "$PHARMA_PYTHON" -m pytest -q 05_原型/tests
 npm run build --prefix 05_原型/frontend
+npm test --prefix 05_原型/frontend
 python3 tools/verify_repository.py
 ```
+
+前端完整节点测试使用 Node.js 24（包含直接导入 TypeScript 的回归），CI 已固定该版本。默认后端回归使用独立合成数值；需要附加核对原题数值时显式设置 `PHARMA_TEST_COMPETITION_DATA=1`。
 
 未设置 `PHARMA_PYTHON` 时，将测试命令中的解释器替换为项目虚拟环境的 Python。预测 CLI 使用标准库，可单独执行。依赖锁文件、构建指纹和验收版本用于复现，不限制正常分支开发或合并。
 

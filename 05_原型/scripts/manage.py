@@ -24,28 +24,42 @@ def _windowless_python():
     return PYTHON
 SERVICE_PYTHON=_windowless_python()
 
-def token(pid):
+def _windows_token(pid):
+    """Bind a PID to its creation FILETIME; absent/legacy tokens fail closed."""
+    import ctypes
+    from ctypes import wintypes
+    kernel32=ctypes.WinDLL('kernel32',use_last_error=True)
+    kernel32.OpenProcess.argtypes=[wintypes.DWORD,wintypes.BOOL,wintypes.DWORD]
+    kernel32.OpenProcess.restype=wintypes.HANDLE
+    kernel32.GetProcessTimes.argtypes=[wintypes.HANDLE]+[ctypes.POINTER(wintypes.FILETIME)]*4
+    kernel32.GetProcessTimes.restype=wintypes.BOOL
+    kernel32.GetExitCodeProcess.argtypes=[wintypes.HANDLE,ctypes.POINTER(wintypes.DWORD)]
+    kernel32.GetExitCodeProcess.restype=wintypes.BOOL
+    kernel32.CloseHandle.argtypes=[wintypes.HANDLE]
+    kernel32.CloseHandle.restype=wintypes.BOOL
+    handle=kernel32.OpenProcess(0x1000,False,int(pid))
+    if not handle:return None
     try:
-        fields=Path(f'/proc/{pid}/stat').read_text().split()
-        return fields[21] if fields[2]!='Z' else None
+        code=wintypes.DWORD()
+        if not kernel32.GetExitCodeProcess(handle,ctypes.byref(code)) or code.value!=259:return None
+        created,exited,kernel,user=(wintypes.FILETIME() for _ in range(4))
+        if not kernel32.GetProcessTimes(handle,ctypes.byref(created),ctypes.byref(exited),ctypes.byref(kernel),ctypes.byref(user)):return None
+        return str((created.dwHighDateTime<<32)|created.dwLowDateTime)
+    finally:
+        kernel32.CloseHandle(handle)
+
+def token(pid):
+    if os.name=='nt':return _windows_token(pid)
+    try:
+        # comm may contain spaces or parentheses; fields after its final ')' start at state.
+        fields=Path(f'/proc/{pid}/stat').read_text(encoding='utf-8').rsplit(')',1)[1].split()
+        return fields[19] if fields[0]!='Z' else None
     except (OSError,IndexError):return None
 
 def alive(info):
-    # POSIX: /proc start-time token. Windows: /proc absent; verify the pid
-    # still names a live process (Start Time via WMI-free ctypes check).
-    if Path('/proc').is_dir():
-        return token(info['pid'])==info['token']
-    import ctypes
-    PROCESS_QUERY_LIMITED_INFORMATION=0x1000; STILL_ACTIVE=259
-    kernel32=ctypes.windll.kernel32
-    handle=kernel32.OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION,False,int(info['pid']))
-    if not handle:return False
-    try:
-        code=ctypes.c_ulong()
-        if not kernel32.GetExitCodeProcess(handle,ctypes.byref(code)):return False
-        return code.value==STILL_ACTIVE
-    finally:
-        kernel32.CloseHandle(handle)
+    expected=info.get('token')
+    return expected is not None and token(info['pid'])==expected
+
 def ready(port):
     try:
         with urllib.request.urlopen(f'http://127.0.0.1:{port}/health',timeout=1) as r:return r.status==200
@@ -67,7 +81,7 @@ def occupied(port):
         except OSError:return True
 
 def main():
-    state=json.loads(STATE.read_text()) if STATE.exists() else {}
+    state=json.loads(STATE.read_text(encoding='utf-8')) if STATE.exists() else {}
     if sys.argv[1]=='stop':
         for name,info in state.items():
             if not alive(info):continue
@@ -83,7 +97,8 @@ def main():
             time.sleep(.1)
         if any(alive(info) for info in state.values()):raise SystemExit('本项目进程仍在退出，请稍后重试')
         print('已停止本项目记录的进程');return
-    env={**os.environ,'PYTHONPATH':str(APP/'backend'),'TMPDIR':'/tmp','MPLCONFIGDIR':str(RUN/'matplotlib'),'ANONYMIZED_TELEMETRY':'False','OTEL_SDK_DISABLED':'true'}
+    temp_dir=RUN/'tmp';temp_dir.mkdir(parents=True,exist_ok=True)
+    env={**os.environ,'PYTHONPATH':str(APP/'backend'),'TMPDIR':str(temp_dir),'TMP':str(temp_dir),'TEMP':str(temp_dir),'MPLCONFIGDIR':str(RUN/'matplotlib'),'ANONYMIZED_TELEMETRY':'False','OTEL_SDK_DISABLED':'true'}
     mock=PACKAGE/'05_RPA接口文档'
     rpa_module='mock_rpa_server:app' if (mock/'mock_rpa_server.py').is_file() else 'pharma.synthetic_rpa:app'
     rpa_dir=str(mock) if (mock/'mock_rpa_server.py').is_file() else str(APP/'backend')
@@ -125,7 +140,7 @@ def main():
                 try:flags|=subprocess.CREATE_BREAKAWAY_FROM_JOB
                 except AttributeError:pass
             p=subprocess.Popen(cmd,cwd=APP,env=env,stdout=log,stderr=log,start_new_session=(os.name!='nt'),creationflags=flags)
-        state[name]={'pid':p.pid,'token':token(p.pid),'command':cmd};STATE.write_text(json.dumps(state,ensure_ascii=False,indent=2))
+        state[name]={'pid':p.pid,'token':token(p.pid),'command':cmd};STATE.write_text(json.dumps(state,ensure_ascii=False,indent=2),encoding='utf-8')
         if port:
             for _ in range(60):
                 if ready(port):break

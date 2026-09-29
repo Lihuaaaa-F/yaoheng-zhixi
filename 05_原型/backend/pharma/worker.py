@@ -56,7 +56,7 @@ def process_job(store,job):
             # 源未变化时秒级返回；补充知识目录增删改后报告链路自动纳入新版本，
             # 不再依赖手动触发构建（实测旧版本会在检索侧静默沿用）。
             from .context_services import knowledge_for_context
-            built = knowledge_for_context(snapshot.get('analysis_context')).build()
+            built = knowledge_for_context(snapshot.get('analysis_context')).build(retry_failed=False)
             # 2026-09-24 修复（审计 AUD-RAG-02）：此前 build() 返回值被丢弃——
             # 源变更+部分解析失败时索引静默陈旧。DEGRADED（failures 非空、
             # CURRENT 未切换）现在透出到任务结果供前端/评测可见。
@@ -131,7 +131,7 @@ def process_job(store,job):
         result['capability_status']='PASS' if all(v.get('status')=='PASS' for k,v in result['acceptance'].items() if isinstance(v,dict) and k not in ('section_completeness','readability','visual_quality')) else 'DEGRADED'
         complete=result['acceptance']['overall']=='PASS'
         result['input_versions']={'data':snapshot.get('data_version'),'formula':snapshot['formula_version'],'knowledge':result['evidence'].get('knowledge_version'),'model':result['narrative'].get('model'),'prompt':result['narrative'].get('prompt_version')}
-        tmp=folder/'record.tmp.json';tmp.write_text(json.dumps(result,ensure_ascii=False,indent=2));tmp.replace(folder/'record.json')
+        tmp=folder/'record.tmp.json';tmp.write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8');tmp.replace(folder/'record.json')
         store.update(id,'SUCCEEDED' if complete else 'DEGRADED',result)
     except Exception as exc:
         store.update(id,'FAILED',result,type(exc).__name__+': '+str(exc)[:700])
@@ -140,17 +140,23 @@ def process_job(store,job):
 
 def dispatch_loop(stop):
     """Outbox and heartbeat remain responsive while report/model work blocks."""
-    actions=ActionStore()
+    actions=None
     while not stop.is_set():
-        heartbeat=RUNTIME/'worker.heartbeat'
-        staged=heartbeat.with_suffix('.tmp')
-        staged.write_text(str(time.time()))
-        staged.replace(heartbeat)
-        for item in actions.pending():
-            try:actions.deliver_one(item['action_id'])
-            except Exception as exc:
-                actions._state(item['action_id'],'DELIVERY_UNKNOWN',error='worker:'+type(exc).__name__)
-                traceback.print_exc()
+        try:
+            if actions is None:actions=ActionStore()
+            heartbeat=RUNTIME/'worker.heartbeat'
+            staged=heartbeat.with_suffix('.tmp')
+            staged.write_text(str(time.time()),encoding='utf-8')
+            staged.replace(heartbeat)
+            for item in actions.pending():
+                try:actions.deliver_one(item['action_id'])
+                except Exception as exc:
+                    # If this write also fails, SENDING is reconciled next time;
+                    # deliver_one never blindly repeats an uncertain send.
+                    actions._state(item['action_id'],'DELIVERY_UNKNOWN',error='worker:'+type(exc).__name__)
+                    traceback.print_exc()
+        except Exception:
+            traceback.print_exc()
         stop.wait(.5)
 
 def main():

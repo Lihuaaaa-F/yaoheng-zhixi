@@ -27,7 +27,7 @@ import httpx
 from .config import RUNTIME, MODEL_DEFAULT, MODEL_PROTOCOL_DEFAULT, MODEL_BASE_URL_DEFAULT, MODEL_CODING_BASE_URL_DEFAULT
 
 PROMPT_VERSION='ranked-diagnostic-paths-v6-bounded-batches'
-VALIDATOR_VERSION='useful-bounded-attribution-v8'
+VALIDATOR_VERSION='useful-bounded-attribution-v9-unit-suffix'
 # Aliases may only be added after a live probe has verified that the upstream
 # really serves the requested model under that exact returned id.
 # 追加机制（2026-09-24 审批方案 C5）：环境变量 PHARMA_MODEL_VERIFIED_ALIASES，
@@ -187,6 +187,13 @@ def _metric_role_validation(text, snapshot, *, alert_refs=()):
         unit = str(metric.get('unit',''))
         prefix = re.split(r'[，,；;。\n]',text[:match.start()])[-1]
         suffix = re.split(r'[，,；;。\n]',text[match.end():])[0]
+        # Match the registered unit, not an arbitrary run of Chinese prose.
+        # The following “的单位成本” is prose, while another slash extends units.
+        explicit_unit = re.match(r'\s*(?:元|%)', suffix)
+        if explicit_unit and (not unit or not re.match(r'\s*' + re.escape(unit) + r'(?![/A-Za-z])', suffix.replace('／', '/'))):
+            raise ValueError('metric unit contradicts explicit suffix')
+        if '/' not in unit and re.match(r'\s*[/／]', suffix):
+            raise ValueError('metric unit cannot acquire a denominator')
         role = metric.get('comparison_role')
         # Explicitly named existing previous/base facts remain legal. A bare
         # current metric or a delta/rate is never implicitly a base-period value.
@@ -821,7 +828,7 @@ def validate_findings(findings,snapshot,evidence,*,excluded_evidence=()):
             chunk = Knowledge.evidence_in_library(ref, context=snapshot.get('analysis_context'))
             if chunk is None:
                 raise ValueError('unknown evidence: ' + str(ref))
-            outcome = Knowledge.evidence_applicability(chunk, product=snapshot.get('product'), factory=snapshot.get('factory'), period=snapshot.get('period'), specification=snapshot.get('specification'), context=snapshot.get('analysis_context'))
+            outcome = Knowledge.evidence_applicability(chunk, product=snapshot.get('product'), factory=snapshot.get('factory'), period=snapshot.get('period'), specification=snapshot.get('specification'),document_version=snapshot.get('document_version'), context=snapshot.get('analysis_context'))
             if not outcome['applicable']:
                 raise ValueError('evidence found in library but inapplicable: ' + '、'.join(outcome['reasons']))
             effective_sources[ref] = chunk
@@ -833,7 +840,7 @@ def validate_findings(findings,snapshot,evidence,*,excluded_evidence=()):
             if not ev.get('location') and not ev.get('page'): raise ValueError('missing evidence position')
             if not _quote_supported(quote, ev['text']): raise ValueError('unsupported quote')
             if len(quote)>180: raise ValueError('quote must be a short positioned excerpt')
-            applicability = Knowledge.evidence_applicability(ev, product=snapshot.get('product'), factory=snapshot.get('factory'), period=snapshot.get('period'), specification=snapshot.get('specification'),context=snapshot.get('analysis_context'))
+            applicability = Knowledge.evidence_applicability(ev, product=snapshot.get('product'), factory=snapshot.get('factory'), period=snapshot.get('period'), specification=snapshot.get('specification'),document_version=snapshot.get('document_version'),context=snapshot.get('analysis_context'))
             if not applicability['applicable']: raise ValueError('evidence belongs to a different product or inapplicable scope: ' + '、'.join(applicability['reasons']))
         slots = re.findall(r'\[\[metric:([^\]]+)\]\]',f.text_template)
         plain = re.sub(r'\[\[metric:[^\]]+\]\]','',f.text_template)
@@ -1189,7 +1196,7 @@ class ModelGateway:
             for name in ('temperature', 'top_p'):
                 if getattr(self, name) is not None:
                     body[name] = getattr(self, name)
-            (self.runtime / f'model-request-{rowid}.json').write_text(json.dumps({'operation':operation,'prompt_version':prompt_version,'body':body},ensure_ascii=False,indent=2))
+            (self.runtime / f'model-request-{rowid}.json').write_text(json.dumps({'operation':operation,'prompt_version':prompt_version,'body':body},ensure_ascii=False,indent=2), encoding='utf-8')
             def _chat_url(base):
                 # 按协议拼完整对话端点；anthropic 兼容 /v1 结尾时直接挂 /messages
                 base = base.rstrip('/')
@@ -1243,7 +1250,7 @@ class ModelGateway:
             returned_model = data.get('model')
             identity_status, identity_reason = classify_identity(self.model, returned_model)
             text = ''.join(x.get('text','') for x in data['content'] if x.get('type')=='text') if self.provider=='anthropic' else data['choices'][0]['message']['content']
-            (self.runtime / f'model-response-{rowid}.json').write_text(json.dumps({'requested_model':self.model,'returned_model':returned_model,'identity_status':identity_status,'endpoint':used_endpoint,'response_text':text,'usage':usage,'finish_reason':data.get('stop_reason') if self.provider=='anthropic' else data['choices'][0].get('finish_reason')},ensure_ascii=False,indent=2))
+            (self.runtime / f'model-response-{rowid}.json').write_text(json.dumps({'requested_model':self.model,'returned_model':returned_model,'identity_status':identity_status,'endpoint':used_endpoint,'response_text':text,'usage':usage,'finish_reason':data.get('stop_reason') if self.provider=='anthropic' else data['choices'][0].get('finish_reason')},ensure_ascii=False,indent=2), encoding='utf-8')
             status = 'PASS'
             return text,usage,{'requested_model':self.model,'returned_model':returned_model,'identity_status':identity_status,'reason':identity_reason,'call_id':rowid,'endpoint':used_endpoint}
         except Exception as exc:
@@ -1341,7 +1348,7 @@ def _prepare_generation(snapshot, evidence, gateway=None):
             document_versions.setdefault(ev['document_number'],set()).add(ev['document_version'])
     conflicting_documents={key for key,versions in document_versions.items() if len(versions)>1}
     for ev in supplied:
-        check=Knowledge.evidence_applicability(ev,product=snapshot.get('product'),factory=snapshot.get('factory'),period=snapshot.get('period'),specification=snapshot.get('specification'),context=snapshot.get('analysis_context'))
+        check=Knowledge.evidence_applicability(ev,product=snapshot.get('product'),factory=snapshot.get('factory'),period=snapshot.get('period'),specification=snapshot.get('specification'),document_version=snapshot.get('document_version'),context=snapshot.get('analysis_context'))
         if ev.get('document_number') in conflicting_documents:
             check['applicable']=False
             check['reasons'].append('同一文档编号存在多个版本，尚未提供替代关系证明')

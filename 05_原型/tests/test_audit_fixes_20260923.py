@@ -11,6 +11,7 @@
 - AUD-BENCH-01：generate(allow_model=False) 不发起模型调用即返回规则结果；
   cached_generation 只读缓存不写。
 """
+import os
 import importlib
 import io
 import json
@@ -74,6 +75,8 @@ def _mapping_for(record):
 
 # ---------- AUD-BENCH-02：benchmark 缺省方向 ----------
 
+@pytest.mark.skipif(os.environ.get('PHARMA_TEST_COMPETITION_DATA') != '1',
+                    reason='competition asset integration requires PHARMA_TEST_COMPETITION_DATA=1')
 def test_benchmark_default_direction_matches_report_path():
     from pharma.metrics import benchmark, analyze
     analyze('中药一厂', '银黄口服液', '2026-05')  # 确保数据快照已建立（CI 冷缓存）
@@ -219,6 +222,8 @@ def test_install_template_missing_yoy_columns_skips_binding(isolated_runtime, tm
 
 # ---------- AUD-BENCH-01：allow_model=False 与只读缓存 ----------
 
+@pytest.mark.skipif(os.environ.get('PHARMA_TEST_COMPETITION_DATA') != '1',
+                    reason='competition asset integration requires PHARMA_TEST_COMPETITION_DATA=1')
 def test_generate_allow_model_false_returns_rules_without_model_calls():
     from pharma.narrative import generate
     from pharma.metrics import analyze
@@ -231,6 +236,8 @@ def test_generate_allow_model_false_returns_rules_without_model_calls():
     assert all(f.get('origin') in (None, 'rules') for f in result['findings'])
 
 
+@pytest.mark.skipif(os.environ.get('PHARMA_TEST_COMPETITION_DATA') != '1',
+                    reason='competition asset integration requires PHARMA_TEST_COMPETITION_DATA=1')
 def test_cached_generation_readonly_and_generate_write_visible(tmp_path):
     # 独立 gateway runtime：不读写真实 .runtime/model_gateway.sqlite3
     import pharma.narrative as narrative
@@ -517,6 +524,8 @@ def test_explanation_presence_accepts_legacy_summary_section(tmp_path):
 
 # ---------- AUD-TST-03：题包真数据独立金标（期望值硬编码，不经引擎推导） ----------
 
+@pytest.mark.skipif(os.environ.get('PHARMA_TEST_COMPETITION_DATA') != '1',
+                    reason='competition asset integration requires PHARMA_TEST_COMPETITION_DATA=1')
 def test_golden_metrics_yinhuang_2026_05():
     """金标值由审计独立复算脚本从题包原始 CSV 以 Decimal 手工推导
     （docs/audits/20260923-1f78b2f/EVIDENCE/verify_metrics.py，2026-09-23）。

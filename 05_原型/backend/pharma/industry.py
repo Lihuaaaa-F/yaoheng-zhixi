@@ -8,7 +8,7 @@ Uploaded configuration names trusted strategies; it cannot execute code or SQL.
 """
 from __future__ import annotations
 from collections import defaultdict
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from hashlib import sha256
 from pathlib import Path
 from typing import Any, Literal
@@ -16,6 +16,7 @@ import csv
 import json
 import os
 import tempfile
+import threading
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from .config import APP, PACKAGE, RUNTIME
 
@@ -201,7 +202,7 @@ def load_pack(pack):
         if not pack.replace('_','').isalnum(): raise ValueError('UNKNOWN_INDUSTRY_PACK')
         path = PACKS / pack / 'manifest.json'
         if not path.is_file(): raise ValueError('UNKNOWN_INDUSTRY_PACK')
-        pack = json.loads(path.read_text())
+        pack = json.loads(path.read_text(encoding='utf-8'))
     result = PackManifest.model_validate(pack)
     if result.core_compatibility != '>=1,<2': raise ValueError('INCOMPATIBLE_CORE_VERSION')
     if any(name not in STRATEGIES for name in result.strategies): raise ValueError('UNREGISTERED_STRATEGY')
@@ -247,7 +248,7 @@ class EnterpriseConfig(Contract):
 
 def _load_enterprise_file(path):
     path=Path(path).resolve()
-    value=EnterpriseConfig.model_validate(json.loads(path.read_text())).model_dump()
+    value=EnterpriseConfig.model_validate(json.loads(path.read_text(encoding='utf-8'))).model_dump()
     value['_base_dir']=path.parent
     value['_config_file']=path
     return value
@@ -255,7 +256,7 @@ def _load_enterprise_file(path):
 
 def _registered():
     if not ENTERPRISE_REGISTRY.is_file():return {}
-    entries=json.loads(ENTERPRISE_REGISTRY.read_text())
+    entries=json.loads(ENTERPRISE_REGISTRY.read_text(encoding='utf-8'))
     # A registered import whose files were deleted is dead, not fatal: the
     # catalog must keep working and a later re-import may overwrite the key.
     return {k:v for k,v in entries.items() if Path(v).is_file()}
@@ -288,6 +289,8 @@ def _fp(path) -> tuple:
 
 
 _DATASET_CACHE: dict = {}
+_DATASET_CACHE_LIMIT = 32
+_DATASET_CACHE_LOCK = threading.Lock()
 
 
 def _read_dataset(pack, enterprise=None):
@@ -300,10 +303,16 @@ def _read_dataset(pack, enterprise=None):
     semantic = {k: enterprise.get(k) for k in ('id', 'quantity_unit', 'currency', 'products', 'policy_version')}
     key = ('dataset', str(enterprise['_config_file']), *_fp(enterprise['_config_file']),
            str(facts), *_fp(facts), _canon(semantic))
-    hit = _DATASET_CACHE.get(key)
-    if hit is None:
-        hit = _read_dataset_uncached(pack, enterprise)
+    with _DATASET_CACHE_LOCK:
+        hit = _DATASET_CACHE.pop(key, None)
+        if hit is not None:
+            _DATASET_CACHE[key] = hit
+            return hit
+    hit = _read_dataset_uncached(pack, enterprise)
+    with _DATASET_CACHE_LOCK:
         _DATASET_CACHE[key] = hit
+        while len(_DATASET_CACHE) > _DATASET_CACHE_LIMIT:
+            del _DATASET_CACHE[next(iter(_DATASET_CACHE))]
     return hit
 
 
@@ -313,7 +322,7 @@ def _canon(value) -> str:
 
 def _read_dataset_uncached(pack, enterprise):
     enterprise = enterprise or _enterprise(pack)
-    raw = json.loads((enterprise['_base_dir'] / enterprise['facts_entry']).read_text())
+    raw = json.loads((enterprise['_base_dir'] / enterprise['facts_entry']).read_text(encoding='utf-8'))
     dataset=NormalizedDataset.model_validate(raw)
     if any(x.quantity_unit!=enterprise['quantity_unit'] for x in dataset.costs) or any(x.unit!=enterprise['quantity_unit'] for x in dataset.quantities):
         raise ValueError('ENTERPRISE_UNIT_CONFLICT')
@@ -344,7 +353,7 @@ def register_enterprise(pack_id, configuration_path, *, advance_workspace=False)
     for factory,product,scenario in {(x.factory_id,x.product_id,x.scenario) for x in dataset.costs}:
         filtered=NormalizedDataset(costs=tuple(x for x in dataset.costs if (x.factory_id,x.product_id,x.scenario)==(factory,product,scenario)),quantities=tuple(x for x in dataset.quantities if (x.factory_id,x.product_id,x.scenario)==(factory,product,scenario)))
         aggregate(filtered,sorted({x.period for x in filtered.costs}),scenario)
-    knowledge=json.loads((enterprise['_base_dir']/enterprise['knowledge_entry']).read_text())
+    knowledge=json.loads((enterprise['_base_dir']/enterprise['knowledge_entry']).read_text(encoding='utf-8'))
     if not isinstance(knowledge,list) or any(x.get('enterprise_id')!=enterprise['id'] or x.get('industry_id')!=pack.id for x in knowledge):
         raise ValueError('ENTERPRISE_KNOWLEDGE_SCOPE_MISMATCH')
     key=pack.id+':'+enterprise['id']
@@ -361,7 +370,7 @@ def register_enterprise(pack_id, configuration_path, *, advance_workspace=False)
             except ValueError: raise ValueError('INVALID_WORKSPACE_VERSION_PATH')
         entries[key]=path
         with tempfile.TemporaryDirectory(dir=ENTERPRISE_REGISTRY.parent,prefix='enterprise-') as temporary:
-            candidate=Path(temporary)/'registry.json';candidate.write_text(json.dumps(entries,ensure_ascii=False,sort_keys=True))
+            candidate=Path(temporary)/'registry.json';candidate.write_text(json.dumps(entries,ensure_ascii=False,sort_keys=True), encoding='utf-8')
             os.replace(candidate,ENTERPRISE_REGISTRY)
     return key
 
@@ -569,18 +578,18 @@ def publish_snapshot(dataset, destination):
     body=dataset.model_dump(mode='json'); snapshot=digest(body)
     document={'snapshot_id':snapshot,'dataset':body}
     with tempfile.TemporaryDirectory(prefix='candidate-',dir=destination) as staging:
-        path=Path(staging)/'snapshot.json';path.write_text(json.dumps(document,ensure_ascii=False))
+        path=Path(staging)/'snapshot.json';path.write_text(json.dumps(document,ensure_ascii=False), encoding='utf-8')
         os.replace(path,destination/(snapshot+'.json'))
-        pointer=Path(staging)/'current.json';pointer.write_text(json.dumps({'snapshot_id':snapshot}))
+        pointer=Path(staging)/'current.json';pointer.write_text(json.dumps({'snapshot_id':snapshot}), encoding='utf-8')
         os.replace(pointer,destination/'current.json')
     return {'snapshot_id':snapshot}
 
 
 def load_snapshot(destination):
     destination=Path(destination)
-    snapshot=json.loads((destination/'current.json').read_text())['snapshot_id']
+    snapshot=json.loads((destination/'current.json').read_text(encoding='utf-8'))['snapshot_id']
     if len(snapshot)!=64 or any(c not in '0123456789abcdef' for c in snapshot): raise ValueError('INVALID_SNAPSHOT_ID')
-    result=json.loads((destination/(snapshot+'.json')).read_text())
+    result=json.loads((destination/(snapshot+'.json')).read_text(encoding='utf-8'))
     if digest(result['dataset']) != snapshot: raise ValueError('SNAPSHOT_HASH_MISMATCH')
     return result
 
@@ -813,7 +822,7 @@ def analyze_reference(context_id, factory=None, product=None, month=None, analys
         sources={'current':current_source,'base':source_evidence(base)}
         row_keys=list(dict.fromkeys(row for source in sources.values() if source for kind in ('cost_rows','quantity_rows') for row in source[kind]))
         return {'metric_id':scope+':'+key,'value':None if value is None else str(value),
-                'display':'N/A' if value is None else str(D(value).quantize(D('0.01'))),'unit':units,
+                'display':'N/A' if value is None else str(D(value).quantize(D('0.01'), rounding=ROUND_HALF_UP)),'unit':units,
                 'formula':formula,'formula_version':FORMULA_VERSION,
                 'numerator':None if numerator is None and value is None else str(value if numerator is None else numerator),
                 'denominator':None if den is None else str(den),'comparison_period':period,
@@ -964,7 +973,7 @@ def benchmark_reference(context_id, product, month, left, right, analysis_type='
             sources={'left':original['sources']['current'],'right':right_metric['sources']['current'] if right_metric else b['metrics']['unit_cost']['sources']['current']}
             rows=list(dict.fromkeys(source_row for source in sources.values() if source for kind in ('cost_rows','quantity_rows') for source_row in source[kind]))
             a['metrics'][key]={**original,'metric_id':key,'label':row['name']+'跨厂'+field,'value':row[field],
-                'display':'N/A' if row[field] is None else str(D(row[field]).quantize(D('0.01'))),'unit':unit,
+                'display':'N/A' if row[field] is None else str(D(row[field]).quantize(D('0.01'), rounding=ROUND_HALF_UP)),'unit':unit,
                 'formula':'左厂−右厂' if field=='delta' else '(左厂−右厂)/右厂×100' if field=='rate' else '要素差额/所选口径总差额×100',
                 'numerator':numerator,'denominator':denominator,'basis':metric_basis,
                 'comparison_period':comparison['period'],'sources':sources,'row_keys':rows,

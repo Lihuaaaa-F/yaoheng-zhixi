@@ -7,6 +7,8 @@
   含 synthetic 标注文件；analyze(中药二厂) 明细可用并携带 data_label；对标
   details 的二厂侧带标注。
 """
+import os
+import pytest
 import importlib
 from pathlib import Path
 
@@ -21,6 +23,8 @@ def _reload_config():
     return importlib.reload(config)
 
 
+@pytest.mark.skipif(os.environ.get('PHARMA_TEST_COMPETITION_DATA') != '1',
+                    reason='competition asset integration requires PHARMA_TEST_COMPETITION_DATA=1')
 def test_default_off_returns_to_package_only(tmp_path, monkeypatch):
     monkeypatch.delenv('PHARMA_SYNTHETIC_DETAIL_DIR', raising=False)
     monkeypatch.setenv('PHARMA_RUNTIME_DIR', str(tmp_path / 'runtime-default'))
@@ -39,6 +43,8 @@ def test_default_off_returns_to_package_only(tmp_path, monkeypatch):
         importlib.reload(config)
 
 
+@pytest.mark.skipif(os.environ.get('PHARMA_TEST_COMPETITION_DATA') != '1',
+                    reason='competition asset integration requires PHARMA_TEST_COMPETITION_DATA=1')
 def test_ingest_manifest_marks_synthetic_files(tmp_path, monkeypatch):
     monkeypatch.setenv('PHARMA_SYNTHETIC_DETAIL_DIR', _synthetic_dir())
     monkeypatch.setenv('PHARMA_RUNTIME_DIR', str(tmp_path / 'runtime'))
@@ -58,6 +64,8 @@ def test_ingest_manifest_marks_synthetic_files(tmp_path, monkeypatch):
         importlib.reload(config)
 
 
+@pytest.mark.skipif(os.environ.get('PHARMA_TEST_COMPETITION_DATA') != '1',
+                    reason='competition asset integration requires PHARMA_TEST_COMPETITION_DATA=1')
 def test_plant2_details_available_and_labeled(tmp_path, monkeypatch):
     monkeypatch.setenv('PHARMA_SYNTHETIC_DETAIL_DIR', _synthetic_dir())
     monkeypatch.setenv('PHARMA_RUNTIME_DIR', str(tmp_path / 'runtime3'))
@@ -78,6 +86,8 @@ def test_plant2_details_available_and_labeled(tmp_path, monkeypatch):
         importlib.reload(config)
 
 
+@pytest.mark.skipif(os.environ.get('PHARMA_TEST_COMPETITION_DATA') != '1',
+                    reason='competition asset integration requires PHARMA_TEST_COMPETITION_DATA=1')
 def test_benchmark_details_carry_synthetic_label(tmp_path, monkeypatch):
     monkeypatch.setenv('PHARMA_SYNTHETIC_DETAIL_DIR', _synthetic_dir())
     monkeypatch.setenv('PHARMA_RUNTIME_DIR', str(tmp_path / 'runtime4'))

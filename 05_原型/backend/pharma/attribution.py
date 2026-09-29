@@ -10,9 +10,9 @@ from __future__ import annotations
 import math
 from decimal import Decimal as D
 
-from .ingestion import load_rows
+from .ingestion import load_rows, RECONCILIATION_TOLERANCE
 
-ATTRIBUTION_VERSION = 'attribution-v2-bound-snapshot'
+ATTRIBUTION_VERSION = 'attribution-v3-reconciliation-contract'
 
 _ELEM_COLS = (('材料', '直接材料(元/盒)'), ('人工', '直接人工(元/盒)'), ('制造费用', '制造费用(元/盒)'))
 _EP_SELECT_THRESHOLD = D('0.95')   # 同向属性累计解释力达到 95% 即止
@@ -275,7 +275,7 @@ def rank(localized: dict, price: dict | None, did_result: dict | None) -> list[d
                         'priority': label, 'score_kind': 'review_priority_heuristic',
                         'basis': f'占同口径变动{cause["ep_pct"]}'
                                  + ('；存在行情同向信号' if price_aff > 0 else '')
-                                 + ('；跨厂变化对照同向' if did_align == 1.0 else ('；跨厂变化对照反向' if did_align == 0.0 and did_tau is not None else '；跨厂变化对照缺失')),
+                                 + ('；跨厂变化对照无变化' if did_tau == 0 else '；跨厂变化对照同向' if did_align == 1.0 else ('；跨厂变化对照反向' if did_align == 0.0 and did_tau is not None else '；跨厂变化对照缺失')),
                         'note': '经验权重仅表示核查优先级，不是原因发生概率；不同维度存在包含关系，不可相加。'})
     ranking.sort(key=lambda r: (-r['score'], r['cause']))
     return ranking[:5]
@@ -316,7 +316,7 @@ def _snapshot_localize(snapshot, compare):
         cur[key], base[key] = _d(values.get('current')), _d(values.get('base'))
     if not cur or any(v is None for v in (*cur.values(), *base.values())):
         raise ValueError('ELEMENT_UNIT_DATA_MISSING')
-    if abs(sum(cur.values(), D(0)) - sum(base.values(), D(0)) - delta_total) > D('0.000000000001'):
+    if abs(sum(cur.values(), D(0)) - sum(base.values(), D(0)) - delta_total) > RECONCILIATION_TOLERANCE:
         raise ValueError('ELEMENTS_DO_NOT_RECONCILE')
     dims, causes = [], []
 
@@ -336,7 +336,7 @@ def _snapshot_localize(snapshot, compare):
         if None not in values:
             u0, q0, u1, q1 = values
             c_u, c_q = _shapley_two_factor(u0, u1, q0, q1)
-            if abs(c_u + c_q - delta_total) > D('0.000000000001'):
+            if abs(c_u + c_q - delta_total) > RECONCILIATION_TOLERANCE:
                 raise ValueError('TOTAL_FACTORS_DO_NOT_RECONCILE')
             factors = {'单位成本（Shapley）': c_u, '产量（Shapley）': c_q}
             dimension('总量两因子（Shapley 精确分配）', factors, {k: D(0) for k in factors}, '')

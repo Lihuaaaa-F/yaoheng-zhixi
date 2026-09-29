@@ -254,7 +254,7 @@ def analyze(factory, product, month, analysis_type='monthly', basis='unit'):
         c = change(values['current'],values['previous'])
         # 2026-09-24 修复（审计 AUD-CORE-08）：按 key 显式取材料要素——
         # 此前 elements[0] 依赖契约顺序，换契约静默错分母。
-        materials_element = next((e for e in elements if e['key'] == 'materials'), elements[0] if elements else None)
+        materials_element = next((e for e in elements if e['key'] == 'materials'), None)
         denominator = materials_element['comparisons']['mom']['unit']['delta'] if materials_element else None
         percentage = contribution(c['delta'],denominator)
         item = {'name':name,'current':c['current'],'previous':c['base'],'delta':c['delta'],'rate':c['rate'],
@@ -416,7 +416,7 @@ def benchmark_analysis(product,month,left=None,right=None,analysis_type='monthly
             metric_id=f"benchmark:{left}:{right}:{product}:{month}:{key}:{field}"
             value=row[field]
             row['metric_refs'][field] = metric_id
-            snapshot['metrics'][metric_id]={**base,'metric_id':metric_id,'label':comparison['direction']+' '+row['name']+{'rate':'差异率','delta':'差异金额','contribution':'占同口径跨厂成本差额'}[field],'value':value,'display':'N/A' if value is None else format(D(value).quantize(D('0.01')),'f'),'unit':unit,'formula':{'rate':'(左厂−右厂)/右厂×100','delta':'左厂−右厂','contribution':'要素跨厂差额/同口径跨厂总差额×100'}[field],'numerator':row['delta'],'denominator':row['right'] if field=='rate' else row['denominator'] if field=='contribution' else '1','comparison_period':comparison['period'],'row_keys':base['row_keys']+right_snapshot['metrics'].get(key, right_snapshot['metrics']['unit_cost'])['row_keys'],'source_hash':sorted(set(base['source_hash']+right_snapshot['metrics'].get(key, right_snapshot['metrics']['unit_cost'])['source_hash']))}
+            snapshot['metrics'][metric_id]={**base,'metric_id':metric_id,'label':comparison['direction']+' '+row['name']+{'rate':'差异率','delta':'差异金额','contribution':'占同口径跨厂成本差额'}[field],'value':value,'display':'N/A' if value is None else format(D(value).quantize(D('0.01'), rounding=ROUND_HALF_UP),'f'),'unit':unit,'formula':{'rate':'(左厂−右厂)/右厂×100','delta':'左厂−右厂','contribution':'要素跨厂差额/同口径跨厂总差额×100'}[field],'numerator':row['delta'],'denominator':row['right'] if field=='rate' else row['denominator'] if field=='contribution' else '1','comparison_period':comparison['period'],'row_keys':base['row_keys']+right_snapshot['metrics'].get(key, right_snapshot['metrics']['unit_cost'])['row_keys'],'source_hash':sorted(set(base['source_hash']+right_snapshot['metrics'].get(key, right_snapshot['metrics']['unit_cost'])['source_hash']))}
     snapshot['benchmark_context']={k:comparison[k] for k in ('left','right','direction','summary','elements','limits','period','basis')}
     snapshot['snapshot_id']=hashlib.sha256(json.dumps(snapshot,sort_keys=True,ensure_ascii=False).encode()).hexdigest()
     return snapshot,comparison

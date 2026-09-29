@@ -14,6 +14,7 @@ model_quantized.onnx + tokenizer.json）。数据分析模型在切换中承担�
 from __future__ import annotations
 
 import json
+import math
 import os
 from pathlib import Path
 from typing import Any
@@ -54,7 +55,8 @@ def _probe_local(path: Path) -> dict[str, Any]:
         embedding = CpuEmbedding(path)
         vectors = embedding.encode(['产品成本分析', '药材价格行情'], query=False)
         dimension = len(vectors[0]) if vectors else None
-        finite = all(isinstance(x, float) for row in vectors for x in row)
+        finite = (len(vectors) == 2 and all(len(row) == dimension for row in vectors)
+                  and all(isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x) for row in vectors for x in row))
     except Exception as exc:  # noqa: BLE001
         raise SwitchFailure('本地校验', f'样本编码失败：{type(exc).__name__}: {str(exc)[:180]}')
     if not dimension or not finite:
@@ -76,6 +78,8 @@ def _model_adaptation(probe: dict[str, Any]) -> dict[str, Any]:
               '判断它能否作为中文语义检索嵌入模型服务本制药成本分析系统。'
               '只返回JSON对象 {"adaptable": bool, "dimension": int, "pooling": str, '
               '"normalize": bool, "query_prefix": str, "reason": str}。'
+              '当前运行器仅支持 CLS 池化、L2归一化，查询前缀固定为'
+              '“为这个句子生成表示以用于检索相关文章：”；若模型必须采用其他策略则不可适配。'
               'reason 用一句中文说明；不可适配时 reason 必须给出具体原因。')
     user = json.dumps(probe, ensure_ascii=False)
     try:
@@ -87,10 +91,14 @@ def _model_adaptation(probe: dict[str, Any]) -> dict[str, Any]:
     if not data.get('adaptable'):
         reason = str(data.get('reason') or '模型评估未给出原因')[:300]
         raise SwitchFailure('数据分析模型API', f'API返回不可适配：{reason}')
-    return {'dimension': data.get('dimension') or probe['probe_dimension'],
-            'pooling': str(data.get('pooling') or 'cls')[:40],
-            'normalize': bool(data.get('normalize', True)),
-            'query_prefix': str(data.get('query_prefix') or '为这个句子生成表示以用于检索相关文章：')[:80],
+    prefix = '为这个句子生成表示以用于检索相关文章：'
+    if (data.get('adaptable') is not True or type(data.get('dimension')) is not int
+            or data['dimension'] != probe['probe_dimension']
+            or str(data.get('pooling', '')).lower() != 'cls'
+            or data.get('normalize') is not True or data.get('query_prefix') != prefix):
+        raise SwitchFailure('数据分析模型API', '适配结论与当前推理合同不一致（维度、CLS池化、归一化或查询前缀）')
+    return {'dimension': data['dimension'], 'pooling': 'cls', 'normalize': True,
+            'query_prefix': prefix,
             'api_reason': str(data.get('reason') or '')[:200], 'model': gateway.model}
 
 
@@ -102,6 +110,9 @@ def run_vector_switch(store, job):
         store.update(job_id, 'VECTOR_SWITCH', result, progress=pct, detail=detail)
 
     previous = model_settings._load().get('vector_model', {})
+    changed = False
+    pointer = None
+    previous_version = None
     try:
         step(5, '本地脚本校验：模型资产与样本编码…')
         probe = _probe_local(Path(raw_path))
@@ -113,8 +124,11 @@ def run_vector_switch(store, job):
         if os.environ.get('PHARMA_EMBEDDING_DIR', '').strip():
             raise SwitchFailure('配置写入', '环境变量 PHARMA_EMBEDDING_DIR 已显式指定向量模型目录'
                                              '且优先级高于页面设置；请清除该环境变量后重试')
-        model_settings.set_vector_model(raw_path)
         from .knowledge import Knowledge
+        pointer = Knowledge().path / 'CURRENT'
+        previous_version = pointer.read_bytes() if pointer.exists() else None
+        changed = True
+        model_settings.set_vector_model(raw_path)
         knowledge = Knowledge()
 
         def build_progress(pct, detail):
@@ -126,7 +140,7 @@ def run_vector_switch(store, job):
                               + '；'.join(str(f.get('reason', f)) for f in (build_result.get('failures') or [])[:3]))
         step(93, '验证新模型语义检索…')
         search = knowledge.search('产品成本 分析', mode='vector', limit=3)
-        if search.get('status') == 'FAILED':
+        if search.get('status') != 'PASS':
             raise SwitchFailure('检索验证', str(search.get('reason') or '向量检索返回失败')[:200])
         result['vector_model'] = model_settings.vector_status()
         result['adaptation'] = adaptation
@@ -137,29 +151,30 @@ def run_vector_switch(store, job):
                                     + ('注意：向量索引降级（' + str(build_result.get('vector_error')) + '）' if build_result.get('vector_error') else ''))
         store.update(job_id, 'SUCCEEDED' if not build_result.get('vector_error') else 'DEGRADED', result,
                      progress=100, detail='向量模型切换成功')
-    except SwitchFailure as exc:
+    except Exception as exc:  # All failures after configuration mutation must roll back.
         # 回滚配置：写回前值，避免半切换状态
-        rolled_back = False
+        rollback_error = None
         try:
-            if previous:
-                model_settings.set_vector_model(str(previous.get('path') or ''))
-            else:
-                model_settings.clear_vector_model()
-            rolled_back = True
-        except Exception:
-            pass
-        # 2026-09-24 修复（审计 AUD-RAG-07）：配置回滚后重建一次索引，使 CURRENT
-        # 立即指回旧模型版本——否则检索在新（可能坏）索引上继续运行至下次构建。
-        if rolled_back:
-            try:
-                from .knowledge import Knowledge as _K
-                _K().build()
-            except Exception:
-                pass  # 重建失败时维持旧行为：下次任何 build() 幂等自愈
-        message = f'向量模型切换失败，{exc.step}报错：{exc.reason}'
+            if changed:
+                if previous:
+                    model_settings.set_vector_model(str(previous.get('path') or ''))
+                else:
+                    model_settings.clear_vector_model()
+                # Restore the exact former index, independently of source health.
+                # Rebuilding here could itself fail or publish a different version.
+                from .locks import exclusive
+                with exclusive(pointer.parent / 'build.lock'):
+                    if previous_version is None:
+                        pointer.unlink(missing_ok=True)
+                    else:
+                        import uuid
+                        temporary = pointer.with_name('CURRENT.rollback.' + uuid.uuid4().hex)
+                        temporary.write_bytes(previous_version)
+                        os.replace(temporary, pointer)
+        except Exception as rollback_exc:
+            rollback_error = type(rollback_exc).__name__
+        detail = f'{exc.step}报错：{exc.reason}' if isinstance(exc, SwitchFailure) else f'{type(exc).__name__}报错：{str(exc)[:300]}'
+        message = f'向量模型切换失败，{detail}'
+        if rollback_error:
+            message += f'；回滚失败：{rollback_error}'
         store.update(job_id, 'FAILED', result, error=message, detail=message)
-    except Exception as exc:  # noqa: BLE001
-        message = f'向量模型切换失败，{type(exc).__name__}报错：{str(exc)[:300]}'
-        store.update(job_id, 'FAILED', result, error=message, detail=message)
-        import traceback
-        traceback.print_exc()

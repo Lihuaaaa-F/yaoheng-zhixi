@@ -95,7 +95,7 @@ export default function Rectification({ selection, snapshot, jobs, actions, refr
             <dt>模拟通知</dt><dd>{a.delivery?.notification === 'SIMULATED_SENT' ? '原 mock 已记录模拟发送' : '未确认发送'}</dd>
             <dt>整改进度</dt><dd>{a.delivery?.remediation === 'completed' ? '原 mock 记录完成；真实整改仍须人工验收' : a.delivery?.remediation === 'in_progress' ? '原 mock 记录处理中；真实进度待人工核查' : '待人工跟进，模拟发送不代表整改完成'}</dd>
           </dl>
-          {['DRAFT', 'draft', 'PENDING_CONFIRMATION'].includes(a.status)
+          {(['DRAFT', 'draft', 'PENDING_CONFIRMATION'].includes(a.status) || a.retryable_edit === true)
             ? <div className="button-row"><button disabled={pending} onClick={() => {
               setEditing(a.id); setDeadline(p.deadline ?? ''); setName(p.assignee?.name ?? '待分配'); setDepartment(p.assignee?.department ?? '');
               setFinding(p.source?.finding?.split('；分析期间：')[0] ?? ''); setSuggestion(p.suggestion ?? '');
@@ -103,8 +103,8 @@ export default function Rectification({ selection, snapshot, jobs, actions, refr
               setExpected((p.action_details?.expected_evidence ?? p.expected_evidence ?? m.expected_evidence ?? []).join('；'));
               setRole(p.action_details?.responsible_role ?? p.responsible_role ?? m.responsible_role ?? '待分配');
               setDeadlineBasis(p.action_details?.deadline_basis ?? p.deadline_basis ?? m.deadline_basis ?? ''); setPriority(normalizedPriority(p.priority)); setNotice('编辑后需要重新确认。');
-            }}>编辑草稿</button>
-              <button className="primary" disabled={pending || editing === a.id} onClick={() => run(async () => {
+            }}>{a.retryable_edit ? '修改后重新确认' : '编辑草稿'}</button>
+              <button className="primary" disabled={pending || editing === a.id || a.retryable_edit === true} onClick={() => run(async () => {
                 await api(`/actions/${encodeURIComponent(a.id)}/confirm`, { payload_hash: a.payload_hash });
                 setNotice('已确认，等待模拟发送。');
               })}>确认并发送模拟通知</button></div>
@@ -120,7 +120,7 @@ export default function Rectification({ selection, snapshot, jobs, actions, refr
                   setAcknowledging(null); setConfirmationName(''); setConfirmationComment(''); setNotice('已登记责任人确认；整改完成仍需后续核查。');
                 })}>确认本人将跟进</button><button disabled={pending} onClick={() => setAcknowledging(null)}>取消</button></div></>
               : <button disabled={pending} onClick={() => { setAcknowledging(a.id); setConfirmationName(''); setConfirmationComment(''); }}>登记责任人确认</button>}</div>}
-          {a.error && <p className="error">本次任务处理未通过。可点击“查询模拟通知状态”刷新；仍失败时请查看后端服务日志。</p>}
+          {a.error && <p className="error" role="alert">本次任务处理未通过：{String(a.error)}。{a.retryable_edit ? '请修改被拒收内容，保存后重新确认发送。' : '可查询模拟通知状态；仍失败时请联系管理员核查。'}</p>}
           <DeveloperDetails value={a} />
         </article>;
       })}

@@ -160,7 +160,11 @@ function Action-Status {
     $null = Invoke-Compose $resolved @('ps') | ForEach-Object { Write-Host "  $_" }
     try {
         $health = Invoke-RestMethod -Uri "$Url/health" -TimeoutSec 3
-        Write-Info ("Web: {0}  Worker 心跳: {1} 秒前  RPA: {2}" -f $health.status, [int]$health.worker.heartbeat_age_seconds, $health.rpa_mode)
+        $heartbeat = '不可用'
+        if ($health.worker.alive -eq $true -and $null -ne $health.worker.heartbeat_age_seconds) {
+            $heartbeat = ('{0} 秒前' -f [int]$health.worker.heartbeat_age_seconds)
+        }
+        Write-Info ("Web: {0}  Worker 心跳: {1}  RPA: {2}" -f $health.status, $heartbeat, $health.rpa_mode)
     } catch { Write-Warn2 'Web 暂不可达（服务可能未启动）' }
 }
 

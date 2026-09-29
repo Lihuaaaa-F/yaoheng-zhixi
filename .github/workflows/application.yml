@@ -24,6 +24,9 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
       - name: Install locked application dependencies
         run: |
           python3 -m venv .venv
@@ -35,7 +38,7 @@ jobs:
         run: |
           PYTHONPATH=backend .venv/bin/python -m pytest -q tests
           npm run build --prefix frontend
-          node --test frontend/record_demo_20260918.test.mjs
+          npm test --prefix frontend
   # 镜像可构建性守门（2026-09-23 审计 AUD-DEP-03）：与 deploy/docker-compose.yml
   # 同一构建上下文/Dockerfile，只构建不 push——Dockerfile 或依赖漂移导致镜像
   # 无法构建时在此暴露，而不是在比赛机首次 compose up 才发现。

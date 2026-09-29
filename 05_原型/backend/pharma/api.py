@@ -369,8 +369,9 @@ def _submit_review(job_id,req):
 def _recalc_acceptance(job_id):
     from .reports import assess_report
     from .reviews import ReviewStore
-    reviews=ReviewStore()
     job=store.get(job_id)
+    if job['status'] not in ('SUCCEEDED','DEGRADED'):raise ValueError('REVIEW_TARGET_NOT_FINAL')
+    reviews=ReviewStore()
     hashes=_current_hashes(job)
     review=reviews.latest_valid(job,hashes)
     acceptance=assess_report(job['result'],review=review)
@@ -383,7 +384,7 @@ def _recalc_acceptance(job_id):
     result['capability_status']='PASS' if all(v.get('status')=='PASS' for k,v in acceptance.items() if isinstance(v,dict) and k not in ('section_completeness','readability','visual_quality')) else 'DEGRADED'
     status='SUCCEEDED' if acceptance['overall']=='PASS' else 'DEGRADED'
     result['acceptance_review_binding']={'review_id':review['id'] if review else None,'artifact_hashes':hashes}
-    with store.db() as c:c.execute('UPDATE jobs SET status=?,stage=?,result=? WHERE id=?',(status,status,json.dumps(result,ensure_ascii=False),job_id))
+    with store.db() as c:c.execute("UPDATE jobs SET status=?,stage=?,result=? WHERE id=? AND status IN ('SUCCEEDED','DEGRADED')",(status,status,json.dumps(result,ensure_ascii=False),job_id))
     expired=[{'review_id':r['id'],'reviewed_at':r['reviewed_at'],'reason':'产物哈希已变化，审核过期'} for r in reviews.list_for_job(job_id) if (r['docx_sha256'],r['pdf_sha256'])!=(hashes['docx'],hashes['pdf'])]
     return {'status':acceptance['overall'],'acceptance':acceptance,'active_review':(review or {}).get('id'),'expired_reviews':expired}
 

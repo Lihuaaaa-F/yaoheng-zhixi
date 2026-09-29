@@ -15,13 +15,15 @@
 | GET /api/jobs?context_id=… | 本上下文任务；执行状态与解释来源/真人审核分别显示 |
 | GET /api/artifacts/{id} | 终态可下载，DEGRADED允许；真实哈希漂移拒绝，preview明确草稿 |
 | POST /api/reports/{id}/reviews | 真人署名、0—5归因、章节/可读性/版式；实际产物绑定 |
-| GET /api/reports/{id}/acceptance | 重算；产物变化使旧审核STALE |
+| GET /api/reports/{id}/acceptance | 仅 SUCCEEDED/DEGRADED 重算；非完成态返回 422 且不改写任务；产物变化使旧审核STALE |
 | POST /api/kb/search | context_id、query、product、month、factory及检索模式 |
 | POST /api/actions | snapshot_id、标题/负责人/来源/优先级、建议/核查对象/证据/岗位/期限依据 |
-| PUT /api/actions/{id} | 合并后仍通过完整行动合同；未确认可编辑 |
+| PUT /api/actions/{id} | 合并后仍通过完整行动合同；草稿或明确 HTTP 422 拒收的任务可编辑，后者恢复草稿并须重新确认 |
 | POST /api/actions/{id}/confirm | 当前payload_hash确认；仅一个outbox |
 | POST /api/actions/{id}/acknowledge | 已送达任务的本人署名责任确认；不等于整改完成 |
 | POST /api/actions/{id}/refresh | 查询模拟API，严格响应合同；协议错误不抹掉已证明状态 |
+
+动作列表和详情返回 `error` 与 `retryable_edit`。仅确定参数被 HTTP 422 拒收时允许修正；超时或送达未知的任务保持查询核对，不能编辑后重发。修正拒收内容会撤销旧 outbox 确认，新的内容哈希必须由用户重新确认。
 
 发送前确认与责任人整改确认不同；GET返回sent/confirmed/completed分别保存，模拟微信不是真实集成。重启SENDING先GET核对，不盲目重发。旧runtime整体隔离，不恢复待发队列。本轮恢复仅复用兼容依赖和只读模型，原题资料路径由PHARMA_DATA_PACKAGE指定；当前授权原件及复现配置也随仓库交付。
 

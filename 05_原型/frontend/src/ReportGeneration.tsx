@@ -138,15 +138,19 @@ function AcceptanceUpload({ jobId, onDone, onError }: { jobId: string; onDone: (
 /** 评审历史：展示历次评定的负责人、时间、分项结果与版本有效性，确保可追踪。 */
 function ReviewHistory({ jobId, version }: { jobId: string; version: number }) {
   const [data, setData] = useState<any>(null);
+  const [error, setError] = useState(''), [retry, setRetry] = useState(0);
   useEffect(() => {
     const controller = new AbortController();
+    setData(null); setError('');
     api(`/reports/${encodeURIComponent(jobId)}/reviews`, undefined, controller.signal)
       .then(value => { if (!controller.signal.aborted) setData(value); })
-      .catch(() => { if (!controller.signal.aborted) setData({ reviews: [] }); });
+      .catch(e => { if (!controller.signal.aborted) setError(e instanceof Error ? e.message : String(e)); });
     return () => controller.abort();
-  }, [jobId, version]);
+  }, [jobId, version, retry]);
+  if (error) return <p className="error" role="alert">评审历史加载失败：{error} <button onClick={() => setRetry(value => value + 1)}>重试</button></p>;
+  if (!data) return <p className="muted" role="status">正在加载评审历史…</p>;
   const reviews = data?.reviews ?? [];
-  if (!reviews.length) return null;
+  if (!reviews.length) return <p className="muted">尚无评审记录。</p>;
   return <details className="review-history">
     <summary>评审历史（{reviews.length} 条）</summary>
     <div className="table-scroll"><table>

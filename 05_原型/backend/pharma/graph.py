@@ -13,7 +13,7 @@ import json
 import re
 import time
 
-GRAPH_RULES_VERSION = 'pharma-recipe-process-v1'
+GRAPH_RULES_VERSION = 'pharma-recipe-process-v2-explicit-dose-units'
 
 # 部分题包 PDF 使用康熙部首区字符（如 ⻩/⻄），统一归一化为常用汉字，
 # 保证术语、产品名与抽取出的实体可互相匹配。表为按需补充的部分映射。
@@ -136,16 +136,22 @@ class KnowledgeGraph:
             if not product:
                 continue
             pid = node(product, 'product', product)
+            header_unit = re.search(r'(?:处方量|剂量|用量)\s*[（(]\s*(kg|mg|g|千克|毫克|克)\s*[）)]', text, re.I)
+            unit_aliases = {'千克': 'kg', '毫克': 'mg', '克': 'g'}
             for line in text.splitlines():
-                match = _RECIPE_ROW.match(normalize_entity(line))
+                line = normalize_entity(line)
+                match = _RECIPE_ROW.match(line)
                 if not match:
                     continue
                 material, dose = match.group(1), match.group(2)
+                row_unit = re.match(r'(kg|mg|g|千克|毫克|克)(?=\s|$)', line[match.end():].lstrip(), re.I)
+                raw_unit = (row_unit or header_unit).group(1).lower() if row_unit or header_unit else None
+                unit = unit_aliases.get(raw_unit, raw_unit)
                 if not _is_material(material):
                     continue
                 material_labels.add(material)
                 mid = node('material:' + material, 'material', material)
-                edge(pid, mid, '成分', dose=dose, unit='kg',
+                edge(pid, mid, '成分', dose=dose, unit=unit,
                      source=source, location=chunk.get('location'))
         for chunk in chunks:
             source = chunk.get('source', '')

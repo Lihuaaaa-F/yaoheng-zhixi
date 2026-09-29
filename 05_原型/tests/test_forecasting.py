@@ -1,4 +1,5 @@
 """成本预测（赛题加分项）：确定性时序外推的合同测试。"""
+import os
 import pytest
 from pharma import forecasting
 
@@ -123,6 +124,8 @@ def test_holdout_rolling_origin_reported():
     assert '无独立留出原点' in short['evaluation_notice']
 
 
+@pytest.mark.skipif(os.environ.get('PHARMA_TEST_COMPETITION_DATA') != '1',
+                    reason='competition-derived series requires PHARMA_TEST_COMPETITION_DATA=1')
 def test_real_contest_series_holdout_improves_over_two_point_init():
     """真实题包序列（银黄 2026 单位成本）回归锚点：v3 留出 MAE 优于 v2 两点
     初始化（v2 实测 0.219，v3 实测 0.165）——防回归到敏感初始化。"""

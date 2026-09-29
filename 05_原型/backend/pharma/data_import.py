@@ -192,26 +192,34 @@ def create_upload(kind: str, filename: str, payload: bytes, data_type: str = '')
         # explicit role is part of identity, while old same-role IDs remain valid.
         legacy_original=IMPORTS_ROOT / import_id / ('original' + suffix)
         if legacy_original.is_file():
-            existing=_row(import_id)
-            if existing['meta'].get('data_type')==data_type:
+            try:
+                existing = _row(import_id)
+            except KeyError:
+                existing = None  # Old interrupted uploads may have no ledger row.
+            if existing and existing['meta'].get('data_type')==data_type:
                 return {**existing,'dedup':True}
         import_id += '-' + data_type
-    folder = _folder(import_id)
-    original = folder / ('original' + suffix)
+    original = IMPORTS_ROOT / import_id / ('original' + suffix)
     if original.exists():  # 同内容重复上传：幂等返回已有记录
         # dedup 标记（2026-09-24 用户反馈"上传后没进待解析而是直接解析了"）：
         # 返回的是已有记录——若它早已解析完，记录会直接出现在"已处理记录"
         # 而不是"待解析"。前端据此给出明确提示，避免像被悄悄解析了一样。
-        existing = _row(import_id)
-        if existing['meta'].get('data_type') != data_type:
-            raise ValueError('IMPORT_DATA_TYPE_CONFLICT: 同一文件已按其他资料类型上传，请核对实际或预算口径')
-        return {**existing, 'dedup': True}
-    original.write_bytes(payload)  # 原始字节保留
+        try:
+            existing = _row(import_id)
+        except KeyError:
+            existing = None  # Reconstruct an interrupted upload from the same bytes.
+        if existing:
+            if existing['meta'].get('data_type') != data_type:
+                raise ValueError('IMPORT_DATA_TYPE_CONFLICT: 同一文件已按其他资料类型上传，请核对实际或预算口径')
+            return {**existing, 'dedup': True}
     meta: dict[str, Any] = {'filename': filename, 'suffix': suffix, 'data_type': data_type}
     if suffix in ('.csv', '.txt'):
         meta['encoding'] = detect_encoding(payload)
     preview = _build_preview(kind, suffix, payload, meta)
     meta['preview'] = preview
+    # Validate the workbook before publishing bytes; bad archives leave no orphan.
+    _folder(import_id)
+    original.write_bytes(payload)
     record = {'id': import_id, 'kind': kind, 'status': 'UPLOADED', 'filename': filename,
               'encoding': meta.get('encoding', ''), 'size': len(payload),
               'sha256': hashlib.sha256(payload).hexdigest(), 'created': _now(), 'meta': meta}
@@ -472,6 +480,11 @@ def validate_business(record: dict[str, Any], mapping: dict[str, str], options: 
 
     role_of = {h: mapping.get(h, '') for h in headers}
     element_headers = [h for h, r in role_of.items() if r.startswith('element:')]
+    for role in sorted({role_of[h] for h in element_headers}):
+        columns = [h for h in element_headers if role_of[h] == role]
+        if len(columns) > 1:
+            errors.append({'file': record['filename'], 'sheet': record['meta'].get('sheet', ''),
+                           'row': '', 'reason': f'成本要素重复映射：{role} 对应 {columns}；请只保留一列金额'})
     numeric_roles = [h for h, r in role_of.items()
                      if r == 'quantity' or r == 'total_cost' or str(r).startswith('element:')]
     for required in DIMENSION_ROLES:

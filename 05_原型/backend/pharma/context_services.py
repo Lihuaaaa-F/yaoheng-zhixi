@@ -57,7 +57,7 @@ def _matching_event(row,snapshot,purpose):
     if not event or not period.get('start') or not period.get('end') or not period['start']<=event<=period['end']:return False
     if not any(term in row.get('text','') for term in purpose.event_match_terms):return False
     return Knowledge.evidence_applicability(row,product=snapshot.get('product'),factory=snapshot.get('factory'),
-        period=period,specification=snapshot.get('specification'),context=snapshot.get('analysis_context'))['applicable']
+        period=period,specification=snapshot.get('specification'),document_version=snapshot.get('document_version'),context=snapshot.get('analysis_context'))['applicable']
 
 
 def knowledge_for_context(context=None):
@@ -85,7 +85,7 @@ def retrieve(snapshot, query, *, mode='hybrid', limit=8, graph_enabled=None):
     policy=retrieval_policy(context)
     knowledge = knowledge_for_context(context)
     scope={'product':snapshot.get('product'),'factory':snapshot.get('factory'),
-           'period':snapshot.get('period'),'specification':snapshot.get('specification'),'mode':mode,'limit':limit}
+           'period':snapshot.get('period'),'specification':snapshot.get('specification'),'document_version':snapshot.get('document_version'),'mode':mode,'limit':limit}
     # 知识图谱增强（赛题加分项）：制药上下文且图谱存在时，把该产品的
     # 配方药材/工序名补充进 BM25 查询词；向量检索与适用性合同保持不变。
     graph_enabled=_graph_enabled() if graph_enabled is None else graph_enabled

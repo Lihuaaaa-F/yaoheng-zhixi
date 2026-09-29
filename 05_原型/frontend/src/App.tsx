@@ -10,6 +10,7 @@ import AssistantDock from './AssistantDock';
 import ModelConfigForm from './ModelConfigForm';
 import { ExtractionModel, AnalysisModel, VectorModel } from './ModelPages';
 import SystemSettings from './SystemSettings';
+import { jobNotification } from './presentationData';
 import { readUiPreferences, saveUiPreferences, type UiPreferences } from './uiPreferences';
 const ProductMonthHeatmap = lazy(() => import('./ProductMonthHeatmap'));
 const Benchmark = lazy(() => import('./Benchmark'));
@@ -96,7 +97,8 @@ export default function App() {
     for (const job of jobs) {
       const previous = previousJobs.current.get(job.id);
       if (preferences.taskNotifications && previous && previous !== job.status && ['SUCCEEDED', 'DEGRADED', 'FAILED'].includes(job.status)) {
-        notifications.open({ key: job.id, title: job.status === 'FAILED' ? '报告任务未完成' : job.status === 'DEGRADED' ? '报告已生成，部分内容需复核' : '报告已生成', description: '打开分析报告查看结果与下载文件。', duration: 7, onClick: () => navigate('reports') });
+        const notice = jobNotification(job);
+        if (notice) notifications.open({ key: job.id, title: notice.title, description: notice.description, duration: 7, onClick: () => navigate(notice.page) });
       }
       previousJobs.current.set(job.id, job.status);
     }

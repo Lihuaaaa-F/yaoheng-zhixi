@@ -17,7 +17,7 @@ from .config import RUNTIME
 
 # 策略版本：判定规则变化时递增，回执据此区分新旧口径。
 DECISION_POLICY_VERSION = 'report-vs-dashboard-v3-capability-topic'
-ADVISORY_PROMPT_VERSION = 'decision-advisory-v2-signal-selection'
+ADVISORY_PROMPT_VERSION = 'decision-advisory-v3-artifact-signal'
 
 
 def _matching_report_jobs(jobs, selection):
@@ -124,7 +124,7 @@ def advise(evaluation, snapshot, gateway_factory=None):
         return {**result, 'advisory_status': 'NO_KEY'}
     system = ('你是成本分析系统的决策依据选择员。只返回JSON对象 '
               '{"decision": "输入的决策", "signal_ids": ["输入信号ID"]}。'
-              '不能改变决策，只从输入选择相关信号，必须包含报告缺失或快照绑定信号。'
+              '不能改变决策，只从输入选择相关信号，必须包含报告缺失、快照绑定或产物健康信号。'
               '不输出自由说明文字，程序将依据所选信号生成说明。')
     user = json.dumps({'decision': evaluation['decision'], 'reason': evaluation['reason'],
                        'signals': evaluation['signals']}, ensure_ascii=False)
@@ -146,7 +146,7 @@ def advise(evaluation, snapshot, gateway_factory=None):
         if (not isinstance(selected, list) or not selected
                 or any(not isinstance(item, str) or item not in allowed for item in selected)
                 or len(selected) != len(set(selected))
-                or not (set(selected) & {'report_for_period', 'snapshot_binding'})):
+                or not (set(selected) & {'report_for_period', 'snapshot_binding', 'artifact_health'})):
             raise ValueError('INVALID_ADVISORY_SIGNALS')
         return {**result, 'advisory_status': 'PASS', 'advisory_signal_ids': selected,
                 'rationale': _rationale(evaluation, selected)}

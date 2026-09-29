@@ -25,7 +25,10 @@ def main():
     dist = APP/'frontend/dist'
     recorded = (dist/'.build-inputs').read_text().strip() if (dist/'.build-inputs').is_file() else None
     font = shutil.which('fc-match')
-    font_result = subprocess.check_output([font,'Noto Sans CJK SC'],text=True).strip() if font else 'NOT_APPLICABLE_ON_THIS_PLATFORM'
+    try:
+        font_result = subprocess.check_output([font, 'Noto Sans CJK SC'], text=True, timeout=10).strip() if font else 'NOT_APPLICABLE_ON_THIS_PLATFORM'
+    except (OSError, subprocess.SubprocessError) as exc:
+        font_result = 'FONT_CHECK_FAILED:' + type(exc).__name__
     runtime_dir = os.environ.get('PHARMA_RUNTIME_DIR', str(APP/'.runtime'))
     data_package = PACKAGE
     r = {'python': sys.version.split()[0], 'python_executable': resolved, 'system': platform.platform(),

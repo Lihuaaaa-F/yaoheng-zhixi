@@ -1,4 +1,6 @@
 import { fmt } from './api';
+import { cleanText } from './presentationData';
+export { cleanText } from './presentationData';
 import { elementLabel } from './labels';
 // Presentation only: original Decimal strings remain in API evidence and exact tables.
 export const displayNumber=(value:unknown)=>value==null?'暂无':Number(value).toLocaleString('zh-CN',{maximumFractionDigits:4});
@@ -9,7 +11,6 @@ export function displayFocusRate(value:unknown){
  return displayNumber(value);
 }
 
-export const cleanText = (value: unknown) => String(value ?? '').replace(/\\r\\n|\\n|\\r/g, '\n').replace(/\\t/g, ' ').trim();
 export function sourceLabel(e: any) {
  const source = e.title ?? e.source_file ?? e.source ?? e.table ?? '来源待核对';
  const name = String(source).split(/[\\/]/).at(-1);

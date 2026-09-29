@@ -453,7 +453,7 @@ def run_turn(ledger, turn, analysis, jobs, action_store, gateway_factory=None, r
             tools.append({'name': 'search_knowledge', 'status': 'completed' if sources else 'empty'})
             if not sources:
                 notices.append('当前范围未检索到支持原因判断的知识证据。')
-        except (ValueError, OSError, RuntimeError, KeyError):
+        except (ValueError, OSError, RuntimeError, KeyError, sqlite3.Error):
             tools.append({'name': 'search_knowledge', 'status': 'unavailable'})
             notices.append('当前知识检索不可用；数值结果仍来自分析引擎。')
         if re.search(r'报告|历史|生成', question):
@@ -532,13 +532,22 @@ def start_worker(ledger, analysis, jobs, action_store):
         if lock is None:
             return
         try:
-            ledger.recover()
+            recovered = False
             while not stop.is_set():
-                turn = ledger.claim()
-                if turn:
-                    run_turn(ledger, turn, analysis, jobs, action_store)
-                else:
-                    stop.wait(.25)
+                try:
+                    if not recovered:
+                        ledger.recover()
+                        recovered = True
+                    turn = ledger.claim()
+                    if turn:
+                        run_turn(ledger, turn, analysis, jobs, action_store)
+                    else:
+                        stop.wait(.25)
+                except Exception as exc:
+                    # Log only the type: model/provider exceptions may contain secrets.
+                    import logging
+                    logging.getLogger(__name__).warning('Assistant scheduler retry: %s', type(exc).__name__)
+                    stop.wait(.5)
         finally:
             lock.close()
     thread = Thread(target=loop, name='workspace-assistant', daemon=True)

@@ -17,7 +17,7 @@ import time
 from .config import ROOT, PACKAGE, RUNTIME
 
 EMBEDDING_SHA = 'a48549b3259a6165364f226599cd91f39923d5d5'
-PARSER_VERSION = 'scope-prefilter-v9-workspace-source-provenance'
+PARSER_VERSION = 'scope-prefilter-v10-source-fingerprint-identity'
 RETRIEVER_VERSION = 'bm25-chroma-prefilter-rrf-v7-vector-completeness'
 # 分块解析与适用性进程内有界缓存（2026-09-23 审计 AUD-KB-01）：此前每次
 # search 全量 SELECT+反序列化所有 chunk 并逐个重算 evidence_applicability
@@ -74,7 +74,13 @@ def pharmaceutical_terminology():
         configured=str(default) if default.is_file() else ''
     path=Path(configured) if configured else APP/'industry_packs/pharmaceutical/terminology.json'
     if path.suffix.lower()!='.json' or path.stat().st_size>1_000_000:raise ValueError('INVALID_TERMINOLOGY_FILE')
-    value=json.loads(path.read_text(encoding='utf-8'))
+    stat = path.stat()
+    return _read_terminology(str(path.resolve()), stat.st_mtime_ns, stat.st_ctime_ns, stat.st_size)
+
+
+@lru_cache(maxsize=8)
+def _read_terminology(path, mtime_ns, ctime_ns, size):
+    value=json.loads(Path(path).read_text(encoding='utf-8'))
     keys={'products','product_aliases','equipment_aliases','tokenizer_terms'}
     if not isinstance(value,dict) or set(value)!=keys:raise ValueError('INVALID_TERMINOLOGY_SHAPE')
     products=_string_list(value['products'],'PRODUCTS')
@@ -99,7 +105,7 @@ def _term_tokenizer(words):
 
 
 def source_snapshot(source_dir):
-    files = sorted(p for p in Path(source_dir).iterdir() if p.suffix.lower() in ('.pdf','.docx','.txt'))
+    files = sorted(p for p in Path(source_dir).iterdir() if p.is_file() and (p.suffix.lower() in ('.pdf','.docx','.txt') or p.name == 'knowledge.json'))
     fingerprints = {p.name:file_fingerprint(p) for p in files}
     return hashlib.sha256(json.dumps({'sources':fingerprints,'terminology_hash':terminology_hash()},ensure_ascii=False,sort_keys=True,separators=(',',':')).encode()).hexdigest()
 
@@ -128,6 +134,23 @@ def embedding_fingerprint_cached(path):
                       for name in ('model_quantized.onnx', 'onnx/model_quantized.onnx', 'model.onnx', 'tokenizer.json', 'config.json')
                       if (path / name).is_file())
     return _cached_embedding_fingerprint(str(path.resolve()), signature)
+
+
+def _source_fingerprints(sources):
+    # Preserve familiar unique filenames, disambiguating collisions by identity.
+    from collections import Counter
+    counts = Counter(p.name for p in sources)
+    return {(p.name if counts[p.name] == 1 else str(p.resolve())): file_fingerprint(p) for p in sources}
+
+
+def _atomic_json(path, value):
+    import uuid
+    temporary = path.with_name(path.name + '.' + uuid.uuid4().hex + '.tmp')
+    try:
+        temporary.write_text(json.dumps(value, ensure_ascii=False, indent=2), encoding='utf-8')
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def knowledge_context_id(context=None):
@@ -446,20 +469,26 @@ class Knowledge:
     @property
     def version(self):
         current = self.path / 'CURRENT'
-        return current.read_text().strip() if current.exists() else None
+        return current.read_text(encoding='utf-8').strip() if current.exists() else None
 
     def status(self):
         version = self.version
         if not version:
             return {'status': 'NOT_BUILT', 'knowledge_version': None, 'sources': []}
-        return json.loads((self.path / version / 'manifest.json').read_text())
+        try:
+            record = json.loads((self.path / version / 'manifest.json').read_text(encoding='utf-8'))
+            if not isinstance(record, dict):
+                raise ValueError('INVALID_INDEX_MANIFEST')
+            return record
+        except (OSError, ValueError):
+            return {'status': 'FAILED', 'reason': 'INVALID_INDEX_MANIFEST'}
 
     def _model(self):
         if self._embedding is None:
             self._embedding = CpuEmbedding(self.model_dir)
         return self._embedding
 
-    def build(self, progress=None):
+    def build(self, progress=None, *, retry_failed=True):
         from .locks import exclusive
         with exclusive(self.path / 'build.lock'):
             # 双重检查：同进程并发首建时，后到者在进程锁上等待，前者建完即已是
@@ -472,7 +501,21 @@ class Knowledge:
                 # source files did not change (for example after a transient
                 # runtime failure). Ordinary BM25 searches can keep this index.
                 self._embedding, self._collection = None, None
-            return self._build(progress)
+            signature = self._input_signature()
+            failed = self.path / 'failed-build.json'
+            if not retry_failed and failed.is_file():
+                try:
+                    previous = json.loads(failed.read_text(encoding='utf-8'))
+                    if isinstance(previous, dict) and previous.get('inputs') == signature:
+                        return previous['result']
+                except (OSError, ValueError, KeyError):
+                    pass
+            result = self._build(progress)
+            if result.get('failures') or result.get('status') == 'FAILED':
+                _atomic_json(failed, {'inputs': signature, 'result': result})
+            else:
+                failed.unlink(missing_ok=True)
+            return result
 
     def _sources(self):
         sources = sorted(self.source_files) if self.source_files is not None else sorted(
@@ -498,15 +541,20 @@ class Knowledge:
                          if self.include_uploads else {})
         embedding_sha = embedding_fingerprint_cached(self.model_dir)
         _report(5, f'读取知识源（{len(sources)} 份）…')
-        fingerprints = {p.name: file_fingerprint(p) for p in sources}
+        fingerprints = _source_fingerprints(sources)
         terms_hash=terminology_hash()
         version = hashlib.sha256(json.dumps([fingerprints, embedding_sha, PARSER_VERSION, self.context, terms_hash], sort_keys=True).encode()).hexdigest()[:20]
         target = self.path / version
         manifest = target / 'manifest.json'
         if manifest.exists():
-            record = json.loads(manifest.read_text())
-            if record.get('parser_version') == PARSER_VERSION and (record['status'] == 'PASS' or (not self.vector_enabled and not record.get('failures'))):
-                (self.path/'CURRENT.tmp').write_text(version)
+            try:
+                record = json.loads(manifest.read_text(encoding='utf-8'))
+            except (OSError, ValueError):
+                record = {}
+            if (isinstance(record, dict) and record.get('parser_version') == PARSER_VERSION
+                    and record.get('status') in ('PASS', 'DEGRADED')
+                    and (record.get('status') == 'PASS' or (not self.vector_enabled and not record.get('failures')))):
+                (self.path/'CURRENT.tmp').write_text(version, encoding='utf-8')
                 os.replace(self.path/'CURRENT.tmp',self.path/'CURRENT')
                 _report(100, '知识索引已是最新版本，直接切换')
                 return record
@@ -550,12 +598,12 @@ class Knowledge:
                             boundary = max(clean.rfind('\n',start+400,end),clean.rfind('。',start+400,end))
                             if boundary > start: end = boundary + 1
                         text = clean[start:end]
-                        ident = hashlib.sha256(f'{fingerprints[source.name]}:{block["location"]}:{block.get("heading")}:{block.get("event_period")}:{index}:{text}'.encode()).hexdigest()[:24]
+                        ident = hashlib.sha256(f'{file_fingerprint(source)}:{block["location"]}:{block.get("heading")}:{block.get("event_period")}:{index}:{text}'.encode()).hexdigest()[:24]
                         chunks.append(dict(block, evidence_id=ident, source=block.get('source') or source.name,
                                            source_id=block.get('source_id') or source_id,
                                            source_context_id=source_scope_id,
                                            title=block.get('title') or block.get('source') or source.name,
-                                           hash=block.get('sha256') or fingerprints[source.name], text=text, chunk=index,
+                                           hash=block.get('sha256') or file_fingerprint(source), text=text, chunk=index,
                                            knowledge_version=version, analysis_context=self.context))
                         if end == len(clean): break
                         start, index = max(start+1,end-80), index+1
@@ -597,12 +645,12 @@ class Knowledge:
                 vector_error = type(exc).__name__ + ': ' + str(exc)[:180]
         _report(90, '索引构建完成，写入清单并验证…')
         record = {'parser_version':PARSER_VERSION,'terminology_hash':terms_hash,'status':'PASS' if self.vector_enabled and not vector_error and not failures else 'DEGRADED','knowledge_version':version,'chunks':len(chunks),'pages':pages,'sources':fingerprints,'embedding':{'repo':self.model_dir.name,'path':str(self.model_dir),'sha':embedding_sha,'pooling':'CLS normalized','runtime':'CPU ONNX quantized' if self.model_dir.is_dir() else 'unknown'},'failures':failures,'vector_error':vector_error,'built_at':time.time()}
-        (target/'chunks.json').write_text(json.dumps(chunks,ensure_ascii=False,indent=2))
-        manifest.write_text(json.dumps(record,ensure_ascii=False,indent=2))
+        _atomic_json(target/'chunks.json', chunks)
+        _atomic_json(manifest, record)
         # Parsing failure must not replace the last valid knowledge snapshot.
         if terminology_hash()!=terms_hash:raise ValueError('TERMINOLOGY_CHANGED_DURING_BUILD')
         if not failures:
-            (self.path/'CURRENT.tmp').write_text(version)
+            (self.path/'CURRENT.tmp').write_text(version, encoding='utf-8')
             os.replace(self.path/'CURRENT.tmp',self.path/'CURRENT')
         return record
 
@@ -681,6 +729,11 @@ class Knowledge:
         import copy
         return copy.deepcopy(chunks_by_id.get(str(evidence_id)))
 
+    def _input_signature(self):
+        return {'sources': _source_fingerprints(self._sources()),
+                'terminology_hash': terminology_hash(), 'parser_version': PARSER_VERSION,
+                'embedding_sha': embedding_fingerprint_cached(self.model_dir)}
+
     def _inputs_fresh(self):
         """当前来源/解析器/术语/向量指纹与已建索引一致（无索引时恒 False）。"""
         if not self.version:
@@ -688,7 +741,7 @@ class Knowledge:
         record = self.status()
         return (record.get('terminology_hash') == terminology_hash()
                 and record.get('parser_version') == PARSER_VERSION
-                and record.get('sources') == {p.name: file_fingerprint(p) for p in self._sources()}
+                and record.get('sources') == _source_fingerprints(self._sources())
                 and (record.get('embedding') or {}).get('sha') == embedding_fingerprint_cached(self.model_dir))
 
     def search(self, query, product=None, mode='hybrid', limit=5, factory=None, period=None, specification=None, document_version=None, context=None, event_only=False, keyword_query=None):
@@ -698,12 +751,12 @@ class Knowledge:
             raise ValueError('mode must be hybrid, bm25 or vector')
         if not self._inputs_fresh():
             self._embedding, self._collection = None, None
-            self.build()
+            self.build(retry_failed=False)
         if not (self.path/'CURRENT').exists():
             return {'status':'FAILED','mode':mode,'evidence':[],'reason':'No valid knowledge snapshot'}
-        if not self._inputs_fresh():
-            return {'status':'FAILED','mode':mode,'evidence':[],'reason':'KNOWLEDGE_REBUILD_FAILED: 当前来源尚未形成有效索引，旧版仍保留'}
-        version = (self.path/'CURRENT').read_text().strip()
+        stale_error = ('KNOWLEDGE_REBUILD_FAILED: 当前来源构建失败，使用上次有效知识版本'
+                       if not self._inputs_fresh() else None)
+        version = (self.path/'CURRENT').read_text(encoding='utf-8').strip()
         target = self.path/version
         # 2026-09-24 修复（审计 AUD-RAG-06）：溯源标注用本索引 manifest 的实际
         # 向量指纹（切换模型后不再恒报内置常量）；无 manifest 时回退常量。
@@ -742,7 +795,9 @@ class Knowledge:
         finally:
             db.close()  # leaked handles block index replacement on Windows
         vec, error = [], None
-        if mode != 'bm25' and not self.vector_enabled:
+        if stale_error and mode != 'bm25':
+            error = stale_error
+        elif mode != 'bm25' and not self.vector_enabled:
             error = 'VECTOR_DISABLED'
         elif mode != 'bm25' and _manifest.get('vector_error'):
             # A failed batch may leave a queryable but incomplete collection.
@@ -764,6 +819,7 @@ class Knowledge:
         lexical_anchor = bool(re.search(r'配方|工艺|收率|装量|设备|维修|GMP|规格|每盒|[A-Z]{2,}|\d', query))
         weights = [0.75, 0.25] if lexical_anchor else [0.5, 0.5]
         ids = reciprocal_rank_fusion(rankings, limit=limit, weights=weights if mode == 'hybrid' else None)
+        error = error or stale_error
         status = 'DEGRADED' if error else 'PASS'
         if mode == 'vector' and error: ids = []
         reranker_error = None

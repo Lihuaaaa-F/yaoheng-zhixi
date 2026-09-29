@@ -9,6 +9,7 @@
 ④ 两条评审阻断的护栏：缺要素快照响亮失败（IMPORT_ELEMENTS_INCOMPLETE），
    要素 unit=None 不崩（图表统一过滤）。
 """
+import os
 import json, re, shutil
 import pytest
 from docx import Document
@@ -213,6 +214,8 @@ def test_import_materials_prose_and_explanation(tmp_path):
     assert check['explanation_bindings_checked']==1 and not check['explanation_binding_failures']
 
 
+@pytest.mark.skipif(os.environ.get('PHARMA_TEST_COMPETITION_DATA') != '1',
+                    reason='competition asset integration requires PHARMA_TEST_COMPETITION_DATA=1')
 def test_competition_bindings_untouched_by_adapter():
     from pharma.industry import analyze_reference
     snapshot=analyze_reference('pharmaceutical:competition',month='2026-06')
