@@ -3,11 +3,12 @@
   "status": "PARTIAL",
   "competition_ready": false,
   "delivery_stage": "preliminary",
-  "validation_scope": "审查修复基础回归；未重新执行真实模型或真人视觉/业务评分",
+  "validation_scope": "审查修复基础回归 + 修复轮1定向重跑（见 fix_round_1）；未重新执行真实模型或真人视觉/业务评分；全量 pytest/前端构建门禁绑定 8b8658d，修复后全量刷新由编排方执行",
   "baseline_commit": "958bb2069e90e9786dcddcfeb10e94f57d26b39f",
-  "candidate_code_commit": "8b8658d19ca0c4d15bea8d0afbccbe61cdf25164",
-  "tested_code_commit": "8b8658d19ca0c4d15bea8d0afbccbe61cdf25164",
-  "application_git_tree": "9f13916a952471f403a66dc2e370766bd929cb17",
+  "candidate_code_commit": "6014562ee07eb09b6744375d200fea49ee3e3728",
+  "tested_code_commit": "6014562ee07eb09b6744375d200fea49ee3e3728",
+  "application_git_tree": "11aac5c93eb4595d03c904890e7fd5ca86d26322",
+  "report_generation_code_changes": true,
   "historical_run_index": "validation/pre_audit_current_run.json",
   "audit_report": "validation/audit_fixes.md",
   "required_scenarios": [
@@ -69,7 +70,8 @@
     "scope": "Playwright真实浏览器，API为独立合成拦截；不作为真实模型或真人验收",
     "new_result_sha256": "5984d066fd42494733332f388deebe38ecdfd7d471bf2e1d69164dbedcca8d0c",
     "existing_result_sha256": "1788e66d3a69a4fd6a5b176fb6d7de456bc49bf4b1662d77a925e03209c061b6",
-    "console_page_errors": 0
+    "console_page_errors": 0,
+    "binding": "绑定 8b8658d 修复轮的脚本组合；6014562 修复后的浏览器重跑与两新脚本登记见 fix_round_1.e2e_gate（隔离实例全绿，无页面 404）"
   },
   "repository_contracts": "PASS",
   "compose_definition": "PASS",
@@ -100,11 +102,62 @@
   },
   "github_delivery": {
     "branch": "main",
-    "tested_code_commit": "8b8658d19ca0c4d15bea8d0afbccbe61cdf25164",
+    "tested_code_commit": "6014562ee07eb09b6744375d200fea49ee3e3728",
     "scope": "源码、合成测试和回归说明；没有新增密钥、数据库、队列或业务报告"
   },
   "known_limits": [
     "旧能力上下文探针因环境没有对应上下文仍跳过；其余默认跳过项已由补充组执行。",
-    "真实云模型、完整向量链路、Windows原生执行及Word/PDF视觉一致性未在本轮复验。"
-  ]
+    "真实云模型、完整向量链路、Windows原生执行及Word/PDF视觉一致性未在本轮复验。",
+    "报告生成存在受审改动（reports.py 102 行 diff，8b8658d）：疑似越界项呈裁中，按裁定处理前不回退不扩散；reports.py/reference_report.py/docx_compat.py 在修复轮1零改动。",
+    "题包真数据直接消费者守卫共 12 处（修复轮1补齐 test_correctness_fixes.py 与 test_docx_compat.py 两处漏网），PHARMA_TEST_COMPETITION_DATA=1 显式启用。"
+  ],
+  "fix_round_1": {
+    "date": "2026-09-30",
+    "code_commit": "6014562ee07eb09b6744375d200fea49ee3e3728",
+    "scope": "复审处置清单未了项与复审新确认项的修复轮1；隔离合成数据，无真实模型调用、无真人评分",
+    "workflow_checks": {
+      "registration_basis": "仅登记本轮实际重跑项；每条附测试名/脚本与结果，未重跑的如实标注",
+      "business_upload_mapping_accumulation_replacement": {
+        "status": "PASS",
+        "evidence": "pytest tests/test_audit_data_regressions.py tests/test_import_template_report.py → 20 passed, 2 skipped（默认合成数据；2026-09-30）"
+      },
+      "three_knowledge_formats_real_vector_hybrid": {
+        "status": "NOT_RERUN",
+        "reason": "原配方依赖真实向量资产与三种知识格式源的真实向量混合检索；本轮无向量服务，不执行也不继承历史 PASS"
+      },
+      "bad_knowledge_preserves_index": {
+        "status": "PASS",
+        "evidence": "pytest tests/test_audit_retrieval.py（含 test_failed_source_keeps_old_index_without_rebuilding_each_request、test_truncated_manifest_can_be_rebuilt、test_switch_rollback_restores_current_without_rebuilding_old_sources）+ tests/test_assistant_lifecycle.py → 50 passed（2026-09-30）"
+      },
+      "template_install_failure_preserves_previous": {
+        "status": "PASS",
+        "evidence": "新增对名回归 tests/test_audit_reports.py::test_failed_install_preserves_previous_template：注入损坏模板使安装失败，断言上一版模板与占位符映射逐字节保留、清单仍展示已安装（2026-09-30）"
+      },
+      "assistant_real_two_turns_and_lifecycle": {
+        "status": "PARTIAL",
+        "evidence": "生命周期部分通过：tests/test_assistant_lifecycle.py + tests/test_audit_runtime.py（调度线程存活、SQLite 检索降级保留事实、fail 写锁卡轮兜底）；『真实两轮对话』需真实模型，本轮 NOT_RUN，不并入通过"
+      },
+      "draft_edit_simulated_rpa_receipt_idempotence": {
+        "status": "PASS",
+        "evidence": "pytest tests/test_audit_runtime.py（422 拒收回草稿需重新确认、SENDING 恢复只 GET 不重发、remediation 按状态区分断言）+ e2e-audit-contracts.mjs 首项『HTTP 422 rejection is visible and editable…』（2026-09-30）"
+      },
+      "forecast_graph_routes_agent_decision": {
+        "status": "PASS",
+        "evidence": "pytest tests/test_forecasting.py tests/test_graph.py tests/test_decision.py → 42 passed, 1 skipped + e2e-graph-interactions.mjs → PASS 12 checks, errors=[]（2026-09-30）"
+      }
+    },
+    "e2e_gate": {
+      "instance": "隔离栈：后端 uvicorn 127.0.0.1:8790（PHARMA_RUNTIME_DIR/PHARMA_ARTIFACTS_DIR 指向系统临时全新目录、清密钥、PHARMA_AUTO_EXPLAIN=0、不起 worker/RPA）+ vite dev 127.0.0.1:8899（临时 config 仅改代理指向 8790，用后删除）；8765 被一台来源不明旧版后端占用（/api/workspace 404），未触碰",
+      "workbench": {"status": "PASS", "pages": 9, "viewports": 2, "result_sha256": "50d811b32ab0953a42cd33043671997bee107dfe14e7dc3dba747e9a7caedf8c"},
+      "audit_contracts": {"status": "PASS", "checks": 5, "failures": 0, "errors": 0, "result_sha256": "36dda4485a0c5b1008c262be526f2e369c85fb80387e14db271775369ad4a6e2"},
+      "graph_interactions": {"status": "PASS", "checks": 12, "errors": 0, "result_sha256": "d3d56c13d3a65c4ae2ea6946264b7abc6ef48118976873922f773c183cebdf94"},
+      "note": "上一轮 e2e-audit-contracts 的 2 项失败为本 8899 实例非 dev 模式导致 /src/presentation.tsx 与 /node_modules/.vite/deps/echarts_core.js 动态模块 404（环境问题，非产品断言失败）；正常隔离 dev 实例重跑 5/5 全绿"
+    },
+    "targeted_regressions": {
+      "backend": "pytest 定向批次（2026-09-30，全部通过）：test_audit_runtime.py + test_concurrency.py + test_acceptance_doc.py + test_audit_reports.py + test_correctness_fixes.py + test_docx_compat.py（66 passed, 2 skipped=新增题包守卫）；test_model_connections_workspace.py + test_private_configuration.py + test_import_delete.py（40 passed, 1 skipped）；test_report_version_cache.py + test_delivery_repair.py + test_knowledge_supplement.py + test_knowledge_source_selection.py + test_import_template_report.py（49 passed, 2 skipped）；test_data_import.py + test_import_v2.py 同批通过",
+      "competition_opt_in": "PHARMA_TEST_COMPETITION_DATA=1 下新增守卫两用例通过：test_correctness_fixes.py::test_metric_contract_holds_on_competition_package、test_docx_compat.py::test_render_upgrades_legacy_default_template_without_changing_original",
+      "node_tests": "node --test frontend/*.test.mjs → 10 pass, 0 fail（node v24.15.0）"
+    },
+    "pending": "全量 pytest 与前端 build 门禁（计划 6.1）由编排方重跑后刷新 backend/frontend_build 数字；three_knowledge_formats_real_vector_hybrid 与『真实两轮对话』待真实向量资产/真实模型工作流"
+  }
 }
