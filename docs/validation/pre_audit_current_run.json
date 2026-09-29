@@ -1,0 +1,144 @@
+{
+  "schema_version": 3,
+  "status": "PARTIAL",
+  "competition_ready": false,
+  "delivery_stage": "preliminary",
+  "required_scenarios": [
+    "S1",
+    "S2",
+    "S3"
+  ],
+  "supplemental_scenarios": [
+    "Q2"
+  ],
+  "candidate_code_commit": "fc6e3fc5a4c5f94401433e353b60d2d3e83e5c3e",
+  "tested_code_commit": "fc6e3fc5a4c5f94401433e353b60d2d3e83e5c3e",
+  "baseline_commit": "3aba221e81d582970a7261204d2b255e822b0e88",
+  "historical_run_index": "validation/baseline_3aba221_current_run.json",
+  "human_review": "S1_S2_APPROVED_ARTIFACTS_S3_USER_ASSIGNED_4",
+  "human_web_check": "PASS",
+  "human_review_record": "evaluation/人工评分记录.json",
+  "human_review_scope": "S1/S2各4分只对应原已评候选；S3用户免打开赋4分并绑定最终文件；新生成S1/S2不迁移旧分数。Q2不评分。",
+  "candidate_review_record": "validation/candidate_review.json",
+  "evaluation_report": "evaluation/评测报告.md",
+  "candidate_notes": "交付候选说明.md",
+  "preserved_originals": {
+    "files_checked": 373,
+    "changed": [],
+    "approved_samples_checked": 4,
+    "approved_samples_changed": [],
+    "reports_py_exact_teammate_version": true,
+    "recovery_copy": "outside_repository"
+  },
+  "backend": {
+    "passed": 667,
+    "failed": 0,
+    "skipped": 1,
+    "warnings": 2,
+    "skip_reason": "legacy capability-context discovery unavailable; slow import E2E ENABLED",
+    "regression_xml_sha256": "42127dbbf988eefffbd44104b86dee3590fa7eb9a7d9a5565cced2cf31a010c6"
+  },
+  "frontend_build": {
+    "build": "PASS",
+    "build_code_commit": "09566e7f67afbce5c832ccf412c51652a55e0e55",
+    "frontend_git_tree": "8120a304bfe0204a4e77f24f41c0dc5e79b6e4cb",
+    "source_equal_to_final": true,
+    "log_sha256": "af7bfe0b873563f2e383a8f5f4d879ee1ba6d2f66742312005f9d7c036557914",
+    "node_tests": "1 passed; a9115a0 identical frontend tree",
+    "browser": {
+      "status": "PASS",
+      "code_commit": "fc6e3fc5a4c5f94401433e353b60d2d3e83e5c3e",
+      "actual_pages": 9,
+      "viewports": 2
+    },
+    "targeted_browser_contracts": {
+      "passed": 12,
+      "code_commit": "a9115a0837f437827d90f7255d4d6d4feaeae145",
+      "source_equal_to_final": true
+    }
+  },
+  "browser": {
+    "status": "PASS",
+    "code_commit": "fc6e3fc5a4c5f94401433e353b60d2d3e83e5c3e",
+    "actual_pages": 9,
+    "viewports": 2
+  },
+  "fresh_model_reports": {
+    "run_id": "main_fc6e3fc",
+    "code_commit": "fc6e3fc5a4c5f94401433e353b60d2d3e83e5c3e",
+    "S1": "PASS",
+    "S2": "PASS",
+    "S3": "PASS",
+    "Q2": "DEGRADED",
+    "new_calls": 8,
+    "required_scenario_calls": 6,
+    "supplemental_calls": 2,
+    "local_cache_hits": 0,
+    "model": "deepseek-flash",
+    "scope": "S1=3/S2=1/S3=2；Q2=2，失败与预算限制保留；不混入必测分母"
+  },
+  "video": {
+    "status": "PENDING_USER_RECORDING",
+    "required": true,
+    "path": null
+  },
+  "ppt": {
+    "status": "CONDITIONAL_FINAL_STAGE",
+    "required_stage": "final",
+    "path": null
+  },
+  "publication_boundary": "Existing repository scope unchanged; organizer permission to publish competition assets remains unverified; new report contents local only",
+  "post_human_final_e2e": "REQUIRED_SCENARIOS_PASS_SUPPLEMENTAL_Q2_DEGRADED",
+  "github_delivery": {
+    "branch": "main",
+    "status": "PUSHED_MAIN",
+    "verified_content_commit": "35bfd290560c5e4299643dcd3b5d90aafda28d2d",
+    "tested_code_commit": "fc6e3fc5a4c5f94401433e353b60d2d3e83e5c3e",
+    "merged_to_main": true,
+    "release_published": false,
+    "authorization": "用户明确要求推送main",
+    "record_update_scope": "后续仅推送回执；应用Git树与fc6e3fc一致"
+  },
+  "workflow_checks": {
+    "required_scenarios": "S1/S2/S3 same-code models, hybrid retrieval, actual downloads, draft edit, localhost confirmation and idempotence PASS",
+    "supplemental_Q2": "model DEGRADED; downloadable degraded artifacts and local simulation independently checked"
+  },
+  "bonus": {
+    "heatmap_and_tracking": "UI_ROUTES_VERIFIED",
+    "graph": "21 nodes / 27 edges; historical 10-query gain not positive",
+    "forecast": "existing Holt; total-cost forecasts worse than naive for all three products",
+    "multi_model_collaboration": "NOT_DEMONSTRATED_REPORTS_USED_ONE_MODEL"
+  },
+  "concurrent_upstream": {
+    "commit": "2e7131ade3fc7629216b5422ae5c416d8ea621f6",
+    "file": "05_原型/backend/pharma/reports.py",
+    "status": "INCLUDED_EXACT_CONTENT",
+    "verification": "Word COM probe plus candidate conversions and full explanation text checks; no local layout edits"
+  },
+  "previous_complete_candidate_run": "validation/candidate_calls_09566e7.json",
+  "content_review_candidate": {
+    "run_id": "s1_revalidated_c5a2f34",
+    "source_call_id": 79,
+    "new_model_calls": 0,
+    "status": "PASS",
+    "record": "validation/candidate_review.json",
+    "attribution_score": 4
+  },
+  "model_budget": {
+    "operation": "generate",
+    "original_daily_cap": 45,
+    "additional_authorization": "用户明确授权额外最多6次",
+    "extra_calls_used": 6,
+    "temporary_total_cap": 51,
+    "total_day_calls": 51,
+    "original_cap_restored": 45,
+    "endpoint_changed": false,
+    "max_output_tokens_per_call": 8192
+  },
+  "active_review": null,
+  "application_git_tree": "0bca355b3be9179f9f7fc7c8ba8362b409e70e2e",
+  "prior_candidate_run": "validation/candidate_run_4b04be5.json",
+  "candidate_machine_record": "validation/candidate_machine.json",
+  "local_candidate_directory": "/home/hujunjie/yaoheng_candidate_runs/main_fc6e3fc",
+  "local_prior_candidate_directory": "/home/hujunjie/yaoheng_candidate_runs/main_09566e7"
+}
