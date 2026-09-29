@@ -520,7 +520,22 @@ def run_turn(ledger, turn, analysis, jobs, action_store, gateway_factory=None, r
                             'snapshot_id': snapshot['snapshot_id'], 'notices': notices,
                             'related_reports': extras.get('reports', []), 'related_tasks': extras.get('tasks', [])}, proposals)
     except Exception:
-        ledger.fail(tid, '本轮未完成。请检查数据范围和服务状态后重试；没有执行报告生成或任务发送。')
+        message = '本轮未完成。请检查数据范围和服务状态后重试；没有执行报告生成或任务发送。'
+        try:
+            ledger.fail(tid, message)
+        except Exception:
+            # fail() 自身再抛（如 SQLite 写锁超时）时异常会溢出到调度线程循环级
+            # 兜底，而 recover() 只在调度线程启动时执行一次——该轮将停留 running
+            # 直到进程重启（复审 2026-09-30）。这里做有界重试：写锁冲突通常瞬时，
+            # 仍失败则如实留待下次重启的 recover() 回收。
+            import time
+            for _ in range(3):
+                time.sleep(.5)
+                try:
+                    ledger.fail(tid, message)
+                    break
+                except Exception:
+                    continue
 
 
 def start_worker(ledger, analysis, jobs, action_store):

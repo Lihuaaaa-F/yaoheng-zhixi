@@ -4,6 +4,7 @@
 重试、Agent 决策、任务过滤、启动状态、跨路径指标合同），防止回归。
 """
 import json
+import os
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
@@ -380,9 +381,16 @@ def test_metric_contract_holds_on_all_paths():
     from pharma.metric_contract import validate_snapshot
     for context in ('mechanical_demo:synthetic-mechanical', 'chemical_demo:synthetic-chemical'):
         assert validate_snapshot(analyze_reference(context, month='2026-06')) == []
+
+
+@pytest.mark.skipif(os.environ.get('PHARMA_TEST_COMPETITION_DATA') != '1',
+                    reason='competition asset integration requires PHARMA_TEST_COMPETITION_DATA=1')
+def test_metric_contract_holds_on_competition_package():
+    # 题包真数据消费者（中药一厂/银黄口服液/2026-05，金标推导自题包原始 CSV）
+    # 与其余 10 处守卫同语义：默认回归用独立合成数据，显式启用才跑（复审 2026-09-30）。
     from pharma.metrics import analyze
-    pharma = analyze('中药一厂', '银黄口服液', '2026-05')
-    assert validate_snapshot(pharma) == []
+    from pharma.metric_contract import validate_snapshot
+    assert validate_snapshot(analyze('中药一厂', '银黄口服液', '2026-05')) == []
 
 
 def test_metric_contract_detects_unit_drift():

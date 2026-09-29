@@ -38,7 +38,7 @@ try {
   else if (url.pathname === '/api/system/status') value = { deployment: { label: '合成环境' }, network: {} };
   await route.fulfill({ json: value });
  });
- const goto = async pageName => { const url = new URL(process.env.PHARMA_E2E_URL); url.searchParams.set('page', pageName); await page.goto(url.href); await page.getByRole('heading', { name: pageName === 'actions' ? '企业任务看板' : pageName === 'reports' ? '生成分析报告' : '成本结构', exact: true }).waitFor(); };
+ const goto = async pageName => { const url = new URL(process.env.PHARMA_E2E_URL); url.searchParams.set('page', pageName); await page.goto(url.href); await page.getByRole('heading', { name: pageName === 'actions' ? '企业任务看板' : pageName === 'reports' ? '报告生成与下载' : '成本结构', exact: true }).waitFor(); };
  const check = async (name, run) => { try { await run(); checks.push(name); } catch(e) { failures.push({ name, error: e.message }); } };
  await goto('actions');
  await check('cleanText normalizes actual and escaped CRLF/tab', async () => {

@@ -7,6 +7,7 @@
 误报；③模板安装/规范化管线产物保留 w:/w14 前缀并通过出厂校验；④渲染
 产出（含参照报告分支）通过出厂校验。
 """
+import os
 import zipfile
 import pytest
 from pathlib import Path
@@ -82,7 +83,12 @@ def test_reference_render_output_passes_word_compat(tmp_path):
     assert validate_word_compat(path)['status'] == 'PASS'
 
 
+@pytest.mark.skipif(os.environ.get('PHARMA_TEST_COMPETITION_DATA') != '1',
+                    reason='competition asset integration requires PHARMA_TEST_COMPETITION_DATA=1')
 def test_render_upgrades_legacy_default_template_without_changing_original(tmp_path, monkeypatch):
+    # 直接消费题包真数据（读取题包原始模板并 analyze 中药一厂/银黄口服液/2026-05），
+    # 与其余题包守卫同语义：默认跳过，PHARMA_TEST_COMPETITION_DATA=1 显式启用
+    # （复审 2026-09-30，与 docs/data_contract.md 表述对齐）。
     import json
     import hashlib
     from xml.etree import ElementTree as ET

@@ -146,11 +146,12 @@ def run_vector_switch(store, job):
         result['adaptation'] = adaptation
         result['knowledge'] = {k: build_result.get(k) for k in ('status', 'knowledge_version', 'chunks', 'vector_error')}
         result['message'] = '向量模型切换成功'
+        # 切换验证已收紧为必须 PASS（上方 :143 判 != 'PASS' 即失败回滚）：manifest
+        # 带 vector_error 时向量检索必为 DEGRADED，成功路径不可能携带降级索引。
+        # 旧的"成功但降级"分支（DEGRADED 终态）因此不可达，已移除（复审 2026-09-30）。
         result['message_detail'] = (f'已切换至 {probe["name"]}（维度 {adaptation["dimension"]}），'
-                                    f'知识索引已重建（{build_result.get("chunks", 0)} 段）并通过语义检索验证。'
-                                    + ('注意：向量索引降级（' + str(build_result.get('vector_error')) + '）' if build_result.get('vector_error') else ''))
-        store.update(job_id, 'SUCCEEDED' if not build_result.get('vector_error') else 'DEGRADED', result,
-                     progress=100, detail='向量模型切换成功')
+                                    f'知识索引已重建（{build_result.get("chunks", 0)} 段）并通过语义检索验证。')
+        store.update(job_id, 'SUCCEEDED', result, progress=100, detail='向量模型切换成功')
     except Exception as exc:  # All failures after configuration mutation must roll back.
         # 回滚配置：写回前值，避免半切换状态
         rollback_error = None

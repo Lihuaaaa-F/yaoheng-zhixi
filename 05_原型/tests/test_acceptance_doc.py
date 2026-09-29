@@ -18,7 +18,9 @@ def _fake_store(monkeypatch, status='SUCCEEDED'):
             return {'id': job_id, 'status': status, 'result': {'narrative': {'status': 'PASS', 'model_live': True, 'findings': []}, 'evidence': {'status': 'PASS', 'evidence': []}, 'docx': {'status': 'PASS'}, 'pdf': {'status': 'PASS'}}}
         def artifact(self, job_id, record, fmt):
             captured['record'] = record; captured['fmt'] = fmt
-            return {'artifact_id': job_id + '-accept', 'sha256': record['sha256']}
+            # 与真实 JobStore.artifact 一致：产物 ID = job_id + '-' + format；
+            # 验收凭证的 format 自带唯一后缀（accept-<stamp>-<rand>）。
+            return {'artifact_id': job_id + '-' + fmt, 'sha256': record['sha256']}
         @contextmanager
         def db(self):
             conn = sqlite3.connect(':memory:')
@@ -73,13 +75,15 @@ def test_acceptance_doc_registers_review_and_recomputes(tmp_path, monkeypatch):
     assert r.status_code == 201, r.text
     body = r.json()
     assert body['status'] == 'OK'
-    assert body['acceptance_doc']['artifact_id'] == 'j1-accept'
+    # 凭证产物 ID 带唯一后缀（处置遗留#4）：二次验收不覆盖旧凭证
+    assert body['acceptance_doc']['artifact_id'].startswith('j1-accept-')
     assert captured['reviewer'] == '测试审核员（虚构夹具）' and captured['score'] == 5
     assert captured['job_id'] == 'j1'
     assert all(captured['dims'][k]['status'] == 'PASS' for k in ('section_completeness', 'readability', 'visual_quality'))
     assert '人工验收凭证' in captured['comment'] and 'j1-accept' in captured['comment']
-    # 凭证字节真实落盘在 ARTIFACTS/acceptance 下
-    assert (tmp_path / 'acceptance' / 'j1-accept.docx').read_bytes() == b'docx-bytes'
+    # 凭证字节真实落盘在 ARTIFACTS/acceptance 下（唯一文件名）
+    stored = list((tmp_path / 'acceptance').glob('j1-accept-*.docx'))
+    assert len(stored) == 1 and stored[0].read_bytes() == b'docx-bytes'
     # 验收重算后人工三维为 PASS（不再 PENDING）
     acceptance = body['acceptance']['acceptance'] if 'acceptance' in body['acceptance'] else body['acceptance']
     for k in ('section_completeness', 'readability', 'visual_quality'):

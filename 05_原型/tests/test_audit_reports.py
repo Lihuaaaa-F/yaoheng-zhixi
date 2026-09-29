@@ -48,6 +48,34 @@ def test_installed_template_verifies_its_own_numeric_binding_contract(tmp_path, 
     assert reports.verify_docx(path,snapshot,placeholders=placeholders)['status']=='FAIL'
 
 
+def test_failed_install_preserves_previous_template(tmp_path, monkeypatch):
+    """workflow_checks template_install_failure_preserves_previous 的对名回归：
+    安装采用暂存发布（先编译后 replace），失败不得毁掉上一份可用模板。"""
+    import json
+    from docx import Document
+    monkeypatch.setattr(reports,'RUNTIME_TEMPLATES',tmp_path/'templates')
+    doc=Document()
+    for title in ('一、封面与基本信息','二、总成本概览','三、成本要素明细分析',
+                  '四、重点产品专项分析','五、对标分析','六、总结与建议'):
+        doc.add_paragraph(title)
+    doc.add_paragraph('{{产品名称}} {{分析月份}}')
+    good=tmp_path/'good.docx';doc.save(good)
+    first=reports.install_template(good,'monthly')
+    installed=tmp_path/'templates'/'monthly.docx'
+    map_path=tmp_path/'templates'/'monthly.placeholder_map.json'
+    assert installed.is_file() and map_path.is_file()
+    before_template,before_map=installed.read_bytes(),map_path.read_bytes()
+    broken=tmp_path/'broken.docx';broken.write_bytes(b'not a zip file')
+    with pytest.raises(Exception):
+        reports.install_template(broken,'monthly')
+    assert installed.read_bytes()==before_template
+    assert map_path.read_bytes()==before_map
+    assert json.loads(map_path.read_text(encoding='utf-8'))['template_hash']==first['template_hash']
+    listing={t['analysis_type']:t for t in reports.installed_templates()}
+    assert listing['monthly']['installed'] is True
+    assert listing['monthly']['placeholder_count']==len(first['placeholders'])
+
+
 def test_key_conclusions_preserve_decimal_rounding_and_missing_deltas():
     snapshot={'metrics':{'unit_cost':{'value':'1'},'total_cost':{'value':'100'},'quantity':{'value':'100'}},
               'period_changes':{'unit_cost':{'mom':{'rate':'-0.405'}}},

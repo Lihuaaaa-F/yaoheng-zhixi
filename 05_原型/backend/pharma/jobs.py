@@ -38,11 +38,21 @@ class JobStore:
         with self.db() as c:r=c.execute('SELECT body FROM snapshots WHERE id=?',(id,)).fetchone()
         if not r:raise KeyError('SNAPSHOT_NOT_FOUND')
         return json.loads(r['body'])
-    def enqueue(self,kind,payload,cache_key=None,retry=False):
+    def enqueue(self,kind,payload,cache_key=None,retry=False,reject_active_kind=None):
         id=uuid.uuid4().hex;initial={}
         if kind=='report':payload={**payload,'generation_mode':'fresh_model' if retry else payload.get('generation_mode','reuse')}
         with self.db() as c:
             c.execute('BEGIN IMMEDIATE')
+            if reject_active_kind:
+                # 审计遗留（api 层"快照读→入队→标记"三步无锁）：活跃同类任务
+                # 检查移入 BEGIN IMMEDIATE 事务，与入队原子，消除并发双入队窗口。
+                # 更新时间超过 30 分钟视为 worker 崩溃残留，不再阻塞（配合
+                # data_import.waiting_imports 对 PARSING 记录的超时回收）。
+                from datetime import datetime
+                for row in c.execute("SELECT id,updated FROM jobs WHERE kind=? AND status IN ('QUEUED','RUNNING') ORDER BY created",(reject_active_kind,)).fetchall():
+                    try:stale=(datetime.now().astimezone()-datetime.fromisoformat(row['updated'])).total_seconds()>1800
+                    except (ValueError,TypeError):stale=False
+                    if not stale:raise ValueError(f'PARSE_ALREADY_RUNNING:{row["id"]}')
             if cache_key:
                 old=c.execute('SELECT * FROM jobs WHERE cache_key=?',(cache_key,)).fetchone()
                 if old and (old['status'] != 'FAILED' or payload.get('generation_mode')=='repair_artifacts'):

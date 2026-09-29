@@ -97,6 +97,28 @@ def test_assistant_sqlite_retrieval_failure_keeps_facts(services):
     assert {'name':'search_knowledge','status':'unavailable'} in result['message']['tools']
 
 
+def test_turn_marks_failed_when_fail_write_hits_lock(services, monkeypatch):
+    """复审 2026-09-30：run_turn 兜底 except 里 ledger.fail() 自身再抛（SQLite
+    写锁超时）时，该轮不得停留 running——recover() 只在调度线程启动时执行一次，
+    进程存活期间无人回收。验证有界重试后落为 failed。"""
+    ledger, jobs, actions, snapshot = services
+    _, turn = enqueue(services)
+    real_fail = ledger.fail
+    attempts = []
+    def flaky_fail(tid, message):
+        attempts.append(1)
+        if len(attempts) == 1:
+            raise sqlite3.OperationalError('database is locked')
+        return real_fail(tid, message)
+    monkeypatch.setattr(ledger, 'fail', flaky_fail)
+    def breach(*args, **kwargs):
+        raise TypeError('retrieval contract breach')
+    assistant.run_turn(ledger, turn, lambda _:snapshot, jobs, actions, OfflineGateway, breach)
+    result = ledger.turn(turn['id'])
+    assert result['status'] == 'failed'
+    assert len(attempts) == 2
+
+
 def test_acknowledgement_endpoint_is_named_idempotent_and_not_completion(tmp_path, monkeypatch):
     store, action = prepared(tmp_path)
     monkeypatch.setattr(api, 'actions', store)
@@ -112,8 +134,14 @@ def test_acknowledgement_endpoint_is_named_idempotent_and_not_completion(tmp_pat
     assert first['status'] == 'SENT'
 
 
-@pytest.mark.parametrize('status', ['confirmed', 'in_progress', 'completed'])
-def test_sending_recovery_queries_without_resending(tmp_path, status):
+@pytest.mark.parametrize('status,remediation', [
+    ('received', 'NOT_CONFIRMED'), ('sent', 'NOT_CONFIRMED'),
+    ('confirmed', 'confirmed'), ('in_progress', 'in_progress'), ('completed', 'completed')])
+def test_sending_recovery_queries_without_resending(tmp_path, status, remediation):
+    """处置遗留#2 的"分别保存与区分"半边：远端状态按回复原样持久化（remote），
+    delivery.remediation 按状态区分映射——confirmed/in_progress/completed 之外
+    一律 NOT_CONFIRMED（映射塌缩或 remote 丢弃持久化都会在此变红）。
+    模拟送达仍不等于整改完成：notification 保持 UNKNOWN，不冒充已整改。"""
     store, action = prepared(tmp_path)
     store._state(action['id'], 'SENDING')
     methods = []
@@ -123,7 +151,9 @@ def test_sending_recovery_queries_without_resending(tmp_path, status):
     with httpx.Client(transport=httpx.MockTransport(handle)) as client:
         recovered = store.deliver_one(action['id'], client)
         assert recovered['status'] == 'ACCEPTED'
+        assert recovered['remote']['status'] == status
         assert recovered['delivery']['notification'] == 'UNKNOWN'
+        assert recovered['delivery']['remediation'] == remediation
         store.deliver_one(action['id'], client)
     assert methods == ['GET']
 
@@ -144,6 +174,96 @@ def test_artifact_hash_drift_rejects_review_endpoint(tmp_path, monkeypatch):
         **{key:{'status':'PASS','comment':''} for key in ('section_completeness','readability','visual_quality')}})
     assert response.status_code == 422
     assert 'HASH' in response.text
+
+
+def test_artifact_hash_drift_rejects_download_endpoint(tmp_path, monkeypatch):
+    """处置遗留#6：K6 点名的缺口是"端点下载路径"——GET /api/artifacts/{id} 在
+    真实哈希漂移时必须拒绝，与 docs/api_and_operations.md 的合同一致。"""
+    from pharma import jobs
+    store = JobStore(tmp_path/'jobs.sqlite')
+    monkeypatch.setattr(api, 'store', store)
+    monkeypatch.setattr(jobs, 'ARTIFACTS', tmp_path)
+    job = store.enqueue('report', {})
+    path = tmp_path/'report.docx'
+    path.write_bytes(b'original')
+    docx = store.artifact(job['id'], {'path':str(path),'sha256':hashlib.sha256(path.read_bytes()).hexdigest()}, 'docx')
+    store.update(job['id'], 'SUCCEEDED', {'docx':docx})
+    path.write_bytes(b'changed')
+    response = TestClient(api.app).get('/api/artifacts/'+docx['artifact_id'])
+    assert response.status_code == 422
+    assert 'ARTIFACT_HASH_MISMATCH' in response.text
+
+
+def test_second_acceptance_doc_keeps_previous_evidence(tmp_path, monkeypatch):
+    """处置遗留#4：二次验收不得覆盖旧凭证——文件名与产物 ID 带唯一后缀，
+    旧 sha256 记录保留在 artifacts 表中可下载追溯。"""
+    from pharma import jobs, config
+    store = JobStore(tmp_path/'jobs.sqlite')
+    monkeypatch.setattr(api, 'store', store)
+    monkeypatch.setattr(jobs, 'ARTIFACTS', tmp_path)
+    monkeypatch.setattr(config, 'ARTIFACTS', tmp_path)
+    monkeypatch.setattr(reviews, 'ReviewStore', lambda: ReviewStore(tmp_path/'reviews.sqlite'))
+    job = store.enqueue('report', {})
+    result = {}
+    for fmt in ('docx', 'pdf'):
+        path = tmp_path/('report.'+fmt)
+        path.write_bytes(b'final report '+fmt.encode())
+        result[fmt] = store.artifact(job['id'], {'path':str(path),'sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'status':'PASS'}, fmt)
+    store.update(job['id'], 'SUCCEEDED', result)
+    client = TestClient(api.app)
+    def upload(name):
+        return client.post(f'/api/reports/{job["id"]}/acceptance-doc',
+            files={'file': (name, b'proof-bytes-'+name.encode('utf-8'), 'application/pdf')},
+            data={'reviewer':'测试审核人','attribution_score':4,
+                  'section_completeness':'PASS','readability':'PASS','visual_quality':'PASS'})
+    first = upload('第一次.pdf')
+    assert first.status_code == 201, first.text
+    second = upload('第二次.pdf')
+    assert second.status_code == 201, second.text
+    first_doc, second_doc = first.json()['acceptance_doc'], second.json()['acceptance_doc']
+    assert first_doc['artifact_id'] != second_doc['artifact_id']
+    assert first_doc['artifact_id'].startswith(job['id']+'-accept-')
+    assert first_doc['sha256'] != second_doc['sha256']
+    with store.db() as c:
+        rows = c.execute("SELECT id,sha256 FROM artifacts WHERE job_id=? AND format LIKE 'accept-%' ORDER BY id",(job['id'],)).fetchall()
+    assert len(rows) == 2
+    assert {r['sha256'] for r in rows} == {first_doc['sha256'], second_doc['sha256']}
+    # 旧凭证文件仍在，旧产物 ID 仍可定位到磁盘上的原始字节
+    first_path = store.artifact_path(first_doc['artifact_id'])
+    assert first_path.read_bytes() == b'proof-bytes-'+('第一次.pdf').encode('utf-8')
+    assert store.artifact_path(second_doc['artifact_id']).is_file()
+
+
+def test_acceptance_doc_over_limit_rejected_at_read_time(tmp_path, monkeypatch):
+    """处置遗留#5：验收凭证上传按上限+1 字节读取，内存峰值受 20MB 约束，
+    不再先全量读入任意大小文件后才检查。"""
+    import asyncio
+    from io import BytesIO
+    from starlette.datastructures import UploadFile
+    from pharma import jobs
+    store = JobStore(tmp_path/'jobs.sqlite')
+    monkeypatch.setattr(api, 'store', store)
+    monkeypatch.setattr(jobs, 'ARTIFACTS', tmp_path)
+    job = store.enqueue('report', {})
+    store.update(job['id'], 'SUCCEEDED', {})
+    payload = b'0'*(20*1024*1024+1)
+    upload = UploadFile(BytesIO(payload), filename='large.pdf')
+    with pytest.raises(ValueError, match='ACCEPTANCE_DOC_TOO_LARGE'):
+        asyncio.run(api.upload_acceptance_doc(job['id'], file=upload, reviewer='测试审核人',
+            attribution_score=4, section_completeness='PASS', readability='PASS', visual_quality='PASS'))
+
+
+def test_import_upload_enforces_limit_at_read_time(monkeypatch):
+    """处置遗留#5：数据中心上传按 MAX_UPLOAD_BYTES+1 字节读取，超限在上游
+    即拒绝；用收缩的上限验证读取端应用了该边界。"""
+    import asyncio
+    from io import BytesIO
+    from starlette.datastructures import UploadFile
+    from pharma import data_import
+    monkeypatch.setattr(data_import, 'MAX_UPLOAD_BYTES', 8)
+    upload = UploadFile(BytesIO(b'x'*9), filename='a.csv')
+    with pytest.raises(ValueError, match='FILE_TOO_LARGE'):
+        asyncio.run(api.import_upload(kind='business', data_type='cost_summary', file=upload))
 
 
 def test_missing_process_identity_never_counts_as_owned(monkeypatch):

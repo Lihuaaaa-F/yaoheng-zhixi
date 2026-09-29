@@ -403,13 +403,21 @@ async def upload_acceptance_doc(job_id:str,file:UploadFile=File(...),reviewer:st
     if not reviewer:raise ValueError('REVIEWER_REQUIRED')
     suffix=Path(file.filename or '').suffix.lower()
     if suffix not in ('.docx','.pdf','.png','.jpg','.jpeg'):raise ValueError('ACCEPTANCE_DOC_TYPE')
-    payload=await file.read()
+    # 先按上限+1 字节读取再判超限：读入内存的峰值受 20MB 约束，
+    # 不再先全量读取任意大小文件后才检查（复审 2026-09-30）。
+    payload=await file.read(20*1024*1024+1)
     if len(payload)>20*1024*1024:raise ValueError('ACCEPTANCE_DOC_TOO_LARGE')
     accept_dir=ARTIFACTS/'acceptance';accept_dir.mkdir(parents=True,exist_ok=True)
-    target=accept_dir/f'{job_id}-accept{suffix}'
+    # 凭证文件名与产物 ID 均带唯一后缀：二次验收不再覆盖旧凭证，
+    # 旧 sha256 记录保留在 artifacts 表中可追溯。
+    from uuid import uuid4 as _uuid4
+    from datetime import datetime
+    stamp_text=datetime.now().astimezone().strftime('%Y%m%dT%H%M%S')
+    accept_token=f'{stamp_text}-{_uuid4().hex[:8]}'
+    target=accept_dir/f'{job_id}-accept-{accept_token}{suffix}'
     target.write_bytes(payload)
     sha=hashlib.sha256(payload).hexdigest()
-    doc=store.artifact(job_id,{'path':str(target),'sha256':sha},'accept')
+    doc=store.artifact(job_id,{'path':str(target),'sha256':sha},f'accept-{accept_token}')
     dims={'section_completeness':section_completeness,'readability':readability,'visual_quality':visual_quality}
     for name,v in dims.items():
         if v not in ('PASS','FAIL'):raise ValueError(f'DIMENSION_{name.upper()}_PASS_OR_FAIL_REQUIRED')
@@ -443,19 +451,9 @@ def import_reviews(payload:ReviewImport):
 def imports():return {'job_id':store.enqueue('import',{})['id']}
 
 # ---- 数据中心 v2：类型化上传、原始预览、解析流水线（进度经 /api/jobs/{id} 轮询） ----
-def _reject_active_parse(kind:str):
-    # 审计 AUD-IMP-05：worker 崩溃后任务永久停在 RUNNING 并阻塞同类新解析；
-    # 更新时间超过 30 分钟视为陈旧，不再阻塞（配合 data_import.waiting_imports
-    # 对 PARSING 记录的超时回收）。
-    from datetime import datetime
-    def _stale(job):
-        try:
-            return (datetime.now().astimezone()-datetime.fromisoformat(job['updated'])).total_seconds()>1800
-        except (ValueError,TypeError):
-            return False
-    for existing in store.list_jobs(limit=200):
-        if existing['kind']==kind and existing['status'] in ('QUEUED','RUNNING') and not _stale(existing):
-            raise ValueError(f'PARSE_ALREADY_RUNNING:{existing["id"]}')
+# 活跃同类任务防重已并入 JobStore.enqueue（reject_active_kind）：检查在
+# BEGIN IMMEDIATE 事务内与入队原子执行，错误合同保持 PARSE_ALREADY_RUNNING:{id}；
+# worker 崩溃后超过 30 分钟的 RUNNING 残留不再阻塞（AUD-IMP-05 语义不变）。
 
 class DataParseRequest(BaseModel):
     model_config=ConfigDict(extra='forbid')
@@ -480,8 +478,7 @@ def data_parse(req:DataParseRequest):
     from . import data_import
     waiting=data_import.waiting_imports('business')
     if not waiting:raise ValueError('NO_WAITING_BUSINESS_IMPORTS')
-    _reject_active_parse('data_parse')
-    j=store.enqueue('data_parse',{'import_ids':[r['id'] for r in waiting],**req.model_dump()})
+    j=store.enqueue('data_parse',{'import_ids':[r['id'] for r in waiting],**req.model_dump()},reject_active_kind='data_parse')
     for record in waiting:data_import.mark_import_status(record,'PARSING',{'parse_job':j['id']})
     return {'job_id':j['id'],'status':j['status'],'import_count':len(waiting)}
 
@@ -490,10 +487,9 @@ def kb_build(req:KnowledgeBuildRequest|None=None):
     """构建知识索引：解析全部待解析知识文档并入向量知识库全流程。"""
     from . import data_import
     waiting=data_import.waiting_imports('knowledge')
-    _reject_active_parse('kb')
     scope=(req or KnowledgeBuildRequest()).model_dump(exclude_none=True)
     scope['context_id']=selected_context(scope.get('context_id'))
-    j=store.enqueue('kb',{'import_ids':[r['id'] for r in waiting],'rebuild':True,**scope})
+    j=store.enqueue('kb',{'import_ids':[r['id'] for r in waiting],'rebuild':True,**scope},reject_active_kind='kb')
     for record in waiting:data_import.mark_import_status(record,'PARSING',{'parse_job':j['id']})
     return {'job_id':j['id'],'status':j['status'],'import_count':len(waiting)}
 
@@ -503,8 +499,7 @@ def template_parse():
     from . import data_import
     waiting=data_import.waiting_imports('template')
     if not waiting:raise ValueError('NO_WAITING_TEMPLATE_IMPORTS')
-    _reject_active_parse('template_parse')
-    j=store.enqueue('template_parse',{'import_ids':[r['id'] for r in waiting]})
+    j=store.enqueue('template_parse',{'import_ids':[r['id'] for r in waiting]},reject_active_kind='template_parse')
     for record in waiting:data_import.mark_import_status(record,'PARSING',{'parse_job':j['id']})
     return {'job_id':j['id'],'status':j['status'],'import_count':len(waiting)}
 
@@ -529,7 +524,9 @@ class KnowledgePublishRequest(BaseModel):
 @app.post('/api/imports/uploads',status_code=201)
 async def import_upload(kind:str=Form(...),data_type:str=Form(''),file:UploadFile=File(...)):
     from . import data_import
-    payload=await file.read()
+    # 只读入上限+1 字节：超限在上游即拒绝，读入内存的峰值受 50MB 约束，
+    # 不再先全量读取任意大小文件后才由 create_upload 检查（复审 2026-09-30）。
+    payload=await file.read(data_import.MAX_UPLOAD_BYTES+1)
     return data_import.create_upload(kind,file.filename or 'upload.bin',payload,data_type)
 @app.delete('/api/imports/{import_id}',status_code=204)
 def import_delete(import_id:str):
@@ -785,8 +782,7 @@ def vector_model_status():
 @app.post('/api/settings/vector-model/switch',status_code=202)
 def vector_model_switch(req:VectorSwitchRequest):
     """向量模型切换：脚本校验+数据分析模型适配评估+知识库重建（进度任务）。"""
-    _reject_active_parse('vector_switch')
-    j=store.enqueue('vector_switch',{'path':req.path})
+    j=store.enqueue('vector_switch',{'path':req.path},reject_active_kind='vector_switch')
     return {'job_id':j['id'],'status':j['status']}
 
 # 助手是工作台的有界辅助入口；读取工具和操作确认分离。

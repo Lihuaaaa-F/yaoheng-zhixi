@@ -249,11 +249,20 @@ def _atomic_write(path: Path, value: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     # 临时文件从创建时起就是 0600，读者只看到完整旧版或完整新版。
     fd, name = tempfile.mkstemp(prefix=path.name + '.', dir=path.parent)
-    with os.fdopen(fd, 'w', encoding='utf-8') as handle:
-        handle.write(value)
-        handle.flush()
-        os.fsync(handle.fileno())
-    os.replace(name, path)
+    try:
+        with os.fdopen(fd, 'w', encoding='utf-8') as handle:
+            handle.write(value)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(name, path)
+    except BaseException:
+        # os.replace 在 Windows 上遇目标被占用（PermissionError）等失败时，
+        # 清理残留临时文件，避免密钥目录孤儿文件累积（复审 2026-09-30）。
+        try:
+            os.unlink(name)
+        except OSError:
+            pass
+        raise
 
 
 def _valid_key_file(path: str, route: str) -> None:
