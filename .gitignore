@@ -17,7 +17,6 @@ __pycache__/
 .runtime/
 **/frontend/dist/
 07_交付/
-04_方案与文档/
 ~$*
 *:Zone.Identifier
 .DS_Store
