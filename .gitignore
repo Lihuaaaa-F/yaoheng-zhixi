@@ -16,7 +16,6 @@ __pycache__/
 *.sqlite*
 .runtime/
 **/frontend/dist/
-07_交付/
 ~$*
 *:Zone.Identifier
 .DS_Store
