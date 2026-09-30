@@ -39,6 +39,7 @@ docker compose -f 05_原型/deploy/docker-compose.yml stop
 
 | 项目 | 入口 |
 |---|---|
+| **使用教程** | [使用教程](使用教程.md) |
 | 完整源码及必要测试 | [05_原型](05_原型/) |
 | 中文技术方案 | [技术方案](docs/技术方案.md) |
 | 三场景评测报告 | [Word](docs/evaluation/评测报告.docx) · [PDF](docs/evaluation/评测报告.pdf) · [Markdown](docs/evaluation/评测报告.md) |
@@ -48,7 +49,7 @@ docker compose -f 05_原型/deploy/docker-compose.yml stop
 | 实际验证及限制 | [验证结果](docs/验证结果.md) · [机器索引](docs/current_run.json) |
 | API | 运行后访问 http://127.0.0.1:8765/docs |
 
-演示视频：**尚未交付，必交，由用户人工录制**。系统演示 PPT：**决赛阶段条件性必交**。人工评分只记录在交付评测中，网站业务报告的用户验收独立处理。
+演示视频：随交付包提供（`07_交付/演示视频/五分钟教程.mp4`，端到端流程实拍）。系统演示 PPT：**决赛阶段条件性必交**。人工评分只记录在交付评测中，网站业务报告的用户验收独立处理。
 
 ## 开发验证
 
@@ -63,5 +64,3 @@ python3 tools/verify_repository.py
 前端完整节点测试使用 Node.js 24（包含直接导入 TypeScript 的回归），CI 已固定该版本。默认后端回归使用独立合成数值；需要附加核对原题数值时显式设置 `PHARMA_TEST_COMPETITION_DATA=1`。
 
 未设置 `PHARMA_PYTHON` 时，将测试命令中的解释器替换为项目虚拟环境的 Python。预测 CLI 使用标准库，可单独执行。依赖锁文件、构建指纹和验收版本用于复现，不限制正常分支开发或合并。
-
-当前修复候选、生成模式及公开范围待确认事项见 [交付候选说明](docs/交付候选说明.md)。
