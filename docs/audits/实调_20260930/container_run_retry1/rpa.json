@@ -1,0 +1,34 @@
+{
+  "run_id": "auditfix_20260930_container_retry1",
+  "attempt_id": "63e710dd773944cc8a3bf58ec13ad8a4",
+  "revision": "source:7bc66067529189e2e4f9a97199500349faa558e2d380705575cd57c95bfcfad6",
+  "revision_kind": "source",
+  "commit": null,
+  "status": "PASS",
+  "scenarios": [
+    {
+      "id": "S1",
+      "job_id": "5941ac12fa8d4415abc53c5064d5fc95",
+      "attempt_id": "63e710dd773944cc8a3bf58ec13ad8a4",
+      "snapshot_id": "f239683c2d464288c9f11cc606a26c049dcb353713135deb52e1d232fdbfda74",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "5941ac12fa8d4415abc53c5064d5fc95-docx",
+          "sha256": "b3d70d0e4fe21d9d1055a7f2f06fa32bbdba32c3afd0553e58b8dbbfe68212cf",
+          "bytes": 264897
+        },
+        "pdf": {
+          "artifact_id": "5941ac12fa8d4415abc53c5064d5fc95-pdf",
+          "sha256": "0fd1e41502359607a2c30a05994a2fe0de3835792a8b998f3c5ce71a94a6201d",
+          "bytes": 1159961
+        }
+      },
+      "status": "PASS",
+      "action_id": "YH-d450919a23c25d3610c2fbb4",
+      "confirmed_payload_hash": "2f2f7bfed55af859bae0ebb23fa9e766d69f110390661f354e9ab4895eb75de9",
+      "receipt_sha256": "db2009fa60e6195da7e3a6e9e4f57f32b0d448b3c087903eb3045024bc97a565",
+      "notification": "SIMULATED_SENT",
+      "human_acknowledgement": "NOT_ENTERED"
+    }
+  ]
+}

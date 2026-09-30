@@ -1,0 +1,64 @@
+{
+  "run_id": "auditfix_20260930_host_retry1",
+  "attempt_id": "4e96f6bc6f3f4ee99d21dbea90d4bb17",
+  "revision": "bec30849061bf00cc19080d71c44c56d74d8b1b6",
+  "revision_kind": "git",
+  "commit": "bec30849061bf00cc19080d71c44c56d74d8b1b6",
+  "required_scenarios": [
+    "S2",
+    "S3"
+  ],
+  "scenarios": [
+    {
+      "id": "S2",
+      "job_id": "01918e3a052542078834cf4bef46eba5",
+      "attempt_id": "4e96f6bc6f3f4ee99d21dbea90d4bb17",
+      "status": "DEGRADED",
+      "docx": "PASS",
+      "pdf": "PASS",
+      "error": null,
+      "snapshot_id": "eeafb940c63a4f853cc9f24896baa27c20509806766ea171281a71093a94878a",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "01918e3a052542078834cf4bef46eba5-docx",
+          "sha256": "28b7ef586f10aa295134ecabdb8392b3f3b827e9b581f76e1222e5929c269392",
+          "bytes": 247016
+        },
+        "pdf": {
+          "artifact_id": "01918e3a052542078834cf4bef46eba5-pdf",
+          "sha256": "185fc6ae8e60bb5376beec2b01ae9c2279df0f6d58860e708898820df770d109",
+          "bytes": 1004925
+        }
+      }
+    },
+    {
+      "id": "S3",
+      "job_id": "aa94245d532c455f96d81ca59e907ba6",
+      "attempt_id": "4e96f6bc6f3f4ee99d21dbea90d4bb17",
+      "status": "DEGRADED",
+      "docx": "PASS",
+      "pdf": "PASS",
+      "error": null,
+      "snapshot_id": "8abf8ae6c80cb63893811cdf3402a831748b6806867d7622519b213c49a8c6cf",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "aa94245d532c455f96d81ca59e907ba6-docx",
+          "sha256": "da3541516b79a79cf967b6b894fa6978a4b6dc83021b378785d8e40521aa2404",
+          "bytes": 258097
+        },
+        "pdf": {
+          "artifact_id": "aa94245d532c455f96d81ca59e907ba6-pdf",
+          "sha256": "af51a76a8c49bc79898fc9e064f5e14fa21be59406dbdc4b129df23fb01a6290",
+          "bytes": 1035298
+        }
+      }
+    }
+  ],
+  "receipts": {
+    "model_live": "model_live.json",
+    "retrieval": "retrieval.json",
+    "rpa": "rpa.json"
+  },
+  "human_review": "PENDING",
+  "competition_ready": false
+}

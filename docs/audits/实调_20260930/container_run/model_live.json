@@ -1,0 +1,57 @@
+{
+  "run_id": "auditfix_20260930_container",
+  "attempt_id": "f42b450ff2b5449993a14ef752daa464",
+  "revision": "source:7bc66067529189e2e4f9a97199500349faa558e2d380705575cd57c95bfcfad6",
+  "revision_kind": "source",
+  "commit": null,
+  "status": "FAIL",
+  "scenarios": [
+    {
+      "id": "S1",
+      "job_id": "34ce131bf98948568983b603212d0325",
+      "attempt_id": "f42b450ff2b5449993a14ef752daa464",
+      "snapshot_id": "f239683c2d464288c9f11cc606a26c049dcb353713135deb52e1d232fdbfda74",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "34ce131bf98948568983b603212d0325-docx",
+          "sha256": "51138d43bb7b757638970750fa68fdad05fab121f5110036c8f121d5810e9850",
+          "bytes": 264897
+        },
+        "pdf": {
+          "artifact_id": "34ce131bf98948568983b603212d0325-pdf",
+          "sha256": "b9ffb8bab6aee7c1e60c665d93fdd2c4066a713663fd05ce92eee077e8de80f8",
+          "bytes": 1159961
+        }
+      },
+      "status": "DEGRADED",
+      "generation_mode": "rules",
+      "model_live": false,
+      "identity": {
+        "status": "VERIFIED",
+        "requested": "glm-5.3",
+        "returned": [
+          "glm-5.3"
+        ],
+        "reason": "全部调用响应model经核验一致"
+      },
+      "usage": {
+        "prompt_tokens": 6599,
+        "completion_tokens": 8192,
+        "total_tokens": 14791,
+        "calls": 1
+      },
+      "cache_hit": false,
+      "generated_at": 1790725982.4922802,
+      "cache_source_time": null,
+      "usage_scope": "本次报告模型生成用量",
+      "alert_coverage": {},
+      "failures": [
+        "JSONDecodeError: Expecting value: line 1 column 1 (char 0)",
+        "ReadTimeout",
+        "网络/配置类错误未重试（仅限流与5xx自动退避重试）",
+        "materials: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代",
+        "benchmark: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代"
+      ]
+    }
+  ]
+}

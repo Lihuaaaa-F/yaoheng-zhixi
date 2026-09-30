@@ -1,0 +1,106 @@
+{
+  "run_id": "auditfix_20260930_host",
+  "attempt_id": "dbf75f325ae0425a9ccf16d3772524e7",
+  "revision": "bec30849061bf00cc19080d71c44c56d74d8b1b6",
+  "revision_kind": "git",
+  "commit": "bec30849061bf00cc19080d71c44c56d74d8b1b6",
+  "status": "PASS",
+  "scenarios": [
+    {
+      "id": "S1",
+      "job_id": "aeb7f143503548b1bb7ca64d8f16f244",
+      "attempt_id": "dbf75f325ae0425a9ccf16d3772524e7",
+      "snapshot_id": "a3ddd7bb4d23f8034c9fcedc7b6d86881019d47bfc59924f2edd18a6fe640116",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "aeb7f143503548b1bb7ca64d8f16f244-docx",
+          "sha256": "4f7cda99370271f930e4b02127cf69c3ddfc2b4fa002be3b251527a833e3aa84",
+          "bytes": 249810
+        },
+        "pdf": {
+          "artifact_id": "aeb7f143503548b1bb7ca64d8f16f244-pdf",
+          "sha256": "6fed639ba70e999415244b8ebec8fd34457b5672b9d235184f467fe57e71a64a",
+          "bytes": 1037908
+        }
+      },
+      "status": "PASS",
+      "action_id": "YH-2f5ecfc4898eaca28b8d5c3e",
+      "confirmed_payload_hash": "17bfe4f24ea15d9346e48c6410925418393391cbfdbf0859295f7a7eae651bce",
+      "receipt_sha256": "5a8b0dade4f0386e478ff98101385628cfcfdfec09cddfa2295b188d55ffd489",
+      "notification": "SIMULATED_SENT",
+      "human_acknowledgement": "NOT_ENTERED"
+    },
+    {
+      "id": "S2",
+      "job_id": "4e44721bd0504eadb5f53c12b170bbf2",
+      "attempt_id": "dbf75f325ae0425a9ccf16d3772524e7",
+      "snapshot_id": "eeafb940c63a4f853cc9f24896baa27c20509806766ea171281a71093a94878a",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "4e44721bd0504eadb5f53c12b170bbf2-docx",
+          "sha256": "d70be67563ee347434529cd8e9153c10fe5c17d9f3feb13f5476ab6a0f03be82",
+          "bytes": 247016
+        },
+        "pdf": {
+          "artifact_id": "4e44721bd0504eadb5f53c12b170bbf2-pdf",
+          "sha256": "e243dfde7515d603fa53853f5f6a0242fe6e955315297bdae85a76910fd0f8f2",
+          "bytes": 1004925
+        }
+      },
+      "status": "PASS",
+      "action_id": "YH-0fbbd7f00a9ac4a1861c4459",
+      "confirmed_payload_hash": "accea4ff98eeaff3b4aebbf76b9142831bde139e96697fd06b9ac55022b7dc06",
+      "receipt_sha256": "e40661291c24d3f5b4d8dd739795cec8c9295ebdebd6989f0fe1810e9dc56295",
+      "notification": "SIMULATED_SENT",
+      "human_acknowledgement": "NOT_ENTERED"
+    },
+    {
+      "id": "S3",
+      "job_id": "b229966cd4cf4526a8daa9ae587f93e0",
+      "attempt_id": "dbf75f325ae0425a9ccf16d3772524e7",
+      "snapshot_id": "8abf8ae6c80cb63893811cdf3402a831748b6806867d7622519b213c49a8c6cf",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "b229966cd4cf4526a8daa9ae587f93e0-docx",
+          "sha256": "2cd70cd5709b50c5bd603bbd6e33e3ba60c7afb49f2bcf7dd3f4e5601cf3655a",
+          "bytes": 258097
+        },
+        "pdf": {
+          "artifact_id": "b229966cd4cf4526a8daa9ae587f93e0-pdf",
+          "sha256": "d7ebb50c0dae901a9a98ed02056298df028bc3f450758ba988722a34996eb860",
+          "bytes": 1035298
+        }
+      },
+      "status": "PASS",
+      "action_id": "YH-b02128d3f94d210b755f6fac",
+      "confirmed_payload_hash": "9cd539c783d371d2e7a8572cf75f109198ae1697e195db4d9e167d237bbce1c7",
+      "receipt_sha256": "eeb901504bf3664dc5820da726737ab9308f12881fe9460ca750150964001e71",
+      "notification": "SIMULATED_SENT",
+      "human_acknowledgement": "NOT_ENTERED"
+    },
+    {
+      "id": "Q2",
+      "job_id": "6c412b9ba1eb4da39a5e0837c6e74e85",
+      "attempt_id": "dbf75f325ae0425a9ccf16d3772524e7",
+      "snapshot_id": "8228aea36da094fa67bbf1ae48aa9a7ccc45c633242cecb961856de75dead2bc",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "6c412b9ba1eb4da39a5e0837c6e74e85-docx",
+          "sha256": "5258fceb5813da83b8df5d4b0ea6cc7fc1596bdde21561bbb2e8e4de28bf0b66",
+          "bytes": 254847
+        },
+        "pdf": {
+          "artifact_id": "6c412b9ba1eb4da39a5e0837c6e74e85-pdf",
+          "sha256": "53f19bf0ff0eaf6a5190e92aa345778d3ba8658ecbe98c6bd3a6375c94be4a80",
+          "bytes": 1072866
+        }
+      },
+      "status": "PASS",
+      "action_id": "YH-0b242fdc6f279c57cc0f1d9a",
+      "confirmed_payload_hash": "5691e57d23e19c1dc935dcbd90c25260e4fc34db67cdbee40e45bd319636260e",
+      "receipt_sha256": "1b4a4193dfa04a9f65ca1ad59f49cb77125f679464bc3b99a7ab538f8b34edd9",
+      "notification": "SIMULATED_SENT",
+      "human_acknowledgement": "NOT_ENTERED"
+    }
+  ]
+}

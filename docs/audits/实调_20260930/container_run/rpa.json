@@ -1,0 +1,34 @@
+{
+  "run_id": "auditfix_20260930_container",
+  "attempt_id": "f42b450ff2b5449993a14ef752daa464",
+  "revision": "source:7bc66067529189e2e4f9a97199500349faa558e2d380705575cd57c95bfcfad6",
+  "revision_kind": "source",
+  "commit": null,
+  "status": "PASS",
+  "scenarios": [
+    {
+      "id": "S1",
+      "job_id": "34ce131bf98948568983b603212d0325",
+      "attempt_id": "f42b450ff2b5449993a14ef752daa464",
+      "snapshot_id": "f239683c2d464288c9f11cc606a26c049dcb353713135deb52e1d232fdbfda74",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "34ce131bf98948568983b603212d0325-docx",
+          "sha256": "51138d43bb7b757638970750fa68fdad05fab121f5110036c8f121d5810e9850",
+          "bytes": 264897
+        },
+        "pdf": {
+          "artifact_id": "34ce131bf98948568983b603212d0325-pdf",
+          "sha256": "b9ffb8bab6aee7c1e60c665d93fdd2c4066a713663fd05ce92eee077e8de80f8",
+          "bytes": 1159961
+        }
+      },
+      "status": "PASS",
+      "action_id": "YH-d450919a23c25d3610c2fbb4",
+      "confirmed_payload_hash": "2f2f7bfed55af859bae0ebb23fa9e766d69f110390661f354e9ab4895eb75de9",
+      "receipt_sha256": "db2009fa60e6195da7e3a6e9e4f57f32b0d448b3c087903eb3045024bc97a565",
+      "notification": "SIMULATED_SENT",
+      "human_acknowledgement": "NOT_ENTERED"
+    }
+  ]
+}

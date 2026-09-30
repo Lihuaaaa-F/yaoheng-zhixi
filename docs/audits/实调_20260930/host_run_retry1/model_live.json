@@ -1,0 +1,109 @@
+{
+  "run_id": "auditfix_20260930_host_retry1",
+  "attempt_id": "4e96f6bc6f3f4ee99d21dbea90d4bb17",
+  "revision": "bec30849061bf00cc19080d71c44c56d74d8b1b6",
+  "revision_kind": "git",
+  "commit": "bec30849061bf00cc19080d71c44c56d74d8b1b6",
+  "status": "FAIL",
+  "scenarios": [
+    {
+      "id": "S2",
+      "job_id": "01918e3a052542078834cf4bef46eba5",
+      "attempt_id": "4e96f6bc6f3f4ee99d21dbea90d4bb17",
+      "snapshot_id": "eeafb940c63a4f853cc9f24896baa27c20509806766ea171281a71093a94878a",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "01918e3a052542078834cf4bef46eba5-docx",
+          "sha256": "28b7ef586f10aa295134ecabdb8392b3f3b827e9b581f76e1222e5929c269392",
+          "bytes": 247016
+        },
+        "pdf": {
+          "artifact_id": "01918e3a052542078834cf4bef46eba5-pdf",
+          "sha256": "185fc6ae8e60bb5376beec2b01ae9c2279df0f6d58860e708898820df770d109",
+          "bytes": 1004925
+        }
+      },
+      "status": "DEGRADED",
+      "generation_mode": "rules",
+      "model_live": false,
+      "identity": {
+        "status": "NOT_CHECKED",
+        "requested": "glm-5.3",
+        "returned": [],
+        "reason": "本次没有成功响应"
+      },
+      "usage": {},
+      "cache_hit": false,
+      "generated_at": 1790721992.5897052,
+      "cache_source_time": null,
+      "usage_scope": "本次报告模型生成用量",
+      "alert_coverage": {},
+      "failures": [
+        "ReadTimeout",
+        "网络/配置类错误未重试（仅限流与5xx自动退避重试）",
+        "materials: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代",
+        "benchmark: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代"
+      ]
+    },
+    {
+      "id": "S3",
+      "job_id": "aa94245d532c455f96d81ca59e907ba6",
+      "attempt_id": "4e96f6bc6f3f4ee99d21dbea90d4bb17",
+      "snapshot_id": "8abf8ae6c80cb63893811cdf3402a831748b6806867d7622519b213c49a8c6cf",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "aa94245d532c455f96d81ca59e907ba6-docx",
+          "sha256": "da3541516b79a79cf967b6b894fa6978a4b6dc83021b378785d8e40521aa2404",
+          "bytes": 258097
+        },
+        "pdf": {
+          "artifact_id": "aa94245d532c455f96d81ca59e907ba6-pdf",
+          "sha256": "af51a76a8c49bc79898fc9e064f5e14fa21be59406dbdc4b129df23fb01a6290",
+          "bytes": 1035298
+        }
+      },
+      "status": "DEGRADED",
+      "generation_mode": "rules",
+      "model_live": false,
+      "identity": {
+        "status": "NOT_CHECKED",
+        "requested": "glm-5.3",
+        "returned": [],
+        "reason": "本次没有成功响应"
+      },
+      "usage": {},
+      "cache_hit": false,
+      "generated_at": 1790722112.927218,
+      "cache_source_time": null,
+      "usage_scope": "本次报告模型生成用量",
+      "alert_coverage": {
+        "alert-ae6cfac6295472537aa5": {
+          "covered": false,
+          "element_key": "materials",
+          "basis": "total"
+        },
+        "alert-a3392a1012a3bdbfd2a9": {
+          "covered": false,
+          "element_key": "labor",
+          "basis": "total"
+        },
+        "alert-918366df38ec19897ded": {
+          "covered": false,
+          "element_key": "overhead",
+          "basis": "total"
+        }
+      },
+      "failures": [
+        "ReadTimeout",
+        "网络/配置类错误未重试（仅限流与5xx自动退避重试）",
+        "materials: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代",
+        "labor: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代",
+        "overhead: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代",
+        "benchmark: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代",
+        "ALERT_EXPLANATION_MISSING:alert-ae6cfac6295472537aa5",
+        "ALERT_EXPLANATION_MISSING:alert-a3392a1012a3bdbfd2a9",
+        "ALERT_EXPLANATION_MISSING:alert-918366df38ec19897ded"
+      ]
+    }
+  ]
+}

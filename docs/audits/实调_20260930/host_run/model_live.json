@@ -1,0 +1,221 @@
+{
+  "run_id": "auditfix_20260930_host",
+  "attempt_id": "dbf75f325ae0425a9ccf16d3772524e7",
+  "revision": "bec30849061bf00cc19080d71c44c56d74d8b1b6",
+  "revision_kind": "git",
+  "commit": "bec30849061bf00cc19080d71c44c56d74d8b1b6",
+  "status": "FAIL",
+  "scenarios": [
+    {
+      "id": "S1",
+      "job_id": "aeb7f143503548b1bb7ca64d8f16f244",
+      "attempt_id": "dbf75f325ae0425a9ccf16d3772524e7",
+      "snapshot_id": "a3ddd7bb4d23f8034c9fcedc7b6d86881019d47bfc59924f2edd18a6fe640116",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "aeb7f143503548b1bb7ca64d8f16f244-docx",
+          "sha256": "4f7cda99370271f930e4b02127cf69c3ddfc2b4fa002be3b251527a833e3aa84",
+          "bytes": 249810
+        },
+        "pdf": {
+          "artifact_id": "aeb7f143503548b1bb7ca64d8f16f244-pdf",
+          "sha256": "6fed639ba70e999415244b8ebec8fd34457b5672b9d235184f467fe57e71a64a",
+          "bytes": 1037908
+        }
+      },
+      "status": "DEGRADED",
+      "generation_mode": "mixed",
+      "model_live": true,
+      "identity": {
+        "status": "VERIFIED",
+        "requested": "glm-5.3",
+        "returned": [
+          "glm-5.3"
+        ],
+        "reason": "全部调用响应model经核验一致"
+      },
+      "usage": {
+        "prompt_tokens": 6546,
+        "completion_tokens": 8192,
+        "total_tokens": 14738,
+        "calls": 1
+      },
+      "cache_hit": false,
+      "generated_at": 1790721283.5296798,
+      "cache_source_time": null,
+      "usage_scope": "本次报告模型生成用量",
+      "alert_coverage": {},
+      "failures": [
+        "benchmark/explanation: ValidationError: 3 validation errors for TaskExplanation\nclaim_type\n  Field required [type=missing, input_value={'task_id': 'explain:benc... 'recommendation': None}, input_type=dict]\n    For furthe",
+        "ReadTimeout",
+        "网络/配置类错误未重试（仅限流与5xx自动退避重试）",
+        "benchmark: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代"
+      ]
+    },
+    {
+      "id": "S2",
+      "job_id": "4e44721bd0504eadb5f53c12b170bbf2",
+      "attempt_id": "dbf75f325ae0425a9ccf16d3772524e7",
+      "snapshot_id": "eeafb940c63a4f853cc9f24896baa27c20509806766ea171281a71093a94878a",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "4e44721bd0504eadb5f53c12b170bbf2-docx",
+          "sha256": "d70be67563ee347434529cd8e9153c10fe5c17d9f3feb13f5476ab6a0f03be82",
+          "bytes": 247016
+        },
+        "pdf": {
+          "artifact_id": "4e44721bd0504eadb5f53c12b170bbf2-pdf",
+          "sha256": "e243dfde7515d603fa53853f5f6a0242fe6e955315297bdae85a76910fd0f8f2",
+          "bytes": 1004925
+        }
+      },
+      "status": "DEGRADED",
+      "generation_mode": "rules",
+      "model_live": false,
+      "identity": {
+        "status": "NOT_CHECKED",
+        "requested": "glm-5.3",
+        "returned": [],
+        "reason": "本次没有成功响应"
+      },
+      "usage": {},
+      "cache_hit": false,
+      "generated_at": 1790721404.4306269,
+      "cache_source_time": null,
+      "usage_scope": "本次报告模型生成用量",
+      "alert_coverage": {},
+      "failures": [
+        "ReadTimeout",
+        "网络/配置类错误未重试（仅限流与5xx自动退避重试）",
+        "materials: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代",
+        "benchmark: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代"
+      ]
+    },
+    {
+      "id": "S3",
+      "job_id": "b229966cd4cf4526a8daa9ae587f93e0",
+      "attempt_id": "dbf75f325ae0425a9ccf16d3772524e7",
+      "snapshot_id": "8abf8ae6c80cb63893811cdf3402a831748b6806867d7622519b213c49a8c6cf",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "b229966cd4cf4526a8daa9ae587f93e0-docx",
+          "sha256": "2cd70cd5709b50c5bd603bbd6e33e3ba60c7afb49f2bcf7dd3f4e5601cf3655a",
+          "bytes": 258097
+        },
+        "pdf": {
+          "artifact_id": "b229966cd4cf4526a8daa9ae587f93e0-pdf",
+          "sha256": "d7ebb50c0dae901a9a98ed02056298df028bc3f450758ba988722a34996eb860",
+          "bytes": 1035298
+        }
+      },
+      "status": "DEGRADED",
+      "generation_mode": "rules",
+      "model_live": false,
+      "identity": {
+        "status": "NOT_CHECKED",
+        "requested": "glm-5.3",
+        "returned": [],
+        "reason": "本次没有成功响应"
+      },
+      "usage": {},
+      "cache_hit": false,
+      "generated_at": 1790721525.200587,
+      "cache_source_time": null,
+      "usage_scope": "本次报告模型生成用量",
+      "alert_coverage": {
+        "alert-ae6cfac6295472537aa5": {
+          "covered": false,
+          "element_key": "materials",
+          "basis": "total"
+        },
+        "alert-a3392a1012a3bdbfd2a9": {
+          "covered": false,
+          "element_key": "labor",
+          "basis": "total"
+        },
+        "alert-918366df38ec19897ded": {
+          "covered": false,
+          "element_key": "overhead",
+          "basis": "total"
+        }
+      },
+      "failures": [
+        "ReadTimeout",
+        "网络/配置类错误未重试（仅限流与5xx自动退避重试）",
+        "materials: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代",
+        "labor: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代",
+        "overhead: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代",
+        "benchmark: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代",
+        "ALERT_EXPLANATION_MISSING:alert-ae6cfac6295472537aa5",
+        "ALERT_EXPLANATION_MISSING:alert-a3392a1012a3bdbfd2a9",
+        "ALERT_EXPLANATION_MISSING:alert-918366df38ec19897ded"
+      ]
+    },
+    {
+      "id": "Q2",
+      "job_id": "6c412b9ba1eb4da39a5e0837c6e74e85",
+      "attempt_id": "dbf75f325ae0425a9ccf16d3772524e7",
+      "snapshot_id": "8228aea36da094fa67bbf1ae48aa9a7ccc45c633242cecb961856de75dead2bc",
+      "artifacts": {
+        "docx": {
+          "artifact_id": "6c412b9ba1eb4da39a5e0837c6e74e85-docx",
+          "sha256": "5258fceb5813da83b8df5d4b0ea6cc7fc1596bdde21561bbb2e8e4de28bf0b66",
+          "bytes": 254847
+        },
+        "pdf": {
+          "artifact_id": "6c412b9ba1eb4da39a5e0837c6e74e85-pdf",
+          "sha256": "53f19bf0ff0eaf6a5190e92aa345778d3ba8658ecbe98c6bd3a6375c94be4a80",
+          "bytes": 1072866
+        }
+      },
+      "status": "DEGRADED",
+      "generation_mode": "mixed",
+      "model_live": true,
+      "identity": {
+        "status": "VERIFIED",
+        "requested": "glm-5.3",
+        "returned": [
+          "glm-5.3"
+        ],
+        "reason": "全部调用响应model经核验一致"
+      },
+      "usage": {
+        "prompt_tokens": 7083,
+        "completion_tokens": 8044,
+        "total_tokens": 15127,
+        "calls": 1
+      },
+      "cache_hit": false,
+      "generated_at": 1790721724.1958814,
+      "cache_source_time": null,
+      "usage_scope": "本次报告模型生成用量",
+      "alert_coverage": {
+        "alert-f63295afdd8152cfe65f": {
+          "covered": true,
+          "element_key": "materials",
+          "basis": "total"
+        },
+        "alert-4dfbe0c1984e3bac496f": {
+          "covered": false,
+          "element_key": "labor",
+          "basis": "total"
+        },
+        "alert-0c80378a697b26dda64c": {
+          "covered": false,
+          "element_key": "overhead",
+          "basis": "total"
+        }
+      },
+      "failures": [
+        "labor/explanation: ValueError: diagnostic verification needs a supporting and a weakening observation",
+        "ReadTimeout",
+        "网络/配置类错误未重试（仅限流与5xx自动退避重试）",
+        "labor: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代",
+        "overhead: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代",
+        "benchmark: NECESSARY_EXPLANATION_MISSING: 主要差异章节缺实质解释（hypothesis或明确insufficient_evidence），summary数字复述与程序计算不能替代",
+        "ALERT_EXPLANATION_MISSING:alert-4dfbe0c1984e3bac496f",
+        "ALERT_EXPLANATION_MISSING:alert-0c80378a697b26dda64c"
+      ]
+    }
+  ]
+}

@@ -3,7 +3,7 @@
   "status": "PARTIAL",
   "competition_ready": false,
   "delivery_stage": "preliminary",
-  "validation_scope": "审查修复基础回归 + 修复轮1定向重跑（见 fix_round_1）；未重新执行真实模型或真人视觉/业务评分；全量 pytest/前端构建门禁绑定 8b8658d，修复后全量刷新由编排方执行",
+  "validation_scope": "审查修复基础回归 + 修复轮1定向重跑（见 fix_round_1）+ 编排方修复后全量门禁（backend 744 passed/15 skipped、前端 build/node、仓库合同，绑定 6014562）+ 第8章真实模型小样本复测（glm-5.3@coding端点，四场景叙事全 DEGRADED，见 fresh_model_reports）+ 第9章 Docker 全档验证（十项：9 PASS、容器S1 部分达成，见 docker）；真人视觉/业务评分未重新执行",
   "baseline_commit": "958bb2069e90e9786dcddcfeb10e94f57d26b39f",
   "candidate_code_commit": "6014562ee07eb09b6744375d200fea49ee3e3728",
   "tested_code_commit": "6014562ee07eb09b6744375d200fea49ee3e3728",
@@ -25,16 +25,19 @@
   "human_web_check": "NOT_RERUN",
   "evaluation_report": "evaluation/评测报告.md",
   "backend": {
-    "passed": 737,
+    "passed": 744,
     "failed": 0,
     "errors": 0,
-    "skipped": 12,
-    "junit_sha256": "54f5ac278419af165a0646a7f30b3a6b16a513196670de0c61b214f1b8ed2553",
-    "scope": "完整默认回归，应用密钥隔离；81项新增审查回归",
+    "skipped": 15,
+    "code_commit": "6014562ee07eb09b6744375d200fea49ee3e3728",
+    "junit_sha256": "a13611505e0b1c4822f595ee1bc092ee948eef8d39b696e62b0a93980623e5e4",
+    "junit_path": "C:/Users/ShiyuFang/AppData/Local/Temp/yaoheng_gates_20260930/postfix_junit.xml",
+    "scope": "编排方修复后全量门禁（2026-09-30：744 passed, 15 skipped, 2 warnings in 57.83s），环境清三把密钥对齐 CI application.yml；junit 解析 tests=759 failures=0 errors=0 skipped=15，skip 拆分自 junit skip message 可辨",
     "warnings": 2,
     "skip_breakdown": {
-      "competition_opt_in": 10,
+      "competition_opt_in": 12,
       "slow_import_opt_in": 1,
+      "platform_symlink_unavailable": 1,
       "legacy_capability_context_unavailable": 1
     }
   },
@@ -49,15 +52,18 @@
   },
   "frontend_build": {
     "build": "PASS",
-    "frontend_git_tree": "75a23fb8421395901c445a0fd98bc5d1030097cd",
-    "log_sha256": "cf27679ab4c554ca09a75524804f1725f5b01ac0edd2f796c5550a161b932a5d"
+    "frontend_git_tree": "489aa0b97100e76db3c8ec57d29a535562395043",
+    "log_sha256": "b5f0b3b7d5b365e8760cf2c2e2d7d46d15bcf4db434b76e2069dc3a4c89815ea",
+    "log_path": "C:/Users/ShiyuFang/AppData/Local/Temp/yaoheng_gates_20260930/postfix_build.log",
+    "scope": "编排方修复后门禁（tsc -b && vite build，vite v6.4.1，3982 modules，built in 8.65s）；绑定 6014562（HEAD bec3084 差异仅 docs/current_run.json，前端子树哈希相同）"
   },
   "frontend_node_tests": {
     "passed": 10,
     "failed": 0,
-    "node_version": "24.18.0",
-    "command": "node --test --test-isolation=none *.test.mjs",
-    "log_sha256": "474018c35ea673a552f92012250639802133bc93ff1e9b36b00c29d43f2ed5d2"
+    "node_version": "24.15.0",
+    "command": "node --test knowledge-graph-layout.test.mjs presentation-data.test.mjs record_demo_20260918.test.mjs（node_tests_gate.py，等价 npm test）",
+    "log_sha256": "52a0f1496e46e61a3cb37cba67e05031ca9355476339377757e66aae52af3514",
+    "log_path": "C:/Users/ShiyuFang/AppData/Local/Temp/yaoheng_gates_20260930/postfix_node.log"
   },
   "browser": {
     "status": "PASS",
@@ -77,8 +83,89 @@
   "compose_definition": "PASS",
   "original_and_reviewed_artifacts": "UNCHANGED",
   "fresh_model_reports": {
-    "status": "NOT_RUN",
-    "reason": "本轮为修复回归，不继承历史真实模型通过状态"
+    "status": "DEGRADED",
+    "date": "2026-09-30",
+    "run_id": "auditfix_20260930_host",
+    "retry_run_id": "auditfix_20260930_host_retry1（仅 S2/S3）",
+    "code_commit": "bec30849061bf00cc19080d71c44c56d74d8b1b6",
+    "code_commit_note": "实调 manifest 绑定 bec3084；与门禁基线 6014562 差异仅 docs/current_run.json（git diff --stat 实测 1 file），源码基线一致",
+    "model": "glm-5.3",
+    "endpoint": "https://open.bigmodel.cn/api/coding/paas/v4",
+    "endpoint_note": "该密钥属 coding plan 账号体系：应用默认主端点 https://open.bigmodel.cn/api/paas/v4 单发即 429；经应用模型连接机制持久化到 .runtime/model_settings.json 对齐 coding 端点，凭据仍走 GLM_API_KEY 环境变量，密钥未回显未落盘",
+    "probe": {
+      "status": "PASS",
+      "underlying_calls": 5,
+      "note": "run1 主端点 1 次即 429（额度/权限拒绝）；run2 coding 端点 text/structured_response/tools/stream 四项全 PASS，returned_model=glm-5.3 一致，usage 23/87/175 tokens；rate_limit 未主动施压、timeout 未真实触发、stream 无 usage 明细（脚本设计内限制）"
+    },
+    "underlying_calls": 8,
+    "budget_total": "探活 5 + 四场景 8 + 容器 S1 3 = 16 次底层调用，无重试风暴（每场景失败重提恰好 1 次）",
+    "freshness": "六条 narrative 记录 cache_hit 全部 false，无缓存替代；本地 /health 轮询不计入底层调用",
+    "manifest": "docs/audits/实调_20260930/host_run/manifest.json",
+    "evidence_dir": "docs/audits/实调_20260930/host_run（重提收据 host_run_retry1/）",
+    "scenarios": {
+      "S1": {
+        "status": "DEGRADED",
+        "docx": "PASS",
+        "pdf": "PASS",
+        "model_live": true,
+        "mode": "mixed",
+        "identity": "VERIFIED（requested=returned=glm-5.3，全部调用响应核验一致）",
+        "calls": 1,
+        "tokens": "prompt 6546 + completion 8192 = 14738；completion 触 8192 默认上限截断致 TaskExplanation 校验失败；另 1 次 ReadTimeout 未计入 usage",
+        "job": "aeb7f143",
+        "snapshot": "a3ddd7bb4d23f803"
+      },
+      "S2": {
+        "status": "DEGRADED",
+        "docx": "PASS",
+        "pdf": "PASS",
+        "model_live": false,
+        "mode": "rules 回退",
+        "identity": "NOT_CHECKED",
+        "calls": 0,
+        "note": "run1 与 retry1（job 01918e3a）均首调 ReadTimeout，按网络类不重试策略回退规则生成，usage 未记录",
+        "job": "4e44721b",
+        "snapshot": "eeafb940c63a4f85"
+      },
+      "S3": {
+        "status": "DEGRADED",
+        "docx": "PASS",
+        "pdf": "PASS",
+        "model_live": false,
+        "mode": "rules 回退",
+        "identity": "NOT_CHECKED",
+        "calls": 0,
+        "note": "run1 与 retry1（job aa94245d）同因首调 ReadTimeout 回退 rules，重提预算已用尽",
+        "job": "b229966c",
+        "snapshot": "8abf8ae6c80cb638"
+      },
+      "Q2": {
+        "status": "DEGRADED",
+        "docx": "PASS",
+        "pdf": "PASS",
+        "model_live": true,
+        "mode": "mixed",
+        "identity": "VERIFIED（requested=returned=glm-5.3）",
+        "calls": 1,
+        "tokens": "prompt 7083 + completion 8044 = 15127；另 1 次 ReadTimeout（labor/explanation 校验失败+超时）未计入 usage",
+        "job": "6c412b9b",
+        "snapshot": "8228aea36da094fa"
+      }
+    },
+    "receipts": {
+      "model_live": "FAIL：S1/Q2 实调 VERIFIED，S2/S3 零实调（首调 ReadTimeout→rules 回退）；retry1 同因复现",
+      "retrieval": "FAIL（收据口径）：四场景 mode=hybrid、recall=RECALLED，但逐场景 evidence status=DEGRADED（PASS 判据要求全场景 status==PASS 且 hybrid）；retry1 同",
+      "rpa": "PASS：四场景 SIMULATED_SENT 且二次确认幂等（同 id 同 payload_hash），human_acknowledgement=NOT_ENTERED"
+    },
+    "comparison_with_0924": {
+      "baseline": "docs/validation/baseline_3aba221_current_run.json fresh_model_reports：S1 PASS / S2 PASS / S3 DEGRADED_AFTER_RETRY / Q2 DEGRADED_AFTER_RETRY",
+      "S1": "PASS→DEGRADED（恶化：成功调用输出截断 + 1 次超时）",
+      "S2": "PASS→DEGRADED（恶化：两次运行均首调 ReadTimeout，实调未发生，rules 回退）",
+      "S3": "DEGRADED_AFTER_RETRY→DEGRADED（持平：降级类；本次首调超时不重试直接降级，重提同因）",
+      "Q2": "DEGRADED_AFTER_RETRY→DEGRADED（持平：降级类，本次成功调用亦截断）",
+      "caveat": "基线在 coding 端点对齐之前、commit 3aba221 测得；今日该密钥仅 coding 端点可用（主端点 429），端点/时延环境不同，恶化结论含环境变量，不能全部归因代码变化"
+    },
+    "root_cause_note": "glm-5.3（thinking 开启）@coding 端点在网关默认 90s 超时内对 S2/S3 首调不返回（确定性复现两次）；S1/Q2 成功调用 completion 撞 8192 默认上限截断致叙事校验失败。未改超时或 max_tokens 凑通过"
   },
   "windows": {
     "process_identity": "PASS_INJECTED_WIN32_REGRESSION",
@@ -86,9 +173,34 @@
     "word_com_and_visual": "NOT_RUN"
   },
   "docker": {
+    "status": "PARTIAL",
+    "date": "2026-09-30",
     "compose_definition": "PASS",
-    "image_build": "NOT_RERUN",
-    "container_runtime": "NOT_RERUN"
+    "image_build": "PASS",
+    "image_tag": "yaoheng-app:verify",
+    "image_id": "sha256:2535301fae78b2ab773b99151ebc4578a39fbbfd6b711ff972fc17bf0d8a0511",
+    "code_commit": "bec30849061bf00cc19080d71c44c56d74d8b1b6",
+    "source_baseline_note": "6014562 与 bec3084 差异仅 docs/current_run.json，源码一致；09-24 旧声明（image_build/container_runtime NOT_RERUN）按本次实测刷新",
+    "items": {
+      "1_image_build": "PASS：镜像独立构建 yaoheng-app:verify，image id 与代码 commit 已记录",
+      "2_compose_config": "PASS：编排方与本验证自跑 docker compose config -q 均 exit=0",
+      "3_services_healthy": "PASS：rpa/worker/web 全部 Up (healthy)（引擎内建 healthcheck）；GET 127.0.0.1:8765/health → status ok、worker.alive=true、simulation=true、rpa_mode=local_simulator",
+      "4_non_root": "PASS：docker exec id → uid=10001(appuser) gid=999(appuser)；旧卷 root 遗留数据一次性 chown 10001:999（数据字节未动，未用 down -v）",
+      "5_vector_assets": "PASS：卷内模型 bge-large-zh-v1.5（ONNX）在位，容器内本地重建 job a42db404512244aeb0fd6fe79f40d214 SUCCEEDED（纯本地推理不耗模型 API）→ /api/kb PASS chunks=180（与 09-24 基线一致）pages=116 knowledge_version=7650d8c1858a73064397",
+      "6_hybrid_retrieval_5": "PASS：5 条不同查询全部 RECALLED、mode=hybrid、fusion_weights=[0.5,0.5]、framework=llama-index-core BaseRetriever/TextNode、embedding_version 与卷内模型指纹一致——真混合非词法降级（备注：curl 中文编码 400 与 ONNX 懒加载超时各一次，python utf-8 客户端全通过）",
+      "7_container_s1": "PARTIAL：真实调用已发生（usage calls=1，prompt 6599+completion 8192=14791 tok，identity VERIFIED glm-5.3，cache_hit=false），但模型响应 8192 截断致 JSONDecodeError + 一次 ReadTimeout（网络类不重试），叙事两轮均 rules 降级（重提 job 5941ac12 ReadTimeout 无响应），model_live 收据 FAIL；S1 叙事 PASS 未在容器内复现（同日宿主轮 S1 为 PASS/mixed，收据在 docs/audits/实调_20260930/host_run/）；按升级裁决 B 容器内运行+字节级回搬，binding source:7bc66067...",
+      "8_word_pdf_download": "PASS：docx 264897B sha256=51138d43bb7b757638970750fa68fdad05fab121f5110036c8f121d5810e9850、pdf 1159961B sha256=b9ffb8bab6aee7c1e60c665d93fdd2c4066a713663fd05ce92eee077e8de80f8；收据生成时强制哈希相等 + 宿主独立 GET 复核 sha_match=True 双重校验；重提轮同 PASS",
+      "9_rpa_closure": "PASS：确认→模拟送达→幂等二次确认全链，action_id=YH-d450919a23c25d3610c2fbb4、receipt_sha256=db2009fa60e6195da7e3a6e9e4f57f32b0d448b3c087903eb3045024bc97a565、human_acknowledgement=NOT_ENTERED（真人评分不自动登记）；重提轮同 PASS",
+      "10_restart_persistence": "PASS：compose restart 三服务约 45s 恢复 healthy、端口映射保持；重启后 kb job a42db404 仍 SUCCEEDED、历史 report job 5e3f3754 可查且 docx 工件（190075B）仍可下载、/api/kb 仍 PASS 180 且 knowledge_version 不变、密钥仍生效（卷内 keys 持久）；卷数据全程未用 down -v"
+    },
+    "evidence_dir": "docs/audits/实调_20260930/container_run（及 container_run_retry1，逐文件 sha256 与容器内原件 MATCH）；审计记录 docs/audits/实调与容器验证_20260930.md",
+    "underlying_calls": 3,
+    "environment_fixes": [
+      "旧栈 root 镜像遗留卷数据属主一次性迁移 uid 0→10001:999（必要且数据无损，未用 down -v）",
+      "停掉第8章实调遗留的宿主 uvicorn（PID 40472）释放 8765：此前容器端口映射静默失效，宿主请求打到宿主旧服务；建议宿主实调收尾显式停服务"
+    ],
+    "design_note": "run_acceptance 的 revision 绑定（revision.py git 探测 + run_acceptance.py:39 commit 相等）只支持与宿主同构 git checkout 的服务端，容器（source 指纹）与宿主（git）永不匹配；09-24 档容器 S1 实际记录的是单 job 而非 run_acceptance 收据，比较口径须注意",
+    "stack_now": "三服务保持 Up(healthy) 于 yaoheng-app:verify，密钥已配置在卷；未执行 down（留编排方决定）"
   },
   "video": {
     "status": "PENDING_USER_RECORDING",
@@ -106,10 +218,15 @@
     "scope": "源码、合成测试和回归说明；没有新增密钥、数据库、队列或业务报告"
   },
   "known_limits": [
-    "旧能力上下文探针因环境没有对应上下文仍跳过；其余默认跳过项已由补充组执行。",
-    "真实云模型、完整向量链路、Windows原生执行及Word/PDF视觉一致性未在本轮复验。",
+    "全量门禁 15 项跳过均为显式 opt-in 或环境能力类（题包 competition 12、慢速 E2E 1、符号链接平台能力 1、能力上下文缺失 1），补充组（题包兼容/慢速导入）此前已执行。",
+    "真实云模型已实调：glm-5.3@coding端点四场景叙事全部 DEGRADED（S1/Q2 截断、S2/S3 ReadTimeout 回退 rules），见 fresh_model_reports；Windows 原生执行与 Word/PDF 视觉一致性仍未复验。",
+    "本次密钥仅 coding 端点可用（主端点 429 单发即拒）；09-24 基线在主端点测得，四场景对比含端点/时延环境变量，不能全部归因代码变化。",
+    "容器内 S1 叙事 PASS 未复现（真实调用+身份核验已达成，两轮均 rules 降级）；宿主轮检索收据逐场景 DEGRADED（hybrid/RECALLED 但 evidence status 非 PASS）；容器检索收据 PASS。",
+    "TOC 更新域后页码对照未做：Word/PDF 产物验收为止于哈希与生成成功的机器校验，目录页码与正文页码的人工对照未执行。",
+    "探针限制（脚本设计内）：rate_limit 未主动施压（429 处理另有本地契约测试）、timeout 未真实触发、stream 探针无 usage 明细。",
     "报告生成存在受审改动（reports.py 102 行 diff，8b8658d）：疑似越界项呈裁中，按裁定处理前不回退不扩散；reports.py/reference_report.py/docx_compat.py 在修复轮1零改动。",
-    "题包真数据直接消费者守卫共 12 处（修复轮1补齐 test_correctness_fixes.py 与 test_docx_compat.py 两处漏网），PHARMA_TEST_COMPETITION_DATA=1 显式启用。"
+    "题包真数据直接消费者守卫共 12 处（修复轮1补齐 test_correctness_fixes.py 与 test_docx_compat.py 两处漏网），PHARMA_TEST_COMPETITION_DATA=1 显式启用。",
+    "run_acceptance 的 revision 绑定与容器形态不兼容（git 探测 vs source 指纹），09-24 档容器 S1 记录口径为单 job，与本轮 run_acceptance 收据口径不同，比较须注意。"
   ],
   "fix_round_1": {
     "date": "2026-09-30",
@@ -122,8 +239,8 @@
         "evidence": "pytest tests/test_audit_data_regressions.py tests/test_import_template_report.py → 20 passed, 2 skipped（默认合成数据；2026-09-30）"
       },
       "three_knowledge_formats_real_vector_hybrid": {
-        "status": "NOT_RERUN",
-        "reason": "原配方依赖真实向量资产与三种知识格式源的真实向量混合检索；本轮无向量服务，不执行也不继承历史 PASS"
+        "status": "PASS",
+        "evidence": "2026-09-30 容器卷真实向量资产复验：/data/runtime/models/bge-large-zh-v1.5（model_quantized.onnx 327MB）在位，容器内本地 ONNX 重建 job a42db404512244aeb0fd6fe79f40d214 SUCCEEDED（不耗模型 API），/api/kb PASS chunks=180（与 09-24 基线一致）pages=116 knowledge_version=7650d8c1858a73064397；5 条不同查询 POST /api/kb/search（mode=hybrid）全部 RECALLED、fusion_weights=[0.5,0.5]（向量+词法真混合非词法降级）、framework=llama-index-core BaseRetriever/TextNode、embedding_version 与卷内模型指纹一致，命中源覆盖 PDF（GMP法规核心摘要）、TXT（药材市场行情）、对标基线与历史处理记录等来源；容器 run 检索收据 docs/audits/实调_20260930/container_run/retrieval.json S1 PASS/hybrid/RECALLED/8 条证据"
       },
       "bad_knowledge_preserves_index": {
         "status": "PASS",
@@ -158,6 +275,6 @@
       "competition_opt_in": "PHARMA_TEST_COMPETITION_DATA=1 下新增守卫两用例通过：test_correctness_fixes.py::test_metric_contract_holds_on_competition_package、test_docx_compat.py::test_render_upgrades_legacy_default_template_without_changing_original",
       "node_tests": "node --test frontend/*.test.mjs → 10 pass, 0 fail（node v24.15.0）"
     },
-    "pending": "全量 pytest 与前端 build 门禁（计划 6.1）由编排方重跑后刷新 backend/frontend_build 数字；three_knowledge_formats_real_vector_hybrid 与『真实两轮对话』待真实向量资产/真实模型工作流"
+    "pending": "assistant_real_two_turns_and_lifecycle 的『真实两轮对话』仍需真实模型工作流（本轮未执行，保持 PARTIAL）；全量 pytest/前端 build/仓库合同门禁已由编排方重跑刷新（backend 744 passed/15 skipped，绑定 6014562）；three_knowledge_formats_real_vector_hybrid 已按容器真实向量证据升级 PASS；真人视觉/业务评分未重新执行"
   }
 }

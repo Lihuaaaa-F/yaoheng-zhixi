@@ -23,3 +23,6 @@ __pycache__/
 .DS_Store
 Thumbs.db
 环境接入.local.sh
+
+# 审计目录不发布运行时数据库（红线：密钥、.env、数据库不入库）
+docs/audits/**/*.sqlite3
